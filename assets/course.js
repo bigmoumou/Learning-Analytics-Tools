@@ -1,7 +1,8 @@
 /* ==========================================================================
    課程資料與共用行為
-   - 新增一週：在 WEEKS 裡把該週改成 status: "ready"，填上標題、摘要和各 section，
-     再照 weeks/week03/ 的結構放檔案（index.html、lesson/、video/）。
+   - 新增一週：在 WEEKS 裡加上該週（status: "ready"、標題、摘要、連結、圖片），
+     再照 weeks/week03/ 的結構放檔案（index.html、lesson/、video/）。首頁膠捲會自動多一格已開放的畫面。
+   - still 是膠捲畫格用的大圖（建議 1920×1080 的影片封面），thumb 是清單用的小圖。
    - 每一頁的 <body data-root="..."> 指到網站根目錄（入口是 "./"，weeks/weekNN/ 是 "../../"）。
    ========================================================================== */
 (function () {
@@ -23,6 +24,7 @@
       summary: "Codex 為什麼以資料夾為工作單位：路徑、工作資料夾、四扇門、讀跑寫、相對路徑、迷路急救。",
       href: "weeks/week03/",
       thumb: "weeks/week03/video/thumb.jpg",
+      still: "weeks/week03/video/poster.jpg",
       web: "網頁教學・約 30 分鐘",
       video: "影片教學・1 分 15 秒",
     },
@@ -38,6 +40,7 @@
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
+  window.courseUtil = { pad, esc, root };
 
   /* ---------- 主題切換（和 Week 3 教材共用同一個設定） ---------- */
   const ICON_SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -60,44 +63,19 @@
       btn.setAttribute("aria-label", d ? "切換成淺色" : "切換成深色");
     };
     paint();
+    const changed = () => document.dispatchEvent(new CustomEvent("themechange"));
     btn.addEventListener("click", () => {
       const next = isDark() ? "light" : "dark";
       document.documentElement.dataset.theme = next;
       try { localStorage.setItem("lesson-theme", next); } catch (e) { /* 無法儲存也沒關係 */ }
       paint();
+      changed();
     });
-  }
-
-  /* ---------- 入口：週次卡片 ---------- */
-  function renderWeeks() {
-    const list = $("#weeks");
-    if (!list) return;
-    const soonList = $("#soonWeeks");
-    const r = root();
-    const ready = [], soon = [];
-    for (let n = COURSE.firstWeek; n <= COURSE.lastWeek; n++) {
-      const w = WEEKS[n];
-      if (w && w.status === "ready") {
-        ready.push(`
-          <li class="week">
-            <a class="week-card" href="${r}${w.href}">
-              <div class="week-thumb"><img src="${r}${w.thumb}" alt="" loading="lazy" width="800" height="450"></div>
-              <div class="week-body">
-                <span class="week-no">WEEK ${pad(n)}</span>
-                <span class="week-title">${esc(w.title)}</span>
-                <span class="week-sum">${esc(w.summary)}</span>
-                <span class="chips"><span class="chip web">${esc(w.web)}</span><span class="chip vid">${esc(w.video)}</span></span>
-              </div>
-            </a>
-          </li>`);
-      } else {
-        soon.push(`<li><span class="n">WEEK ${pad(n)}</span><span class="s">準備中</span></li>`);
-      }
+    if (window.matchMedia) {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const onSystem = () => { if (!document.documentElement.dataset.theme) { paint(); changed(); } };
+      if (mq.addEventListener) mq.addEventListener("change", onSystem);
     }
-    list.innerHTML = ready.join("");
-    if (soonList) soonList.innerHTML = soon.join("");
-    const count = $("#weeksCount");
-    if (count) count.textContent = `已開放 ${ready.length} 週，共 ${COURSE.lastWeek - COURSE.firstWeek + 1} 週`;
   }
 
   /* ---------- 每週頁：上一週／下一週 ---------- */
@@ -118,7 +96,6 @@
 
   function start() {
     initTheme();
-    renderWeeks();
     renderPager();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);

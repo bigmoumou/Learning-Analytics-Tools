@@ -12,10 +12,12 @@ Learning Analytics Tools Implementation Applications (NTNU) 課程教材網站�
 ## 結構
 
 ```
-index.html              課程入口：Week 3–16 的週次卡片
+index.html              課程首頁：全螢幕膠捲，片頭 + Week 3–16 各一格，點已開放的畫格進入
 assets/
-  site.css              入口、每週總覽、影片頁共用的樣式
-  course.js             課程資料（每週標題、狀態、連結）和共用行為
+  home.css, home.js     首頁的樣式和膠捲（原生 WebGL2，不用函式庫；膠捲停住時不重畫）；
+                        不支援 WebGL2 時改顯示週次清單
+  site.css              每週總覽、影片頁共用的樣式
+  course.js             課程資料（每週標題、狀態、連結、圖片）和共用行為（主題切換、上一週／下一週）
 weeks/
   week03/
     index.html          Week 3 總覽：學習目標、建議順序、各 section 介紹
@@ -37,11 +39,14 @@ weeks/
      title: "這週的標題",
      summary: "一兩句話的摘要",
      href: "weeks/week04/",
-     thumb: "weeks/week04/video/thumb.jpg",
+     thumb: "weeks/week04/video/thumb.jpg",   // 清單用的小圖（800×450）
+     still: "weeks/week04/video/poster.jpg",  // 膠捲畫格用的大圖（1920×1080）
      web: "網頁教學・約 NN 分鐘",
      video: "影片教學・N 分 NN 秒",
    },
    ```
+
+   首頁膠捲會自動把這一格從「準備中」換成影片封面，開場也會停在最新開放的一週。
 
 4. commit、push 到 `main`，GitHub Pages 會自動更新（約 1 分鐘）。
 
@@ -49,4 +54,10 @@ weeks/
 
 ## 本機預覽
 
-直接用瀏覽器打開 `index.html` 就可以看。
+在 repo 資料夾開一個本機伺服器，再用瀏覽器打開 http://localhost:8000/：
+
+```bash
+python -m http.server 8000
+```
+
+直接雙擊 `index.html` 也看得到，但瀏覽器的安全限制會讓首頁膠捲裡的影片封面圖顯示不出來。

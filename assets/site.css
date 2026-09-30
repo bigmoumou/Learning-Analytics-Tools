@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Learning Analytics Tools — 課程網站共用樣式（入口、每週總覽、影片頁）
-   Layout: 單欄置中，內容寬 68rem；週次用卡片格線，每週頁面用 section 卡片。
+   Learning Analytics Tools — 課程網站共用樣式（每週總覽、影片頁；首頁另外用 home.css）
+   Layout: 單欄置中，內容寬 68rem；每週頁面用 section 卡片。
    配色沿用 Week 3 教材：冷調紙面、墨藍文字、資料夾琥珀、Agent 青綠。
    ========================================================================== */
 :root {
@@ -104,67 +104,14 @@ code { font-family: var(--font-mono); font-size: .9em; }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: .08em; color: var(--folder); font-weight: 700; }
 .lede { font-size: var(--fs-md); color: var(--ink-2); line-height: 1.7; max-width: 44rem; }
 
-/* ---------- 入口：課程標題 ---------- */
+/* ---------- 頁首標題（影片頁） ---------- */
 .course-hero { display: flex; flex-direction: column; gap: .9rem; padding-block: 2.5rem 2rem; }
 .course-hero h1 { font-family: var(--font-body); font-weight: 900; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: -.01em; line-height: 1.12; }
-.course-hero .sub { font-family: var(--font-mono); color: var(--ink-3); font-size: var(--fs-sm); }
 
-.howto {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: .8rem;
-  list-style: none; margin: 0 0 2.6rem; padding: 0; counter-reset: step;
-}
-.howto li {
-  counter-increment: step; display: flex; gap: .8rem; align-items: flex-start;
-  padding: .9rem 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0;
-  font-size: var(--fs-sm); color: var(--ink-2); line-height: 1.6;
-}
-.howto li::before {
-  content: counter(step); flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%;
-  display: grid; place-items: center; background: var(--folder-soft); color: var(--folder);
-  font-family: var(--font-mono); font-weight: 800;
-}
-.howto strong { color: var(--ink); display: block; font-size: var(--fs-base); }
-
-/* ---------- 入口：週次卡片 ---------- */
-.weeks-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.weeks-head h2 { font-size: var(--fs-lg); }
-.weeks-head .count { font-size: var(--fs-sm); color: var(--ink-3); }
-.weeks {
-  display: grid; gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
-  list-style: none; margin: 0; padding: 0;
-}
-.week { min-width: 0; }
-.week-card {
-  display: flex; flex-direction: column; height: 100%;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  overflow: hidden; color: inherit; text-decoration: none;
-  transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s;
-}
-a.week-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--agent); }
-.week-thumb { aspect-ratio: 16 / 9; background: var(--surface-2); overflow: hidden; }
-.week-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.week-body { display: flex; flex-direction: column; gap: .45rem; padding: 1rem 1.1rem 1.15rem; flex: 1; }
-.week-no { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 800; letter-spacing: .1em; color: var(--folder); }
-.week-title { font-size: var(--fs-md); font-weight: 800; line-height: 1.4; }
-.week-sum { font-size: var(--fs-sm); color: var(--ink-2); line-height: 1.6; }
-.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: auto; padding-top: .4rem; }
+/* ---------- 標籤 ---------- */
 .chip { display: inline-flex; align-items: center; gap: .3rem; padding: .05rem .6rem; border-radius: 999px; font-size: var(--fs-xs); font-weight: 700; line-height: 1.8; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
 .chip.web { background: var(--agent-soft); color: var(--agent); }
 .chip.vid { background: var(--folder-soft); color: var(--folder); }
-.soon-head { display: flex; align-items: baseline; gap: .8rem; margin: 2.2rem 0 .8rem; }
-.soon-head h2 { font-size: var(--fs-md); }
-.soon-head span { font-size: var(--fs-sm); color: var(--ink-3); }
-.soon-list {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
-}
-.soon-list li {
-  display: flex; flex-direction: column; gap: .1rem; padding: .7rem .9rem;
-  border: 1px dashed var(--line); border-radius: 12px; min-width: 0;
-}
-.soon-list .n { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 800; letter-spacing: .1em; color: var(--ink-3); }
-.soon-list .s { font-size: var(--fs-sm); color: var(--ink-3); }
 
 /* ---------- 每週總覽 ---------- */
 .week-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.8rem; padding-block: 2rem 2.4rem; align-items: center; }
