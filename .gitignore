@@ -2,3 +2,6 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# wrangler pages dev 的本機暫存
+.wrangler/

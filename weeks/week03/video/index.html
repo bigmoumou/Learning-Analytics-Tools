@@ -27,9 +27,11 @@
 
     <div class="video-layout">
       <div class="player">
-        <video id="vid" controls preload="metadata" playsinline poster="poster.jpg" width="1920" height="1080">
+        <!-- 影片和封面從 Cloudflare Pages（同一個 repo 的鏡像）載入，GitHub Pages 在台灣太慢；Cloudflare 失敗時改用本站的檔案 -->
+        <video id="vid" controls preload="metadata" playsinline poster="https://learning-analytics-tools.pages.dev/weeks/week03/video/poster.jpg" width="1920" height="1080">
+          <source src="https://learning-analytics-tools.pages.dev/weeks/week03/video/report-journey.mp4" type="video/mp4">
           <source src="report-journey.mp4" type="video/mp4">
-          你的瀏覽器無法播放這支影片，可以<a href="report-journey.mp4">直接下載 mp4</a>。
+          你的瀏覽器無法播放這支影片，可以<a href="https://learning-analytics-tools.pages.dev/weeks/week03/video/report-journey.mp4">直接下載 mp4</a>。
         </video>
       </div>
       <div>
