@@ -1,0 +1,7 @@
+# Cloudflare Pages 轉址（GitHub Pages 會忽略這個檔案）
+# Week 3 改成單一頁面（影片＋重點）：舊的影片頁、網頁教學頁都轉到週次頁，#t= 片段會保留
+/weeks/week03/video/   /weeks/week03/   301
+/weeks/week03/video    /weeks/week03/   301
+/weeks/week03/lesson/  /weeks/week03/   301
+/weeks/week03/lesson   /weeks/week03/   301
+/weeks/week03/lesson/* /weeks/week03/   301

@@ -36,15 +36,15 @@
     cta: $("#infoCta"), ctaLabel: $("#infoCtaLabel"), alt: $("#infoAlt"), announce: $("#announce"),
   };
 
-  // 「影片教學・1 分 15 秒　網頁教學・約 30 分鐘」：兩段各自不斷行
-  const lengths = (w) => `<span class="nw">${esc(w.video)}</span>　<span class="nw">${esc(w.web)}</span>`;
+  // 一行長度說明，例如「影片 1 分 23 秒・5 則重點」（course.js 的 meta）
+  const lengths = (w) => `<span class="nw">${esc(w.meta || "")}</span>`;
 
   function describe(f) {
     if (f.kind === "leader") {
       return {
         kicker: "LEARNING ANALYTICS TOOLS・NTNU",
         title: "從 Week 3 開始",
-        meta: "每週一支短影片、一份互動網頁教學。先看影片建立直覺，再讀網頁教學，最後做小測驗。",
+        meta: "每週一頁：一支短影片，加上幾則重點。轉動膠捲，選一週開始。",
         alt: "看全部週次", altAction: "index",
       };
     }
@@ -366,7 +366,7 @@
     g.fillText("NTNU・WEEK 03 — 16", x + 48, y + 368);
     g.fillStyle = "rgba(244,242,236,.72)";
     g.font = `500 24px ${SANS}`;
-    g.fillText("每週：影片教學＋網頁教學", x + 46, y + h - 44);
+    g.fillText("每週：一支影片＋幾則重點", x + 46, y + h - 44);
   }
 
   function drawReady(g, f, img) {
@@ -378,21 +378,22 @@
       const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
       g.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
     }
-    // 左上角「WEEK 03・已開放」（標題寫在畫面下方的介紹裡，這裡不重複，也不壓到封面上的字）
+    // 右上角「WEEK 03・已開放」（標題寫在畫面下方的介紹裡，這裡不重複；封面左上角是影片自己的標題）
     const wk = `WEEK ${pad(f.n)}`, st = "已開放";
     g.font = `700 22px ${MONO}`;
     const w1 = g.measureText(wk).width;
     g.font = `700 20px ${SANS}`;
     const w2 = g.measureText(st).width;
+    const pw = 58 + w1 + 22 + w2 + 22, px = x + w - 26 - pw;
     g.fillStyle = "rgba(10,10,10,.78)";
-    rr(g, x + 26, y + 24, 58 + w1 + 22 + w2 + 22, 46, 23); g.fill();
+    rr(g, px, y + 24, pw, 46, 23); g.fill();
     g.fillStyle = "#f0b545";
-    g.beginPath(); g.arc(x + 50, y + 47, 7, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(px + 24, y + 47, 7, 0, Math.PI * 2); g.fill();
     g.font = `700 22px ${MONO}`;
-    g.fillText(wk, x + 70, y + 55);
+    g.fillText(wk, px + 44, y + 55);
     g.fillStyle = "#fff";
     g.font = `700 20px ${SANS}`;
-    g.fillText(st, x + 70 + w1 + 22, y + 55);
+    g.fillText(st, px + 44 + w1 + 22, y + 55);
   }
 
   function drawSoon(g, f) {
@@ -462,7 +463,7 @@
     const jobs = [
       document.fonts.load(`900 60px "Noto Sans TC"`, "LEARNINGANALYTICSTOOLS"),
       document.fonts.load(`700 44px "Noto Sans TC"`, titles + "準備中已開放"),
-      document.fonts.load(`500 24px "Noto Sans TC"`, "每週：影片教學＋網頁教學"),
+      document.fonts.load(`500 24px "Noto Sans TC"`, "每週：一支影片＋幾則重點"),
       document.fonts.load(`700 20px "JetBrains Mono"`, "0123456789 WEEKNTUAOLSGRCMIY"),
     ];
     return Promise.race([Promise.all(jobs).catch(() => {}), new Promise((r) => setTimeout(r, 2500))]);

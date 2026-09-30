@@ -10,106 +10,93 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Week 3｜AI 助理的工作資料夾</title>
-<meta name="description" content="Week 3：Codex 這類 AI Agent 為什麼以資料夾為工作單位。影片教學「report.md 的旅程」和網頁教學「AI 助理的工作資料夾」。">
+<meta name="description" content="Week 3：Codex 這類 AI 助理為什麼以資料夾為工作單位。一支 83 秒的影片和五則重點。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="../../assets/week.css">
 <script src="../../assets/course.js" defer></script>
 </head>
 <body data-root="../../">
-<main class="page">
-  <div class="wrap">
-    <div class="topbar">
-      <nav class="crumbs" aria-label="目前位置"><a href="../../">Learning Analytics Tools</a><span class="sep">/</span><span>Week 3</span></nav>
-      <button class="btn theme-btn" id="themeBtn" type="button">深色</button>
+<div class="page">
+  <header class="top">
+    <a class="brand" href="../../">
+      <span class="brand-name">Learning Analytics Tools</span>
+      <span class="brand-sub">NTNU・課程教材・Week 3 – 16</span>
+    </a>
+    <button class="pill icon-only" id="themeBtn" type="button">深色</button>
+  </header>
+
+  <main>
+    <div class="head">
+      <p class="kicker"><span class="dot" aria-hidden="true"></span>WEEK 03</p>
+      <h1>AI 助理的工作資料夾</h1>
+      <p class="lede">Codex 這類 AI 助理都以「一個資料夾」為工作單位。看懂這件事，就知道檔案在哪裡、它做了什麼、做完的東西去了哪。</p>
     </div>
 
-    <header class="week-hero">
-      <div class="text">
-        <p class="eyebrow">WEEK 03</p>
-        <h1>AI 助理的工作資料夾</h1>
-        <p class="lede">Codex、Claude Code 這類 AI Agent 都以「一個資料夾」為工作單位。這週搞懂三件事：檔案到底在哪裡、叫 Codex 做事時它實際做了什麼、找不到檔案時怎麼找回來。</p>
-        <div class="meta">
-          <span class="chip vid">影片教學・1 分 15 秒</span>
-          <span class="chip web">網頁教學・約 30 分鐘</span>
-          <span class="chip">小測驗・5 題</span>
-        </div>
+    <div class="film">
+      <div class="player">
+        <!-- 影片以 HLS 播放（assets/video.js）；<source> 的 mp4 是 HLS 播不了時的備援 -->
+        <video id="vid" controls preload="metadata" playsinline data-hls="video/hls/index.m3u8" poster="video/poster.jpg" width="1920" height="1080">
+          <source src="video/report-journey.mp4" type="video/mp4">
+          你的瀏覽器無法播放這支影片，可以<a href="video/report-journey.mp4">直接下載 mp4</a>。
+        </video>
       </div>
-      <figure>
-        <a href="video/"><img src="video/poster.jpg" alt="影片畫面：Project 資料夾的四個入口 Codex、VS Code、終端機、檔案總管，都看得到同一個 report.md" width="1920" height="1080"></a>
-      </figure>
-    </header>
+    </div>
 
-    <section class="block" aria-labelledby="goalsTitle">
-      <h2 id="goalsTitle">學完這週，你可以</h2>
-      <ul class="goals">
-        <li>看懂像 <code>C:\Users\an\Desktop\Project</code> 這樣的路徑，知道它是檔案的完整地址。</li>
-        <li>說明 AI Agent 為什麼只在「工作資料夾」裡工作，以及範圍開太大有什麼風險。</li>
-        <li>知道 Codex、VS Code、終端機、檔案總管看的是硬碟上同一個資料夾。</li>
-        <li>看懂 Codex 工作時反覆做的三件事：讀取、執行指令、寫入。</li>
-        <li>用「完整路徑 ＝ 工作資料夾 ＋ 相對路徑」判斷 Codex 產出的檔案會落在哪裡。</li>
-        <li>找不到檔案時，會用 <code>directory:</code>、<code>pwd</code>、<code>explorer .</code> 把它找回來。</li>
-      </ul>
-    </section>
+    <ol class="chapters" id="chapters" aria-label="影片片段（點了直接跳到那一段）">
+      <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t">開場</span></button></li>
+      <li><button type="button" data-t="3"><span class="k">00:03</span><span class="t">每個檔案都有地址</span></button></li>
+      <li><button type="button" data-t="8"><span class="k">00:08</span><span class="t">report.md 誕生</span></button></li>
+      <li><button type="button" data-t="18"><span class="k">00:18</span><span class="t">一個資料夾，四個窗口</span></button></li>
+      <li><button type="button" data-t="38"><span class="k">00:38</span><span class="t">外面要先問你</span></button></li>
+      <li><button type="button" data-t="50"><span class="k">00:50</span><span class="t">開錯資料夾</span></button></li>
+      <li><button type="button" data-t="64"><span class="k">01:04</span><span class="t">把檔案找回來</span></button></li>
+      <li><button type="button" data-t="76"><span class="k">01:16</span><span class="t">結論</span></button></li>
+    </ol>
 
-    <section class="block" aria-labelledby="orderTitle">
-      <h2 id="orderTitle">建議順序</h2>
-      <ol class="order">
-        <li>看影片（1 分鐘）</li>
-        <li>讀網頁教學，動手操作 5 個示範</li>
-        <li>做小測驗</li>
-      </ol>
-    </section>
-
-    <section class="block" aria-labelledby="sectionsTitle">
-      <h2 id="sectionsTitle">本週內容</h2>
-      <div class="sections">
-        <article class="section-card video">
-          <p class="label">SECTION 1・影片教學</p>
-          <h3>report.md 的旅程</h3>
-          <p class="desc">把小安的電腦畫成一座城市，鏡頭一路跟著 report.md 這個檔案：Codex 先讀取資料、再寫出報告；開錯資料夾時報告跑去哪裡；最後照四個步驟把它找回來。影片沒有旁白，重點都在畫面字卡上。</p>
-          <div class="meta"><span class="chip vid">1 分 15 秒</span><span class="chip">7 個片段</span><span class="chip">1080p</span></div>
-          <ol class="toc-list">
-            <li><a href="video/#t=0"><span class="k">00:00</span><span class="t">開場<small>Codex 說做好了，小安卻找不到檔案</small></span></a></li>
-            <li><a href="video/#t=3"><span class="k">00:03</span><span class="t">01 地址<small>每個檔案都有一個完整地址</small></span></a></li>
-            <li><a href="video/#t=8"><span class="k">00:08</span><span class="t">02 誕生<small>Codex 讀取 AGENTS.md 和 data/，再寫出 report.md</small></span></a></li>
-            <li><a href="video/#t=18"><span class="k">00:18</span><span class="t">03 四扇門<small>四個工具看的是同一個資料夾</small></span></a></li>
-            <li><a href="video/#t=30"><span class="k">00:30</span><span class="t">04 範圍<small>工作資料夾外面，要先問你</small></span></a></li>
-            <li><a href="video/#t=42"><span class="k">00:42</span><span class="t">05 走錯地方<small>Codex 開在桌面時，報告落到 Desktop\output</small></span></a></li>
-            <li><a href="video/#t=56"><span class="k">00:56</span><span class="t">06 找回來<small>找不到檔案時的四個步驟</small></span></a></li>
-            <li><a href="video/#t=68"><span class="k">01:08</span><span class="t">07 結論<small>Codex 做的東西，都在你打開它的那個資料夾裡</small></span></a></li>
-          </ol>
-          <div class="actions"><a class="btn btn-primary" href="video/">觀看影片</a></div>
-        </article>
-
-        <article class="section-card web">
-          <p class="label">SECTION 2・網頁教學</p>
-          <h3>AI 助理的工作資料夾</h3>
-          <p class="desc">7 章文字說明，搭配 5 個可以動手操作的互動示範：點檔案看路徑、移動工作範圍、看四個視窗同步、一步一步播放 Codex 的工作過程、實驗相對路徑。最後用 5 題小測驗檢查自己。</p>
-          <div class="meta"><span class="chip web">約 30 分鐘</span><span class="chip">5 個互動示範</span><span class="chip">小測驗 5 題</span></div>
-          <ol class="toc-list">
-            <li><a href="lesson/#ch1"><span class="k">第 1 章</span><span class="t">每個檔案都有一個地址<small>示範：點一個檔案，看它的完整地址</small></span></a></li>
-            <li><a href="lesson/#ch2"><span class="k">第 2 章</span><span class="t">Agent 只在一個資料夾裡工作<small>示範：Codex 開在哪，工作範圍就在哪</small></span></a></li>
-            <li><a href="lesson/#ch3"><span class="k">第 3 章</span><span class="t">四扇門，同一個房間<small>示範：一個資料夾，四個窗口</small></span></a></li>
-            <li><a href="lesson/#ch4"><span class="k">第 4 章</span><span class="t">你叫 Codex 做事時，它實際在做什麼<small>示範：一步一步看 Codex 工作</small></span></a></li>
-            <li><a href="lesson/#ch5"><span class="k">第 5 章</span><span class="t">同一句話，檔案卻跑到不同地方<small>示範：相對路徑實驗室</small></span></a></li>
-            <li><a href="lesson/#ch6"><span class="k">第 6 章</span><span class="t">迷路急救包<small>找不到檔案時的五個步驟和常用指令</small></span></a></li>
-            <li><a href="lesson/#ch7"><span class="k">第 7 章</span><span class="t">好習慣：一個作業，一個資料夾<small>建議的資料夾結構和 AGENTS.md 範例</small></span></a></li>
-            <li><a href="lesson/#quiz"><span class="k">測驗</span><span class="t">小測驗<small>5 題，點選答案就會看到解釋</small></span></a></li>
-          </ol>
-          <div class="actions"><a class="btn btn-primary" href="lesson/">開始閱讀</a></div>
-        </article>
-      </div>
-    </section>
+    <ol class="points">
+      <li><p><strong>每個檔案都有一個地址。</strong>像 <code>C:\Users\an\Desktop\Project</code> 這樣的路徑，就是它在硬碟上的完整地址。</p></li>
+      <li><p><strong>Codex 只在你打開它的那個資料夾裡工作。</strong>在裡面讀檔、改檔、執行指令不用問你；要動外面的檔案或上網，會先問。</p></li>
+      <li><p><strong>Codex、VS Code、終端機、檔案總管看的是同一個資料夾。</strong>檔案不在聊天室裡，而是硬碟上的真檔案，在哪個窗口改，其他窗口都看得到。</p></li>
+      <li><p><strong>「存到 <code>output/report.md</code>」是相對路徑。</strong>真正的位置＝ Codex 打開的資料夾＋ <code>output/report.md</code>。開錯資料夾，檔案就會落到別的地方。</p></li>
+      <li><p><strong>找不到檔案時，照這四步。</strong>看 Codex 開在哪（<code>directory:</code>）、請它給完整路徑、在終端機打 <code>pwd</code>、用 <code>explorer .</code> 打開那個資料夾。</p></li>
+    </ol>
 
     <nav class="pager" id="pager" data-week="3" aria-label="其他週次"></nav>
+  </main>
 
-    <footer class="footer">
-      <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
-      <a href="../../">回到課程首頁</a>
-    </footer>
-  </div>
-</main>
+  <footer class="foot">
+    <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
+    <a href="../../">回到課程首頁</a>
+  </footer>
+</div>
+
+<!-- 順序很重要：先 hls.js、再 video.js，最後才是讀取影片時間的程式 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.15/hls.light.min.js" integrity="sha512-+s5Bl3QE0s/yJwRQ5TJLHFBaOQ133gm4y4zw6yzlZhVlQnX0zDuSD+vnW1J2Le0ZViiVspejpPfHX6YdBjHoNg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="../../assets/video.js"></script>
+<script>
+  (function () {
+    const vid = document.getElementById("vid");
+    const btns = Array.from(document.querySelectorAll("#chapters button"));
+    const starts = btns.map((b) => Number(b.dataset.t));
+    function seek(t, play) {
+      const go = () => { vid.currentTime = t; if (play) vid.play().catch(() => {}); };
+      if (vid.readyState >= 1) go(); else vid.addEventListener("loadedmetadata", go, { once: true });
+    }
+    btns.forEach((b) => b.addEventListener("click", () => seek(Number(b.dataset.t), true)));
+    function mark() {
+      let i = 0;
+      starts.forEach((s, k) => { if (vid.currentTime + 0.05 >= s) i = k; });
+      btns.forEach((b, k) => b.setAttribute("aria-current", k === i ? "true" : "false"));
+    }
+    vid.addEventListener("timeupdate", mark);
+    vid.addEventListener("seeked", mark);
+    mark();
+    // 網址帶 #t=秒數 時直接跳到那裡（舊的影片頁連結也會帶過來）
+    const m = location.hash.match(/^#t=(\d+(?:\.\d+)?)$/);
+    if (m) seek(Number(m[1]), false);
+  })();
+</script>
 </body>
 </html>
