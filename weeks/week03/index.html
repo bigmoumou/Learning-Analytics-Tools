@@ -2,6 +2,12 @@
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Week 3｜AI 助理的工作資料夾</title>
 <meta name="description" content="Week 3：Codex 這類 AI Agent 為什麼以資料夾為工作單位。影片教學「report.md 的旅程」和網頁教學「AI 助理的工作資料夾」。">

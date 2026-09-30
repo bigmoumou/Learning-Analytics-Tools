@@ -2,6 +2,12 @@
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Learning Analytics Tools｜課程教材</title>
 <meta name="description" content="Learning Analytics Tools Implementation Applications (NTNU) 課程教材入口：Week 3 到 Week 16，每週都有網頁教學和影片教學。">

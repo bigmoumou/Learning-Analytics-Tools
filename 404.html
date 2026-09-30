@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>找不到頁面｜Learning Analytics Tools</title>
+<meta name="robots" content="noindex">
+<!-- 這一頁會出現在任何路徑底下，所以一律用從網站根目錄開始的路徑 -->
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/course.js" defer></script>
+</head>
+<body data-root="/">
+<main class="page">
+  <div class="wrap">
+    <div class="topbar">
+      <nav class="crumbs" aria-label="目前位置"><a href="/">Learning Analytics Tools</a><span class="sep">/</span><span>找不到頁面</span></nav>
+      <button class="btn theme-btn" id="themeBtn" type="button">深色</button>
+    </div>
+
+    <header class="course-hero">
+      <p class="eyebrow">404</p>
+      <h1>找不到這一頁</h1>
+      <p class="lede">網址可能打錯了，或是這一頁已經搬家。從課程首頁可以找到每一週的教材。</p>
+      <div class="meta" style="gap: .6rem">
+        <a class="btn btn-primary" href="/">回到課程首頁</a>
+      </div>
+    </header>
+  </div>
+</main>
+</body>
+</html>

@@ -2,6 +2,12 @@
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Week 3 影片｜report.md 的旅程</title>
 <meta name="description" content="Week 3 影片教學：鏡頭跟著一份 report.md，看懂 Codex 為什麼以資料夾為工作單位。75 秒，無旁白。">
@@ -27,11 +33,10 @@
 
     <div class="video-layout">
       <div class="player">
-        <!-- 影片以 HLS 從 Cloudflare Pages 播放（assets/video.js）；<source> 的 mp4 是 HLS 播不了時的備援 -->
-        <video id="vid" controls preload="metadata" playsinline data-hls="hls/index.m3u8" poster="https://learning-analytics-tools.pages.dev/weeks/week03/video/poster.jpg" width="1920" height="1080">
-          <source src="https://learning-analytics-tools.pages.dev/weeks/week03/video/report-journey.mp4" type="video/mp4">
+        <!-- 影片以 HLS 播放（assets/video.js）；<source> 的 mp4 是 HLS 播不了時的備援 -->
+        <video id="vid" controls preload="metadata" playsinline data-hls="hls/index.m3u8" poster="poster.jpg" width="1920" height="1080">
           <source src="report-journey.mp4" type="video/mp4">
-          你的瀏覽器無法播放這支影片，可以<a href="https://learning-analytics-tools.pages.dev/weeks/week03/video/report-journey.mp4">直接下載 mp4</a>。
+          你的瀏覽器無法播放這支影片，可以<a href="report-journey.mp4">直接下載 mp4</a>。
         </video>
       </div>
       <div>
