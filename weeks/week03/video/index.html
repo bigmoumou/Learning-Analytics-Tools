@@ -27,8 +27,8 @@
 
     <div class="video-layout">
       <div class="player">
-        <!-- 影片和封面從 Cloudflare Pages（同一個 repo 的鏡像）載入，GitHub Pages 在台灣太慢；Cloudflare 失敗時改用本站的檔案 -->
-        <video id="vid" controls preload="metadata" playsinline poster="https://learning-analytics-tools.pages.dev/weeks/week03/video/poster.jpg" width="1920" height="1080">
+        <!-- 影片以 HLS 從 Cloudflare Pages 播放（assets/video.js）；<source> 的 mp4 是 HLS 播不了時的備援 -->
+        <video id="vid" controls preload="metadata" playsinline data-hls="hls/index.m3u8" poster="https://learning-analytics-tools.pages.dev/weeks/week03/video/poster.jpg" width="1920" height="1080">
           <source src="https://learning-analytics-tools.pages.dev/weeks/week03/video/report-journey.mp4" type="video/mp4">
           <source src="report-journey.mp4" type="video/mp4">
           你的瀏覽器無法播放這支影片，可以<a href="https://learning-analytics-tools.pages.dev/weeks/week03/video/report-journey.mp4">直接下載 mp4</a>。
@@ -63,6 +63,8 @@
     </footer>
   </div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.15/hls.light.min.js" integrity="sha512-+s5Bl3QE0s/yJwRQ5TJLHFBaOQ133gm4y4zw6yzlZhVlQnX0zDuSD+vnW1J2Le0ZViiVspejpPfHX6YdBjHoNg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="../../../assets/video.js"></script>
 <script>
   (function () {
     const vid = document.getElementById("vid");
