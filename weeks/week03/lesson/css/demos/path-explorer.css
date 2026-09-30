@@ -1,0 +1,263 @@
+/* ==========================================================================
+   Demo: path-explorer（前綴 pe-）
+   ========================================================================== */
+
+.pe-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 1rem;
+  align-items: start;
+}
+.pe-grid > * { min-width: 0; }
+
+/* ---------------- 左：檔案樹 ---------------- */
+.pe-pane .pane-body { padding: .35rem .4rem .5rem; }
+
+.pe-treebox { position: relative; min-width: 0; }
+
+.pe-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .1rem .3rem;
+  padding: .3rem .5rem .4rem;
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.pe-top-seg {
+  padding: 0 .4rem;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  color: var(--ink-2);
+  transition: background .2s, border-color .2s;
+}
+.pe-top-seg.pe-hl { background: var(--agent-soft); border-color: var(--agent); color: var(--ink); }
+.pe-top-note { color: var(--ink-3); }
+
+.pe-arrow { color: var(--ink-3); flex: none; padding-inline: .1rem; }
+
+.pe-tree .tree-row { gap: .3rem; padding-block: .22rem; }
+.pe-tree .tree-row .name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.pe-tree .tree-row .tag { flex: none; }
+.pe-tree .tree-row .ico-file { color: var(--ink-3); }
+
+.pe-chev {
+  width: .9rem;
+  height: .9rem;
+  flex: none;
+  display: inline-flex;
+  color: var(--ink-3);
+  transition: transform .2s var(--ease);
+}
+.pe-chev svg { width: 100%; height: 100%; }
+.pe-chev.is-empty { visibility: hidden; }
+.pe-tree .tree-row[aria-expanded="true"] .pe-chev { transform: rotate(90deg); }
+
+/* 路徑上的祖先資料夾：淡青綠底 */
+.pe-tree .tree-row.pe-anc { background: color-mix(in srgb, var(--agent) 12%, transparent); }
+.pe-tree .tree-row.is-selected { background: var(--folder-soft); font-weight: 600; }
+.pe-tree .tree-row.pe-hl {
+  background: var(--agent-soft);
+  box-shadow: inset 0 0 0 2px var(--agent);
+}
+
+/* 選取時，從家目錄一層一層亮下來 */
+.pe-tree[data-par="0"] .tree-row.pe-anc,
+.pe-tree[data-par="0"] .tree-row.is-selected {
+  animation: pe-ping-a .6s var(--ease) backwards;
+  animation-delay: calc(var(--pe-i, 0) * 80ms);
+}
+.pe-tree[data-par="1"] .tree-row.pe-anc,
+.pe-tree[data-par="1"] .tree-row.is-selected {
+  animation: pe-ping-b .6s var(--ease) backwards;
+  animation-delay: calc(var(--pe-i, 0) * 80ms);
+}
+@keyframes pe-ping-a {
+  0%, 100% { box-shadow: inset 0 0 0 2px transparent; }
+  35% { box-shadow: inset 0 0 0 2px var(--agent); }
+}
+@keyframes pe-ping-b {
+  0%, 100% { box-shadow: inset 0 0 0 2px transparent; }
+  35% { box-shadow: inset 0 0 0 2px var(--agent); }
+}
+
+/* ---------------- 右：地址卡 ---------------- */
+.pe-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.pe-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .3rem .6rem;
+  padding: .5rem .85rem;
+  background: var(--folder-soft);
+  border-bottom: 1px solid color-mix(in srgb, var(--folder) 35%, transparent);
+}
+.pe-card-label { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-base); }
+.pe-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: .95rem;
+  padding: .85rem .9rem 1rem;
+  min-width: 0;
+}
+.pe-lab {
+  margin-bottom: .35rem;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--ink-3);
+}
+
+/* 麵包屑 */
+.pe-crumbs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .1rem;
+}
+.pe-step {
+  display: inline-flex;
+  align-items: center;
+  gap: .1rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.pe-crumbs.is-tracing .pe-step {
+  animation: pe-trace .42s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@keyframes pe-trace {
+  from { opacity: .3; transform: translateX(-14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.pe-seg {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: .2rem .55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  text-align: left;
+  overflow-wrap: anywhere;
+  transition: background .2s, border-color .2s;
+}
+button.pe-seg { cursor: pointer; }
+button.pe-seg:hover,
+.pe-seg.pe-hl { background: var(--agent-soft); border-color: var(--agent); }
+.pe-seg.is-top { border-style: dashed; background: transparent; color: var(--ink-2); }
+.pe-seg.is-top.pe-hl { background: var(--agent-soft); }
+.pe-seg.is-last { background: var(--folder-soft); border-color: var(--folder); font-weight: 600; }
+.pe-seg-ico { width: 1rem; height: 1rem; flex: none; display: inline-flex; color: var(--folder); }
+.pe-seg-ico svg { width: 100%; height: 100%; }
+
+/* 完整路徑（深色終端機底，兩種主題都一樣） */
+.pe-path {
+  display: block;
+  padding: .6rem .75rem;
+  border-radius: var(--radius-sm);
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.pe-p-sep { color: var(--term-path); padding-inline: .05em; }
+.pe-p-last { color: var(--term-accent); font-weight: 600; }
+
+.pe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .75rem;
+  margin-top: .5rem;
+}
+.pe-btn-ico { display: inline-flex; }
+.pe-copy.is-done { border-color: var(--new); background: var(--new-soft); color: var(--new); }
+.pe-copied {
+  min-height: 1.4em;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.pe-copied.is-ok { color: var(--new); }
+
+/* 說明 */
+.pe-explain {
+  min-height: 5.4rem;
+  padding: .7rem .85rem;
+  border-radius: var(--radius-sm);
+  background: var(--agent-soft);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+/* 寫法對照 */
+.pe-compare {
+  display: grid;
+  gap: .2rem;
+  padding-top: .75rem;
+  border-top: 1px dashed var(--line);
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
+.pe-compare .pe-lab { margin-bottom: .1rem; }
+.pe-cmp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .1rem .6rem;
+  padding: .2rem .5rem;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+.pe-cmp-row b { min-width: 4.4rem; font-weight: 700; }
+.pe-cmp-row.is-on { background: var(--folder-soft); color: var(--ink); }
+
+/* ---------------- 窄螢幕：上下堆疊 ---------------- */
+@media (max-width: 760px) {
+  .pe-grid { grid-template-columns: minmax(0, 1fr); }
+  .pe-treebox { max-height: 17rem; overflow-y: auto; overscroll-behavior: contain; }
+}
+@media (max-width: 420px) {
+  .demo-body .pe-grid { gap: .8rem; }
+  .pe-card-body { padding: .75rem .7rem .9rem; }
+}
+@media (pointer: coarse) {
+  .pe-tree .tree-row { min-height: 2.4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pe-crumbs.is-tracing .pe-step,
+  .pe-tree[data-par] .tree-row { animation: none !important; }
+}

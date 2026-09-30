@@ -1,0 +1,323 @@
+/* ==========================================================================
+   Demo: agent-loop —「一步一步看 Codex 工作」   前綴：al-
+   ========================================================================== */
+
+/* 動作類型的代表色（圓點、圖例、說明框、飛行標籤共用） */
+.al-root { --al-c: var(--ink-3); }
+.al-k-user   { --al-c: var(--ink-3); }
+.al-k-read   { --al-c: var(--folder); }
+.al-k-cmd    { --al-c: var(--agent); }
+.al-k-create { --al-c: var(--new); }
+.al-k-edit   { --al-c: var(--mod); }
+.al-k-report { --al-c: var(--ink); }
+
+/* ---------------- 控制列 ---------------- */
+.al-root .al-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+  min-width: 0;
+}
+.al-root .al-play-ico { display: inline-flex; }
+.al-root .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.al-root .btn[aria-disabled="true"]:not(.btn-primary):not(.btn-quiet):hover {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.al-root .al-count {
+  min-width: 3.6em;
+  padding-inline: .3rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- 步驟圓點（分段條） ---------------- */
+.al-root .al-strip {
+  padding: .45rem 1rem .6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  min-width: 0;
+}
+.al-root .al-dots {
+  display: flex;
+  gap: 4px;
+}
+.al-root .al-dot {
+  appearance: none;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 1.8rem;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.al-root .al-dot::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: .5rem;
+  margin-top: -.25rem;
+  border-radius: .25rem;
+  background: var(--al-c);
+  opacity: .3;
+  transition: opacity .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease);
+}
+.al-root .al-dot:hover::before { opacity: .65; }
+.al-root .al-dot.is-done::before { opacity: .85; }
+.al-root .al-dot.is-current::before {
+  opacity: 1;
+  transform: scaleY(1.6);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--al-c) 30%, transparent);
+}
+
+.al-root .al-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .1rem .9rem;
+  margin-top: .1rem;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.al-root .al-legend-lead { color: var(--ink-3); }
+.al-root .al-key { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.al-root .al-key i {
+  display: block;
+  width: .6rem;
+  height: .6rem;
+  border-radius: 50%;
+  background: var(--al-c);
+}
+
+/* ---------------- 版面 ---------------- */
+.al-root .al-body { position: relative; }
+.al-root .al-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+@media (max-width: 760px) {
+  .al-root .al-cols { grid-template-columns: minmax(0, 1fr); }
+}
+.al-root .al-cols > .pane { min-width: 0; }
+.al-root .pane-head .pane-name { flex: none; }
+.al-root .pane-head .pane-path { flex: 0 1 auto; }
+
+/* ---------------- 左：Codex 對話記錄 ---------------- */
+.al-root .al-term {
+  flex: 1 1 20rem;          /* 約 320px；內容再多就在框內捲動 */
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+  scrollbar-color: var(--term-dim) transparent;
+  overscroll-behavior: contain;
+}
+.al-root .al-term:focus-visible { outline-offset: -3px; }
+
+.al-root .al-banner {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  padding: .4rem .7rem;
+  border: 1px solid color-mix(in srgb, var(--term-dim) 60%, transparent);
+  border-radius: 6px;
+}
+.al-root .al-brand { color: var(--term-accent); font-weight: 700; }
+.al-root .al-banner b { color: var(--term-fg); }
+
+.al-root .al-block {
+  display: flex;
+  flex-direction: column;
+  gap: .12rem;
+  margin-top: .55rem;
+  padding: .35rem .5rem;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  transition: opacity .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease);
+}
+.al-root .al-block.is-past { opacity: .6; }
+.al-root .al-block.is-current {
+  border-left-color: var(--term-accent);
+  background: color-mix(in srgb, var(--term-accent) 9%, transparent);
+}
+
+.al-root .al-ln { display: flex; gap: .6ch; min-width: 0; }
+.al-root .al-pfx { flex: none; width: 1.4ch; color: var(--term-dim); }
+.al-root .al-tx { flex: 1 1 auto; min-width: 0; }
+.al-root .al-ln.is-in { animation: al-in .28s var(--ease) both; }
+@keyframes al-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 使用者說的話 */
+.al-root .al-user {
+  padding: .3rem .5rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--term-fg) 10%, transparent);
+}
+.al-root .al-user .al-pfx { color: var(--term-accent); font-weight: 700; }
+
+/* Codex 的動作標題：Read / Added / Edited */
+.al-root .al-verb { font-weight: 700; color: var(--term-fg); }
+.al-root .al-meta { color: var(--term-dim); }
+
+/* 指令與輸出 */
+.al-root .al-cmd .al-pfx { color: var(--term-dim); }
+.al-root .al-quote,
+.al-root .al-out,
+.al-root .al-err,
+.al-root .al-add,
+.al-root .al-del,
+.al-root .al-more { margin-left: 2ch; }
+.al-root .al-quote .al-tx { color: color-mix(in srgb, var(--term-fg) 88%, transparent); }
+.al-root .al-more .al-tx { color: var(--term-dim); }
+.al-root .al-err .al-tx { color: color-mix(in srgb, var(--out) 55%, var(--term-fg)); }
+
+/* 程式碼差異 */
+.al-root .al-add,
+.al-root .al-del {
+  padding-right: .3rem;
+  border-radius: 3px;
+}
+.al-root .al-add { background: color-mix(in srgb, var(--new) 22%, transparent); }
+.al-root .al-add .al-pfx { color: color-mix(in srgb, var(--new) 55%, var(--term-fg)); font-weight: 700; }
+.al-root .al-del { background: color-mix(in srgb, var(--out) 22%, transparent); }
+.al-root .al-del .al-pfx { color: color-mix(in srgb, var(--out) 55%, var(--term-fg)); font-weight: 700; }
+.al-root .al-del .al-tx { color: color-mix(in srgb, var(--out) 40%, var(--term-fg)); }
+
+/* ---------------- 右：資料夾 ---------------- */
+.al-root .al-tree-pane { position: relative; }
+.al-root .al-tree-pane .pane-body { padding: .5rem; min-height: 20.5rem; }
+.al-root .al-tree .tree-row.is-selected .chip-folder { background: var(--surface); }
+.al-root .al-tree .tree-row.al-run { background: var(--agent-soft); }
+.al-root .al-tree .tree-row.al-run .name { color: var(--agent); font-weight: 600; }
+.al-root .al-tree-foot {
+  padding: .5rem .8rem;
+  border-top: 1px dashed var(--line);
+  font-size: var(--fs-xs);
+  line-height: 1.8;
+  color: var(--ink-2);
+}
+.al-root .al-tree-foot code { font-size: 1em; }
+
+/* 檔案飛行的小標籤 */
+.al-root .al-fly {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .15rem .65rem .15rem .5rem;
+  border: 1.5px solid var(--al-c);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.al-root .al-fly svg { width: 1rem; height: 1rem; flex: none; color: var(--al-c); }
+
+/* ---------------- 下：這一步實際發生了什麼 ---------------- */
+.al-root .al-explain {
+  margin-top: 1rem;
+  padding: .8rem 1.1rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--al-c) 35%, var(--line));
+  border-left: 4px solid var(--al-c);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--al-c) 6%, var(--surface));
+  min-width: 0;
+  transition: border-color .3s var(--ease), background-color .3s var(--ease);
+}
+.al-root .al-eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-2);
+}
+.al-root .al-what {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .3rem .6rem;
+  margin-top: .3rem;
+  min-width: 0;
+}
+.al-root .al-what strong { min-width: 0; overflow-wrap: anywhere; }
+.al-root .al-what strong.is-mono { font-family: var(--font-mono); font-size: .95em; }
+.al-root .al-explain-text {
+  margin-top: .3rem;
+  line-height: 1.8;
+  color: var(--ink);
+}
+
+.al-root .al-paths {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-top: .8rem;
+  padding: .7rem .9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  min-width: 0;
+}
+.al-root .al-paths-title { font-size: var(--fs-sm); font-weight: 700; }
+.al-root .al-paths ul {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.al-root .al-paths li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .25rem .6rem;
+  min-width: 0;
+}
+.al-root .al-paths code { font-size: var(--fs-xs); line-height: 1.8; }
+
+/* 只給讀螢幕程式的人看 */
+.al-root .al-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 480px) {
+  .al-root .al-legend-lead { flex-basis: 100%; }
+  .al-root .demo-body { padding: .8rem; }
+  .al-root .al-explain { padding-inline: .9rem; }
+}
