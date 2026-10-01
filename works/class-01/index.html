@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 ?s= 等參數
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-ui="works.doc">作品集｜Learning Analytics Tools</title>
+<meta name="description" content="Learning Analytics Tools 課程的學生作品：同學在課堂練習做的網頁，依練習分類，可以一件一件打開來看。" data-ui-attr="content:works.desc">
+<meta name="author" content="JUNHAO CHEN">
+<meta name="copyright" content="© 2026 JUNHAO CHEN">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="../../assets/week.css">
+<link rel="stylesheet" href="../../assets/works.css">
+<!-- 多語系要比其他程式先載入（不要 defer） -->
+<script src="../../assets/i18n-strings.js"></script>
+<script src="../../assets/i18n.js"></script>
+<script src="../../assets/course.js" defer></script>
+</head>
+<body data-root="../../">
+<div class="page">
+  <header class="top">
+    <a class="brand" href="../../">
+      <span class="brand-name">Learning Analytics Tools</span>
+      <span class="brand-sub" data-ui="brand.sub">NTNU・課程教材・Week 3 – 16</span>
+    </a>
+    <a class="pill nav-works" href="../../works/" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5zm9 0h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5zm-9 9h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5zm9 0h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span data-ui="nav.works">作品集</span></a>
+    <button class="pill icon-only" id="themeBtn" type="button">深色</button>
+  </header>
+
+  <!-- 內容由 assets/works.js 依 assets/works-data.js 產生；data-cat 是練習分類的代號（作品集首頁沒有） -->
+  <main id="works" data-cat="class-01"></main>
+
+  <footer class="foot">
+    <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
+    <span><span data-ui="footer.works">Copyright © 2026 JUNHAO CHEN・程式碼 MIT・學生作品的著作權屬於各作者</span> <a class="foot-lic" href="https://github.com/bigmoumou/Learning-Analytics-Tools#授權" data-ui="footer.license" data-ui-attr="href:footer.licenseUrl">授權說明</a></span>
+    <a href="../../" data-ui="nav.home">回到課程首頁</a>
+  </footer>
+</div>
+
+<script src="../../assets/works-data.js"></script>
+<script src="../../assets/works.js"></script>
+</body>
+</html>

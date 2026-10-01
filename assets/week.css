@@ -79,6 +79,12 @@ body::after {
 .pill.icon-only { width: 2.5rem; padding: 0; }
 .pill.icon-only span { display: none; }
 .pill.solid { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* 頂列的「作品集」按鈕：在作品集頁時反白；很窄的手機只留圖示 */
+.pill.nav-works[aria-current="page"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+@media (max-width: 430px) {
+  .pill.nav-works { width: 2.5rem; padding: 0; }
+  .pill.nav-works span { display: none; }
+}
 
 /* 語言選單（assets/i18n.js 加在主題按鈕前面）：看起來是一顆小按鈕，點下去是瀏覽器原生的選單 */
 .lang-switch { position: relative; flex: none; padding: 0 .85rem; }

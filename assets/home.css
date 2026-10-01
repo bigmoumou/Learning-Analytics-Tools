@@ -265,6 +265,8 @@ body.index-open .hud-top { background: var(--bg); padding-bottom: .9rem; border-
   .info-meta { font-size: .9rem; }
   #viewLabel { display: none; }
   #viewBtn { width: 2.5rem; padding: 0; }
+  .nav-works span { display: none; }
+  .nav-works { width: 2.5rem; padding: 0; }
   .lang-switch { width: 2.5rem; padding: 0; }
   .lang-switch svg { display: none; }
   .index-row { grid-template-columns: 3.6rem minmax(0, 1fr); }

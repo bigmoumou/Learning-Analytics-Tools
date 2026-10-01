@@ -1,0 +1,73 @@
+/* ==========================================================================
+   作品集（works/）：疊在 week.css 上面，和週次頁同一套樣子
+   - 練習分類：細線分隔的編號列，右邊露出幾張作品縮圖
+   - 一個練習的作品：縮圖格線，下面是遮蔽後的學號
+   - 在網站裡看作品：上方一條細列，下面整塊是學生的網頁
+   ========================================================================== */
+
+/* ---------- 作品集首頁：練習分類 ---------- */
+.cats { list-style: none; margin: 0; padding: clamp(1rem, 3vw, 2rem) 0 0; max-width: 60rem; }
+.cat {
+  display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 1rem; align-items: center;
+  padding: 1.4rem 0; border-top: 1px solid var(--line); text-decoration: none;
+}
+.cats li:last-child .cat { border-bottom: 1px solid var(--line); }
+.cat-n { font-family: var(--font-mono); font-weight: 700; font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1; color: var(--ink-3); letter-spacing: -.02em; transition: color .2s; }
+.cat-text { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.cat-t { font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 700; line-height: 1.35; }
+.cat-m { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .04em; color: var(--ink-3); }
+.cat-peek { display: flex; gap: .4rem; }
+.cat-peek img { display: block; width: 5.6rem; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border-radius: 4px; outline: 1px solid var(--line); opacity: .8; transition: opacity .3s; }
+a.cat:hover .cat-n { color: var(--accent); }
+a.cat:hover .cat-t { text-decoration: underline; text-underline-offset: .22em; }
+a.cat:hover .cat-peek img { opacity: 1; }
+.cat.is-empty .cat-t { color: var(--ink-2); }
+.works-none, .works-missing { color: var(--ink-3); font-size: .95rem; }
+
+/* ---------- 一個練習的作品：縮圖格線 ---------- */
+.shots {
+  list-style: none; margin: 0; padding: clamp(1rem, 3vw, 2rem) 0 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); gap: clamp(1.4rem, 2.4vw, 2.2rem) clamp(1rem, 2vw, 1.6rem);
+}
+.shot { display: flex; flex-direction: column; gap: .6rem; text-decoration: none; }
+.shot-img { display: block; aspect-ratio: 16 / 10; border-radius: 6px; overflow: hidden; background: var(--btn); outline: 1px solid var(--line); }
+.shot-img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform .6s var(--ease); }
+.shot-label { font-family: var(--font-mono); font-size: .86rem; font-weight: 700; letter-spacing: .06em; color: var(--ink-2); transition: color .2s; }
+.shot:hover .shot-img img { transform: scale(1.03); }
+.shot:hover .shot-label { color: var(--accent); }
+
+/* ---------- 在網站裡看作品 ---------- */
+body.is-viewing { overflow: hidden; }
+body.is-viewing .page { visibility: hidden; }
+body.is-viewing::after { display: none; } /* 不要在學生的網頁上蓋一層顆粒 */
+.viewer { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: var(--bg); }
+.vbar {
+  flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .8rem;
+  height: 3.5rem; padding: 0 var(--gutter); border-bottom: 1px solid var(--line);
+}
+.vback { display: inline-flex; align-items: center; gap: .5rem; min-width: 0; font-size: .9rem; font-weight: 700; text-decoration: none; color: var(--ink-2); }
+.vback svg { width: 1.1rem; height: 1.1rem; flex: none; }
+.vback-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vback:hover { color: var(--ink); }
+.vback:hover .vback-t { text-decoration: underline; text-underline-offset: .2em; }
+.vwho { display: flex; align-items: baseline; gap: .8rem; font-family: var(--font-mono); white-space: nowrap; }
+.vlabel { font-size: 1rem; font-weight: 700; letter-spacing: .06em; }
+.vcount { font-size: .78rem; color: var(--ink-3); }
+.vnav { justify-self: end; display: flex; gap: .4rem; }
+.round {
+  display: inline-grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--btn); color: inherit; transition: background-color .2s;
+}
+.round:hover { background: var(--btn-hover); }
+.round svg { width: 1.05rem; height: 1.05rem; }
+.vframe { flex: 1 1 auto; width: 100%; border: 0; background: #fff; }
+@media (max-width: 760px) {
+  .cat { grid-template-columns: 2.8rem minmax(0, 1fr); gap: .6rem; }
+  .cat-peek { display: none; }
+  .vbar { grid-template-columns: auto minmax(0, 1fr) auto; height: 3.2rem; }
+  .vback-t { display: none; }
+  .vwho { justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shot-img img { transition: none; }
+}

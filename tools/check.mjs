@@ -13,6 +13,9 @@
 //      data-ui 用到的 key 都存在；data-i18n、data-i18n-attr 的元素都有 data-zh-hans、data-en、data-vi；
 //      已開放的週次在 WEEKS 裡有三種語言的 title、summary、meta
 //   9. 提醒：weeks/ 裡不該有 mp4（只放 HLS）、頁面裡還有「待填」、總容量接近 GitHub Pages 的 1 GB
+//  10. 作品集：assets/works-data.js 的每個分類都有頁面和三種語言的標題；每件作品都有資料夾（index.html）
+//      和縮圖；代號是遮蔽過的（有 x）；works/<分類>/ 裡沒有沒登記的資料夾。學生的網頁不套用 2、3、8 的規定，
+//      只檢查檔案大小，找不到的本機檔案列成提醒
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
@@ -61,6 +64,8 @@ const exists = (p) => {
 
 const files = walk(ROOT);
 const published = files.filter((f) => !rel(f).startsWith("tools/"));
+// 作品集裡學生的網頁（works/<分類>/<代號>/…）：原封不動放上來，不套用網站自己的規定
+const isStudent = (f) => /^works\/[^/]+\/(?!_thumbs\/)[^/]+\//.test(rel(f));
 
 // 1. 檔案大小
 let total = 0;
@@ -91,7 +96,7 @@ for (const l of LANGS) {
 
 // 2、3、4、8. 頁面
 const playlists = new Set();
-const pages = published.filter((f) => f.endsWith(".html"));
+const pages = published.filter((f) => f.endsWith(".html") && !isStudent(f));
 for (const page of pages) {
   const html = fs.readFileSync(page, "utf8");
   for (const need of ["i18n-strings.js", "i18n.js"]) {
@@ -177,6 +182,46 @@ for (const week of fs.existsSync(weeksDir) ? fs.readdirSync(weeksDir) : []) {
       if (!fs.existsSync(path.join(d, need))) error(`weeks/${week}/video/${slug}/ 少了 ${need}（用 tools/publish-video.sh 產生）`);
     }
     if (!pageHtml.includes(`video/${slug}/hls/index.m3u8`)) warn(`weeks/${week}/index.html 沒有用到 video/${slug}/`);
+  }
+}
+
+// 10. 作品集
+const worksDataPath = path.join(ROOT, "assets/works-data.js");
+if (fs.existsSync(worksDataPath)) {
+  const wctx = { window: {} };
+  try {
+    vm.runInNewContext(fs.readFileSync(worksDataPath, "utf8"), wctx);
+  } catch (e) {
+    error(`assets/works-data.js 讀不進來：${e.message}`);
+  }
+  for (const c of wctx.window.WORKS || []) {
+    const dir = path.join(ROOT, "works", c.slug);
+    if (!fs.existsSync(path.join(dir, "index.html"))) error(`作品集分類 ${c.slug} 沒有 works/${c.slug}/index.html`);
+    for (const l of LANGS.slice(1)) {
+      const v = c.i18n && c.i18n[l] && c.i18n[l].title;
+      if (!v || !String(v).trim() || String(v).includes("待填")) error(`assets/works-data.js 的 ${c.slug} 少了 ${l} 的 title（寫在 i18n["${l}"]）`);
+    }
+    const codes = new Set();
+    for (const it of c.items || []) {
+      codes.add(it.code);
+      if (!/x/.test(it.code)) warn(`作品集 ${c.slug}/${it.code}：代號沒有遮蔽（應該像 41xxxxx23）`);
+      if (!fs.existsSync(path.join(dir, it.code, "index.html"))) error(`作品集 ${c.slug}/${it.code}/ 少了 index.html`);
+      if (!fs.existsSync(path.join(dir, "_thumbs", `${it.code}.jpg`))) error(`作品集 ${c.slug}/_thumbs/${it.code}.jpg 不存在（用 tools/add-works.mjs 重新匯入會補上）`);
+    }
+    if (fs.existsSync(dir)) {
+      for (const d of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (d.isDirectory() && d.name !== "_thumbs" && !codes.has(d.name)) warn(`works/${c.slug}/${d.name}/ 沒有登記在 assets/works-data.js，頁面上看不到`);
+      }
+    }
+  }
+  for (const f of published.filter((p) => isStudent(p) && p.endsWith(".html"))) {
+    const html = fs.readFileSync(f, "utf8");
+    for (const m of html.matchAll(/\s(?:href|src)\s*=\s*["']([^"']+)["']/gi)) {
+      const ref = m[1].trim();
+      if (/^(https?:|\/\/|mailto:|tel:|data:|javascript:|#|\{|\$)/i.test(ref) || ref.includes("${")) continue;
+      const target = resolveRef(f, ref);
+      if (target && !exists(target)) warn(`${rel(f)}：${ref} 找不到（學生的網頁）`);
+    }
   }
 }
 
