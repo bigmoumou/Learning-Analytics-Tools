@@ -17,7 +17,7 @@
 
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
-  --gutter: clamp(16px, 4vw, 44px);
+  --gutter: clamp(16px, 3.2vw, 44px);  /* 和首頁一樣，頂列的位置才不會跳 */
   --wide: 72rem;
   --ease: cubic-bezier(.2, .7, .2, 1);
   color-scheme: light;
@@ -56,7 +56,9 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.page { width: 100%; max-width: var(--wide); margin-inline: auto; padding: 0 var(--gutter) 4rem; }
+/* 頂列和頁尾橫跨整個畫面（和首頁一樣靠左右兩邊），只有中間的內容限制寬度、置中 */
+.page { width: 100%; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; padding: 0 var(--gutter); }
+.page > main { width: 100%; max-width: var(--wide); margin-inline: auto; padding-bottom: clamp(3rem, 7vw, 5rem); }
 
 /* ---------- 頂列（和首頁一樣） ---------- */
 .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-top: max(14px, env(safe-area-inset-top)); }
@@ -138,12 +140,20 @@ body::after {
 .pager a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .pager span { color: var(--ink-3); font-weight: 500; }
 
-.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1.2rem; padding-top: 2.4rem; font-size: .78rem; color: var(--ink-3); }
+/* 頁尾：貼在最下面，上緣一條橫跨整個畫面的細線；左、中（版權）、右三欄，中間那欄真正置中 */
+.foot {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline; gap: .4rem 1.2rem;
+  margin-top: auto; margin-inline: calc(var(--gutter) * -1); padding: 1.3rem var(--gutter) max(1.4rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line); font-size: .78rem; color: var(--ink-3);
+}
 .foot a { color: var(--ink-3); }
+.foot > :nth-child(3) { justify-self: end; }
 
 @media (max-width: 760px) {
   .chapters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .points li { grid-template-columns: 2.8rem minmax(0, 1fr); gap: .6rem; }
+  .foot { grid-template-columns: minmax(0, 1fr); }
+  .foot > :nth-child(3) { justify-self: start; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .001ms !important; }
