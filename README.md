@@ -8,37 +8,66 @@ Learning Analytics Tools Implementation Applications (NTNU) 課程教材網站�
 所以不再用它當網址；它仍然開著，只負責把舊網址 https://bigmoumou.github.io/Learning-Analytics-Tools/
 轉到 Cloudflare 上的同一頁（每一頁 `<head>` 最前面的轉址程式，加上 `404.html`）。
 
-每週（Week 3 – Week 16）只有一頁：一支短影片，加上幾則重點說明，不再往下分頁。
+每週（Week 3 – Week 16）只有一頁：標題，接著每支影片一段（影片、片段、幾則重點），不再往下分頁。
+一週通常有兩支以上的影片。
 
 ## 結構
 
 ```
 index.html              課程首頁：全螢幕膠捲，片頭 + Week 3–16 各一格，點已開放的畫格進入
 404.html                找不到頁面；也負責把 github.io 上不存在的舊網址轉到 Cloudflare
+_redirects              Cloudflare 轉址：搬走或拿掉的舊網址轉到新的位置
 assets/
   home.css, home.js     首頁的樣式和膠捲（原生 WebGL2，不用函式庫；膠捲停住時不重畫）；
                         不支援 WebGL2 時改顯示週次清單
   week.css              每週頁面和 404 的樣式（和首頁同一套風格）
   course.js             課程資料（每週標題、狀態、連結、圖片）和共用行為（主題切換、上一週／下一週）
-  video.js              每週頁面共用：用 hls.js 播放 HLS，失敗時退回 mp4
-tools/
-  make-hls.sh           把 mp4 切成 HLS 小段
+  video.js              每週頁面共用：播放 HLS、片段按鈕、#t= 連結、一次只播一支
+  vendor/               hls.js 1.6.15（Apache-2.0，授權在 hls.LICENSE.txt）
 weeks/
   week03/
-    index.html          Week 3 的唯一一頁：標題、影片（含片段）、5 則重點
-    video/              影片檔（report-journey.mp4、hls/、poster.jpg、thumb.jpg）
-_redirects              Cloudflare 轉址：舊的 Week 3 影片頁、網頁教學頁轉到週次頁
+    index.html          Week 3 的頁面：每支影片一個 <section class="unit" id="NN-slug">
+    video/
+      01-report-journey/  hls/（index.m3u8、init.mp4、segNN.m4s）、poster.jpg、thumb.jpg
+tools/                  不會出現在網頁上的工具（Cloudflare 也會部署，但沒有頁面連過去）
+  new-video.sh          開一支新影片：製作資料夾、影片資料夾、週次頁的段落
+  publish-video.sh      把做好的影片壓縮、切成 HLS，擷取封面和縮圖
+  check.mjs             推上去之前的檢查
+  template/             週次頁和影片段落的範本
+```
+
+做影片用的 HTML/CSS/JS、音訊和成品不放進這個 repo，放在旁邊的 `製作/`，名稱和網站上的影片資料夾一樣：
+
+```
+師大教材/
+  Learning-Analytics-Tools/       這個 repo（只放要公開的東西）
+  製作/
+    week03/
+      01-report-journey/          opus-video 專案：brief.md、source/、hf/、audio/、qa/、out/final.mp4
 ```
 
 純 HTML、CSS、JavaScript，不需要建置步驟。
 
-## 新增一週
+## 新增一支影片
 
-1. 複製 `weeks/week03/`，改名成 `weeks/weekNN/`（例如 `week04`）。
-2. 換掉 `video/` 裡的影片檔，修改 `weeks/weekNN/index.html` 的標題、一句話說明、片段時間、重點和 `data-week`。
-   重點寫短句就好，不要加小標題。
-   每一頁的 `<head>` 都要保留最前面那段 github.io 轉址程式；新做的頁面從 Week 3 複製過去。
-3. 在 `assets/course.js` 的 `WEEKS` 加上這一週：
+```bash
+tools/new-video.sh 4 01-relative-path "相對路徑的起點"
+```
+
+1. 上面這行會建立 `製作/week04/01-relative-path/`、`weeks/week04/video/01-relative-path/`，
+   這週還沒有頁面時從範本建立 `weeks/week04/index.html`，並在頁面上加一段這支影片。
+   slug 用「兩位數字-英文小寫」：數字是這週的第幾支，英文描述主題。
+2. 在 `製作/week04/01-relative-path/` 做影片，成品放在 `out/final.mp4`。
+3. 放上網站：
+
+   ```bash
+   tools/publish-video.sh "../製作/week04/01-relative-path/out/final.mp4" weeks/week04/video/01-relative-path 12
+   ```
+
+   最後的 `12` 是封面取第幾秒的畫面（可省略：已有封面時不動，沒有時取 30% 的位置）。
+   影片會重新壓縮（H.264 CRF 23），每 8 秒一個關鍵影格，切成 8 秒一段的 HLS。
+4. 補完週次頁裡「待填」的地方：標題、說明、片段時間（`data-t` 是秒數）、重點。重點寫短句就好，不要加小標題。
+5. 這週第一次開放時，在 `assets/course.js` 的 `WEEKS` 加上這一週：
 
    ```js
    4: {
@@ -46,32 +75,24 @@ _redirects              Cloudflare 轉址：舊的 Week 3 影片頁、網頁教�
      title: "這週的標題",
      summary: "一兩句話的摘要",
      href: "weeks/week04/",
-     thumb: "weeks/week04/video/thumb.jpg",   // 清單用的小圖（800×450）
-     still: "weeks/week04/video/poster.jpg",  // 膠捲畫格用的大圖（1920×1080）
-     meta: "影片 N 分 NN 秒・N 則重點",          // 首頁顯示的一行說明
+     thumb: "weeks/week04/video/01-relative-path/thumb.jpg",   // 清單用的小圖（800×450）
+     still: "weeks/week04/video/01-relative-path/poster.jpg",  // 膠捲畫格用的大圖（1920×1080）
+     meta: "2 支影片・共 3 分鐘",                                // 首頁顯示的一行說明
    },
    ```
 
    首頁膠捲會自動把這一格從「準備中」換成影片封面，開場也會停在最新開放的一週。
-
-4. 產生影片的 HLS 小段（見下面「影片」）。
-5. commit、push 到 `main`，Cloudflare Pages 會自動更新（約 1 分鐘）。
+6. `node tools/check.mjs`，沒有錯誤再 commit、push 到 `main`（Cloudflare Pages 約 1 分鐘更新）。
 
 ## 影片
 
-週次頁的 `<video>` 用 `data-hls="video/hls/index.m3u8"` 指向 HLS，由 `assets/video.js` 播放。
-Cloudflare Pages 不支援 Range 請求，直接放 mp4 會無法跳轉，所以要切成小段：
-
-```bash
-tools/make-hls.sh weeks/week04/video/影片.mp4
-```
-
-- 不重新壓縮，切點在關鍵影格上；請維持 x264 預設的關鍵影格間隔（30 fps 約 8 秒一段）。
-- mp4 仍然留在 `video/`，當 HLS 播不了時的備援和下載連結。
-- 每個檔案都要小於 25 MiB（Cloudflare Pages 的上限，超過時整個部署會失敗）。
-- 週次頁要照 Week 3 的順序載入 hls.js（cdnjs，含 integrity）和 `assets/video.js`，放在頁面自己的影片程式之前。
-- 這台電腦的 ffmpeg 不在 PATH，執行時加上
-  `FFMPEG=/c/Users/bigmoumou/anaconda3/envs/opus-video/Library/bin/ffmpeg.exe`。
+- 網站只放 HLS，不放 mp4：Cloudflare Pages 不支援 Range 請求，mp4 放上去無法跳轉；而且同一支影片存兩份，
+  14 週下來會超過 GitHub Pages 1 GB 的上限。mp4 留在 `製作/` 裡。
+- 每個檔案都要小於 25 MiB（Cloudflare Pages 的上限，超過時整個部署會失敗）。`publish-video.sh` 和 `check.mjs` 都會檢查。
+- 週次頁先載入 `assets/vendor/hls.light.min.js`，再載入 `assets/video.js`（範本已經寫好）。
+- 連結到影片的某個時間：`weeks/week04/#t=30` 是第一支影片的 30 秒，`weeks/week04/#02-find-files&t=30` 是指定的那一支。
+- 影片確定了再 commit：重新渲染過的舊版本會一直留在 git 歷史裡，讓 repo 越來越大。
+- `publish-video.sh` 會自己找 ffmpeg（PATH，或 opus-video conda 環境裡的那一份）；要指定時用 `FFMPEG=...`。
 
 ## 本機預覽
 
@@ -81,4 +102,4 @@ tools/make-hls.sh weeks/week04/video/影片.mp4
 python -m http.server 8000
 ```
 
-直接雙擊 `index.html` 也看得到，但瀏覽器的安全限制會讓首頁膠捲裡的影片封面圖顯示不出來。
+直接雙擊 `index.html` 也看得到，但瀏覽器的安全限制會讓首頁膠捲裡的影片封面圖和週次頁的影片顯示不出來。

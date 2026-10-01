@@ -1,7 +1,7 @@
 /* ==========================================================================
    Learning Analytics Tools — 每週頁面（也給 404 用）
    和首頁同一套風格：黑白為主、琥珀色點綴、影片放在一段膠捲裡。
-   一週只有一頁：標題、影片、片段、幾則重點，不再往下分頁。
+   一週只有一頁：標題，接著每支影片一段（影片、片段、幾則重點），不再往下分頁。
    ========================================================================== */
 :root {
   --bg: #ebe9e4;
@@ -83,6 +83,11 @@ body::after {
 .head h1 { font-size: clamp(2rem, 5.2vw, 3.6rem); font-weight: 700; line-height: 1.14; letter-spacing: .005em; text-wrap: balance; }
 .head .lede { font-size: clamp(1.02rem, 1.6vw, 1.15rem); color: var(--ink-2); line-height: 1.75; text-wrap: pretty; }
 
+/* ---------- 每支影片一段（section.unit） ---------- */
+.unit + .unit { margin-top: clamp(3.4rem, 9vw, 6rem); }
+.unit-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .9rem; margin-bottom: 1rem; font-size: clamp(1.3rem, 2.6vw, 1.7rem); font-weight: 700; line-height: 1.3; }
+.unit-num { font-family: var(--font-mono); font-size: .76rem; font-weight: 700; letter-spacing: .14em; color: var(--accent); }
+
 /* ---------- 影片：放在一段膠捲裡 ---------- */
 .film {
   position: relative; background: var(--film); border-radius: 14px;
@@ -97,6 +102,8 @@ body::after {
 .film::after { bottom: clamp(9px, 1.2vw, 14px); }
 .player { position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: #000; }
 .player video { display: block; width: 100%; height: 100%; background: #000; }
+/* video.js 在影片載入失敗時加上的說明 */
+.video-error { position: absolute; left: 0; right: 0; bottom: 0; padding: .8rem 1rem; background: rgba(0, 0, 0, .78); color: #fff; font-size: .92rem; line-height: 1.6; }
 
 /* 片段：影片下面一條時間軸，點了直接跳過去 */
 .chapters { list-style: none; margin: 0; padding: 1.1rem 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .2rem 1rem; }

@@ -5,3 +5,7 @@
 /weeks/week03/lesson/  /weeks/week03/   301
 /weeks/week03/lesson   /weeks/week03/   301
 /weeks/week03/lesson/* /weeks/week03/   301
+# Week 3 的影片檔搬到 video/01-report-journey/（2026-10-01）：已經開著的舊頁面還讀得到
+/weeks/week03/video/hls/*      /weeks/week03/video/01-report-journey/hls/:splat   301
+/weeks/week03/video/poster.jpg /weeks/week03/video/01-report-journey/poster.jpg   301
+/weeks/week03/video/thumb.jpg  /weeks/week03/video/01-report-journey/thumb.jpg    301

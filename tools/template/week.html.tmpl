@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week {{WEEK}}｜待填：這週的標題</title>
+<meta name="description" content="Week {{WEEK}}：待填：一句話說明這週學什麼。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="../../assets/week.css">
+<script src="../../assets/course.js" defer></script>
+</head>
+<body data-root="../../">
+<div class="page">
+  <header class="top">
+    <a class="brand" href="../../">
+      <span class="brand-name">Learning Analytics Tools</span>
+      <span class="brand-sub">NTNU・課程教材・Week 3 – 16</span>
+    </a>
+    <button class="pill icon-only" id="themeBtn" type="button">深色</button>
+  </header>
+
+  <main>
+    <div class="head">
+      <p class="kicker"><span class="dot" aria-hidden="true"></span>WEEK {{WEEK2}}</p>
+      <h1>待填：這週的標題</h1>
+      <p class="lede">待填：一兩句話說明這週要看懂什麼。</p>
+    </div>
+
+    <!-- 一支影片一個 section：id 和 video/ 裡的資料夾同名；影片、片段、重點都由 assets/video.js 接起來 -->
+
+    <nav class="pager" id="pager" data-week="{{WEEK}}" aria-label="其他週次"></nav>
+  </main>
+
+  <footer class="foot">
+    <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
+    <a href="../../">回到課程首頁</a>
+  </footer>
+</div>
+
+<!-- 先 hls.js、再 video.js（播放、片段、#t= 連結都在 video.js） -->
+<script src="../../assets/vendor/hls.light.min.js"></script>
+<script src="../../assets/video.js"></script>
+</body>
+</html>

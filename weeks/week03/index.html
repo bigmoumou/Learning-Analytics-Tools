@@ -34,34 +34,37 @@
       <p class="lede">Codex 這類 AI 助理都以「一個資料夾」為工作單位。看懂這件事，就知道檔案在哪裡、它做了什麼、做完的東西去了哪。</p>
     </div>
 
-    <div class="film">
-      <div class="player">
-        <!-- 影片以 HLS 播放（assets/video.js）；<source> 的 mp4 是 HLS 播不了時的備援 -->
-        <video id="vid" controls preload="metadata" playsinline data-hls="video/hls/index.m3u8" poster="video/poster.jpg" width="1920" height="1080">
-          <source src="video/report-journey.mp4" type="video/mp4">
-          你的瀏覽器無法播放這支影片，可以<a href="video/report-journey.mp4">直接下載 mp4</a>。
-        </video>
+    <!-- 一支影片一個 section：id 和 video/ 裡的資料夾同名；影片、片段、重點都由 assets/video.js 接起來 -->
+    <section class="unit" id="01-report-journey" aria-labelledby="u01-title">
+      <h2 class="unit-title" id="u01-title"><span class="unit-num">影片 01</span>report.md 的旅程</h2>
+
+      <div class="film">
+        <div class="player">
+          <video controls preload="metadata" playsinline data-hls="video/01-report-journey/hls/index.m3u8" poster="video/01-report-journey/poster.jpg" width="1920" height="1080">
+            你的瀏覽器無法播放這支影片。
+          </video>
+        </div>
       </div>
-    </div>
 
-    <ol class="chapters" id="chapters" aria-label="影片片段（點了直接跳到那一段）">
-      <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t">開場</span></button></li>
-      <li><button type="button" data-t="3"><span class="k">00:03</span><span class="t">每個檔案都有地址</span></button></li>
-      <li><button type="button" data-t="8"><span class="k">00:08</span><span class="t">report.md 誕生</span></button></li>
-      <li><button type="button" data-t="18"><span class="k">00:18</span><span class="t">一個資料夾，四個窗口</span></button></li>
-      <li><button type="button" data-t="38"><span class="k">00:38</span><span class="t">外面要先問你</span></button></li>
-      <li><button type="button" data-t="50"><span class="k">00:50</span><span class="t">開錯資料夾</span></button></li>
-      <li><button type="button" data-t="64"><span class="k">01:04</span><span class="t">把檔案找回來</span></button></li>
-      <li><button type="button" data-t="76"><span class="k">01:16</span><span class="t">結論</span></button></li>
-    </ol>
+      <ol class="chapters" aria-label="影片片段（點了直接跳到那一段）">
+        <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t">開場</span></button></li>
+        <li><button type="button" data-t="3"><span class="k">00:03</span><span class="t">每個檔案都有地址</span></button></li>
+        <li><button type="button" data-t="8"><span class="k">00:08</span><span class="t">report.md 誕生</span></button></li>
+        <li><button type="button" data-t="18"><span class="k">00:18</span><span class="t">一個資料夾，四個窗口</span></button></li>
+        <li><button type="button" data-t="38"><span class="k">00:38</span><span class="t">外面要先問你</span></button></li>
+        <li><button type="button" data-t="50"><span class="k">00:50</span><span class="t">開錯資料夾</span></button></li>
+        <li><button type="button" data-t="64"><span class="k">01:04</span><span class="t">把檔案找回來</span></button></li>
+        <li><button type="button" data-t="76"><span class="k">01:16</span><span class="t">結論</span></button></li>
+      </ol>
 
-    <ol class="points">
-      <li><p><strong>每個檔案都有一個地址。</strong>像 <code>C:\Users\an\Desktop\Project</code> 這樣的路徑，就是它在硬碟上的完整地址。</p></li>
-      <li><p><strong>Codex 只在你打開它的那個資料夾裡工作。</strong>在裡面讀檔、改檔、執行指令不用問你；要動外面的檔案或上網，會先問。</p></li>
-      <li><p><strong>Codex、VS Code、終端機、檔案總管看的是同一個資料夾。</strong>檔案不在聊天室裡，而是硬碟上的真檔案，在哪個窗口改，其他窗口都看得到。</p></li>
-      <li><p><strong>「存到 <code>output/report.md</code>」是相對路徑。</strong>真正的位置＝ Codex 打開的資料夾＋ <code>output/report.md</code>。開錯資料夾，檔案就會落到別的地方。</p></li>
-      <li><p><strong>找不到檔案時，照這四步。</strong>看 Codex 開在哪（<code>directory:</code>）、請它給完整路徑、在終端機打 <code>pwd</code>、用 <code>explorer .</code> 打開那個資料夾。</p></li>
-    </ol>
+      <ol class="points">
+        <li><p><strong>每個檔案都有一個地址。</strong>像 <code>C:\Users\an\Desktop\Project</code> 這樣的路徑，就是它在硬碟上的完整地址。</p></li>
+        <li><p><strong>Codex 只在你打開它的那個資料夾裡工作。</strong>在裡面讀檔、改檔、執行指令不用問你；要動外面的檔案或上網，會先問。</p></li>
+        <li><p><strong>Codex、VS Code、終端機、檔案總管看的是同一個資料夾。</strong>檔案不在聊天室裡，而是硬碟上的真檔案，在哪個窗口改，其他窗口都看得到。</p></li>
+        <li><p><strong>「存到 <code>output/report.md</code>」是相對路徑。</strong>真正的位置＝ Codex 打開的資料夾＋ <code>output/report.md</code>。開錯資料夾，檔案就會落到別的地方。</p></li>
+        <li><p><strong>找不到檔案時，照這四步。</strong>看 Codex 開在哪（<code>directory:</code>）、請它給完整路徑、在終端機打 <code>pwd</code>、用 <code>explorer .</code> 打開那個資料夾。</p></li>
+      </ol>
+    </section>
 
     <nav class="pager" id="pager" data-week="3" aria-label="其他週次"></nav>
   </main>
@@ -72,31 +75,8 @@
   </footer>
 </div>
 
-<!-- 順序很重要：先 hls.js、再 video.js，最後才是讀取影片時間的程式 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.15/hls.light.min.js" integrity="sha512-+s5Bl3QE0s/yJwRQ5TJLHFBaOQ133gm4y4zw6yzlZhVlQnX0zDuSD+vnW1J2Le0ZViiVspejpPfHX6YdBjHoNg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- 先 hls.js、再 video.js（播放、片段、#t= 連結都在 video.js） -->
+<script src="../../assets/vendor/hls.light.min.js"></script>
 <script src="../../assets/video.js"></script>
-<script>
-  (function () {
-    const vid = document.getElementById("vid");
-    const btns = Array.from(document.querySelectorAll("#chapters button"));
-    const starts = btns.map((b) => Number(b.dataset.t));
-    function seek(t, play) {
-      const go = () => { vid.currentTime = t; if (play) vid.play().catch(() => {}); };
-      if (vid.readyState >= 1) go(); else vid.addEventListener("loadedmetadata", go, { once: true });
-    }
-    btns.forEach((b) => b.addEventListener("click", () => seek(Number(b.dataset.t), true)));
-    function mark() {
-      let i = 0;
-      starts.forEach((s, k) => { if (vid.currentTime + 0.05 >= s) i = k; });
-      btns.forEach((b, k) => b.setAttribute("aria-current", k === i ? "true" : "false"));
-    }
-    vid.addEventListener("timeupdate", mark);
-    vid.addEventListener("seeked", mark);
-    mark();
-    // 網址帶 #t=秒數 時直接跳到那裡（舊的影片頁連結也會帶過來）
-    const m = location.hash.match(/^#t=(\d+(?:\.\d+)?)$/);
-    if (m) seek(Number(m[1]), false);
-  })();
-</script>
 </body>
 </html>

@@ -1,10 +1,10 @@
 /* ==========================================================================
    課程資料與共用行為
    - 新增一週：在 WEEKS 裡加上該週（status: "ready"、標題、摘要、連結、圖片、meta），
-     再照 weeks/week03/ 的結構放檔案（一頁 index.html：影片＋幾則重點；影片檔放在 video/）。
-     首頁膠捲會自動多一格已開放的畫面。
-   - still 是膠捲畫格用的大圖（建議 1920×1080 的影片封面），thumb 是清單用的小圖；
-     meta 是首頁顯示的一行長度說明，例如「影片 1 分 23 秒・5 則重點」。
+     再照 weeks/week03/ 的結構放檔案（一頁 index.html：每支影片一段，影片、片段、幾則重點；
+     影片檔放在 video/NN-slug/）。首頁膠捲會自動多一格已開放的畫面。
+   - still 是膠捲畫格用的大圖、thumb 是清單用的小圖，通常用這週第一支影片的 poster.jpg、thumb.jpg；
+     meta 是首頁顯示的一行說明，例如「影片 1 分 23 秒・5 則重點」或「2 支影片・共 3 分鐘」。
    - 每一頁的 <body data-root="..."> 指到網站根目錄（入口是 "./"，weeks/weekNN/ 是 "../../"）。
    ========================================================================== */
 (function () {
@@ -25,8 +25,8 @@
       title: "AI 助理的工作資料夾",
       summary: "Codex 為什麼以資料夾為工作單位：路徑、工作資料夾、四個窗口、相對路徑、找回檔案。",
       href: "weeks/week03/",
-      thumb: "weeks/week03/video/thumb.jpg",
-      still: "weeks/week03/video/poster.jpg",
+      thumb: "weeks/week03/video/01-report-journey/thumb.jpg",
+      still: "weeks/week03/video/01-report-journey/poster.jpg",
       meta: "影片 1 分 23 秒・5 則重點",
     },
   };

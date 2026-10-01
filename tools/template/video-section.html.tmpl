@@ -1,0 +1,19 @@
+    <section class="unit" id="{{SLUG}}" aria-labelledby="u{{NUM}}-title">
+      <h2 class="unit-title" id="u{{NUM}}-title"><span class="unit-num">影片 {{NUM}}</span>{{TITLE}}</h2>
+
+      <div class="film">
+        <div class="player">
+          <video controls preload="metadata" playsinline data-hls="video/{{SLUG}}/hls/index.m3u8" poster="video/{{SLUG}}/poster.jpg" width="1920" height="1080">
+            你的瀏覽器無法播放這支影片。
+          </video>
+        </div>
+      </div>
+
+      <ol class="chapters" aria-label="影片片段（點了直接跳到那一段）">
+        <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t">開場</span></button></li>
+      </ol>
+
+      <ol class="points">
+        <li><p><strong>待填：重點一句話。</strong>待填：補一兩句說明。</p></li>
+      </ol>
+    </section>
