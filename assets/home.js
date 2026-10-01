@@ -76,10 +76,12 @@
   }
 
   let shown = -1;
+  let spinning = false; // 開場快轉中：介紹停在要落地的那一週，舞台光先暗著
   function showInfo(i, animate) {
     if (i === shown) return;
     shown = i;
     const d = describe(frames[i]);
+    document.body.classList.toggle("spot-on", !!d.ready && !spinning);
     els.kicker.textContent = d.kicker;
     els.title.textContent = d.title;
     if (d.metaHtml) els.meta.innerHTML = d.metaHtml;
@@ -615,12 +617,22 @@
   /* ======================================================================
      狀態和操作
      ====================================================================== */
-  // 從某一週回到首頁時，停在剛剛進去的那一格，開場只輕輕滑進來
-  let start = latest, spin = 2.8;
+  // 開場：這個分頁第一次打開時，膠捲快速轉一整圈、越轉越慢，停在最新開放的一週（舞台光這時才亮）。
+  // 從某一週回到首頁、或換語言重新載入時，停在剛剛那一格，只輕輕滑進來。
+  const SPIN_MS = 3000;
+  const SPIN_BACK = 0.5;     // 停下時稍微超過一點再退回來（約 0.1 格），像放映機卡進片門
+  const LAND_HOLD = 1900;    // 落地後多停一下：約 8 秒（1.9 + IDLE_MS + HOLD_MS）才開始自動往下一格
+  let start = latest, spin = 2.8, bigSpin = false;
   try {
     const saved = Number(sessionStorage.getItem("film-frame"));
     if (saved > 0 && saved < N) { start = saved; spin = 0.6; }
+    else if (!reduceMotion && !sessionStorage.getItem("film-spun")) {
+      bigSpin = true;
+      spin = N;
+      sessionStorage.setItem("film-spun", "1");
+    }
   } catch (e) { /* 無法讀取也沒關係 */ }
+  let spinT0 = 0;
   let pos = start - (reduceMotion ? 0 : spin); // 目前轉到第幾格（可以是小數，會一直累加）
   let target = start;
   let vel = 0, bend = 0;
@@ -638,18 +650,33 @@
   frameNow = current;
 
   function touch() { lastInput = performance.now(); gliding = false; wake(); }
+  // 開場快轉中使用者一動手，就從膠捲現在的位置接手（之後的操作都以這裡為起點）
+  function takeOver() {
+    if (!spinning) return;
+    spinning = false;
+    target = Math.round(pos);
+  }
+  // 快轉停好：亮燈，並在這一週多停一下
+  function landed() {
+    spinning = false;
+    pos = target = start;
+    lastInput = performance.now() + LAND_HOLD;
+    shown = -1;
+    showInfo(start, false);
+  }
   function scheduleSnap(ms) {
     clearTimeout(snapTimer);
     snapTimer = setTimeout(() => { target = Math.round(target); wake(); }, ms);
   }
   function goTo(i, speak) {
+    takeOver();
     let d = mod(i - target);
     if (d > N / 2) d -= N;
     target = Math.round(target + d);
     touch();
     if (speak) announce(mod(i));
   }
-  function step(d) { target = Math.round(target) + d; touch(); announce(mod(target)); }
+  function step(d) { takeOver(); target = Math.round(target) + d; touch(); announce(mod(target)); }
 
   function enter(i) {
     const f = frames[i];
@@ -679,7 +706,7 @@
   els.cta.addEventListener("click", (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
-    enter(current());
+    enter(shown); // 介紹顯示的那一週（快轉中也是要落地的那一週）
   });
   els.alt.addEventListener("click", () => {
     if (els.alt.dataset.action === "index") setIndex(true, true);
@@ -707,6 +734,7 @@
   window.addEventListener("wheel", (e) => {
     if (indexOpen || leaving) return;
     e.preventDefault();
+    takeOver();
     const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     const d = raw * (e.deltaMode === 1 ? 32 : 1);
     target += clamp((d / pxPerFrame) * 1.1, -0.6, 0.6);
@@ -737,6 +765,7 @@
 
   canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || leaving) return;
+    takeOver();
     canvas.setPointerCapture(e.pointerId);
     const now = performance.now();
     drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, from: target, moved: false, axis: "x", lx: e.clientX, ly: e.clientY, lt: now, v: 0 };
@@ -809,15 +838,23 @@
     last = now;
 
     // 自動前進
-    const canAuto = !paused && !drag && !leaving && hovered < 0 && ready;
+    const canAuto = !paused && !drag && !leaving && !spinning && hovered < 0 && ready;
     if (!canAuto || now - lastInput < IDLE_MS) nextAuto = 0;
     else if (!nextAuto) nextAuto = now + HOLD_MS;
     else if (now >= nextAuto) { target = Math.round(target) + 1; nextAuto = now + HOLD_MS; gliding = true; }
 
-    const k = now < introUntil ? 2.3 : drag ? 20 : gliding ? 3.2 : 7;
     const prev = pos;
-    pos += (target - pos) * (1 - Math.exp(-k * dt));
-    if (Math.abs(target - pos) < 5e-4) pos = target;   // 差不到 0.3 像素就算停好
+    if (spinning) {
+      // 開場快轉：一開始很快、越轉越慢（ease-out-back，最後稍微超過再退回）
+      const u = clamp((now - spinT0) / SPIN_MS, 0, 1);
+      const x = u - 1;
+      pos = start - spin * (1 - (1 + (SPIN_BACK + 1) * x * x * x + SPIN_BACK * x * x));
+      if (u >= 1) landed();
+    } else {
+      const k = now < introUntil ? 2.3 : drag ? 20 : gliding ? 3.2 : 7;
+      pos += (target - pos) * (1 - Math.exp(-k * dt));
+      if (Math.abs(target - pos) < 5e-4) pos = target;   // 差不到 0.3 像素就算停好
+    }
     vel += ((pos - prev) / dt - vel) * (1 - Math.exp(-10 * dt));
     if (Math.abs(vel) < 1e-3 && pos === target) vel = 0;
     bend = reduceMotion ? 0 : clamp(-vel * 0.05, -0.45, 0.45);
@@ -837,11 +874,11 @@
     }
 
     const c = current();
-    if (c !== shown) showInfo(c, true);
+    if (c !== shown && !spinning) showInfo(c, true); // 快轉中介紹不跟著跳
     draw();
     if (mouse && !drag && !leaving && Math.abs(target - pos) > 1e-3) setHover(pick(mouse.x, mouse.y), mouse.x, mouse.y);
 
-    const moving = pos !== target || vel !== 0 || hoverMoving || !!leaving || now < introUntil ||
+    const moving = spinning || pos !== target || vel !== 0 || hoverMoving || !!leaving || now < introUntil ||
       !near(col.fog[0], want.fog[0]) || !near(col.alpha, want.alpha);
 
     // 太慢就降解析度（只在連續動畫時量，睡醒的第一格不算）
@@ -877,7 +914,7 @@
     const dist = (i) => { const d = mod(i - (start - 1)); return Math.min(d, N - d); };
     return dist(a) - dist(b);
   });
-  const FIRST = 5; // 開場會轉過的幾格
+  const FIRST = bigSpin ? N : 5; // 開場會轉過的幾格（快轉一整圈時全部先畫好，才不會閃過空白的格子）
 
   // 封面圖不擋開場：先畫沒有圖的版本，小縮圖（thumb）到了就換上，
   // 大圖（still）在背景下載，到了再換一次（手機只用小縮圖）
@@ -914,7 +951,13 @@
         ready = true;
         document.body.classList.remove("is-loading");
         layout(); // 字型載入後文字高度可能改變，重新量一次
-        introUntil = performance.now() + 2400;
+        if (bigSpin) {
+          spinning = true;
+          spinT0 = performance.now();
+          document.body.classList.remove("spot-on"); // 暗著轉，停好才亮
+        } else {
+          introUntil = performance.now() + 2400;
+        }
         touch();
       } else {
         wake();

@@ -141,6 +141,33 @@ body:not(.is-loading) .loader span { animation: none; }
 .cta svg { width: 1.1rem; height: 1.1rem; }
 .cta.is-quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .cta.is-quiet:hover { background: var(--btn); }
+/* 已開放的週次：主按鈕像被舞台光照到（兩種主題都用同一個亮琥珀色，深色字） */
+.info.is-ready .cta:not(.is-quiet) { background: #f0b545; color: #141210; }
+
+/* 舞台光：從上方打在正中間那一格和地板上（只在深色模式）。
+   停在已開放的週次時亮起來（body.spot-on，home.js 切換）；準備中、片頭、開場快轉時暗下來。 */
+.spot {
+  --lamp-w: 16%;        /* 頂端光源的寬度 */
+  --pool-y: 79%;        /* 地板上那圈光落在畫面多高的地方（膠捲下方） */
+  --pool-w: 30%;
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; display: none;
+  opacity: .28; transition: opacity .9s var(--ease); mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse var(--lamp-w) 22% at 50% -2%, rgba(255, 205, 120, .30), transparent 70%),
+    conic-gradient(from 180deg at 50% -14%, rgba(255, 190, 90, .17) 0deg, rgba(255, 190, 90, .07) 10deg, transparent 17deg 343deg, rgba(255, 190, 90, .07) 350deg, rgba(255, 190, 90, .17) 360deg),
+    radial-gradient(ellipse var(--pool-w) 11% at 50% var(--pool-y), rgba(255, 185, 80, .20), transparent 72%);
+}
+/* 直式手機：膠捲在畫面上半部，光源放寬、地上的光往上移到膠捲下方 */
+@media (max-width: 760px) {
+  .spot { --lamp-w: 42%; --pool-y: 55%; --pool-w: 60%; }
+}
+body.spot-on .spot { opacity: 1; }
+body.is-loading .spot { opacity: 0; }
+:root[data-theme="dark"] .spot { display: block; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .spot { display: block; } }
+body.no-film .spot { display: none !important; }
+:root[data-theme="dark"] .info.is-ready .info-title { text-shadow: 0 0 34px rgba(255, 196, 92, .22); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .info.is-ready .info-title { text-shadow: 0 0 34px rgba(255, 196, 92, .22); } }
 
 /* 換畫格時介紹文字淡入 */
 .info.swap > * { animation: swap .5s var(--ease) both; }
