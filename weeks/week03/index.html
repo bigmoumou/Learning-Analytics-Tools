@@ -13,10 +13,10 @@
   data-zh-hans="Week 3｜AI 助理的工作文件夹"
   data-en="Week 3 | The AI Assistant's Working Folder"
   data-vi="Tuần 3 | Thư mục làm việc của trợ lý AI">Week 3｜AI 助理的工作資料夾</title>
-<meta name="description" content="Week 3：Codex 這類 AI 助理為什麼以資料夾為工作單位。一支 83 秒的影片和五則重點。" data-i18n-attr="content"
-  data-zh-hans="Week 3：Codex 这类 AI 助理为什么以文件夹为工作单位。一个 83 秒的视频和五条重点。"
-  data-en="Week 3: why AI assistants like Codex treat one folder as their unit of work. An 83-second video and five key points."
-  data-vi="Tuần 3: vì sao các trợ lý AI như Codex lấy một thư mục làm đơn vị làm việc. Một video 83 giây và năm ý chính.">
+<meta name="description" content="Week 3：Codex 這類 AI 助理為什麼以資料夾為工作單位，以及怎麼用 AGENTS.md 當長期記憶、管理上下文。兩支影片和十則重點。" data-i18n-attr="content"
+  data-zh-hans="Week 3：Codex 这类 AI 助理为什么以文件夹为工作单位，以及怎么用 AGENTS.md 当长期记忆、管理上下文。两个视频和十条重点。"
+  data-en="Week 3: why AI assistants like Codex treat one folder as their unit of work, and how AGENTS.md serves as long-term memory while you manage the context. Two videos and ten key points."
+  data-vi="Tuần 3: vì sao các trợ lý AI như Codex lấy một thư mục làm đơn vị làm việc, và cách dùng AGENTS.md làm bộ nhớ dài hạn, quản lý ngữ cảnh. Hai video và mười ý chính.">
 <meta name="author" content="JUNHAO CHEN">
 <meta name="copyright" content="© 2026 JUNHAO CHEN">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,9 +46,9 @@
         data-en="The AI Assistant's Working Folder"
         data-vi="Thư mục làm việc của trợ lý AI">AI 助理的工作資料夾</h1>
       <p class="lede" data-i18n
-        data-zh-hans="Codex 这类 AI 助理都以“一个文件夹”为工作单位。看懂这件事，就知道文件在哪里、它做了什么、做完的东西去了哪儿。"
-        data-en="AI assistants like Codex treat “one folder” as their unit of work. Once you see this, you'll know where your files are, what the assistant did, and where its output went."
-        data-vi="Các trợ lý AI như Codex đều lấy “một thư mục” làm đơn vị làm việc. Hiểu được điều này, bạn sẽ biết tệp nằm ở đâu, trợ lý đã làm gì và kết quả được lưu vào đâu.">Codex 這類 AI 助理都以「一個資料夾」為工作單位。看懂這件事，就知道檔案在哪裡、它做了什麼、做完的東西去了哪。</p>
+        data-zh-hans="Codex 这类 AI 助理都以“一个文件夹”为工作单位。看懂这件事，就知道文件在哪里、它做了什么、做完的东西去了哪儿。再用 AGENTS.md 把项目的规则记下来，让它每次对话都记得。"
+        data-en="AI assistants like Codex treat “one folder” as their unit of work. Once you see this, you'll know where your files are, what the assistant did, and where its output went. Then write the project's rules in AGENTS.md so it remembers them in every conversation."
+        data-vi="Các trợ lý AI như Codex đều lấy “một thư mục” làm đơn vị làm việc. Hiểu được điều này, bạn sẽ biết tệp nằm ở đâu, trợ lý đã làm gì và kết quả được lưu vào đâu. Sau đó ghi quy tắc của dự án vào AGENTS.md để nó nhớ trong mọi cuộc trò chuyện.">Codex 這類 AI 助理都以「一個資料夾」為工作單位。看懂這件事，就知道檔案在哪裡、它做了什麼、做完的東西去了哪。再用 AGENTS.md 把專案的規則記下來，讓它每次對話都記得。</p>
       <p class="lang-note" data-ui="video.note"></p>
     </div>
 
@@ -100,6 +100,58 @@
           data-zh-hans="<strong>找不到文件时，照这四步。</strong>看 Codex 开在哪儿（<code>directory:</code>）、请它给出完整路径、在终端输入 <code>pwd</code>、用 <code>explorer .</code> 打开那个文件夹。"
           data-en="<strong>Can't find a file? Follow these four steps.</strong> Check where Codex is open (<code>directory:</code>), ask it for the full path, type <code>pwd</code> in the terminal, and open that folder with <code>explorer .</code>"
           data-vi="<strong>Không tìm thấy tệp? Làm theo bốn bước sau.</strong> Xem Codex đang mở ở đâu (<code>directory:</code>), nhờ nó cho đường dẫn đầy đủ, gõ <code>pwd</code> trong Terminal, rồi dùng <code>explorer .</code> để mở thư mục đó."><strong>找不到檔案時，照這四步。</strong>看 Codex 開在哪（<code>directory:</code>）、請它給完整路徑、在終端機打 <code>pwd</code>、用 <code>explorer .</code> 打開那個資料夾。</p></li>
+      </ol>
+    </section>
+
+    <section class="unit" id="02-agents-md-context" aria-labelledby="u02-title">
+      <h2 class="unit-title" id="u02-title"><span class="unit-num" data-ui="video.n" data-n="02">影片 02</span><span data-i18n
+        data-zh-hans="AGENTS.md 与上下文管理"
+        data-en="AGENTS.md and Context Management"
+        data-vi="AGENTS.md và quản lý ngữ cảnh">AGENTS.md 與上下文管理</span></h2>
+
+      <div class="film">
+        <div class="player">
+          <video controls preload="metadata" playsinline data-hls="video/02-agents-md-context/hls/index.m3u8" poster="video/02-agents-md-context/poster.jpg" width="1920" height="1080">
+            你的瀏覽器無法播放這支影片。
+          </video>
+        </div>
+      </div>
+
+      <ol class="chapters" aria-label="影片片段（點了直接跳到那一段）" data-ui-attr="aria-label:video.chapters">
+        <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t" data-i18n data-zh-hans="开场" data-en="Opening" data-vi="Mở đầu">開場</span></button></li>
+        <li><button type="button" data-t="7"><span class="k">00:07</span><span class="t" data-i18n data-zh-hans="长期记忆 AGENTS.md" data-en="Long-term memory: AGENTS.md" data-vi="Bộ nhớ dài hạn: AGENTS.md">長期記憶 AGENTS.md</span></button></li>
+        <li><button type="button" data-t="30"><span class="k">00:30</span><span class="t" data-i18n data-zh-hans="Prompt 其实是一整串" data-en="A prompt is a whole bundle" data-vi="Prompt thật ra là cả một chuỗi">Prompt 其實是一整串</span></button></li>
+        <li><button type="button" data-t="46"><span class="k">00:46</span><span class="t" data-i18n data-zh-hans="AGENTS.md 要写什么" data-en="What goes in AGENTS.md" data-vi="AGENTS.md viết gì">AGENTS.md 要寫什麼</span></button></li>
+        <li><button type="button" data-t="69"><span class="k">01:09</span><span class="t" data-i18n data-zh-hans="Markdown 速成" data-en="Markdown in a minute" data-vi="Markdown cấp tốc">Markdown 速成</span></button></li>
+        <li><button type="button" data-t="88"><span class="k">01:28</span><span class="t" data-i18n data-zh-hans="上下文窗口＝短期记忆" data-en="Context window = short-term memory" data-vi="Cửa sổ ngữ cảnh = bộ nhớ ngắn hạn">上下文視窗＝短期記憶</span></button></li>
+        <li><button type="button" data-t="110"><span class="k">01:50</span><span class="t" data-i18n data-zh-hans="噪音、幻觉、成本" data-en="Noise, hallucinations, cost" data-vi="Nhiễu, ảo giác, chi phí">噪音、幻覺、成本</span></button></li>
+        <li><button type="button" data-t="133"><span class="k">02:13</span><span class="t" data-i18n data-zh-hans="连到 progress.md" data-en="Linking to progress.md" data-vi="Liên kết tới progress.md">連到 progress.md</span></button></li>
+        <li><button type="button" data-t="154"><span class="k">02:34</span><span class="t" data-i18n data-zh-hans="编辑与分支" data-en="Edit and branch" data-vi="Chỉnh sửa và rẽ nhánh">編輯與分支</span></button></li>
+        <li><button type="button" data-t="174"><span class="k">02:54</span><span class="t" data-i18n data-zh-hans="Side chat" data-en="Side chat" data-vi="Side chat">Side chat</span></button></li>
+        <li><button type="button" data-t="188"><span class="k">03:08</span><span class="t" data-i18n data-zh-hans="结论" data-en="Wrap-up" data-vi="Kết luận">結論</span></button></li>
+      </ol>
+
+      <ol class="points">
+        <li><p data-i18n
+          data-zh-hans="<strong>每个项目文件夹，一定要有一份 <code>AGENTS.md</code>。</strong>它是 AI Agent 的长期记忆，Codex 每次对话都会先带入它（Claude Code 用的是 <code>CLAUDE.md</code>）。"
+          data-en="<strong>Every project folder needs an <code>AGENTS.md</code>.</strong> It is the AI agent’s long-term memory, and Codex brings it into every conversation first (Claude Code uses <code>CLAUDE.md</code>)."
+          data-vi="<strong>Mỗi thư mục dự án đều phải có một tệp <code>AGENTS.md</code>.</strong> Đây là bộ nhớ dài hạn của AI Agent; mỗi cuộc trò chuyện Codex đều nạp nó trước tiên (Claude Code dùng <code>CLAUDE.md</code>)."><strong>每個專案資料夾，一定要有一份 <code>AGENTS.md</code>。</strong>它是 AI Agent 的長期記憶，Codex 每次對話都會先帶入它（Claude Code 用的是 <code>CLAUDE.md</code>）。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>你送出的 prompt，其实是一整串。</strong>Global Prompt、过去的对话、<code>AGENTS.md</code> 里和这次问题有关的指引，再加上你这次的问题，一起送给模型。"
+          data-en="<strong>The prompt you send is really a whole bundle.</strong> The global prompt, the earlier conversation, the parts of <code>AGENTS.md</code> that fit this question, and your new question all go to the model together."
+          data-vi="<strong>Prompt bạn gửi đi thật ra là cả một chuỗi.</strong> Global Prompt, cuộc trò chuyện trước đó, các chỉ dẫn trong <code>AGENTS.md</code> liên quan đến câu hỏi lần này, cùng câu hỏi mới của bạn, được gửi cho mô hình cùng một lúc."><strong>你送出的 prompt，其實是一整串。</strong>Global Prompt、過去的對話、<code>AGENTS.md</code> 裡和這次問題有關的指引，再加上你這次的問題，一起送給模型。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong><code>AGENTS.md</code> 写三件事：做什么、怎么帮忙、不要做什么。</strong>用 Markdown 写；进度可以另外记在 <code>progress.md</code>，再从 <code>AGENTS.md</code> 连过去，Codex 需要时才读。"
+          data-en="<strong><code>AGENTS.md</code> covers three things: what the project is, how the AI should help, and what not to do.</strong> Write it in Markdown. Progress can live in a separate <code>progress.md</code> linked from <code>AGENTS.md</code>; Codex reads it only when needed."
+          data-vi="<strong><code>AGENTS.md</code> ghi ba điều: dự án làm gì, AI nên giúp thế nào, và những gì không được làm.</strong> Viết bằng Markdown; tiến độ có thể ghi riêng trong <code>progress.md</code> rồi liên kết từ <code>AGENTS.md</code>, Codex chỉ đọc khi cần."><strong><code>AGENTS.md</code> 寫三件事：做什麼、怎麼幫忙、不要做什麼。</strong>用 Markdown 寫；進度可以另外記在 <code>progress.md</code>，再從 <code>AGENTS.md</code> 連過去，Codex 需要時才讀。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>上下文窗口＝短期记忆。</strong>对话越长越满，满了就要压缩（Compact），而且会丢掉细节；里面的垃圾越多，越容易出现幻觉，时间和成本也越高。"
+          data-en="<strong>The context window is short-term memory.</strong> The longer the chat, the fuller it gets; when it is full it has to be compacted, and details are lost. The more junk inside, the more likely hallucinations become, and the more time and cost each answer takes."
+          data-vi="<strong>Cửa sổ ngữ cảnh = bộ nhớ ngắn hạn.</strong> Trò chuyện càng dài thì càng đầy; đầy rồi thì phải nén (Compact), và sẽ mất chi tiết. Bên trong càng nhiều rác thì càng dễ sinh ảo giác, thời gian và chi phí cũng càng cao."><strong>上下文視窗＝短期記憶。</strong>對話越長越滿，滿了就要壓縮（Compact），而且會遺失細節；裡面的垃圾越多，越容易出現幻覺，時間和成本也越高。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>Codex 的三个实用操作：编辑、分支、Side chat。</strong>改写问题重新问；从某个回答分出新的对话；做到一半想问小问题，就开一个临时的 Side chat。"
+          data-en="<strong>Three handy Codex moves: edit, branch and side chat.</strong> Rewrite a question and ask again; branch a new conversation from an answer; and for a quick side question mid-task, open a temporary side chat."
+          data-vi="<strong>Ba thao tác hữu ích của Codex: chỉnh sửa, rẽ nhánh và Side chat.</strong> Sửa lại câu hỏi rồi hỏi lại; tách một cuộc trò chuyện mới từ một câu trả lời; đang làm dở mà muốn hỏi câu nhỏ thì mở một Side chat tạm thời."><strong>Codex 的三個實用操作：編輯、分支、Side chat。</strong>改寫問題重新問；從某個回答分出新的對話；做到一半想問小問題，就開一個暫時的 Side chat。</p></li>
       </ol>
     </section>
 
