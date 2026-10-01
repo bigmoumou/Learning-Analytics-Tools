@@ -98,7 +98,11 @@ tools/new-video.sh 4 01-relative-path "相對路徑的起點"
   14 週下來會超過 GitHub Pages 1 GB 的上限。mp4 留在 `製作/` 裡。
 - 每個檔案都要小於 25 MiB（Cloudflare Pages 的上限，超過時整個部署會失敗）。`publish-video.sh` 和 `check.mjs` 都會檢查。
 - 週次頁先載入 `assets/vendor/hls.light.min.js`，再載入 `assets/video.js`（範本已經寫好）。
-- 連結到影片的某個時間：`weeks/week04/#t=30` 是第一支影片的 30 秒，`weeks/week04/#02-find-files&t=30` 是指定的那一支。
+- 連結到影片的某個時間：`weeks/week04/#t=30` 是第一支影片的 30 秒，`weeks/week04/#02-find-files&t=30` 是指定的那一支，
+  `weeks/week04/#02-find-files` 直接打開那一支。
+- 一週有兩支以上影片時，`assets/video.js` 會自動把週次頁變成播放清單：一次只顯示一支（播放器、片段、重點），
+  清單在右邊（手機在上方），從各個 `<section class="unit">` 自動產生，頁面不用另外寫。清單上緣的細線是觀看進度
+  （記在學生自己的瀏覽器），影片播完會出現「下一支」；沒選到的影片等點了才下載。只有一支影片的週次維持原本的版面。
 - 影片確定了再 commit：重新渲染過的舊版本會一直留在 git 歷史裡，讓 repo 越來越大。
 - `publish-video.sh` 會自己找 ffmpeg（PATH，或 opus-video conda 環境裡的那一份）；要指定時用 `FFMPEG=...`。
 

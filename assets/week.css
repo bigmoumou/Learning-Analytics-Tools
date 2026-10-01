@@ -149,6 +149,55 @@ body::after {
 .points strong { font-weight: 700; }
 .points code { background: var(--btn); border-radius: 6px; padding: .05em .4em; white-space: nowrap; }
 
+/* ---------- 一週兩支以上影片：播放清單（video.js 產生 .reel，並在 main 加上 .has-reel） ----------
+   和片段、重點同一套樣子：細線分隔、等寬編號、黃色標出目前這支，不用卡片。 */
+.page > main.has-reel { max-width: 84rem; display: grid; grid-template-columns: minmax(0, 1fr) 17.5rem; column-gap: clamp(1.6rem, 3vw, 2.8rem); align-items: start; }
+main.has-reel > .head, main.has-reel > .pager { grid-column: 1 / -1; }
+main.has-reel > .unit { grid-column: 1; grid-row: 2; margin-top: 0; } /* 一次只顯示一支，不需要影片之間的間距 */
+.reel { grid-column: 2; grid-row: 2; position: sticky; top: 1.2rem; }
+.reel-label { font-family: var(--font-mono); font-size: .76rem; font-weight: 700; letter-spacing: .14em; color: var(--ink-3); padding: .55rem 0 .95rem; }
+.reel ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.reel-item {
+  appearance: none; position: relative; width: 100%; display: grid; grid-template-columns: 6.8rem minmax(0, 1fr); gap: .85rem; align-items: start;
+  padding: 1rem 0 1.05rem; border: 0; background: none; text-align: left; cursor: pointer;
+}
+.reel li:last-child .reel-item { border-bottom: 1px solid var(--line); }
+/* 上緣的細線就是觀看進度：看到哪裡就填到哪裡 */
+.reel-bar { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--line); overflow: hidden; }
+.reel-bar > span { position: absolute; inset: 0; background: var(--ink-3); transform: scaleX(var(--p, 0)); transform-origin: left; transition: transform .6s var(--ease), background-color .3s; }
+.reel-item[aria-current="true"] .reel-bar > span { background: var(--accent); }
+.reel-thumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: #000; }
+.reel-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: .62; transition: opacity .3s, transform .6s var(--ease); }
+.reel-item:hover .reel-thumb img, .reel-item[aria-current="true"] .reel-thumb img { opacity: 1; }
+.reel-item:hover .reel-thumb img { transform: scale(1.04); }
+.reel-len { position: absolute; right: .3rem; bottom: .3rem; padding: .05rem .32rem; border-radius: 4px; background: rgba(0, 0, 0, .72); color: #fff; font: 700 .66rem/1.5 var(--font-mono); }
+.reel-text { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.reel-n { display: inline-flex; align-items: center; gap: .45rem; font-family: var(--font-mono); font-size: .74rem; font-weight: 700; letter-spacing: .08em; color: var(--ink-3); }
+.reel-item[aria-current="true"] .reel-n { color: var(--accent); }
+.reel-item.is-done .reel-n::after { content: "✓"; color: var(--ink-3); }
+/* 播放中：編號前的小點輕輕呼吸 */
+.reel-item.is-playing .reel-n::before { content: ""; width: .42rem; height: .42rem; border-radius: 50%; background: var(--accent); animation: reel-breathe 1.8s ease-in-out infinite; }
+@keyframes reel-breathe { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.reel-t { font-size: .95rem; font-weight: 700; line-height: 1.45; color: var(--ink-2); transition: color .2s; }
+.reel-item:hover .reel-t, .reel-item[aria-current="true"] .reel-t { color: var(--ink); }
+
+/* 換影片時：播放器和重點輕輕淡入（只往上移 10px），重點一則接一則 */
+.unit.is-entering { animation: unit-in .5s var(--ease) both; }
+.unit.is-entering .points li { animation: unit-in .5s var(--ease) both; animation-delay: calc(120ms + var(--i, 0) * 60ms); }
+@keyframes unit-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* 影片播完：畫面中間出現「下一支」，點了才播 */
+.next-up {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
+  display: inline-flex; align-items: center; gap: .7rem; max-width: calc(100% - 2rem); padding: .8rem 1.15rem .8rem 1.3rem;
+  border: 0; border-radius: 999px; background: #f0b545; color: #141210; font-weight: 700; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35); animation: next-in .45s var(--ease) both;
+}
+.next-k { font-family: var(--font-mono); font-size: .74rem; letter-spacing: .1em; opacity: .72; white-space: nowrap; }
+.next-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.next-up svg { width: 1rem; height: 1rem; flex: none; }
+@keyframes next-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
 /* ---------- 上一週／下一週（course.js 產生內容） ---------- */
 .pager { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: clamp(2.6rem, 6vw, 4rem); font-size: .9rem; }
 .pager a, .pager span { font-weight: 700; text-decoration: none; }
@@ -169,7 +218,16 @@ body::after {
   .points li { grid-template-columns: 2.8rem minmax(0, 1fr); gap: .6rem; }
   .foot { grid-template-columns: minmax(0, 1fr); }
   .foot > :nth-child(3) { justify-self: start; }
+  /* 手機：清單放在播放器上方，橫排；三支以上可以左右滑 */
+  .page > main.has-reel { display: block; }
+  .reel { position: static; margin-bottom: 1.6rem; }
+  .reel-label { padding-top: 0; }
+  .reel ol { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(10rem, 1fr); gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .reel li { scroll-snap-align: start; }
+  .reel-item { grid-template-columns: 1fr; gap: .6rem; padding: .9rem 0 .2rem; }
+  .reel li:last-child .reel-item { border-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .001ms !important; }
+  .unit.is-entering, .unit.is-entering .points li, .next-up, .reel-item.is-playing .reel-n::before { animation: none; }
 }
