@@ -44,7 +44,8 @@
     if (box.querySelector(".video-error")) return;
     const p = document.createElement("p");
     p.className = "video-error";
-    p.textContent = "影片載入失敗。請重新整理頁面；還是不行的話，換一個瀏覽器（Chrome、Edge、Safari）試試。";
+    const zh = "影片載入失敗。請重新整理頁面；還是不行的話，換一個瀏覽器（Chrome、Edge、Safari）試試。";
+    p.textContent = window.I18N ? window.I18N.t("video.failed") : zh;
     box.append(p);
   }
 

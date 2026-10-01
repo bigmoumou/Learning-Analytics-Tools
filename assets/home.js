@@ -18,6 +18,17 @@
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
+  // 多語系（assets/i18n.js）。畫格上的字是畫進貼圖裡的，所以換語言時重新載入首頁，並停在原本那一格
+  const I18N = window.I18N || { t: (k) => k, pick: (o, f) => o[f], lang: "zh-Hant" };
+  const tr = (key, vars) => I18N.t(key, vars);
+  const wf = (w, field) => I18N.pick(w, field);
+  const weekName = (n) => tr("week.n", { n });
+  let frameNow = () => -1;
+  document.addEventListener("langchange", () => {
+    try { const i = frameNow(); if (i > 0) sessionStorage.setItem("film-frame", String(i)); } catch (e) { /* 無法儲存也沒關係 */ }
+    window.location.reload();
+  });
+
   /* ---------- 畫格資料：第 0 格是片頭，之後依序是每一週 ---------- */
   const frames = [{ kind: "leader" }];
   for (let n = COURSE.firstWeek; n <= COURSE.lastWeek; n++) {
@@ -37,29 +48,29 @@
   };
 
   // 一行長度說明，例如「影片 1 分 23 秒・5 則重點」（course.js 的 meta）
-  const lengths = (w) => `<span class="nw">${esc(w.meta || "")}</span>`;
+  const lengths = (w) => `<span class="nw">${esc(wf(w, "meta") || "")}</span>`;
 
   function describe(f) {
     if (f.kind === "leader") {
       return {
         kicker: "LEARNING ANALYTICS TOOLS・NTNU",
-        title: "從 Week 3 開始",
-        meta: "每週一頁：一支短影片，加上幾則重點。轉動膠捲，選一週開始。",
-        alt: "看全部週次", altAction: "index",
+        title: tr("home.leaderTitle"),
+        meta: tr("home.leaderMeta"),
+        alt: tr("home.seeAll"), altAction: "index",
       };
     }
     if (f.kind === "ready") {
       return {
-        kicker: `WEEK ${pad(f.n)}・已開放`, title: f.w.title, metaHtml: lengths(f.w),
-        href: root() + f.w.href, cta: `進入 Week ${f.n}`, ready: true,
+        kicker: tr("fmt.dot", { a: `WEEK ${pad(f.n)}`, b: tr("home.open") }), title: wf(f.w, "title"), metaHtml: lengths(f.w),
+        href: root() + f.w.href, cta: tr("home.enter", { n: f.n }), ready: true,
       };
     }
     const newest = frames[latest];
     return {
-      kicker: `WEEK ${pad(f.n)}・準備中`,
-      title: "這一格還在沖洗",
-      meta: "教材開放後，這一格會換成那一週的影片畫面。",
-      alt: newest.kind === "ready" ? `看最新的 Week ${newest.n}` : "看全部週次",
+      kicker: tr("fmt.dot", { a: `WEEK ${pad(f.n)}`, b: tr("home.soon") }),
+      title: tr("home.soonTitle"),
+      meta: tr("home.soonMeta"),
+      alt: newest.kind === "ready" ? tr("home.latest", { n: newest.n }) : tr("home.seeAll"),
       altAction: newest.kind === "ready" ? "latest" : "index",
     };
   }
@@ -83,15 +94,15 @@
   }
   function announce(i) {
     const d = describe(frames[i]);
-    els.announce.textContent = `${d.kicker}：${d.title}`;
+    els.announce.textContent = tr("fmt.colon", { a: d.kicker, b: d.title });
   }
 
   /* ---------- 右下角的週次刻度 ---------- */
   const scrub = $("#scrub");
   scrub.innerHTML = frames.map((f, i) => {
     if (f.kind === "leader") return "";
-    const label = f.kind === "ready" ? `Week ${f.n}：${esc(f.w.title)}` : `Week ${f.n}（準備中）`;
-    return `<li><button type="button" data-i="${i}" class="${f.kind === "ready" ? "is-ready" : ""}" aria-label="${label}">${pad(f.n)}</button></li>`;
+    const label = f.kind === "ready" ? tr("fmt.colon", { a: weekName(f.n), b: wf(f.w, "title") }) : tr("pager.soon", { a: weekName(f.n) });
+    return `<li><button type="button" data-i="${i}" class="${f.kind === "ready" ? "is-ready" : ""}" aria-label="${esc(label)}">${pad(f.n)}</button></li>`;
   }).join("");
   const scrubButtons = Array.from(scrub.querySelectorAll("button"));
 
@@ -100,11 +111,11 @@
     if (f.kind === "ready") {
       return `<li><a class="index-row" href="${root()}${f.w.href}">
         <span class="n">${pad(f.n)}</span>
-        <span class="t"><strong>${esc(f.w.title)}</strong><small>${lengths(f.w)}</small></span>
+        <span class="t"><strong>${esc(wf(f.w, "title"))}</strong><small>${lengths(f.w)}</small></span>
         <span class="thumb"><img src="${root()}${f.w.thumb}" alt="" loading="lazy" width="800" height="450"></span>
       </a></li>`;
     }
-    return `<li><div class="index-row is-soon"><span class="n">${pad(f.n)}</span><span class="t"><strong>準備中</strong></span></div></li>`;
+    return `<li><div class="index-row is-soon"><span class="n">${pad(f.n)}</span><span class="t"><strong>${esc(tr("home.soon"))}</strong></span></div></li>`;
   }).join("");
 
   const viewBtn = $("#viewBtn");
@@ -117,7 +128,7 @@
     indexView.hidden = !open;
     document.body.classList.toggle("index-open", open);
     viewBtn.setAttribute("aria-expanded", String(open));
-    const label = open ? "回到膠捲" : "全部週次";
+    const label = open ? tr("home.back") : tr("home.all");
     $("#viewLabel").textContent = label;
     viewBtn.setAttribute("aria-label", label);
     if (moveFocus) (open ? $("#indexTitle") : viewBtn).focus();
@@ -306,7 +317,10 @@
   const TS_SOON = small ? 0.6 : 0.75;        // 「準備中」只有大字，用小一點的貼圖就夠
   const IMG = { x: 40, y: 118, w: 944, h: 532 };
   const MONO = '"JetBrains Mono", "Cascadia Mono", Consolas, monospace';
-  const SANS = '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+  const SANS_FAMILY = I18N.lang === "zh-Hans" ? "Noto Sans SC" : "Noto Sans TC"; // 簡中用簡體字型
+  const SANS = I18N.lang === "zh-Hans"
+    ? '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif'
+    : '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
 
   function rr(g, x, y, w, h, r) {
     g.beginPath();
@@ -366,7 +380,7 @@
     g.fillText("NTNU・WEEK 03 — 16", x + 48, y + 368);
     g.fillStyle = "rgba(244,242,236,.72)";
     g.font = `500 24px ${SANS}`;
-    g.fillText("每週：一支影片＋幾則重點", x + 46, y + h - 44);
+    g.fillText(tr("home.tagline"), x + 46, y + h - 44);
   }
 
   function drawReady(g, f, img) {
@@ -379,7 +393,7 @@
       g.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
     }
     // 右上角「WEEK 03・已開放」（標題寫在畫面下方的介紹裡，這裡不重複；封面左上角是影片自己的標題）
-    const wk = `WEEK ${pad(f.n)}`, st = "已開放";
+    const wk = `WEEK ${pad(f.n)}`, st = tr("home.open");
     g.font = `700 22px ${MONO}`;
     const w1 = g.measureText(wk).width;
     g.font = `700 20px ${SANS}`;
@@ -416,7 +430,7 @@
     g.fillText(`WEEK ${pad(f.n)}`, x + 32, y + 52);
     g.fillStyle = "rgba(255,255,255,.85)";
     g.font = `700 34px ${SANS}`;
-    g.fillText("準備中", x + 30, y + h - 34);
+    g.fillText(tr("home.soon"), x + 30, y + h - 34);
     g.textAlign = "right";
     g.fillStyle = "rgba(255,255,255,.38)";
     g.font = `700 15px ${MONO}`;
@@ -459,11 +473,11 @@
   }
   function fontsReady() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    const titles = frames.filter((f) => f.w).map((f) => f.w.title).join("");
+    const titles = frames.filter((f) => f.w).map((f) => wf(f.w, "title")).join("");
     const jobs = [
-      document.fonts.load(`900 60px "Noto Sans TC"`, "LEARNINGANALYTICSTOOLS"),
-      document.fonts.load(`700 44px "Noto Sans TC"`, titles + "準備中已開放"),
-      document.fonts.load(`500 24px "Noto Sans TC"`, "每週：一支影片＋幾則重點"),
+      document.fonts.load(`900 60px "${SANS_FAMILY}"`, "LEARNINGANALYTICSTOOLS"),
+      document.fonts.load(`700 44px "${SANS_FAMILY}"`, titles + tr("home.soon") + tr("home.open")),
+      document.fonts.load(`500 24px "${SANS_FAMILY}"`, tr("home.tagline")),
       document.fonts.load(`700 20px "JetBrains Mono"`, "0123456789 WEEKNTUAOLSGRCMIY"),
     ];
     return Promise.race([Promise.all(jobs).catch(() => {}), new Promise((r) => setTimeout(r, 2500))]);
@@ -605,7 +619,7 @@
   let start = latest, spin = 2.8;
   try {
     const saved = Number(sessionStorage.getItem("film-frame"));
-    if (saved > 0 && saved < N && frames[saved].kind === "ready") { start = saved; spin = 0.6; }
+    if (saved > 0 && saved < N) { start = saved; spin = 0.6; }
   } catch (e) { /* 無法讀取也沒關係 */ }
   let pos = start - (reduceMotion ? 0 : spin); // 目前轉到第幾格（可以是小數，會一直累加）
   let target = start;
@@ -621,6 +635,7 @@
   let gliding = false;  // 自動前進中（用比較慢的速度滑過去）
   let ready = false;    // 第一批畫格貼圖做好了沒
   const current = () => mod(Math.round(pos));
+  frameNow = current;
 
   function touch() { lastInput = performance.now(); gliding = false; wake(); }
   function scheduleSnap(ms) {
@@ -676,7 +691,7 @@
   const playBtn = $("#playBtn");
   function paintPlay() {
     playBtn.setAttribute("aria-pressed", String(paused));
-    playBtn.setAttribute("aria-label", paused ? "讓膠捲繼續轉動" : "暫停膠捲轉動");
+    playBtn.setAttribute("aria-label", paused ? tr("home.play") : tr("home.pause"));
   }
   playBtn.addEventListener("click", () => { paused = !paused; paintPlay(); lastInput = 0; wake(); });
   paintPlay();
@@ -704,9 +719,9 @@
   let mouse = null; // 滑鼠停在膠捲上的位置（膠捲轉動時要重新判斷指到哪一格）
   function tagText(i) {
     const f = frames[i];
-    if (f.kind === "ready") return { text: `進入 Week ${f.n}`, soon: false };
-    if (f.kind === "leader") return { text: current() === i ? "全部週次" : "片頭", soon: true };
-    return { text: `Week ${f.n}・準備中`, soon: true };
+    if (f.kind === "ready") return { text: tr("home.enter", { n: f.n }), soon: false };
+    if (f.kind === "leader") return { text: current() === i ? tr("home.all") : tr("home.leaderTag"), soon: true };
+    return { text: tr("fmt.dot", { a: weekName(f.n), b: tr("home.soon") }), soon: true };
   }
   function setHover(i, x, y) {
     if (i !== hovered) wake();

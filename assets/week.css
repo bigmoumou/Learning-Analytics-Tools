@@ -22,6 +22,8 @@
   --ease: cubic-bezier(.2, .7, .2, 1);
   color-scheme: light;
 }
+/* 簡中用簡體字型（assets/i18n.js 選到時才載入） */
+:root:lang(zh-Hans) { --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #070707; --ink: #f1efe9; --ink-2: #b9b6ae; --ink-3: #85827b;
@@ -61,8 +63,8 @@ body::after {
 .page > main { width: 100%; max-width: var(--wide); margin-inline: auto; padding-bottom: clamp(3rem, 7vw, 5rem); }
 
 /* ---------- 頂列（和首頁一樣） ---------- */
-.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-top: max(14px, env(safe-area-inset-top)); }
-.brand { display: flex; flex-direction: column; gap: .1rem; text-decoration: none; min-width: 0; padding-top: .35rem; }
+.top { display: flex; align-items: flex-start; gap: .5rem; padding-top: max(14px, env(safe-area-inset-top)); }
+.brand { display: flex; flex-direction: column; gap: .1rem; text-decoration: none; min-width: 0; padding-top: .35rem; margin-right: auto; }
 .brand-name { font-size: 1.02rem; font-weight: 700; line-height: 1.3; }
 .brand-sub { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; color: var(--ink-3); }
 .brand:hover .brand-name { text-decoration: underline; text-underline-offset: .2em; }
@@ -78,12 +80,25 @@ body::after {
 .pill.icon-only span { display: none; }
 .pill.solid { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
+/* 語言選單（assets/i18n.js 加在主題按鈕前面）：看起來是一顆小按鈕，點下去是瀏覽器原生的選單 */
+.lang-switch { position: relative; flex: none; padding: 0 .85rem; }
+.lang-short { font-size: .8rem; font-weight: 700; }
+.lang-select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; font: inherit; }
+.lang-switch:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .lang-switch { width: 2.5rem; padding: 0; }
+  .lang-switch svg { display: none; }
+}
+
 /* ---------- 標題 ---------- */
 .head { padding-block: clamp(2.2rem, 7vw, 4.5rem) clamp(1.4rem, 3vw, 2rem); display: flex; flex-direction: column; gap: .7rem; max-width: 46rem; }
 .kicker { display: flex; align-items: center; gap: .55rem; font-family: var(--font-mono); font-size: .76rem; font-weight: 700; letter-spacing: .14em; color: var(--ink-2); }
 .kicker .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); flex: none; }
 .head h1 { font-size: clamp(2rem, 5.2vw, 3.6rem); font-weight: 700; line-height: 1.14; letter-spacing: .005em; text-wrap: balance; }
 .head .lede { font-size: clamp(1.02rem, 1.6vw, 1.15rem); color: var(--ink-2); line-height: 1.75; text-wrap: pretty; }
+/* 非繁中時的說明：影片畫面裡的字是繁中（繁中時是空的，不顯示） */
+.lang-note { font-size: .86rem; color: var(--ink-3); line-height: 1.6; }
+.lang-note:empty { display: none; }
 
 /* ---------- 每支影片一段（section.unit） ---------- */
 .unit + .unit { margin-top: clamp(3.4rem, 9vw, 6rem); }

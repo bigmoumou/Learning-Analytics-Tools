@@ -9,9 +9,13 @@
 //   5. assets/course.js 的 WEEKS 裡的 href、thumb、still 都找得到
 //   6. 每個影片資料夾（weeks/weekNN/video/NN-slug/）都有 hls/index.m3u8、poster.jpg、thumb.jpg，而且週次頁有用到
 //   7. _redirects 轉去的目的地存在
-//   8. 提醒：weeks/ 裡不該有 mp4（只放 HLS）、頁面裡還有「待填」、總容量接近 GitHub Pages 的 1 GB
+//   8. 多語系：assets/i18n-strings.js 四種語言的 key 一樣、沒有空的；每頁都載入 i18n；
+//      data-ui 用到的 key 都存在；data-i18n、data-i18n-attr 的元素都有 data-zh-hans、data-en、data-vi；
+//      已開放的週次在 WEEKS 裡有三種語言的 title、summary、meta
+//   9. 提醒：weeks/ 裡不該有 mp4（只放 HLS）、頁面裡還有「待填」、總容量接近 GitHub Pages 的 1 GB
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -20,6 +24,8 @@ const BUDGET = 800 * 1024 * 1024;
 const SKIP_DIRS = new Set([".git", "node_modules", ".wrangler"]);
 const REDIRECT_MARK = 'location.hostname.endsWith("github.io")';
 const COPYRIGHT = "Copyright © 2026 JUNHAO CHEN";
+const LANGS = ["zh-Hant", "zh-Hans", "en", "vi"];
+const TRANSLATED = { "zh-hans": "zh-Hans", en: "en", vi: "vi" }; // data-xxx 屬性 → 語言
 
 const errors = [];
 const warnings = [];
@@ -64,11 +70,52 @@ for (const f of published) {
   if (size >= MAX_FILE) error(`${rel(f)} 有 ${(size / 1048576).toFixed(1)} MiB，超過 Cloudflare Pages 單檔 25 MiB 的上限`);
 }
 
-// 2、3、4. 頁面
+// 8. 多語系：共用文字
+const strCtx = { window: {} };
+try {
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, "assets/i18n-strings.js"), "utf8"), strCtx);
+} catch (e) {
+  error(`assets/i18n-strings.js 讀不進來：${e.message}`);
+}
+const STR = strCtx.window.I18N_STRINGS || {};
+const baseKeys = Object.keys(STR["zh-Hant"] || {});
+for (const l of LANGS) {
+  const table = STR[l];
+  if (!table) { error(`assets/i18n-strings.js 少了 ${l}`); continue; }
+  for (const k of baseKeys) {
+    if (!(k in table)) error(`assets/i18n-strings.js 的 ${l} 少了 "${k}"`);
+    else if (table[k] === "" && !(l === "zh-Hant" && k === "video.note")) error(`assets/i18n-strings.js 的 ${l} "${k}" 是空的`);
+  }
+  for (const k of Object.keys(table)) if (!baseKeys.includes(k)) error(`assets/i18n-strings.js 的 ${l} 多了繁中沒有的 "${k}"`);
+}
+
+// 2、3、4、8. 頁面
 const playlists = new Set();
 const pages = published.filter((f) => f.endsWith(".html"));
 for (const page of pages) {
   const html = fs.readFileSync(page, "utf8");
+  for (const need of ["i18n-strings.js", "i18n.js"]) {
+    if (!new RegExp(`<script src="[^"]*assets/${need.replace(".", "\\.")}"></script>`).test(html)) error(`${rel(page)} 沒有載入 assets/${need}（放在 <head>，不要 defer）`);
+  }
+  for (const m of html.matchAll(/\sdata-ui="([^"]+)"/g)) {
+    if (!baseKeys.includes(m[1])) error(`${rel(page)}：data-ui="${m[1]}" 在 assets/i18n-strings.js 裡找不到`);
+  }
+  for (const m of html.matchAll(/\sdata-ui-attr="([^"]+)"/g)) {
+    for (const pair of m[1].split(";")) {
+      const key = (pair.split(":")[1] || "").trim();
+      if (!baseKeys.includes(key)) error(`${rel(page)}：data-ui-attr="${m[1]}" 的 "${key}" 在 assets/i18n-strings.js 裡找不到`);
+    }
+  }
+  // 每個要翻譯的元素：三種語言都要寫（屬性值裡可以有 > 和換行）
+  for (const m of html.matchAll(/<([a-zA-Z][\w-]*)((?:\s+[\w:-]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>]+))?)*)\s*\/?>/g)) {
+    const attrs = m[2];
+    if (!/\sdata-i18n(?:-attr)?(?=[\s=]|$)/.test(attrs)) continue;
+    const line = html.slice(0, m.index).split("\n").length;
+    for (const [suffix, l] of Object.entries(TRANSLATED)) {
+      const v = attrs.match(new RegExp(`\\sdata-${suffix}="([^"]*)"`));
+      if (!v || !v[1].trim()) error(`${rel(page)} 第 ${line} 行的 <${m[1]}> 少了 ${l} 翻譯（data-${suffix}）`);
+    }
+  }
   if (!html.includes(REDIRECT_MARK)) error(`${rel(page)} 少了 github.io 轉址程式（從 weeks/week03/index.html 的 <head> 複製）`);
   if (!html.includes(COPYRIGHT)) error(`${rel(page)} 少了版權聲明「${COPYRIGHT}」（從 weeks/week03/index.html 的頁尾複製）`);
   if (html.includes("待填")) warn(`${rel(page)} 還有「待填」的地方`);
@@ -94,6 +141,25 @@ for (const pl of playlists) {
 const course = fs.readFileSync(path.join(ROOT, "assets/course.js"), "utf8");
 for (const m of course.matchAll(/\b(href|thumb|still): "([^"]+)"/g)) {
   if (!exists(path.join(ROOT, m[2]))) error(`assets/course.js 的 ${m[1]}: "${m[2]}" 找不到`);
+}
+// 8. 已開放的週次要有三種語言的 title、summary、meta
+const courseCtx = {
+  window: {},
+  document: { readyState: "loading", addEventListener() {}, querySelector() { return null; } },
+};
+try {
+  vm.runInNewContext(course, courseCtx);
+  for (const [n, w] of Object.entries(courseCtx.window.WEEKS || {})) {
+    if (w.status !== "ready") continue;
+    for (const l of LANGS.slice(1)) {
+      for (const f of ["title", "summary", "meta"]) {
+        const v = w.i18n && w.i18n[l] && w.i18n[l][f];
+        if (!v || !String(v).trim()) error(`assets/course.js 的 WEEKS[${n}] 少了 ${l} 的 ${f}（寫在 i18n["${l}"]）`);
+      }
+    }
+  }
+} catch (e) {
+  error(`assets/course.js 讀不進來：${e.message}`);
 }
 
 // 6. 影片資料夾

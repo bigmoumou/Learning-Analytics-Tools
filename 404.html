@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <script>
@@ -9,7 +9,7 @@
   }
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>找不到頁面｜Learning Analytics Tools</title>
+<title data-ui="404.doc">找不到頁面｜Learning Analytics Tools</title>
 <meta name="robots" content="noindex">
 <meta name="author" content="JUNHAO CHEN">
 <meta name="copyright" content="© 2026 JUNHAO CHEN">
@@ -18,6 +18,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="/assets/week.css">
+<!-- 多語系要比其他程式先載入（不要 defer） -->
+<script src="/assets/i18n-strings.js"></script>
+<script src="/assets/i18n.js"></script>
 <script src="/assets/course.js" defer></script>
 </head>
 <body data-root="/">
@@ -25,22 +28,22 @@
   <header class="top">
     <a class="brand" href="/">
       <span class="brand-name">Learning Analytics Tools</span>
-      <span class="brand-sub">NTNU・課程教材・Week 3 – 16</span>
+      <span class="brand-sub" data-ui="brand.sub">NTNU・課程教材・Week 3 – 16</span>
     </a>
     <button class="pill icon-only" id="themeBtn" type="button">深色</button>
   </header>
   <main>
     <div class="head">
       <p class="kicker"><span class="dot" aria-hidden="true"></span>404</p>
-      <h1>找不到這一頁</h1>
-      <p class="lede">網址可能打錯了，或是這一頁已經搬家。從課程首頁可以找到每一週的教材。</p>
-      <p><a class="pill solid" href="/">回到課程首頁</a></p>
+      <h1 data-ui="404.title">找不到這一頁</h1>
+      <p class="lede" data-ui="404.lede">網址可能打錯了，或是這一頁已經搬家。從課程首頁可以找到每一週的教材。</p>
+      <p><a class="pill solid" href="/" data-ui="nav.home">回到課程首頁</a></p>
     </div>
   </main>
 
   <footer class="foot">
     <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
-    <span>Copyright © 2026 JUNHAO CHEN・版權所有</span>
+    <span data-ui="footer.copyright">Copyright © 2026 JUNHAO CHEN・版權所有</span>
   </footer>
 </div>
 </body>

@@ -5,6 +5,8 @@
      影片檔放在 video/NN-slug/）。首頁膠捲會自動多一格已開放的畫面。
    - still 是膠捲畫格用的大圖、thumb 是清單用的小圖，通常用這週第一支影片的 poster.jpg、thumb.jpg；
      meta 是首頁顯示的一行說明，例如「影片 1 分 23 秒・5 則重點」或「2 支影片・共 3 分鐘」。
+   - i18n 放 title、summary、meta 的簡中、英文、越南文；已開放的週次三種都要有（tools/check.mjs 會檢查）。
+     介面文字在 assets/i18n-strings.js，語言切換在 assets/i18n.js（要比這個檔案先載入）。
    - 每一頁的 <body data-root="..."> 指到網站根目錄（入口是 "./"，weeks/weekNN/ 是 "../../"）。
    ========================================================================== */
 (function () {
@@ -28,6 +30,23 @@
       thumb: "weeks/week03/video/01-report-journey/thumb.jpg",
       still: "weeks/week03/video/01-report-journey/poster.jpg",
       meta: "影片 1 分 23 秒・5 則重點",
+      i18n: {
+        "zh-Hans": {
+          title: "AI 助理的工作文件夹",
+          summary: "Codex 为什么以文件夹为工作单位：路径、工作文件夹、四个窗口、相对路径、找回文件。",
+          meta: "视频 1 分 23 秒・5 条重点",
+        },
+        en: {
+          title: "The AI Assistant's Working Folder",
+          summary: "Why Codex works inside one folder: paths, the working folder, four windows, relative paths, and finding files again.",
+          meta: "Video 1 min 23 s · 5 key points",
+        },
+        vi: {
+          title: "Thư mục làm việc của trợ lý AI",
+          summary: "Vì sao Codex làm việc trong một thư mục: đường dẫn, thư mục làm việc, bốn cửa sổ, đường dẫn tương đối và cách tìm lại tệp.",
+          meta: "Video 1 phút 23 giây · 5 ý chính",
+        },
+      },
     },
   };
 
@@ -43,6 +62,11 @@
   }
   window.courseUtil = { pad, esc, root };
 
+  // 多語系（assets/i18n.js）；萬一沒載入就用繁中
+  const I18N = window.I18N;
+  const t = (key, vars, zh) => (I18N ? I18N.t(key, vars) : zh);
+  const pick = (w, field) => (I18N ? I18N.pick(w, field) : w[field]);
+
   /* ---------- 主題切換（和 Week 3 教材共用同一個設定） ---------- */
   const ICON_SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
   const ICON_MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
@@ -51,6 +75,7 @@
     if (t) return t === "dark";
     return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
+  let paintTheme = () => {};
   function initTheme() {
     try {
       const saved = localStorage.getItem("lesson-theme");
@@ -58,11 +83,11 @@
     } catch (e) { /* 無法讀取也沒關係 */ }
     const btn = $("#themeBtn");
     if (!btn) return;
-    const paint = () => {
+    const paint = (paintTheme = () => {
       const d = isDark();
-      btn.innerHTML = (d ? ICON_SUN : ICON_MOON) + `<span>${d ? "淺色" : "深色"}</span>`;
-      btn.setAttribute("aria-label", d ? "切換成淺色" : "切換成深色");
-    };
+      btn.innerHTML = (d ? ICON_SUN : ICON_MOON) + `<span>${esc(d ? t("theme.light", null, "淺色") : t("theme.dark", null, "深色"))}</span>`;
+      btn.setAttribute("aria-label", d ? t("theme.toLight", null, "切換成淺色") : t("theme.toDark", null, "切換成深色"));
+    });
     paint();
     const changed = () => document.dispatchEvent(new CustomEvent("themechange"));
     btn.addEventListener("click", () => {
@@ -85,12 +110,14 @@
     if (!el) return;
     const n = Number(el.dataset.week);
     const r = root();
+    const zh = !I18N || I18N.lang.startsWith("zh");
     const link = (m, dir) => {
       if (m < COURSE.firstWeek || m > COURSE.lastWeek) return "<span></span>";
       const w = WEEKS[m];
-      const label = dir < 0 ? `← Week ${m}` : `Week ${m} →`;
-      if (w && w.status === "ready") return `<a href="${r}${w.href}">${label}　${esc(w.title)}</a>`;
-      return `<span>${label}（準備中）</span>`;
+      const wk = t("week.n", { n: m }, `Week ${m}`);
+      const label = dir < 0 ? `← ${wk}` : `${wk} →`;
+      if (w && w.status === "ready") return `<a href="${r}${w.href}">${esc(label)}${zh ? "　" : " · "}${esc(pick(w, "title"))}</a>`;
+      return `<span>${esc(t("pager.soon", { a: label }, `${label}（準備中）`))}</span>`;
     };
     el.innerHTML = link(n - 1, -1) + link(n + 1, 1);
   }
@@ -98,6 +125,7 @@
   function start() {
     initTheme();
     renderPager();
+    document.addEventListener("langchange", () => { paintTheme(); renderPager(); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();

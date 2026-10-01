@@ -9,7 +9,7 @@ Learning Analytics Tools Implementation Applications (NTNU) 課程教材網站�
 轉到 Cloudflare 上的同一頁（每一頁 `<head>` 最前面的轉址程式，加上 `404.html`）。
 
 每週（Week 3 – Week 16）只有一頁：標題，接著每支影片一段（影片、片段、幾則重點），不再往下分頁。
-一週通常有兩支以上的影片。
+一週通常有兩支以上的影片。網站有四種語言：繁中（預設）、简中、English、Tiếng Việt（見下面「多語系」）。
 
 ## 結構
 
@@ -21,7 +21,9 @@ assets/
   home.css, home.js     首頁的樣式和膠捲（原生 WebGL2，不用函式庫；膠捲停住時不重畫）；
                         不支援 WebGL2 時改顯示週次清單
   week.css              每週頁面和 404 的樣式（和首頁同一套風格）
-  course.js             課程資料（每週標題、狀態、連結、圖片）和共用行為（主題切換、上一週／下一週）
+  course.js             課程資料（每週標題、狀態、連結、圖片、各語言翻譯）和共用行為（主題切換、上一週／下一週）
+  i18n.js               多語系：決定語言、語言選單、把頁面文字換成選的語言
+  i18n-strings.js       全站共用的介面文字（四種語言）
   video.js              每週頁面共用：播放 HLS、片段按鈕、#t= 連結、一次只播一支
   vendor/               hls.js 1.6.15（Apache-2.0，授權在 hls.LICENSE.txt）
 weeks/
@@ -66,8 +68,9 @@ tools/new-video.sh 4 01-relative-path "相對路徑的起點"
 
    最後的 `12` 是封面取第幾秒的畫面（可省略：已有封面時不動，沒有時取 30% 的位置）。
    影片會重新壓縮（H.264 CRF 23），每 8 秒一個關鍵影格，切成 8 秒一段的 HLS。
-4. 補完週次頁裡「待填」的地方：標題、說明、片段時間（`data-t` 是秒數）、重點。重點寫短句就好，不要加小標題。
-5. 這週第一次開放時，在 `assets/course.js` 的 `WEEKS` 加上這一週：
+4. 補完週次頁裡「待填」的地方：標題、說明、片段時間（`data-t` 是秒數）、重點，以及每一處的
+   简中、英文、越南文翻譯（`data-zh-hans`、`data-en`、`data-vi`）。重點寫短句就好，不要加小標題。
+5. 這週第一次開放時，在 `assets/course.js` 的 `WEEKS` 加上這一週（`i18n` 三種語言都要有）：
 
    ```js
    4: {
@@ -78,6 +81,11 @@ tools/new-video.sh 4 01-relative-path "相對路徑的起點"
      thumb: "weeks/week04/video/01-relative-path/thumb.jpg",   // 清單用的小圖（800×450）
      still: "weeks/week04/video/01-relative-path/poster.jpg",  // 膠捲畫格用的大圖（1920×1080）
      meta: "2 支影片・共 3 分鐘",                                // 首頁顯示的一行說明
+     i18n: {
+       "zh-Hans": { title: "…", summary: "…", meta: "2 个视频・共 3 分钟" },
+       en: { title: "…", summary: "…", meta: "2 videos · 3 min" },
+       vi: { title: "…", summary: "…", meta: "2 video · 3 phút" },
+     },
    },
    ```
 
@@ -93,6 +101,23 @@ tools/new-video.sh 4 01-relative-path "相對路徑的起點"
 - 連結到影片的某個時間：`weeks/week04/#t=30` 是第一支影片的 30 秒，`weeks/week04/#02-find-files&t=30` 是指定的那一支。
 - 影片確定了再 commit：重新渲染過的舊版本會一直留在 git 歷史裡，讓 repo 越來越大。
 - `publish-video.sh` 會自己找 ffmpeg（PATH，或 opus-video conda 環境裡的那一份）；要指定時用 `FFMPEG=...`。
+
+## 多語系
+
+繁中（預設）、简中、English、Tiếng Việt。右上角的語言選單由 `assets/i18n.js` 自動加上，選了會記住；
+網址加 `?lang=zh-Hans`、`?lang=en`、`?lang=vi` 可以直接指定（分享連結用）。第一次來的人依瀏覽器語言決定。
+
+- 繁中直接寫在 HTML 裡（沒有 JavaScript 也看得到），其他語言這樣標：
+  - 全站共用的文字（頁尾、翻頁、首頁按鈕……）：`data-ui="key"`，屬性用 `data-ui-attr="aria-label:key"`，
+    文字在 `assets/i18n-strings.js`。
+  - 這一頁自己的內容（標題、片段、重點）：加 `data-i18n`，翻譯直接寫在 `data-zh-hans`、`data-en`、`data-vi`
+    （可以含 `<strong>`、`<code>`；引號用「“ ”」，不要用 `"`）。屬性（例如 meta description）用 `data-i18n-attr="content"`。
+  - 首頁和翻頁用的週次標題、摘要、meta：`assets/course.js` 的 `WEEKS[n].i18n`。
+- 每一頁的 `<head>` 要先載入 `i18n-strings.js`、`i18n.js`（不要 defer），範本已經寫好。
+- 簡中會自動改用 Noto Sans SC 字型（選到時才載入）。
+- 影片畫面裡的字是繁中；非繁中時，週次頁標題下會有一行說明（`video.note`）。
+- `tools/check.mjs` 會檢查：每個 `data-i18n` 元素三種翻譯都有、`data-ui` 的 key 都存在、
+  四種語言的介面文字一樣齊、已開放的週次在 `WEEKS` 裡有三種語言。
 
 ## 版權
 

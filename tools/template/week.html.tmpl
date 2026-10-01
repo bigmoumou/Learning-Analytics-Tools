@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <script>
@@ -9,14 +9,23 @@
   }
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Week {{WEEK}}｜待填：這週的標題</title>
-<meta name="description" content="Week {{WEEK}}：待填：一句話說明這週學什麼。">
+<title data-i18n
+  data-zh-hans="Week {{WEEK}}｜待填：这周的标题"
+  data-en="Week {{WEEK}} | 待填: this week's title"
+  data-vi="Tuần {{WEEK}} | 待填: tiêu đề tuần này">Week {{WEEK}}｜待填：這週的標題</title>
+<meta name="description" content="Week {{WEEK}}：待填：一句話說明這週學什麼。" data-i18n-attr="content"
+  data-zh-hans="Week {{WEEK}}：待填：一句话说明这周学什么。"
+  data-en="Week {{WEEK}}: 待填: one sentence on what this week covers."
+  data-vi="Tuần {{WEEK}}: 待填: một câu nói tuần này học gì.">
 <meta name="author" content="JUNHAO CHEN">
 <meta name="copyright" content="© 2026 JUNHAO CHEN">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="../../assets/week.css">
+<!-- 多語系要比其他程式先載入（不要 defer） -->
+<script src="../../assets/i18n-strings.js"></script>
+<script src="../../assets/i18n.js"></script>
 <script src="../../assets/course.js" defer></script>
 </head>
 <body data-root="../../">
@@ -24,7 +33,7 @@
   <header class="top">
     <a class="brand" href="../../">
       <span class="brand-name">Learning Analytics Tools</span>
-      <span class="brand-sub">NTNU・課程教材・Week 3 – 16</span>
+      <span class="brand-sub" data-ui="brand.sub">NTNU・課程教材・Week 3 – 16</span>
     </a>
     <button class="pill icon-only" id="themeBtn" type="button">深色</button>
   </header>
@@ -32,19 +41,27 @@
   <main>
     <div class="head">
       <p class="kicker"><span class="dot" aria-hidden="true"></span>WEEK {{WEEK2}}</p>
-      <h1>待填：這週的標題</h1>
-      <p class="lede">待填：一兩句話說明這週要看懂什麼。</p>
+      <h1 data-i18n
+        data-zh-hans="待填：这周的标题"
+        data-en="待填: this week's title"
+        data-vi="待填: tiêu đề tuần này">待填：這週的標題</h1>
+      <p class="lede" data-i18n
+        data-zh-hans="待填：一两句话说明这周要看懂什么。"
+        data-en="待填: one or two sentences on what this week explains."
+        data-vi="待填: một hai câu nói tuần này cần hiểu điều gì.">待填：一兩句話說明這週要看懂什麼。</p>
+      <p class="lang-note" data-ui="video.note"></p>
     </div>
 
-    <!-- 一支影片一個 section：id 和 video/ 裡的資料夾同名；影片、片段、重點都由 assets/video.js 接起來 -->
+    <!-- 一支影片一個 section：id 和 video/ 裡的資料夾同名；影片、片段、重點都由 assets/video.js 接起來。
+         翻譯寫在 data-zh-hans、data-en、data-vi（assets/i18n.js），三種都要有 -->
 
-    <nav class="pager" id="pager" data-week="{{WEEK}}" aria-label="其他週次"></nav>
+    <nav class="pager" id="pager" data-week="{{WEEK}}" aria-label="其他週次" data-ui-attr="aria-label:pager.label"></nav>
   </main>
 
   <footer class="foot">
     <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
-    <span>Copyright © 2026 JUNHAO CHEN・版權所有</span>
-    <a href="../../">回到課程首頁</a>
+    <span data-ui="footer.copyright">Copyright © 2026 JUNHAO CHEN・版權所有</span>
+    <a href="../../" data-ui="nav.home">回到課程首頁</a>
   </footer>
 </div>
 

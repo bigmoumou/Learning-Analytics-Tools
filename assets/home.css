@@ -26,6 +26,8 @@
   --ease: cubic-bezier(.2, .7, .2, 1);
   color-scheme: light;
 }
+/* 簡中用簡體字型（assets/i18n.js 選到時才載入） */
+:root:lang(zh-Hans) { --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #070707; --ink: #f1efe9; --ink-2: #b9b6ae; --ink-3: #85827b;
@@ -104,6 +106,12 @@ body:not(.is-loading) .loader span { animation: none; }
 .pill[aria-expanded="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .pill .i-close, .pill[aria-expanded="true"] .i-list { display: none; }
 .pill[aria-expanded="true"] .i-close { display: block; }
+
+/* 語言選單（assets/i18n.js 加在主題按鈕前面）：看起來是一顆小按鈕，點下去是瀏覽器原生的選單 */
+.lang-switch { position: relative; flex: none; padding: 0 .85rem; }
+.lang-short { font-size: .8rem; font-weight: 700; }
+.lang-select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; font: inherit; }
+.lang-switch:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
 .nw { white-space: nowrap; }
 
 /* ---------- 底部：目前畫格的介紹 + 週次刻度 ---------- */
@@ -166,7 +174,7 @@ body:not(.is-loading) .loader span { animation: none; }
 #playBtn .i-play { display: none; }
 #playBtn[aria-pressed="true"] .i-play { display: block; }
 #playBtn[aria-pressed="true"] .i-pause { display: none; }
-.hint { font-size: .78rem; color: var(--ink-3); margin-left: .5rem; }
+.hint { font-size: .78rem; color: var(--ink-3); margin-left: .5rem; max-width: 15rem; line-height: 1.45; } /* 英文、越南文的提示比較長：換行，不要把左邊的介紹擠窄 */
 .hint-narrow { display: none; }
 /* 版權：底部最後一行，橫跨整列、靠右 */
 .copyright { grid-column: 1 / -1; justify-self: end; margin-top: -.4rem; font-family: var(--font-mono); font-size: .68rem; letter-spacing: .06em; color: var(--ink-3); }
@@ -230,6 +238,8 @@ body.index-open .hud-top { background: var(--bg); padding-bottom: .9rem; border-
   .info-meta { font-size: .9rem; }
   #viewLabel { display: none; }
   #viewBtn { width: 2.5rem; padding: 0; }
+  .lang-switch { width: 2.5rem; padding: 0; }
+  .lang-switch svg { display: none; }
   .index-row { grid-template-columns: 3.6rem minmax(0, 1fr); }
   .index-row .thumb { display: none; }
 }
