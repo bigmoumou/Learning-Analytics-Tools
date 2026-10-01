@@ -73,6 +73,7 @@ body.home::after {
 .stage canvas.is-link { cursor: pointer; }
 .stage { opacity: 0; transition: opacity 1.1s var(--ease); }
 body:not(.is-loading) .stage { opacity: 1; }
+body.spin-intro .stage { transition-duration: .3s; } /* 開場快轉：舞台很快就顯示，才看得到最快的那一段 */
 
 .loader { position: fixed; inset: 0; display: grid; place-content: center; grid-auto-flow: column; gap: 6px; z-index: 5; pointer-events: none; transition: opacity .4s; }
 .loader span { width: 22px; height: 2px; background: var(--ink); animation: load 1s var(--ease) infinite; }

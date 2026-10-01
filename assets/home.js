@@ -617,21 +617,28 @@
   /* ======================================================================
      狀態和操作
      ====================================================================== */
-  // 開場：這個分頁第一次打開時，膠捲快速轉一整圈、越轉越慢，停在最新開放的一週（舞台光這時才亮）。
-  // 從某一週回到首頁、或換語言重新載入時，停在剛剛那一格，只輕輕滑進來。
-  const SPIN_MS = 3000;
+  // 開場：每次打開（或重新整理）首頁，膠捲先等速快轉，再慢慢減速，轉一圈半停在最新開放的一週（舞台光這時才亮）。
+  // 從某一週回到首頁、或換語言重新載入時（film-frame 記著剛剛那一格，只用一次），只輕輕滑進來。
+  const SPIN_FAST = 800;     // 等速快轉的時間（毫秒）
+  const SPIN_SLOW = 2400;    // 減速到停下的時間（毫秒）
+  const SPIN_TURNS = 1.5;    // 總共轉幾圈
   const SPIN_BACK = 0.5;     // 停下時稍微超過一點再退回來（約 0.1 格），像放映機卡進片門
   const LAND_HOLD = 1900;    // 落地後多停一下：約 8 秒（1.9 + IDLE_MS + HOLD_MS）才開始自動往下一格
-  let start = latest, spin = 2.8, bigSpin = false;
+  let start = latest, spin = 2.8, bigSpin = !reduceMotion;
   try {
     const saved = Number(sessionStorage.getItem("film-frame"));
-    if (saved > 0 && saved < N) { start = saved; spin = 0.6; }
-    else if (!reduceMotion && !sessionStorage.getItem("film-spun")) {
-      bigSpin = true;
-      spin = N;
-      sessionStorage.setItem("film-spun", "1");
-    }
+    sessionStorage.removeItem("film-frame");
+    if (saved > 0 && saved < N) { start = saved; spin = 0.6; bigSpin = false; }
   } catch (e) { /* 無法讀取也沒關係 */ }
+  if (bigSpin) spin = Math.round(N * SPIN_TURNS);
+  // 減速段用 ease-out-back，開頭的速度要接得上等速段：v = (3 + s) × 減速段距離 ÷ 減速段時間
+  const spinSlowDist = spin / (1 + (3 + SPIN_BACK) * SPIN_FAST / SPIN_SLOW);
+  const spinSpeed = (3 + SPIN_BACK) * spinSlowDist / SPIN_SLOW;   // 每毫秒幾格
+  function spinOffset(ms) {  // 開場後 ms 毫秒轉過了幾格
+    if (ms < SPIN_FAST) return spinSpeed * ms;
+    const x = clamp((ms - SPIN_FAST) / SPIN_SLOW, 0, 1) - 1;
+    return spinSpeed * SPIN_FAST + spinSlowDist * (1 + (SPIN_BACK + 1) * x * x * x + SPIN_BACK * x * x);
+  }
   let spinT0 = 0;
   let pos = start - (reduceMotion ? 0 : spin); // 目前轉到第幾格（可以是小數，會一直累加）
   let target = start;
@@ -845,11 +852,10 @@
 
     const prev = pos;
     if (spinning) {
-      // 開場快轉：一開始很快、越轉越慢（ease-out-back，最後稍微超過再退回）
-      const u = clamp((now - spinT0) / SPIN_MS, 0, 1);
-      const x = u - 1;
-      pos = start - spin * (1 - (1 + (SPIN_BACK + 1) * x * x * x + SPIN_BACK * x * x));
-      if (u >= 1) landed();
+      // 開場快轉：先等速快轉，再越轉越慢（最後稍微超過再退回）
+      const ms = now - spinT0;
+      pos = start - spin + spinOffset(ms);
+      if (ms >= SPIN_FAST + SPIN_SLOW) landed();
     } else {
       const k = now < introUntil ? 2.3 : drag ? 20 : gliding ? 3.2 : 7;
       pos += (target - pos) * (1 - Math.exp(-k * dt));
@@ -949,6 +955,8 @@
       paint(i);
       if (done === FIRST) {
         ready = true;
+        // 快轉時舞台很快就要看得到（不然最快的那段都在淡入，看起來只像輕輕滑進來）
+        if (bigSpin) document.body.classList.add("spin-intro");
         document.body.classList.remove("is-loading");
         layout(); // 字型載入後文字高度可能改變，重新量一次
         if (bigSpin) {
