@@ -1,6 +1,6 @@
 /* ==========================================================================
    多語系：繁中（預設）、简中、English、Tiếng Việt
-   - 語言的決定順序：網址 ?lang= → 上次選的（localStorage）→ 瀏覽器語言 → 繁中。
+   - 語言的決定順序：網址 ?lang= → 上次選的（localStorage）→ 繁中。不看瀏覽器語言：第一次來一律是繁中。
    - 預設的繁中直接寫在 HTML 裡（沒有 JavaScript 也看得到），其他語言這樣標：
        data-ui="key"                     全站共用的文字，從 assets/i18n-strings.js 取（{n} 這類變數取自同一個元素的 data-n）
        data-ui-attr="aria-label:key"     把共用文字放進屬性，多個用 ; 隔開
@@ -25,18 +25,6 @@
   const STORE = "site-lang";
   const STR = window.I18N_STRINGS || {};
 
-  function fromBrowser() {
-    const list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ""];
-    for (const raw of list) {
-      const l = String(raw).toLowerCase();
-      if (/^zh-(hans|cn|sg|my)\b/.test(l)) return "zh-Hans";
-      if (l.startsWith("zh")) return "zh-Hant";
-      if (l.startsWith("vi")) return "vi";
-      if (l.startsWith("en")) return "en";
-    }
-    return list[0] ? "en" : DEFAULT; // 其他語言的瀏覽器先給英文
-  }
-
   function save(code) {
     try { localStorage.setItem(STORE, code); } catch (e) { /* 無法儲存也沒關係 */ }
   }
@@ -49,7 +37,7 @@
       const s = localStorage.getItem(STORE);
       if (CODES.includes(s)) return s;
     } catch (e) { /* 無法讀取也沒關係 */ }
-    return fromBrowser();
+    return DEFAULT;
   }
 
   // 簡體中文用 Noto Sans SC（同一個字的寫法和繁體字型不一樣），選到時才載入

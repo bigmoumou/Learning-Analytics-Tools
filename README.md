@@ -105,7 +105,7 @@ tools/new-video.sh 4 01-relative-path "相對路徑的起點"
 ## 多語系
 
 繁中（預設）、简中、English、Tiếng Việt。右上角的語言選單由 `assets/i18n.js` 自動加上，選了會記住；
-網址加 `?lang=zh-Hans`、`?lang=en`、`?lang=vi` 可以直接指定（分享連結用）。第一次來的人依瀏覽器語言決定。
+網址加 `?lang=zh-Hans`、`?lang=en`、`?lang=vi` 可以直接指定（分享連結用）。第一次來的人一律是繁中（不看瀏覽器語言）。
 
 - 繁中直接寫在 HTML 裡（沒有 JavaScript 也看得到），其他語言這樣標：
   - 全站共用的文字（頁尾、翻頁、首頁按鈕……）：`data-ui="key"`，屬性用 `data-ui-attr="aria-label:key"`，
