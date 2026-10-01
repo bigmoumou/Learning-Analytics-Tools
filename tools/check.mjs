@@ -3,7 +3,7 @@
 //
 // 檢查項目：
 //   1. 每個檔案都小於 25 MiB（Cloudflare Pages 的上限，超過時整個部署會失敗）
-//   2. 每個 .html 都有 github.io 轉址程式（舊網址才轉得過來）
+//   2. 每個 .html 都有 github.io 轉址程式（舊網址才轉得過來）和版權聲明
 //   3. HTML 裡的本機連結（href、src、poster、data-hls）都找得到檔案
 //   4. HLS 播放清單（.m3u8）列出的小段都在
 //   5. assets/course.js 的 WEEKS 裡的 href、thumb、still 都找得到
@@ -19,6 +19,7 @@ const MAX_FILE = 25 * 1024 * 1024;
 const BUDGET = 800 * 1024 * 1024;
 const SKIP_DIRS = new Set([".git", "node_modules", ".wrangler"]);
 const REDIRECT_MARK = 'location.hostname.endsWith("github.io")';
+const COPYRIGHT = "Copyright © 2026 JUNHAO CHEN";
 
 const errors = [];
 const warnings = [];
@@ -69,6 +70,7 @@ const pages = published.filter((f) => f.endsWith(".html"));
 for (const page of pages) {
   const html = fs.readFileSync(page, "utf8");
   if (!html.includes(REDIRECT_MARK)) error(`${rel(page)} 少了 github.io 轉址程式（從 weeks/week03/index.html 的 <head> 複製）`);
+  if (!html.includes(COPYRIGHT)) error(`${rel(page)} 少了版權聲明「${COPYRIGHT}」（從 weeks/week03/index.html 的頁尾複製）`);
   if (html.includes("待填")) warn(`${rel(page)} 還有「待填」的地方`);
   for (const m of html.matchAll(/\s(href|src|poster|data-hls)="([^"]*)"/g)) {
     const ref = m[2];

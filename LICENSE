@@ -1,0 +1,15 @@
+Copyright © 2026 JUNHAO CHEN. All rights reserved.
+版權所有 © 2026 JUNHAO CHEN。
+
+本網站的教材內容（文字、影片、圖片、版面設計與程式碼）著作權屬於 JUNHAO CHEN。
+未經書面同意，請勿重製、改作、散布或用於商業用途。
+
+The course materials on this site (text, videos, images, design and code) are
+copyright JUNHAO CHEN. Do not copy, adapt, redistribute or use them commercially
+without written permission.
+
+第三方元件（依各自的授權）／Third-party components (under their own licenses):
+- hls.js 1.6.15 — assets/vendor/hls.light.min.js, Apache License 2.0
+  (see assets/vendor/hls.LICENSE.txt)
+- Noto Sans TC and JetBrains Mono are loaded from Google Fonts under the
+  SIL Open Font License 1.1; they are not included in this repository.

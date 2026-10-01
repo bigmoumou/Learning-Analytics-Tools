@@ -94,6 +94,13 @@ tools/new-video.sh 4 01-relative-path "相對路徑的起點"
 - 影片確定了再 commit：重新渲染過的舊版本會一直留在 git 歷史裡，讓 repo 越來越大。
 - `publish-video.sh` 會自己找 ffmpeg（PATH，或 opus-video conda 環境裡的那一份）；要指定時用 `FFMPEG=...`。
 
+## 版權
+
+Copyright © 2026 JUNHAO CHEN・版權所有。授權說明和第三方元件見 [LICENSE](LICENSE)。
+
+每一頁都要有版權聲明（頁尾的 `Copyright © 2026 JUNHAO CHEN・版權所有`，以及 `<head>` 的
+`author`、`copyright` meta），範本已經寫好；`tools/check.mjs` 會檢查。
+
 ## 本機預覽
 
 在 repo 資料夾開一個本機伺服器，再用瀏覽器打開 http://localhost:8000/：

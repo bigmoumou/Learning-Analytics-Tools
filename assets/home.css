@@ -168,6 +168,8 @@ body:not(.is-loading) .loader span { animation: none; }
 #playBtn[aria-pressed="true"] .i-pause { display: none; }
 .hint { font-size: .78rem; color: var(--ink-3); margin-left: .5rem; }
 .hint-narrow { display: none; }
+/* 版權：底部最後一行，橫跨整列、靠右 */
+.copyright { grid-column: 1 / -1; justify-self: end; margin-top: -.4rem; font-family: var(--font-mono); font-size: .68rem; letter-spacing: .06em; color: var(--ink-3); }
 
 /* 游標旁邊的小標籤 */
 .cursor-tag {
@@ -224,6 +226,7 @@ body.index-open .hud-top { background: var(--bg); padding-bottom: .9rem; border-
   .controls { justify-content: flex-start; }
   .hint-wide { display: none; }
   .hint-narrow { display: inline; }
+  .copyright { justify-self: start; margin-top: 0; }
   .info-meta { font-size: .9rem; }
   #viewLabel { display: none; }
   #viewBtn { width: 2.5rem; padding: 0; }
