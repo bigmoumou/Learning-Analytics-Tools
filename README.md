@@ -38,13 +38,13 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ### AI 教學影片
 
-目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」與 Week 4「AI Agent 內建瀏覽器」：共 4 支影片（合計 9 分 46 秒）、35 個章節、21 則重點。Week 5 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
+目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」與 Week 4「AI Agent 內建瀏覽器」：共 4 支影片（合計 9 分 59 秒）、34 個章節、21 則重點。Week 5 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
 
 影片沒有旁白，用動畫、字卡和程式合成的配樂說明一個主題，長度從 1 分多到 3 分多鐘。課程教的是 AI 程式助理的實際用法，影片中示範的工具主要是 OpenAI 的 Codex。
 
 | | 影片 | 長度 | 章節／重點 | 內容 |
 |---|---|---|---|---|
-| <img src="weeks/week03/video/01-report-journey/thumb.jpg" width="180" alt="Week 3 影片 01 縮圖"> | Week 3・01<br>[report.md 的旅程](https://learning-analytics-tools.pages.dev/weeks/week03/#01-report-journey) | 1:23 | 8／5 | AI 助理以資料夾為工作單位：每個檔案都有路徑，開錯資料夾時怎麼把檔案找回來 |
+| <img src="weeks/week03/video/01-report-journey/thumb.jpg" width="180" alt="Week 3 影片 01 縮圖"> | Week 3・01<br>[report.md 的旅程](https://learning-analytics-tools.pages.dev/weeks/week03/#01-report-journey) | 1:35 | 7／5 | AI 助理以資料夾為工作單位：每個檔案都有路徑，開錯資料夾時怎麼把檔案找回來 |
 | <img src="weeks/week03/video/02-agents-md-context/thumb.jpg" width="180" alt="Week 3 影片 02 縮圖"> | Week 3・02<br>[AGENTS.md 與上下文管理](https://learning-analytics-tools.pages.dev/weeks/week03/#02-agents-md-context) | 3:16 | 11／5 | 用 `AGENTS.md` 當長期記憶；上下文視窗是短期記憶，噪音、幻覺與成本；編輯、分支與 side chat |
 | <img src="weeks/week03/video/03-homework-firenze/thumb.jpg" width="180" alt="Week 3 影片 03 縮圖"> | Week 3・03<br>[作業：佛羅倫斯美術館資料收集](https://learning-analytics-tools.pages.dev/weeks/week03/#03-homework-firenze) | 2:43 | 8／6 | 只用 Codex 收集美術館資料：先看把整份題目貼給 AI 的錯誤示範，再規劃 `AGENTS.md`、資料存在本地並自己確認、`ARCHITECTURE.md` 流程圖、有效率又精準的 prompt |
 | <img src="weeks/week04/video/01-built-in-browser/thumb.jpg" width="180" alt="Week 4 影片 01 縮圖"> | Week 4・01<br>[AI Agent 內建瀏覽器](https://learning-analytics-tools.pages.dev/weeks/week04/) | 2:24 | 8／5 | AI Agent 控制瀏覽器的五種方法；Codex 內建瀏覽器卡住後，Codex 自己找出原因並修好，再實際在 Blockbench 做出方塊桌椅（22 分 34 秒的操作，影片中加速播放） |
@@ -215,13 +215,13 @@ This repository is the website itself; every file the site serves is here.
 
 ### AI teaching videos
 
-As of October 2026, Week 3, "The AI Assistant's Working Folder", and Week 4, "AI Agent Built-in Browser", are published: 4 videos (9 min 46 s in total), 35 chapters and 21 key points. Weeks 5 to 16 open as the course goes on and show as "Coming soon" on the site until then.
+As of October 2026, Week 3, "The AI Assistant's Working Folder", and Week 4, "AI Agent Built-in Browser", are published: 4 videos (9 min 59 s in total), 34 chapters and 21 key points. Weeks 5 to 16 open as the course goes on and show as "Coming soon" on the site until then.
 
 The videos have no voice-over. Each one explains a single topic with animation, text cards and music synthesized in code, and runs between one and a little over three minutes. The course teaches the practical use of AI coding agents, and the tool shown in the videos is mostly OpenAI's Codex.
 
 | | Video | Length | Chapters / key points | Topic |
 |---|---|---|---|---|
-| <img src="weeks/week03/video/01-report-journey/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 01"> | Week 3 · 01<br>[The Journey of report.md](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#01-report-journey) | 1:23 | 8 / 5 | AI assistants treat one folder as their unit of work: every file has a path; finding a file again after opening the wrong folder |
+| <img src="weeks/week03/video/01-report-journey/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 01"> | Week 3 · 01<br>[The Journey of report.md](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#01-report-journey) | 1:35 | 7 / 5 | AI assistants treat one folder as their unit of work: every file has a path; finding a file again after opening the wrong folder |
 | <img src="weeks/week03/video/02-agents-md-context/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 02"> | Week 3 · 02<br>[AGENTS.md and Context Management](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#02-agents-md-context) | 3:16 | 11 / 5 | `AGENTS.md` as long-term memory; the context window as short-term memory, with noise, hallucinations and cost; edit, branch and side chat |
 | <img src="weeks/week03/video/03-homework-firenze/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 03"> | Week 3 · 03<br>[Homework: Collecting Florence Museum Data](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#03-homework-firenze) | 2:43 | 8 / 6 | Collecting museum data with Codex only: a demonstration of the mistake of pasting the whole assignment into the AI, then planning `AGENTS.md`, saving data locally and checking it yourself, an `ARCHITECTURE.md` flowchart, and efficient, precise prompts |
 | <img src="weeks/week04/video/01-built-in-browser/thumb.jpg" width="180" alt="Thumbnail of Week 4 video 01"> | Week 4 · 01<br>[AI Agent Built-in Browser](https://learning-analytics-tools.pages.dev/weeks/week04/?lang=en) | 2:24 | 8 / 5 | Five ways an AI agent can control a browser; when Codex's built-in browser gets stuck, Codex finds the cause and fixes it, then builds a block table and chair in Blockbench (22 min 34 s of real work, sped up in the video) |
