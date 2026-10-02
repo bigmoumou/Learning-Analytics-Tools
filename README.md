@@ -1,8 +1,8 @@
 # AI 影片示範教學網站：Learning Analytics Tools（NTNU）
 
-國立臺灣師範大學（臺師大，NTNU）課程的 AI 示範教學網站：AI 教學影片、學生參與的互動複習，以及即將推出的學生作品展示。網站程式開源（MIT），AI 教學影片與教材開放授權（CC BY-NC-SA 4.0，限非商業使用）；製作影片用的教學影片生成 prompt 與經驗也會陸續公開（規劃中）。
+國立臺灣師範大學學習分析工具課程的 AI 示範教學網站：AI 教學影片、學生參與的互動複習，以及即將推出的學生作品展示。網站程式開源（MIT），AI 教學影片與教材開放授權（CC BY-NC-SA 4.0，限非商業使用）；製作影片用的教學影片生成 prompt 與經驗也會陸續公開（規劃中）。
 
-An AI teaching-video demonstration site for a course at National Taiwan Normal University (NTNU): AI-made teaching videos, interactive review for students, and a student work showcase (coming soon). The code is open source (MIT), and the AI teaching videos and course material are openly licensed for non-commercial use (CC BY-NC-SA 4.0). The prompts and production experience behind the videos will be released too (planned).
+An AI teaching-video demonstration site for the Learning Analytics Tools course at National Taiwan Normal University (NTNU): AI-made teaching videos, interactive review for students, and a student work showcase (coming soon). The code is open source (MIT), and the AI teaching videos and course material are openly licensed for non-commercial use (CC BY-NC-SA 4.0). The prompts and production experience behind the videos will be released too (planned).
 
 [![Code: MIT](https://img.shields.io/badge/Code-MIT-555.svg)](LICENSE) [![Content: CC BY-NC-SA 4.0](https://img.shields.io/badge/Content-CC%20BY--NC--SA%204.0-555.svg)](LICENSE-CONTENT.md) [![Website](https://img.shields.io/badge/Website-learning--analytics--tools.pages.dev-555.svg)](https://learning-analytics-tools.pages.dev/)
 
