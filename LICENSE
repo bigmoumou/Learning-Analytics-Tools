@@ -1,21 +1,21 @@
-Copyright © 2026 JUNHAO CHEN. All rights reserved.
-版權所有 © 2026 JUNHAO CHEN。
+MIT License
 
-本網站的教材內容（文字、影片、圖片、版面設計與程式碼）著作權屬於 JUNHAO CHEN。
-未經書面同意，請勿重製、改作、散布或用於商業用途。
+Copyright (c) 2026 JUNHAO CHEN
 
-The course materials on this site (text, videos, images, design and code) are
-copyright JUNHAO CHEN. Do not copy, adapt, redistribute or use them commercially
-without written permission.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-第三方元件（依各自的授權）／Third-party components (under their own licenses):
-- hls.js 1.6.15 — assets/vendor/hls.light.min.js, Apache License 2.0
-  (see assets/vendor/hls.LICENSE.txt)
-- Noto Sans TC and JetBrains Mono are loaded from Google Fonts under the
-  SIL Open Font License 1.1; they are not included in this repository.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-影片中使用的圖片／Images used in the videos (Wikimedia Commons):
-- Week 3 影片 03 開頭：
-  - "Florence, Italy (Unsplash pRU-VnBVJMQ).jpg" by Jonathan Körner, CC0
-  - "Ponte Vecchio, Florence, Italy, 2023.jpg" by Julian Lupyan, CC0
-  - Sandro Botticelli, "La nascita di Venere" (Google Art Project), public domain
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

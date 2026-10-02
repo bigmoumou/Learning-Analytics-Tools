@@ -289,3 +289,6 @@ body.index-open .hud-top { background: var(--bg); padding-bottom: .9rem; border-
   .info.swap > *, .index-view { animation: none; }
   .loader span { animation: none; opacity: .6; }
 }
+
+/* 頁尾的「授權說明」連結（接在版權那一行後面） */
+.foot-lic { margin-left: .45em; white-space: nowrap; color: inherit; }

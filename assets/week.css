@@ -231,3 +231,6 @@ main.has-reel > .unit { grid-column: 1; grid-row: 2; margin-top: 0; } /* 一次�
   *, *::before, *::after { transition-duration: .001ms !important; }
   .unit.is-entering, .unit.is-entering .points li, .next-up, .reel-item.is-playing .reel-n::before { animation: none; }
 }
+
+/* 頁尾的「授權說明」連結（接在版權那一行後面） */
+.foot-lic { margin-left: .45em; white-space: nowrap; }

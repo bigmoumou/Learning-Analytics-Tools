@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use these course materials, please cite them as below."
+type: software
+title: "Learning Analytics Tools Implementation Applications (NTNU): Course website and AI-made teaching videos"
+authors:
+  - family-names: Chen
+    given-names: Junhao
+abstract: >-
+  An AI teaching-video demonstration site: the course website for the NTNU
+  course Learning Analytics Tools Implementation Applications, with AI-made
+  teaching videos with chapters and key points, an interactive weekly review
+  site in four languages, and a student work showcase (coming soon). The code
+  is licensed under MIT (LICENSE); the course content (videos, posters,
+  thumbnails and course text) is licensed under CC BY-NC-SA 4.0
+  (LICENSE-CONTENT.md). Student work and third-party items are not covered
+  (NOTICE.md).
+url: "https://learning-analytics-tools.pages.dev/"
+repository-code: "https://github.com/bigmoumou/Learning-Analytics-Tools"
+date-released: 2026-10-02
+keywords:
+  - education
+  - open educational resources
+  - open source
+  - learning analytics
+  - teaching videos
+  - AI in education
+  - Claude Code
+  - NTNU
+  - National Taiwan Normal University
