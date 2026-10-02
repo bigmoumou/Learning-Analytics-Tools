@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>東京銀杏散步圖</title>
+  <meta name="description" content="東京銀杏景點、具日期的官方或在地葉況觀測、分區散步順序與行前查核清單。僅供教學使用、非營利、非即時導航。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">跳到主要內容</a>
+
+  <header class="masthead">
+    <div class="wrap masthead__row">
+      <a class="brand" href="#top" aria-label="東京銀杏散步圖">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M16 27 V17" />
+          <path d="M16 17 C 9 17, 4.5 12.5, 4 6.5 C 8 5, 12.5 6, 15 9.2 L16 12 L17 9.2 C 19.5 6, 24 5, 28 6.5 C 27.5 12.5, 23 17, 16 17 Z" />
+        </svg>
+        <span class="brand__name" data-i18n="siteTitle">東京銀杏散步圖</span>
+      </a>
+      <div class="lang" role="group" aria-label="語言" data-i18n-aria="langLabel">
+        <button type="button" class="lang__btn" data-lang="zh" lang="zh-Hant-TW">中文</button>
+        <button type="button" class="lang__btn" data-lang="en" lang="en">EN</button>
+        <button type="button" class="lang__btn" data-lang="ja" lang="ja">日本語</button>
+      </div>
+    </div>
+    <nav class="wrap nav" aria-label="主要導覽" data-i18n-aria="navLabel">
+      <a href="#spots"><span class="nav__no">01</span><span data-i18n="navSpots">景點</span></a>
+      <a href="#status"><span class="nav__no">02</span><span data-i18n="navStatus">葉況流程</span></a>
+      <a href="#walk"><span class="nav__no">03</span><span data-i18n="navWalk">散步順序</span></a>
+      <a href="#check"><span class="nav__no">04</span><span data-i18n="navCheck">行前查核</span></a>
+      <a href="#sources"><span class="nav__no">05</span><span data-i18n="navSources">來源</span></a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="intro wrap" id="top">
+      <svg class="intro__art" viewBox="0 0 340 400" aria-hidden="true" focusable="false">
+        <defs>
+          <g id="leafShape">
+            <path class="leaf__stem" d="M0 0 L0 -38" />
+            <path class="leaf__blade" d="M0 -38 C -26 -40 -48 -58 -56 -90 C -38 -104 -16 -106 -4 -96 L0 -84 L4 -96 C 16 -106 38 -104 56 -90 C 48 -58 26 -40 0 -38 Z" />
+            <path class="leaf__veins" d="M0 -38 L-50 -84 M0 -38 L-38 -96 M0 -38 L-24 -100 M0 -38 L-11 -97 M0 -38 L11 -97 M0 -38 L24 -100 M0 -38 L38 -96 M0 -38 L50 -84" />
+          </g>
+        </defs>
+        <path class="art__twig" d="M36 396 C 84 344 132 296 166 238 C 196 186 222 140 270 92" />
+        <path class="art__twig art__twig--fine" d="M166 238 C 180 224 192 214 204 210" />
+        <path class="art__twig art__twig--fine" d="M118 312 C 112 302 108 294 106 284" />
+        <use href="#leafShape" class="art__leaf art__leaf--soft" transform="translate(106 284) rotate(-58) scale(.76)" />
+        <use href="#leafShape" class="art__leaf art__leaf--fill" transform="translate(204 210) rotate(8) scale(1.14)" />
+        <use href="#leafShape" class="art__leaf art__leaf--line" transform="translate(270 92) rotate(14) scale(.72)" />
+        <use href="#leafShape" class="art__leaf art__leaf--fall" transform="translate(268 326) rotate(-128) scale(.54)" />
+      </svg>
+      <p class="eyebrow" data-i18n="introEyebrow">東京・2026 秋季</p>
+      <h1 data-i18n="siteTitle">東京銀杏散步圖</h1>
+      <p class="intro__lede" data-i18n="introLede">整理東京各地區的銀杏景點、具日期的官方或在地葉況觀測，以及分區散步順序與出發前查核事項。</p>
+      <dl class="intro__facts">
+        <div><dt data-i18n="factSpots">收錄景點</dt><dd><span id="factCount">26</span></dd></div>
+        <div><dt data-i18n="factStatus">本季葉況</dt><dd data-i18n="noReport">尚無回報</dd></div>
+        <div><dt data-i18n="factChecked">資料核對</dt><dd>2026-10-01 / 10-02</dd></div>
+      </dl>
+      <p class="intro__note" data-i18n="introNote">截至核對日，沒有任何列出景點具備「銀杏樹種、特定地點、觀測日期」且屬於現場觀測的 2026 資料，因此全部顯示「尚無回報」，不推測葉況。</p>
+    </section>
+
+    <!-- 01 景點 -->
+    <section class="section" id="spots" aria-labelledby="h-spots">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="section__no">01</p>
+          <h2 id="h-spots" data-i18n="spotsTitle">景點與分區</h2>
+          <p class="section__lede" data-i18n="spotsLede">點選分區示意圖或使用下方篩選，比較各景點的地區、葉況、最新回報日期與官方來源。點選景點可開啟資料視窗。</p>
+        </header>
+
+        <div class="spots">
+          <figure class="schematic">
+            <div class="schematic__frame">
+              <svg id="areaMap" class="schematic__svg" viewBox="0 0 600 352" role="group" aria-labelledby="mapCaption">
+                <defs>
+                  <pattern id="mapDots" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1" />
+                  </pattern>
+                </defs>
+                <rect class="paperdots" x="0" y="0" width="600" height="352" fill="url(#mapDots)" aria-hidden="true" />
+                <path class="bay" d="M370 306 L404 286 L418 262 L446 250 L476 254 L504 262 L528 278 L568 288 L600 300 L600 352 L428 352 C 398 342 378 328 370 306 Z" aria-hidden="true" />
+                <g class="bay__lines" aria-hidden="true">
+                  <path d="M452 286 q 10 -5 20 0 t 20 0" />
+                  <path d="M536 302 q 10 -5 20 0 t 20 0" />
+                </g>
+                <g class="north" aria-hidden="true">
+                  <path d="M40 22 L 40 56" />
+                  <path d="M33 33 L 40 21 L 47 33" />
+                  <text x="40" y="76" text-anchor="middle">N</text>
+                </g>
+                <g class="region" data-area="nishitama" tabindex="0" role="button">
+                  <path class="region__shape" d="M14 132 L40 108 L84 98 L118 84 L142 88 L152 150 L138 212 L154 276 L112 268 L70 258 L32 236 L18 190 Z" />
+                  <g class="contour" aria-hidden="true">
+                    <path d="M40 132 q 14 -9 28 -2 t 30 -4 t 26 -8" />
+                    <path d="M46 238 q 14 -8 28 -2 t 30 -4" />
+                  </g>
+                  <text class="region__name" x="82" y="182" text-anchor="middle"></text>
+                  <text class="region__count" x="82" y="210" text-anchor="middle"></text>
+                </g>
+                <g class="region" data-area="tama" tabindex="0" role="button">
+                  <path class="region__shape" d="M142 88 L186 76 L232 70 L270 64 L304 58 L310 124 L300 190 L312 252 L326 302 L284 318 L238 314 L194 298 L154 276 L138 212 L152 150 Z" />
+                  <text class="region__name" x="226" y="186" text-anchor="middle"></text>
+                  <text class="region__count" x="226" y="214" text-anchor="middle"></text>
+                </g>
+                <g class="region" data-area="johoku" tabindex="0" role="button">
+                  <path class="region__shape" d="M304 58 L352 38 L414 28 L476 24 L530 32 L520 82 L504 128 L410 126 L366 134 L310 124 Z" />
+                  <text class="region__name" x="414" y="80" text-anchor="middle"></text>
+                  <text class="region__count" x="414" y="108" text-anchor="middle"></text>
+                </g>
+                <g class="region" data-area="josai" tabindex="0" role="button">
+                  <path class="region__shape" d="M310 124 L366 134 L410 126 L404 196 L418 262 L404 286 L370 306 L326 302 L312 252 L300 190 Z" />
+                  <text class="region__name" x="358" y="208" text-anchor="middle"></text>
+                  <text class="region__count" x="358" y="236" text-anchor="middle"></text>
+                </g>
+                <g class="region" data-area="toshin" tabindex="0" role="button">
+                  <path class="region__shape" d="M410 126 L504 128 L498 198 L504 262 L476 254 L446 250 L418 262 L404 196 Z" />
+                  <text class="region__name" x="455" y="190" text-anchor="middle"></text>
+                  <text class="region__count" x="455" y="218" text-anchor="middle"></text>
+                </g>
+                <g class="region" data-area="joto" tabindex="0" role="button">
+                  <path class="region__shape" d="M530 32 L566 46 L590 90 L588 168 L582 236 L568 288 L528 278 L504 262 L498 198 L504 128 L520 82 Z" />
+                  <text class="region__name" x="546" y="184" text-anchor="middle"></text>
+                  <text class="region__count" x="546" y="212" text-anchor="middle"></text>
+                </g>
+                <text class="bay__label" x="494" y="334" text-anchor="middle" data-i18n-svg="bay" aria-hidden="true">東京灣</text>
+              </svg>
+            </div>
+            <figcaption id="mapCaption" class="schematic__cap">
+              <strong data-i18n="mapLabel">示意圖，非比例地圖</strong>
+              <span data-i18n="mapHint">分區為本站自訂、只供辨識地區；點選分區即可篩選景點。</span>
+            </figcaption>
+            <p class="schematic__wards" id="areaWards" aria-live="polite"></p>
+          </figure>
+
+          <div class="finder">
+            <form class="filters" id="filters" role="search" onsubmit="return false">
+              <div class="field field--search">
+                <label for="q" data-i18n="searchLabel">搜尋景點名稱</label>
+                <input id="q" type="search" autocomplete="off" data-i18n-ph="searchPh" placeholder="例：新宿、Hibiya、昭和">
+              </div>
+              <div class="field">
+                <label for="areaSel" data-i18n="areaLabel">地區</label>
+                <select id="areaSel"></select>
+              </div>
+              <button type="button" class="linkbtn" id="clearBtn" data-i18n="clear">清除篩選</button>
+            </form>
+            <p class="finder__count" id="resultCount" aria-live="polite"></p>
+
+            <div class="spotlist">
+              <div class="spotlist__head" aria-hidden="true">
+                <span data-i18n="colSpot">景點</span>
+                <span data-i18n="colStatus">當季葉況</span>
+                <span data-i18n="colLatest">最新回報</span>
+                <span data-i18n="colSource">官方來源</span>
+              </div>
+              <ul id="spotList" class="spotlist__rows"></ul>
+              <div id="emptyState" class="empty" hidden>
+                <p data-i18n="empty">沒有符合條件的景點。</p>
+                <button type="button" class="linkbtn" id="emptyClear" data-i18n="clear">清除篩選</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 葉況流程 -->
+    <section class="section section--alt" id="status" aria-labelledby="h-status">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="section__no">02</p>
+          <h2 id="h-status" data-i18n="statusTitle">銀杏狀態流程</h2>
+          <p class="section__lede" data-i18n="statusLede">葉況依六個階段描述。只有同時具備銀杏樹種、特定地點與觀測日期，且明確屬於現場觀測的資料，才會標上階段。</p>
+        </header>
+        <ol class="flow" id="flow"></ol>
+        <div class="flow__none">
+          <span class="ring" aria-hidden="true"></span>
+          <div>
+            <p class="flow__none-name" data-i18n="noReport">尚無回報</p>
+            <p data-i18n="noReportDesc">沒有符合條件的當季資料時顯示。截至 2026-10-02，本站所有景點都是這個狀態。</p>
+          </div>
+        </div>
+        <div class="rules">
+          <h3 data-i18n="rulesTitle">資料品質規則</h3>
+          <ul>
+            <li data-i18n="rule1">景點葉況只採用同時具備「銀杏樹種、特定地點、觀測日期」且明確屬於現場觀測的資料。</li>
+            <li data-i18n="rule2">舊資料、預報、其他樹種、東京標本木的狀態，不可代替個別景點葉況。</li>
+            <li data-i18n="rule3">每個葉況項目都保留資料日期、資料性質與可點擊的來源。</li>
+            <li data-i18n="rule4">輔助來源（氣象廳標本木、GO TOKYO、tenki.jp、Weathernews）只用於找景點或連到預報，不當作個別景點的現場觀測。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 散步順序 -->
+    <section class="section" id="walk" aria-labelledby="h-walk">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="section__no">03</p>
+          <h2 id="h-walk" data-i18n="walkTitle">分區散步順序</h2>
+          <p class="section__lede" data-i18n="walkLede">選擇一個地區，產生該區景點的建議造訪順序。</p>
+        </header>
+        <p class="notice" data-i18n="walkDisclaimer">這是靜態散步建議，不是即時導航，不提供即時路況或步行時間。</p>
+        <div class="tabs" role="group" aria-labelledby="walkTabsLabel">
+          <span id="walkTabsLabel" class="tabs__label" data-i18n="walkPick">選擇地區</span>
+          <div class="tabs__row" id="walkTabs"></div>
+        </div>
+        <div class="walk">
+          <ol class="walk__list" id="walkList" aria-live="polite"></ol>
+          <aside class="walk__logic">
+            <h3 data-i18n="walkLogicTitle">排序方式</h3>
+            <p data-i18n="walkLogic">從該區最北的景點開始，每一步接往直線上最近、尚未排入的景點。計算只使用各景點的近似代表座標，結果不是實際步行路線，也不顯示任何距離或時間。</p>
+            <p class="walk__area" id="walkArea"></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 行前查核 -->
+    <section class="section section--alt" id="check" aria-labelledby="h-check">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="section__no">04</p>
+          <h2 id="h-check" data-i18n="checkTitle">行前查核清單</h2>
+          <p class="section__lede" data-i18n="checkLede">選擇景點後，逐項查看查核結果、引用來源與本次核對日期。</p>
+        </header>
+        <p class="notice" data-i18n="checkDisclaimer">行前資訊容易變動。本頁列出的是查核日期與來源，不保證查核日之後仍有效；請在行程當日回到官方來源再次確認。</p>
+        <div class="field field--inline">
+          <label for="checkSel" data-i18n="checkPick">選擇景點</label>
+          <select id="checkSel"></select>
+        </div>
+        <p class="legend" id="checkLegend"></p>
+        <table class="checktable" id="checkTable">
+          <caption class="sr-only" id="checkCaption"></caption>
+          <thead>
+            <tr>
+              <th scope="col" data-i18n="thItem">項目</th>
+              <th scope="col" data-i18n="thResult">查核結果</th>
+              <th scope="col" data-i18n="thMark">狀態</th>
+              <th scope="col" data-i18n="thSource">引用來源</th>
+              <th scope="col" data-i18n="thDate">核對日期</th>
+            </tr>
+          </thead>
+          <tbody id="checkBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 05 來源 -->
+    <section class="section" id="sources" aria-labelledby="h-sources">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="section__no">05</p>
+          <h2 id="h-sources" data-i18n="sourcesTitle">資料來源</h2>
+          <p class="section__lede" data-i18n="sourcesLede">來源依性質分為三類。所有連結都會在新分頁開啟官方或原始頁面。</p>
+        </header>
+        <div class="sources" id="sourceGroups"></div>
+        <div class="grades">
+          <h3 data-i18n="gradesTitle">來源分級（資料表）</h3>
+          <ul id="gradeList"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__wrap">
+      <svg class="footer__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path d="M16 27 V17" />
+        <path d="M16 17 C 9 17, 4.5 12.5, 4 6.5 C 8 5, 12.5 6, 15 9.2 L16 12 L17 9.2 C 19.5 6, 24 5, 28 6.5 C 27.5 12.5, 23 17, 16 17 Z" />
+      </svg>
+      <div>
+      <p class="footer__line" data-i18n="footer">僅供教學使用、非營利、非即時導航</p>
+      <p class="footer__small" data-i18n="footerSmall">資料來自老師指定資料表與各官方網站，核對日期 2026-10-01（BRIEF）與 2026-10-02。分區圖為示意圖，非比例地圖。</p>
+      </div>
+    </div>
+  </footer>
+
+  <dialog class="modal" id="spotModal" aria-labelledby="modalTitle">
+    <div class="modal__inner">
+      <header class="modal__head">
+        <div>
+          <p class="modal__meta" id="modalMeta"></p>
+          <h2 id="modalTitle"></h2>
+          <p class="modal__sub" id="modalSub"></p>
+        </div>
+        <button type="button" class="modal__close" id="modalClose" aria-label="關閉" data-i18n-aria="close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body" id="modalBody"></div>
+    </div>
+  </dialog>
+
+  <noscript><p class="wrap">此網站需要 JavaScript 才能顯示景點資料。This site needs JavaScript. このサイトの表示にはJavaScriptが必要です。</p></noscript>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

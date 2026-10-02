@@ -75,6 +75,7 @@ window.I18N_STRINGS = {
     "works.of": "{a} / {b}",
     "works.frame": "{a} 的作品",
     "works.missing": "找不到這件作品，可能已經移除。",
+    "works.stars": "老師推薦 {n} 顆星",
   },
   "zh-Hans": {
     "lang.label": "语言",
@@ -145,6 +146,7 @@ window.I18N_STRINGS = {
     "works.of": "{a} / {b}",
     "works.frame": "{a} 的作品",
     "works.missing": "找不到这件作品，可能已经移除。",
+    "works.stars": "老师推荐 {n} 颗星",
   },
   en: {
     "lang.label": "Language",
@@ -215,6 +217,7 @@ window.I18N_STRINGS = {
     "works.of": "{a} of {b}",
     "works.frame": "Work by {a}",
     "works.missing": "This work can't be found; it may have been removed.",
+    "works.stars": "Teacher's pick: {n} of 3 stars",
   },
   vi: {
     "lang.label": "Ngôn ngữ",
@@ -285,5 +288,6 @@ window.I18N_STRINGS = {
     "works.of": "{a} / {b}",
     "works.frame": "Tác phẩm của {a}",
     "works.missing": "Không tìm thấy tác phẩm này; có thể nó đã bị gỡ.",
+    "works.stars": "Giáo viên chọn: {n}/3 sao",
   },
 };

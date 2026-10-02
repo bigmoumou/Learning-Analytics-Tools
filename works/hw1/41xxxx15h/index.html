@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>東京銀杏黃葉地圖｜手機散步指南</title>
+<meta name="description" content="繁體中文、手機優先的東京銀杏散步指南：季節示意、官方來源、示意地圖、收藏與散步路線。">
+<meta name="theme-color" content="#24452F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 共用的銀杏葉形（原創 SVG） -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="gk" viewBox="-32 -64 64 68">
+      <path d="M0 3 L0 -14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M0 -14 C -8 -18 -24 -30 -30 -48 C -21 -59 -9 -62 -2.5 -58 L0 -49 L2.5 -58 C 9 -62 21 -59 30 -48 C 24 -30 8 -18 0 -14 Z" fill="currentColor"/>
+      <path d="M0 -15 L-19 -50 M0 -15 L-8 -57 M0 -15 L8 -57 M0 -15 L19 -50" fill="none" stroke="#000" stroke-opacity=".13" stroke-width="1.1"/>
+    </symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#explore">跳到地圖與清單</a>
+
+<header class="hero" id="top">
+  <div class="topbar wrap">
+    <a class="brand" href="#top" aria-label="東京銀杏黃葉地圖 回到頂端">
+      <svg class="brand-mark" viewBox="0 0 64 68" aria-hidden="true"><use href="#gk"/></svg>
+      <span>東京銀杏黃葉地圖</span>
+    </a>
+    <nav class="topnav" aria-label="頁內導覽">
+      <a href="#season">季節</a>
+      <a href="#explore">地圖</a>
+      <a href="#walks">散步提案</a>
+      <a href="#sources">資料來源</a>
+    </nav>
+  </div>
+
+  <div class="hero-inner wrap">
+    <div class="hero-copy">
+      <p class="eyebrow">TOKYO GINKGO WALK · 2026 秋</p>
+      <h1>東京銀杏<br>黃葉地圖</h1>
+      <p class="lead">從青葉到落葉，看東京銀杏的季節變化；查每個景點的官方來源與位置，挑幾個想去的地方，排成一條自己的散步路線。</p>
+      <div class="hero-cta">
+        <a class="btn btn-gold" href="#explore">打開示意地圖</a>
+        <a class="btn btn-line" href="#walks">看散步提案</a>
+      </div>
+      <dl class="hero-facts">
+        <div><dt>收錄景點（近似座標）</dt><dd id="factMapped">–</dd></div>
+        <div><dt>散步提案</dt><dd id="factWalks">–</dd></div>
+        <div><dt>資料核對日</dt><dd>2026-10-02</dd></div>
+      </dl>
+    </div>
+
+    <figure class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 640 480" class="hero-svg" focusable="false">
+        <!-- 淡淡的東京天際線 -->
+        <g class="skyline" fill="none" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M0 452 H34 V432 H58 V444 H80 V420 H104 V444 H128 V428 H150 V452 H172"/>
+          <path d="M172 452 L196 452 L210 392 L216 352 L220 312 L223 282 L226 312 L230 352 L236 392 L250 452 L272 452"/>
+          <path d="M207 404 H239 M213 368 H233 M218 334 H228 M223 282 V262"/>
+          <path d="M272 452 V424 H300 V436 H322 V410 H346 V440 H372 V426 H396 V452 H424 V432 H446 V452"/>
+          <path d="M446 452 H470 L476 330 L478 270 L480 214 L482 270 L484 330 L490 452 H512"/>
+          <path d="M474 330 H486 M475 296 H485 M480 214 V190"/>
+          <path d="M512 452 V430 H540 V442 H566 V418 H590 V446 H614 V436 H640 H662 V426 H690 V452 H716 V422 H744 V440 H770 V430 H800 V452 H828 V416 H858 V444 H896 V428 H926 V452 H960 V434 H990 V446 H1024 V424 H1052 V452 H1180"/>
+        </g>
+        <!-- 枝條 -->
+        <g class="branch" fill="none" stroke-linecap="round">
+          <path d="M1180 -60 C 980 -24 800 0 660 34 C 560 60 470 96 392 150 C 330 192 270 214 196 232" stroke-width="9"/>
+          <path d="M474 96 C 470 128 478 160 490 186" stroke-width="5"/>
+          <path d="M352 176 C 340 206 344 236 356 262" stroke-width="5"/>
+          <path d="M560 62 C 576 92 572 118 560 140" stroke-width="4"/>
+          <path d="M270 212 C 254 186 246 160 250 136" stroke-width="4"/>
+        </g>
+        <!-- 枝上的扇形葉 -->
+        <g class="leaves">
+          <use href="#gk" class="lf l1" x="-26" y="-50" width="52" height="56" transform="translate(196 232) rotate(-104)"/>
+          <use href="#gk" class="lf l2" x="-24" y="-46" width="48" height="52" transform="translate(222 228) rotate(-160)"/>
+          <use href="#gk" class="lf l3" x="-22" y="-44" width="44" height="48" transform="translate(206 226) rotate(-40)"/>
+          <use href="#gk" class="lf l2" x="-24" y="-46" width="48" height="52" transform="translate(250 136) rotate(-12)"/>
+          <use href="#gk" class="lf l1" x="-20" y="-40" width="40" height="44" transform="translate(252 150) rotate(-62)"/>
+          <use href="#gk" class="lf l4" x="-22" y="-44" width="44" height="48" transform="translate(300 206) rotate(170)"/>
+          <use href="#gk" class="lf l3" x="-26" y="-50" width="52" height="56" transform="translate(356 262) rotate(176)"/>
+          <use href="#gk" class="lf l1" x="-24" y="-46" width="48" height="52" transform="translate(352 254) rotate(128)"/>
+          <use href="#gk" class="lf l2" x="-22" y="-44" width="44" height="48" transform="translate(360 252) rotate(-138)"/>
+          <use href="#gk" class="lf l4" x="-24" y="-46" width="48" height="52" transform="translate(420 132) rotate(-20)"/>
+          <use href="#gk" class="lf l1" x="-26" y="-50" width="52" height="56" transform="translate(490 186) rotate(160)"/>
+          <use href="#gk" class="lf l3" x="-22" y="-44" width="44" height="48" transform="translate(486 178) rotate(-150)"/>
+          <use href="#gk" class="lf l2" x="-24" y="-46" width="48" height="52" transform="translate(494 176) rotate(118)"/>
+          <use href="#gk" class="lf l1" x="-24" y="-46" width="48" height="52" transform="translate(560 140) rotate(-170)"/>
+          <use href="#gk" class="lf l4" x="-20" y="-40" width="40" height="44" transform="translate(566 132) rotate(140)"/>
+          <use href="#gk" class="lf l3" x="-22" y="-44" width="44" height="48" transform="translate(520 72) rotate(-24)"/>
+          <use href="#gk" class="lf l2" x="-20" y="-40" width="40" height="44" transform="translate(600 52) rotate(14)"/>
+          <use href="#gk" class="lf l1" x="-22" y="-44" width="44" height="48" transform="translate(700 24) rotate(168)"/>
+          <use href="#gk" class="lf l3" x="-20" y="-40" width="40" height="44" transform="translate(760 10) rotate(-18)"/>
+          <use href="#gk" class="lf l4" x="-22" y="-44" width="44" height="48" transform="translate(850 -6) rotate(150)"/>
+        </g>
+        <!-- 緩緩飄落的葉 -->
+        <g transform="translate(150 250)"><g class="fall f1"><use href="#gk" class="lf l1" x="-14" y="-28" width="28" height="30"/></g></g>
+        <g transform="translate(300 300)"><g class="fall f2"><use href="#gk" class="lf l2" x="-12" y="-24" width="24" height="26"/></g></g>
+        <g transform="translate(420 240)"><g class="fall f3"><use href="#gk" class="lf l3" x="-13" y="-26" width="26" height="28"/></g></g>
+        <g transform="translate(90 170)"><g class="fall f4"><use href="#gk" class="lf l4" x="-11" y="-22" width="22" height="24"/></g></g>
+        <g transform="translate(540 230)"><g class="fall f5"><use href="#gk" class="lf l1" x="-12" y="-24" width="24" height="26"/></g></g>
+        <!-- 地面落葉 -->
+        <use href="#gk" class="lf l3 ground" x="-12" y="-24" width="24" height="26" transform="translate(120 462) rotate(70)"/>
+        <use href="#gk" class="lf l1 ground" x="-10" y="-20" width="20" height="22" transform="translate(338 466) rotate(-80)"/>
+        <use href="#gk" class="lf l2 ground" x="-11" y="-22" width="22" height="24" transform="translate(560 464) rotate(100)"/>
+      </svg>
+    </figure>
+  </div>
+</header>
+
+<main>
+
+  <!-- 01 季節 -->
+  <section id="season" class="section season" aria-labelledby="seasonTitle">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="kicker">01 · 季節</p>
+        <h2 id="seasonTitle">季節示意與日期滑桿</h2>
+        <p class="sec-lead">拖動滑桿選一個日期，看東京銀杏大致走到哪個階段。地圖葉片的顏色、清單與篩選會一起更新。</p>
+      </header>
+
+      <div class="season-panel">
+        <div class="season-readout">
+          <svg class="season-leaf" viewBox="0 0 64 68" aria-hidden="true"><use href="#gk"/></svg>
+          <div class="readout-text">
+            <p class="readout-date" id="seasonDate">–</p>
+            <p class="readout-stage"><span id="seasonStage">–</span><span class="tag-est">季節示意</span></p>
+            <p class="readout-hint" id="seasonHint"></p>
+          </div>
+        </div>
+
+        <div class="slider-block">
+          <label class="slider-label" for="dateSlider">選擇日期（<span id="sliderYear"></span> 年 10/15–12/31）</label>
+          <input type="range" id="dateSlider" min="0" max="77" step="1" value="0">
+          <div class="slider-scale" id="sliderScale" aria-hidden="true"></div>
+          <p class="today-note" id="todayNote"></p>
+        </div>
+
+        <ol class="stage-steps" id="stageSteps" aria-label="六個季節階段（點選可跳到該階段的第一天）"></ol>
+
+        <p class="season-disclaimer">本頁的六個階段為<strong>季節示意</strong>：依氣象廳東京「いちょう黄葉日」平年值（11/23）推估，不代表各地即時觀測；景點最新情況以官方連結為準。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 地圖、清單、路線 -->
+  <section id="explore" class="section explore" aria-labelledby="exploreTitle">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="kicker">02 · 探索</p>
+        <h2 id="exploreTitle">示意地圖、景點清單與散步路線</h2>
+        <p class="sec-lead">點選地圖上的葉片或清單中的景點，兩邊會同步高亮。所有座標都是近似值；位置不確定的地點（例如昭和紀念公園的かたらいのイチョウ並木）只以文字說明，不放上地圖，也不能加入路線。</p>
+      </header>
+    </div>
+
+    <div class="explore-grid wrap">
+      <div class="explore-side">
+        <div class="filters" role="group" aria-label="篩選景點">
+          <div class="filter-block">
+            <span class="filter-label" id="lblGroup">季節階段</span>
+            <div class="chips" id="groupChips" role="radiogroup" aria-labelledby="lblGroup"></div>
+          </div>
+          <div class="filter-grid">
+            <label class="field"><span class="filter-label">地區</span>
+              <select id="regionSel"></select>
+            </label>
+            <label class="field"><span class="filter-label">來源等級</span>
+              <select id="gradeSel"></select>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button type="button" class="btn-toggle" id="favOnly" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.2-6 4.2z"/></svg>
+              只看收藏 <span class="count" id="favCount">0</span>
+            </button>
+            <button type="button" class="btn-toggle" id="locateBtn" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+              <span id="locateLabel">依我的位置排序</span>
+            </button>
+            <button type="button" class="btn-text" id="clearBtn">清除篩選</button>
+          </div>
+          <p class="geo-msg" id="geoMsg" role="status" aria-live="polite" hidden></p>
+        </div>
+
+        <div id="paneAnchor" class="pane-anchor" aria-hidden="true"></div>
+        <div class="tabs" role="tablist" aria-label="切換檢視">
+          <button type="button" role="tab" class="tab tab-map" id="tab-map" aria-controls="pane-map" aria-selected="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5zM9 4v13.5M15 6.5V20"/></svg>地圖
+          </button>
+          <button type="button" role="tab" class="tab tab-list" id="tab-list" aria-controls="pane-list" aria-selected="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>清單 <span class="count" id="listCount">0</span>
+          </button>
+          <button type="button" role="tab" class="tab tab-route" id="tab-route" aria-controls="pane-route" aria-selected="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.8"/></svg>路線 <span class="count" id="routeTabCount">0</span>
+          </button>
+        </div>
+
+        <div class="pane pane-list" id="pane-list" role="tabpanel" aria-labelledby="tab-list">
+          <p class="result-line" id="resultLine" aria-live="polite" tabindex="-1"></p>
+          <ul class="place-list" id="placeList"></ul>
+          <div class="empty" id="listEmpty" hidden></div>
+        </div>
+
+        <div class="pane pane-route" id="pane-route" role="tabpanel" aria-labelledby="tab-route">
+          <div class="route-head">
+            <h3>我的散步路線</h3>
+            <span class="route-count" id="routeCount">0 / 5</span>
+          </div>
+          <p class="route-intro">從清單按「加入路線」，挑 2 至 5 個有座標的景點。加入時會從第一個景點開始，依最近距離自動排序；也可以用上下箭頭手動調整順序。</p>
+          <p class="geo-msg is-warn route-undo" id="routeUndo" role="status" aria-live="polite" hidden><span id="routeUndoText"></span><button type="button" class="btn-text" id="routeUndoBtn">復原</button></p>
+          <ol class="route-list" id="routeList"></ol>
+          <div class="empty" id="routeEmpty"></div>
+          <div class="route-dock">
+          <div class="route-summary" id="routeSummary" hidden></div>
+          <div class="route-actions">
+            <a class="btn btn-forest" id="routeNav" href="#" target="_blank" rel="noopener" aria-disabled="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+              用 Google 地圖導航
+            </a>
+            <button type="button" class="btn btn-line-dark" id="routeSort">重新自動排序</button>
+            <button type="button" class="btn-text" id="routeOnMap" disabled>在地圖上看路線</button>
+            <button type="button" class="btn-text" id="routeClear">清空路線</button>
+          </div>
+          </div>
+          <p class="route-note">距離依直線距離估算；步行時間以每分鐘約 80 公尺推估，實際步行路程通常更長。路線保存在這個瀏覽器（localStorage）。</p>
+        </div>
+      </div>
+
+      <div class="pane pane-map" id="pane-map" role="tabpanel" aria-labelledby="tab-map">
+        <div class="map-frame">
+          <div id="map" role="region" aria-label="東京銀杏景點示意地圖"></div>
+          <div class="map-notice" id="mapNotice" role="status" hidden></div>
+        </div>
+        <div class="map-foot">
+          <span class="legend"><svg viewBox="0 0 64 68" aria-hidden="true"><use href="#gk"/></svg>葉片顏色＝所選日期的季節示意</span>
+          <span class="legend"><i class="legend-route" aria-hidden="true"></i>路線（直線連接）</span>
+          <span class="legend"><i class="legend-fav" aria-hidden="true"></i>金點＝已收藏</span>
+          <span class="legend-note">座標皆為近似值；大型公園以園區代表點標示。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 散步提案 -->
+  <section id="walks" class="section walks" aria-labelledby="walksTitle">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="kicker">03 · 散步提案</p>
+        <h2 id="walksTitle">四條銀杏散步提案</h2>
+        <p class="sec-lead">每條提案只寫官方頁面提到的地點與資訊。活動日期不等於見頃日；什麼時候最好看，請以季節示意估計，並以官方連結的最新消息為準。</p>
+      </header>
+      <div class="walk-list" id="walkList"></div>
+    </div>
+  </section>
+
+  <!-- 04 季節變動說明與資料來源 -->
+  <section id="sources" class="section sources" aria-labelledby="sourcesTitle">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="kicker">04 · 說明</p>
+        <h2 id="sourcesTitle">季節變動說明與資料來源</h2>
+      </header>
+
+      <div class="src-grid">
+        <article class="src-block">
+          <h3>季節示意怎麼算</h3>
+          <p>以氣象廳東京觀測站「いちょう黄葉日」的平年值 <strong>11/23</strong>（1991–2020 年）作為「見頃」第一天，「いちょう落葉日」平年值 <strong>12/3</strong> 作為「落葉」第一天；其餘分界是示意參數。</p>
+          <div class="table-scroll">
+            <table class="stage-table" id="stageTable">
+              <thead><tr><th scope="col">階段</th><th scope="col">與 11/23 的差距</th><th scope="col">日期（示意）</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="small">氣象廳的「黃葉日」指標本木整體看來大部分葉子轉黃的第一天；「落葉日」指約 80% 葉子落下的第一天。觀測對象是氣象台的標本木，不是各公園的最佳觀賞日。</p>
+          <p class="src-links"><a href="https://www.data.jma.go.jp/sakura/data/phn_012.html" target="_blank" rel="noopener">氣象廳：いちょうの黄葉日</a><a href="https://www.data.jma.go.jp/sakura/data/phn_013.html" target="_blank" rel="noopener">氣象廳：いちょうの落葉日</a></p>
+        </article>
+
+        <article class="src-block">
+          <h3>每年都會變動</h3>
+          <p>東京近年的實際黃葉日：2023 年 12/1、2024 年 12/3、2025 年 11/22。真實季節可能比平年值早或晚約一週，所以本站階段只是季節示意。</p>
+          <ul class="year-strip" id="yearStrip" aria-label="東京近十年黃葉日"></ul>
+          <p class="small">截至 2026-10-02，氣象廳 2026 年東京黃葉日尚未觀測（頁面顯示「///」）；也沒有任何官方來源發布 2026 年各景點的銀杏階段。</p>
+          <p class="src-links"><a href="https://www.data.jma.go.jp/sakura/data/download_ruinenchi.html" target="_blank" rel="noopener">氣象廳：生物季節累年值</a></p>
+        </article>
+
+        <article class="src-block">
+          <h3>來源等級</h3>
+          <dl class="grade-legend" id="gradeLegend"></dl>
+        </article>
+
+        <article class="src-block src-wide">
+          <h3>只當資料來源、不列為景點的試算表列</h3>
+          <p class="small">本站以老師提供的試算表作為來源索引，只把確認有銀杏的地點列為景點。以下各列是入口、觀測站或第三方平台，或無法證實有銀杏，所以只列在這裡。皇居外苑（TKG-030 的另一部分）在官方頁面上未證實有銀杏，也不列為景點。</p>
+          <p class="src-links"><a href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?gid=164385659#gid=164385659" target="_blank" rel="noopener">開啟老師提供的試算表（Google 試算表）</a></p>
+          <div class="table-scroll">
+            <table class="src-table" id="srcTable">
+              <thead><tr><th scope="col">編號</th><th scope="col">等級</th><th scope="col">來源</th><th scope="col">不列為景點的原因</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-grid">
+    <div>
+      <p class="foot-brand">
+        <svg viewBox="0 0 64 68" aria-hidden="true"><use href="#gk"/></svg>東京銀杏黃葉地圖
+      </p>
+      <p class="foot-statement">本網站供課程教學、非營利使用；資訊以官方公告為準。</p>
+    </div>
+    <div>
+      <h2 class="foot-h">資料來源</h2>
+      <ul class="foot-list">
+        <li>老師提供的試算表（來源索引，41 列）：<a href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?gid=164385659#gid=164385659" target="_blank" rel="noopener">Google 試算表</a></li>
+        <li>各景點的官方網站與證據頁（見每個景點的「來源資料」），2026-10-02 核對</li>
+        <li>氣象廳 生物季節觀測：<a href="https://www.data.jma.go.jp/sakura/data/phn_012.html" target="_blank" rel="noopener">いちょうの黄葉日</a>、<a href="https://www.data.jma.go.jp/sakura/data/phn_013.html" target="_blank" rel="noopener">いちょうの落葉日</a></li>
+        <li>座標：OpenStreetMap、維基百科等交叉核對的近似值</li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="foot-h">地圖與授權</h2>
+      <ul class="foot-list">
+        <li>地圖程式庫：<a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a>（BSD 2-Clause 授權）</li>
+        <li>地圖資料：© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>（ODbL 授權）</li>
+        <li>字型：Noto Sans TC、Zen Kaku Gothic New（Google Fonts，SIL Open Font License）</li>
+        <li>銀杏插畫與圖示為本站原創 SVG</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="script.js"></script>
+</body>
+</html>

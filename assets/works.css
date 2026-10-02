@@ -35,6 +35,9 @@ a.cat:hover .cat-peek img { opacity: 1; }
 .shot-label { font-family: var(--font-mono); font-size: .86rem; font-weight: 700; letter-spacing: .06em; color: var(--ink-2); transition: color .2s; }
 .shot:hover .shot-img img { transform: scale(1.03); }
 .shot:hover .shot-label { color: var(--accent); }
+/* 老師推薦的星號：接在代號後面，只用強調色，不加底色或框 */
+.stars { margin-left: .5em; color: var(--accent); font-family: "Noto Sans TC", system-ui, sans-serif; font-weight: 400; letter-spacing: .08em; }
+.vlabel .stars { font-size: .92em; }
 
 /* ---------- 在網站裡看作品 ---------- */
 body.is-viewing { overflow: hidden; }
@@ -64,9 +67,15 @@ body.is-viewing::after { display: none; } /* 不要在學生的網頁上蓋一�
 @media (max-width: 760px) {
   .cat { grid-template-columns: 2.8rem minmax(0, 1fr); gap: .6rem; }
   .cat-peek { display: none; }
-  .vbar { grid-template-columns: auto minmax(0, 1fr) auto; height: 3.2rem; }
+  .vbar { grid-template-columns: auto minmax(0, 1fr) auto; height: 3.2rem; gap: .5rem; }
   .vback-t { display: none; }
-  .vwho { justify-self: center; }
+  /* 中間的代號（含星號）在窄螢幕要能縮：太長時截斷，不壓到返回鍵和上一位／下一位 */
+  .vwho { justify-self: center; min-width: 0; max-width: 100%; overflow: hidden; gap: .5rem; }
+  .vlabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; letter-spacing: .02em; }
+  .vlabel .stars { margin-left: .25em; letter-spacing: 0; font-size: .85em; }
+}
+@media (max-width: 350px) {
+  .vcount { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .shot-img img { transition: none; }

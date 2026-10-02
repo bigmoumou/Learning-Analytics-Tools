@@ -14,7 +14,7 @@
 //      已開放的週次在 WEEKS 裡有三種語言的 title、summary、meta
 //   9. 提醒：weeks/ 裡不該有 mp4（只放 HLS）、頁面裡還有「待填」、總容量接近 GitHub Pages 的 1 GB
 //  10. 作品集：assets/works-data.js 的每個分類都有頁面和三種語言的標題；每件作品都有資料夾（index.html）
-//      和縮圖；代號是遮蔽過的（有 x）；works/<分類>/ 裡沒有沒登記的資料夾。學生的網頁不套用 2、3、8 的規定，
+//      和縮圖，stars 若有寫要是 1–3 的整數；代號是遮蔽過的（有 x）；works/<分類>/ 裡沒有沒登記的資料夾。學生的網頁不套用 2、3、8 的規定，
 //      只檢查檔案大小，找不到的本機檔案列成提醒
 import fs from "node:fs";
 import path from "node:path";
@@ -205,6 +205,7 @@ if (fs.existsSync(worksDataPath)) {
     for (const it of c.items || []) {
       codes.add(it.code);
       if (!/x/.test(it.code)) warn(`作品集 ${c.slug}/${it.code}：代號沒有遮蔽（應該像 41xxxxx23）`);
+      if (it.stars !== undefined && !(Number.isInteger(it.stars) && it.stars >= 1 && it.stars <= 3)) warn(`作品集 ${c.slug}/${it.code}：stars 要是 1–3 的整數（現在是 ${JSON.stringify(it.stars)}）`);
       if (!fs.existsSync(path.join(dir, it.code, "index.html"))) error(`作品集 ${c.slug}/${it.code}/ 少了 index.html`);
       if (!fs.existsSync(path.join(dir, "_thumbs", `${it.code}.jpg`))) error(`作品集 ${c.slug}/_thumbs/${it.code}.jpg 不存在（用 tools/add-works.mjs 重新匯入會補上）`);
     }

@@ -5,6 +5,8 @@
    - 分類頁的網址加 ?s=代號，就在網站裡打開那件作品：上方一條細列（回到列表、上一位／下一位、
      在新分頁開啟），下面整塊是學生的網頁（iframe，樣式和程式互不干擾）。方向鍵也能換人，Esc 回到列表。
    - 和週次頁同一套樣子：細線分隔、等寬編號、黃色點綴，不用卡片。
+   - 作品可以有 stars（1–3，老師推薦）：有星的排在最前面、星多的在前，同星數照 works-data.js 的順序；
+     列表、上一位／下一位、首頁的縮圖預覽都用同一個順序。星號接在代號後面。
    ========================================================================== */
 (function () {
   "use strict";
@@ -16,6 +18,16 @@
   const pad = (n) => String(n).padStart(2, "0");
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const $ = (sel, el = document) => el.querySelector(sel);
+  // 有星的作品排前面（星多的在前），同星數保持原本順序
+  const byStars = (items) => items.map((it, i) => [it, i])
+    .sort((a, b) => (starsOf(b[0]) - starsOf(a[0])) || a[1] - b[1]).map(([it]) => it);
+  const starsOf = (it) => Math.max(0, Math.min(3, Math.floor(Number(it.stars) || 0)));
+  const starsHtml = (it) => {
+    const n = starsOf(it);
+    if (!n) return "";
+    const label = esc(t("works.stars", { n }, `老師推薦 ${n} 顆星`));
+    return `<span class="stars" role="img" aria-label="${label}" title="${label}">${"★".repeat(n)}</span>`;
+  };
 
   const ICON_PREV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const ICON_NEXT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -28,6 +40,7 @@
   const catSlug = main.dataset.cat || "";
   const cat = WORKS.find((c) => c.slug === catSlug);
   const catIndex = WORKS.indexOf(cat);
+  const items = cat ? byStars(cat.items) : [];
 
   /* ---------- 作品集首頁：全部練習 ---------- */
   function renderIndex() {
@@ -36,7 +49,7 @@
       const meta = n ? t("works.count", { n }, `${n} 件作品`) : t("works.empty", null, "作品整理中");
       const wk = c.week ? t("week.n", { n: c.week }, `Week ${c.week}`) : "";
       const metaLine = wk ? t("fmt.dot", { a: meta, b: wk }, `${meta}・${wk}`) : meta;
-      const peek = c.items.slice(0, 4).map((it) => `<img src="${esc(c.slug)}/_thumbs/${esc(it.code)}.jpg" alt="" loading="lazy">`).join("");
+      const peek = byStars(c.items).slice(0, 4).map((it) => `<img src="${esc(c.slug)}/_thumbs/${esc(it.code)}.jpg" alt="" loading="lazy">`).join("");
       const inner = `<span class="cat-n">${pad(i + 1)}</span>` +
         `<span class="cat-text"><span class="cat-t">${esc(pick(c, "title"))}</span><span class="cat-m">${esc(metaLine)}</span></span>` +
         (peek ? `<span class="cat-peek" aria-hidden="true">${peek}</span>` : "");
@@ -50,12 +63,12 @@
 
   /* ---------- 分類頁：一個練習的全部作品 ---------- */
   function renderList() {
-    const n = cat.items.length;
+    const n = items.length;
     const kicker = `${t("works.kicker", null, "作品集")} ／ ${pad(catIndex + 1)}`;
-    const shots = cat.items.map((it) =>
+    const shots = items.map((it) =>
       `<li><a class="shot" href="?s=${encodeURIComponent(it.code)}" data-code="${esc(it.code)}">` +
       `<span class="shot-img"><img src="_thumbs/${esc(it.code)}.jpg" alt="" loading="lazy"></span>` +
-      `<span class="shot-label">${esc(it.label)}</span></a></li>`).join("");
+      `<span class="shot-label">${esc(it.label)}${starsHtml(it)}</span></a></li>`).join("");
     main.innerHTML =
       `<div class="head"><p class="kicker"><span class="dot" aria-hidden="true"></span>${esc(kicker)}</p>` +
       `<h1>${esc(pick(cat, "title"))}</h1>` +
@@ -100,14 +113,13 @@
     });
   }
   function paintViewer(code) {
-    const items = cat.items;
     const i = items.findIndex((it) => it.code === code);
     const it = items[i];
     const prev = items[(i - 1 + items.length) % items.length];
     const next = items[(i + 1) % items.length];
     $(".vback-t", viewer).textContent = pick(cat, "title");
     $(".vback", viewer).setAttribute("aria-label", t("works.back", null, "回到列表"));
-    $(".vlabel", viewer).textContent = it.label;
+    $(".vlabel", viewer).innerHTML = esc(it.label) + starsHtml(it);
     $(".vcount", viewer).textContent = t("works.of", { a: i + 1, b: items.length }, `${i + 1} / ${items.length}`);
     for (const [cls, target, key, zh] of [["vprev", prev, "works.prev", "上一位"], ["vnext", next, "works.next", "下一位"]]) {
       const a = $("." + cls, viewer);
@@ -133,7 +145,7 @@
     document.title = `${it.label}｜${pick(cat, "title")}｜${t("works.title", null, "作品集")}`;
   }
   function show(code) {
-    const ok = code && cat.items.some((it) => it.code === code);
+    const ok = code && items.some((it) => it.code === code);
     if (!ok) {
       if (viewer) viewer.hidden = true;
       document.body.classList.remove("is-viewing");

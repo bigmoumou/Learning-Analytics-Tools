@@ -14,7 +14,7 @@
 //      寫死的本機路徑（C:\Users\…、file:///）、找不到的本機檔案（網站上大小寫要完全一樣）、
 //      檔案裡出現完整學號（個資）、用到的外部網站。
 //   4. 用無頭瀏覽器（Edge 或 Chrome）打開每份作品截圖，存成 works/<分類>/_thumbs/<代號>.jpg（640×400）。
-//   5. 更新 assets/works-data.js；分類還不存在時建立它（要給 --title）和 works/<分類>/index.html。
+//   5. 更新 assets/works-data.js（已有的作品只更新 label，手動加的 stars 等欄位保留）；分類還不存在時建立它（要給 --title）和 works/<分類>/index.html。
 // 跑完看一下報告，用本機伺服器打開 works/ 確認，再 node tools/check.mjs、commit、push。
 import fs from "node:fs";
 import os from "node:os";
@@ -280,7 +280,8 @@ await thumbs(imported);
 const header = `/* 作品集的資料：練習分類和每件作品。
    - 作品由 tools/add-works.mjs 匯入時自動加進來，通常不用手改；分類的標題、翻譯可以手改。
    - code 是遮蔽後的學號（網址和資料夾名稱），label 是畫面上顯示的樣子；完整學號不放進這個 repo。
-   - 每件作品在 works/<分類>/<code>/，縮圖在 works/<分類>/_thumbs/<code>.jpg。 */
+   - 每件作品在 works/<分類>/<code>/，縮圖在 works/<分類>/_thumbs/<code>.jpg。
+   - stars（可省略，1–3）：老師推薦的星數，手動加；頁面上有星的排在最前面，星多的在前，同星數照原本順序。重新匯入不會清掉。 */
 `;
 fs.writeFileSync(dataPath, header + "window.WORKS = " + JSON.stringify(WORKS, null, 2) + ";\n");
 fs.mkdirSync(privDir, { recursive: true });

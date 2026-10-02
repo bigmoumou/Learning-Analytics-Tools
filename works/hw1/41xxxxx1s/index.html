@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>東京銀杏地圖｜2026 秋季靜態快照</title>
+  <meta name="description" content="東京銀杏地圖：依老師資料表與官方來源整理的 26 處東京銀杏景點，提供地圖總覽、六階段葉況辨識、景點詳情與銀杏散步路線規劃。本網站僅供課程教學使用，非營利用途。">
+  <meta name="theme-color" content="#F5F1E8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 共用的銀杏葉漸層（六階段各自的填色比例） -->
+  <svg width="0" height="0" class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="lg-aoba" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4C7A45"/><stop offset="1" stop-color="#5E8D52"/></linearGradient>
+      <linearGradient id="lg-iro" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#5E8D52"/><stop offset=".68" stop-color="#8FA64A"/><stop offset=".68" stop-color="#E3C44B"/><stop offset="1" stop-color="#E8C64A"/></linearGradient>
+      <linearGradient id="lg-shinko" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8FA64A"/><stop offset=".36" stop-color="#A9B246"/><stop offset=".36" stop-color="#E8C23C"/><stop offset="1" stop-color="#EBC53E"/></linearGradient>
+      <linearGradient id="lg-migoro" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E2A91C"/><stop offset="1" stop-color="#F1C232"/></linearGradient>
+      <linearGradient id="lg-rakuyo1" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E6AE2A"/><stop offset=".62" stop-color="#E0A030"/><stop offset=".62" stop-color="#B9772C"/><stop offset="1" stop-color="#A86A28"/></linearGradient>
+      <linearGradient id="lg-rakuyo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9C8064"/><stop offset="1" stop-color="#7F6852"/></linearGradient>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#explore">跳到地圖與景點</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#overview" aria-label="東京銀杏地圖 回到頁首">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path class="brand-leaf" d="M16 19.5C12.1 18.6 6.2 15.4 4.6 9.6 8.4 5.5 12.7 4.6 15 5.4l1 4.6 1-4.6c2.3-.8 6.6.1 10.4 4.2-1.6 5.8-7.5 9-11.4 9.9Z"/><path class="brand-stem" d="M16 19.5v8"/></svg>
+        </span>
+        <span class="brand-text"><strong>東京銀杏地圖</strong><small>Tokyo Ginkgo Atlas · 2026 秋</small></span>
+      </a>
+      <nav class="site-nav" aria-label="主要區塊">
+        <a class="nav-key" href="#explore">地圖</a>
+        <a href="#status">狀態辨識</a>
+        <a class="nav-key" href="#route">散步路線</a>
+        <a href="#sources">資料來源</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. 總覽 -->
+    <section id="overview" class="hero" aria-labelledby="hero-title">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="dot" aria-hidden="true"></span>秋季銀杏散策 · 資料快照 <time datetime="2026-10-02">2026-10-02</time></p>
+          <h1 id="hero-title">東京銀杏地圖</h1>
+          <p class="hero-lead">從皇居周邊的並木，到多摩相傳樹齡千年的大銀杏，整理老師資料表中有官方依據的 <span class="num" data-bind="spotCount">26</span> 處銀杏景點：看分布、辨葉況、讀來源，再排一條自己的散步路線。</p>
+          <div class="hero-notice" role="note">
+            <span class="hero-notice-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M12 7.6v5.4M12 16.2v.2"/></svg></span>
+            <p><strong>截至 2026-10-02 快照，各官方來源尚未發布 2026 年銀杏葉況。</strong>因此每個景點的「目前狀態」都標示為「資料未提供」；過去季節的官方紀錄只放在景點詳情中，並標明日期。</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#explore">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Zm0 0v14m6-12v14"/></svg>
+              探索銀杏地圖
+            </a>
+            <a class="btn btn-ghost" href="#route">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8"/></svg>
+              規劃散步路線
+            </a>
+          </div>
+        </div>
+
+        <figure class="hero-art" aria-hidden="true">
+          <svg class="hero-leaf" viewBox="0 0 400 420">
+            <defs>
+              <linearGradient id="heroLeafFill" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stop-color="#E9B52E"/>
+                <stop offset=".55" stop-color="#F2CB52"/>
+                <stop offset="1" stop-color="#F7DD8A"/>
+              </linearGradient>
+              <radialGradient id="heroGlow" cx=".5" cy=".45" r=".55">
+                <stop offset="0" stop-color="#F6E3A8" stop-opacity=".55"/>
+                <stop offset="1" stop-color="#F6E3A8" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <circle cx="200" cy="190" r="190" fill="url(#heroGlow)"/>
+            <g transform="translate(200 250) rotate(-14)">
+              <path class="hl-body" d="M0 0C-62-14-150-64-176-160-120-226-48-240-14-226L0-150 14-226C48-240 120-226 176-160 150-64 62-14 0 0Z" fill="url(#heroLeafFill)"/>
+              <g class="hl-veins">
+                <path d="M0 0-150-150M0 0-118-196M0 0-80-222M0 0-40-228M0 0-8-208M0 0 8-208M0 0 40-228M0 0 80-222M0 0 118-196M0 0 150-150M0 0-166-118M0 0 166-118"/>
+              </g>
+              <path class="hl-stem" d="M0 0C4 40 10 78 26 122"/>
+            </g>
+            <g class="hero-small" transform="translate(70 372) rotate(-24) scale(.22)">
+              <path d="M0 0C-62-14-150-64-176-160-120-226-48-240-14-226L0-150 14-226C48-240 120-226 176-160 150-64 62-14 0 0Z" fill="#E3C44B"/>
+              <path d="M0 0C4 40 10 78 26 122" stroke="#B48A1C" stroke-width="10" fill="none" stroke-linecap="round"/>
+            </g>
+            <g class="hero-small hero-small--2" transform="translate(346 360) rotate(-38) scale(.17)">
+              <path d="M0 0C-62-14-150-64-176-160-120-226-48-240-14-226L0-150 14-226C48-240 120-226 176-160 150-64 62-14 0 0Z" fill="#B9772C"/>
+              <path d="M0 0C4 40 10 78 26 122" stroke="#8A5A22" stroke-width="12" fill="none" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </figure>
+      </div>
+
+      <div class="container">
+        <dl class="hero-stats">
+          <div><dt>銀杏景點</dt><dd><span class="num" data-bind="spotCount">26</span><small>處</small></dd></div>
+          <div><dt>本站分區</dt><dd><span class="num" data-bind="areaCount">5</span><small>個</small></dd></div>
+          <div><dt>東京黃葉日平年值<span class="stat-note">氣象廳標本木・參考</span></dt><dd><span class="num">11/23</span></dd></div>
+          <div><dt>官方已標示 2026 葉況<span class="stat-note">截至快照日</span></dt><dd><span class="num" data-bind="statusKnown">0</span><small>處</small></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- 2. 地圖 / 地點 -->
+    <section id="explore" class="explore" aria-labelledby="explore-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker"><span class="kicker-num">01</span>地圖與景點</p>
+          <h2 id="explore-title">銀杏分布總覽</h2>
+          <p class="section-desc">點選地圖標記或景點卡片，查看名稱、位置、目前狀態、更新日期、簡介與官方來源。</p>
+        </div>
+      </div>
+
+      <div class="filterbar" id="filterbar" role="search" aria-label="搜尋與篩選景點">
+        <div class="container filterbar-inner">
+          <label class="search" for="q">
+            <span class="sr-only">關鍵字搜尋</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+            <input id="q" type="search" placeholder="搜尋景點、行政區或關鍵字（例：並木、新宿）" autocomplete="off" enterkeyhint="search">
+            <button type="button" class="search-clear" id="qClear" aria-label="清除關鍵字" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+            </button>
+          </label>
+          <p class="result-count" id="resultCount" aria-live="polite">顯示 <b>26</b> / 26 處</p>
+          <div class="filter-selects">
+            <label class="select">
+              <span>區域</span>
+              <select id="areaSel" aria-label="依區域篩選"></select>
+            </label>
+          </div>
+          <div class="chip-scroller" id="statusChips" role="group" aria-label="依目前狀態篩選"></div>
+          <button type="button" class="clear-btn" id="clearFilters" disabled aria-label="清除篩選">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.9h3.9"/></svg>
+            <span>清除<span class="cl-long">篩選</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="view-toggle" role="tablist" aria-label="切換列表或地圖">
+          <button type="button" role="tab" id="tabList" aria-selected="true" aria-controls="panel">列表</button>
+          <button type="button" role="tab" id="tabMap" aria-selected="false" aria-controls="mapWrap">地圖</button>
+        </div>
+
+        <div class="explore-grid" id="exploreGrid" data-view="list">
+          <div class="map-wrap" id="mapWrap">
+            <a class="skip-map" href="#list" id="skipMap">跳過地圖，直接看景點列表</a>
+            <div id="map" class="map" role="region" aria-label="東京銀杏景點地圖"></div>
+            <div class="map-msg" id="mapMsg" hidden></div>
+            <div class="map-legend" id="mapLegend" aria-label="地圖圖例"></div>
+            <p class="map-coord-note">標記位置為近似座標，僅供示意。</p>
+          </div>
+
+          <aside class="panel" id="panel" aria-label="景點列表與詳情">
+            <div class="panel-list" id="panelList">
+              <div class="panel-head">
+                <h3>景點列表</h3>
+                <p class="panel-sub" id="panelSub">依區域排列 · 點選查看詳情</p>
+              </div>
+              <div class="list" id="list" tabindex="-1"></div>
+            </div>
+            <div class="panel-detail" id="panelDetail" hidden tabindex="-1"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 狀態辨識 -->
+    <section id="status" class="lifecycle" aria-labelledby="status-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker"><span class="kicker-num">02</span>狀態辨識</p>
+          <h2 id="status-title">銀杏葉況的六個階段</h2>
+          <p class="section-desc">每個階段都有固定的顏色、葉片圖示與標籤，地圖、卡片與詳情使用同一套標示。官方沒有發布的狀態，一律以虛線框的「資料未提供」標示，不用推估值代替。</p>
+        </div>
+
+        <ol class="stage-track" id="stageTrack"></ol>
+
+        <div class="nodata-row" id="nodataRow"></div>
+
+        <div class="jma" id="jma">
+          <div class="jma-head">
+            <h3>參考：東京氣象台標本木的歷年黃葉日</h3>
+            <p>這是氣象廳在東京觀測站的單一標本木紀錄，<strong>不是任何景點的狀態</strong>，只用來理解東京銀杏季節的大致時間。</p>
+          </div>
+          <div class="jma-body">
+            <div class="jma-chart" id="jmaChart" role="img" aria-label="2016 到 2025 年東京銀杏黃葉日分布，平年值 11 月 23 日"></div>
+            <dl class="jma-facts" id="jmaFacts"></dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 行程規劃 -->
+    <section id="route" class="route" aria-labelledby="route-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker"><span class="kicker-num">03</span>行程規劃</p>
+          <h2 id="route-title">銀杏散步路線規劃</h2>
+          <p class="section-desc">選擇多個景點，系統會從你選的第一個景點出發，依「最近的下一站」排出停靠順序；也可以手動調整。距離只用近似座標計算直線距離，不提供步行時間。</p>
+        </div>
+
+        <div class="route-grid">
+          <div class="route-pick card-surface">
+            <div class="route-pick-head">
+              <h3>1 · 選擇景點</h3>
+              <p>點選加入或取消；也可以在景點卡片或詳情中按「加入路線」。</p>
+            </div>
+            <div class="pick-groups" id="pickGroups"></div>
+          </div>
+
+          <div class="route-plan card-surface">
+            <div class="route-plan-head">
+              <h3>2 · 停靠順序</h3>
+              <div class="route-tools">
+                <button type="button" class="btn btn-small" id="routeNN" disabled>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 12h8M4 17h5M17 5v14m0 0-3-3m3 3 3-3"/></svg>
+                  依最近距離重新排序
+                </button>
+                <button type="button" class="btn btn-small btn-quiet" id="routeClear" disabled>清空</button>
+              </div>
+            </div>
+            <p class="route-mode" id="routeMode" aria-live="polite"></p>
+            <ol class="stops" id="stops"></ol>
+            <div class="route-empty" id="routeEmpty"></div>
+
+            <div class="route-summary" id="routeSummary" hidden aria-live="polite"></div>
+            <div class="route-map-wrap" id="routeMapWrap" hidden>
+              <div id="routeMap" class="route-map" role="region" aria-label="散步路線示意地圖"></div>
+              <div class="map-msg" id="routeMapMsg" hidden></div>
+              <p class="route-map-cap">示意路線：以虛線直線連接各站，不是實際道路。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 資料來源 -->
+    <section id="sources" class="sources" aria-labelledby="sources-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker"><span class="kicker-num">04</span>資料來源</p>
+          <h2 id="sources-title">資料來源與揭露</h2>
+          <p class="section-desc">本網站是 <time datetime="2026-10-02">2026-10-02</time> 製作的靜態快照，不會自動更新。景點與狀態以老師的資料表，以及表內對應的官方來源為準；缺少的欄位標示「資料未提供」。</p>
+        </div>
+
+        <div class="source-primary card-surface">
+          <div>
+            <p class="source-label">主要資料依據</p>
+            <h3>東京銀杏資料表（老師提供）</h3>
+            <p>共 41 列來源；本網站採用其中有銀杏依據的單一地點，以及由官方網域證實有銀杏的地點。</p>
+          </div>
+          <a class="btn btn-primary" id="sheetLink" href="#" target="_blank" rel="noopener">
+            開啟資料表
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5"/></svg>
+          </a>
+        </div>
+
+        <div class="grade-key" id="gradeKey"></div>
+
+        <h3 class="sources-sub">各景點實際使用的官方 URL</h3>
+        <div class="source-list" id="sourceList"></div>
+
+        <h3 class="sources-sub">共用參考（氣象廳與東京都公園協會）</h3>
+        <ul class="ref-list" id="refList"></ul>
+
+        <details class="other-rows">
+          <summary><span>資料表中未列為景點的其他來源（<span id="otherCount">17</span> 列）</span></summary>
+          <ul id="otherRows"></ul>
+        </details>
+
+        <div class="map-credit">
+          <h3 class="sources-sub">地圖、座標與字型</h3>
+          <ul class="credit-list">
+            <li><span>地圖資料</span><p>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>（ODbL 授權）；使用 OpenStreetMap 標準圖磚，本網站以淡色濾鏡呈現。</p></li>
+            <li><span>地圖程式庫</span><p><a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a>（BSD 2-Clause 授權）。</p></li>
+            <li><span>座標</span><p>以 OpenStreetMap（Nominatim／Overpass）為主，並與維基百科等來源交叉核對的近似值，僅供地圖示意與直線距離估算。</p></li>
+            <li><span>字型與圖示</span><p>Noto Sans TC、Manrope（Google Fonts）；銀杏葉圖示為本網站自繪 SVG。</p></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="disclaimer">本網站僅供課程教學使用，非營利用途。</p>
+      <p class="footer-meta">資料快照：<time datetime="2026-10-02">2026-10-02</time>　·　靜態網站，不即時更新　·　狀態以官方發布為準</p>
+    </div>
+  </footer>
+
+  <!-- 行動版：景點詳情 bottom sheet -->
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+    <div class="sheet-grip" id="sheetGrip" aria-hidden="true"><span></span></div>
+    <button type="button" class="sheet-close" id="sheetClose" aria-label="關閉景點詳情">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+    </button>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
