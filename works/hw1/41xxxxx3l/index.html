@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京銀杏前線｜情報與散步地圖</title>
+<meta name="description" content="東京銀杏名所的六階段季節示意、官方交通與開放資訊，以及 2～3 個景點的散步路線規劃。">
+<meta name="theme-color" content="#FBF6EA">
+<!-- 網頁小圖示：自繪銀杏葉（內嵌 SVG，不需額外檔案） -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23E3A20F' d='M32 47C27 41 14 31 6.5 21 4.3 18 5 14.6 8.2 12.4 15 7.6 23.8 6.2 28.8 9c1.8 1 2.7 3.6 3.2 6.8.5-3.2 1.4-5.8 3.2-6.8 5-2.8 13.8-1.4 20.6 3.4 3.2 2.2 3.9 5.6 1.7 8.6C50 31 37 41 32 47z'/%3E%3Cpath fill='none' stroke='%23A0660A' stroke-width='3' stroke-linecap='round' d='M32 46c-.6 6 .6 10.5-1.2 15.5'/%3E%3C/svg%3E">
+<!-- 字體：Noto Sans TC（中文內文）＋ Zen Kaku Gothic New（日文地名，以及中文句子裡的日文漢字）
+     ＋ Inter（日期、氣溫、時間、距離等數字；等寬數字讓上下列的數字對齊，像氣象情報台的數據欄） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+/* =========================================================
+   0. 設計變數：暖奶油底、銀杏黃 → 琥珀 → 秋季赭褐、深褐色文字
+   ========================================================= */
+:root {
+  color-scheme: light;
+  --paper: #FBF6EA;        /* 奶油底色 */
+  --paper-deep: #F4EAD4;   /* 較深的奶油色 */
+  --panel: #FFFDF8;        /* 面板底色 */
+  --ink: #2A1E13;          /* 主要文字：深褐 */
+  --ink-2: #4F3B2A;        /* 次要文字 */
+  --ink-3: #6A533F;        /* 說明文字（對比 ≥ 6:1） */
+  --line: #E7D9BC;         /* 細線 */
+  --line-strong: #D3BE93;
+  --gold: #F2BD1D;         /* 銀杏黃 */
+  --gold-wash: #FCEFC4;
+  --gold-mark: #F7D661;
+  --amber: #D3861A;
+  --amber-ink: #8A5208;    /* 可當文字的琥珀色 */
+  --umber: #7A4C27;        /* 赭褐 */
+  --brown: #33241A;
+  /* 六個階段的代表色（綠 → 黃綠 → 金黃 → 濃金 → 琥珀 → 赭褐） */
+  --s1: #6E8F3A; --s2: #ABB136; --s3: #E5BE2C; --s4: #F2A20F; --s5: #CB7428; --s6: #8A5A35;
+  /* 六階段色譜（硬色階，各佔六分之一）：頁首、今日東京、頁尾共用 */
+  --spectrum: linear-gradient(90deg, var(--s1) 0 16.667%, var(--s2) 16.667% 33.333%, var(--s3) 33.333% 50%, var(--s4) 50% 66.667%, var(--s5) 66.667% 83.333%, var(--s6) 83.333% 100%);
+  --radius: 16px;
+  /* 面板陰影：一條細線＋很淡的暖褐色落影（不發光） */
+  --shadow: 0 1px 0 rgba(122, 76, 39, .05), 0 22px 44px -32px rgba(91, 58, 22, .38);
+  --wash: #FBF4E4;         /* 展開面板、路段卡的淡底色 */
+  /* 和紙般的細顆粒（自繪 SVG 雜訊，極淡；只在底色上，不影響文字對比） */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .27 0 0 0 0 .1 .1 0 0 0 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  /* 中文字體後面緊接已載入的日文字體：中文句子裡的日文漢字（徒歩、本郷、都営、黄葉…）
+     由 Zen Kaku Gothic New 補字，不會掉到系統字體；日文字體缺的繁體字（黃、鄉…）則由 Noto Sans TC 補字 */
+  --font-tc: "Noto Sans TC", "Zen Kaku Gothic New", "PingFang TC", "Microsoft JhengHei", "Heiti TC", system-ui, sans-serif;
+  --font-ja: "Zen Kaku Gothic New", "Noto Sans TC", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", "Microsoft JhengHei", sans-serif;
+  --font-num: "Inter", "Zen Kaku Gothic New", "Noto Sans TC", "Segoe UI", system-ui, sans-serif;
+}
+
+/* =========================================================
+   1. 基本設定
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--grain), var(--paper);
+  color: var(--ink);
+  font-family: var(--font-tc);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
+}
+[lang="ja"] { font-family: var(--font-ja); }
+a { color: var(--amber-ink); text-underline-offset: 3px; }
+/* 只在真正能懸停的裝置上改變懸停顏色（觸控點擊後不會殘留 hover 色） */
+@media (hover: hover) { a:hover { color: var(--ink); } }
+/* 焦點框：深琥珀色，在奶油底與面板上對比都 ≥ 3:1 */
+:focus-visible { outline: 3px solid var(--amber-ink); outline-offset: 2px; border-radius: 6px; }
+/* 頁內錨點跳轉時，區塊上緣保留一點呼吸空間 */
+#front, #board, #planner, #sources, #legend { scroll-margin-top: 24px; }
+h1, h2, h3, h4 { line-height: 1.3; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* 跳到主要內容（鍵盤使用者） */
+.skip {
+  position: fixed; left: 12px; top: 12px; z-index: 50;
+  display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 16px;
+  background: var(--brown); color: #FFF8E8; border-radius: 10px; text-decoration: none;
+  opacity: 0; pointer-events: none; transform: translateY(-160%); transition: transform .25s var(--ease), opacity .25s;
+}
+.skip:focus { opacity: 1; pointer-events: auto; transform: none; color: #FFF8E8; }
+.nw { white-space: nowrap; }
+
+/* 共用按鈕 */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 0 20px; border-radius: 10px;
+  font: inherit; font-weight: 700; font-size: .96rem; text-decoration: none; cursor: pointer;
+  border: 1px solid transparent; transition: background-color .25s, border-color .25s, color .25s, transform .15s;
+  text-wrap: balance;   /* 按鈕文字換行時兩行長度接近，不留單字 */
+}
+.btn:active { transform: translateY(1px); }
+.btn svg { width: 18px; height: 18px; flex: none; }
+/* 主要按鈕：深褐底，上緣一道極細的亮線，像印刷品的壓紋 */
+.btn-primary { background: var(--brown); color: #FFF8E8; box-shadow: inset 0 1px 0 rgba(255, 240, 205, .14), 0 10px 22px -16px rgba(51, 36, 26, .9); }
+.btn-ghost { background: rgba(255, 253, 248, .6); color: var(--ink); border-color: var(--line-strong); }
+.btn-quiet { background: transparent; color: var(--amber-ink); border: 0; padding: 0 6px; min-width: 44px; }
+.btn-primary:disabled { cursor: progress; }
+@media (hover: hover) {
+  .btn-primary:hover { background: #4C3523; color: #FFF8E8; transform: translateY(-1px); }
+  .btn-ghost:hover { background: var(--gold-wash); color: var(--ink); border-color: #DDBF7A; }
+  .btn-quiet:hover { color: var(--ink); text-decoration: underline; }
+}
+
+/* 小標（中文＋日文）：下方一條細線，像情報台面板的欄位標題 */
+.kicker { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: .78rem; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
+.kicker .ja { font-weight: 500; color: var(--ink-3); letter-spacing: .04em; }
+
+/* =========================================================
+   2. 頁首（Header）
+   ========================================================= */
+.masthead {
+  position: relative; border-bottom: 1px solid var(--line);
+  /* 右上角一團很淡的秋陽暖光＋和紙顆粒，往下漸漸融入奶油底 */
+  background:
+    radial-gradient(52% 70% at 82% 26%, rgba(242, 189, 29, .14), rgba(242, 189, 29, 0) 70%),
+    var(--grain),
+    linear-gradient(180deg, #FFF9EB 0%, var(--paper) 78%);
+}
+/* 最上方一條六色細帶：代表銀杏的六個階段 */
+.spectrum { display: grid; grid-template-columns: repeat(6, 1fr); height: 5px; }
+.spectrum span:nth-child(1) { background: var(--s1); } .spectrum span:nth-child(2) { background: var(--s2); }
+.spectrum span:nth-child(3) { background: var(--s3); } .spectrum span:nth-child(4) { background: var(--s4); }
+.spectrum span:nth-child(5) { background: var(--s5); } .spectrum span:nth-child(6) { background: var(--s6); }
+
+.topbar { border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 66px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--ink); text-decoration: none; }
+.brand svg { width: 30px; height: 30px; color: var(--s4); flex: none; transition: transform .6s var(--ease); transform-origin: 50% 90%; }
+@media (hover: hover) { .brand:hover svg { transform: rotate(-8deg); } }
+.brand-name { font-family: var(--font-ja); font-weight: 900; font-size: 1.08rem; letter-spacing: .06em; }
+/* 品牌名與日文副名之間一條短直線 */
+.brand-sub { position: relative; margin-left: 6px; padding-left: 11px; font-size: .74rem; color: var(--ink-3); letter-spacing: .1em; }
+.brand-sub::before { content: ""; position: absolute; left: 0; top: 50%; height: 12px; margin-top: -6px; border-left: 1px solid var(--line-strong); }
+.topnav { display: flex; gap: 2px; }
+.topnav a {
+  position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+  color: var(--ink-2); text-decoration: none; font-size: .9rem; font-weight: 500; letter-spacing: .04em;
+  transition: color .25s var(--ease);
+}
+.topnav a::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 8px; height: 2px; border-radius: 1px; background: var(--gold); transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease); }
+@media (hover: hover) {
+  .topnav a:hover { color: var(--ink); }
+  .topnav a:hover::after { transform: scaleX(1); }
+}
+
+.hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr); gap: 32px; align-items: center; padding: 56px 32px 40px; }
+/* 眉標：前面一條金色短線 */
+.eyebrow { margin: 0; font-size: .86rem; font-weight: 700; letter-spacing: .1em; color: var(--amber-ink); }
+.eyebrow::before { content: ""; display: inline-block; vertical-align: middle; width: 28px; height: 2px; margin: -2px 12px 0 0; border-radius: 1px; background: var(--gold); }
+.hero h1 { margin: .4em 0 0; font-weight: 400; }
+.h1-main { display: block; font-family: var(--font-ja); font-weight: 900; font-size: clamp(2.6rem, 7vw, 5.2rem); line-height: 1.06; letter-spacing: .03em; color: var(--ink); }
+.h1-main mark { color: inherit; background: linear-gradient(transparent 62%, var(--gold-mark) 62%, var(--gold-mark) 90%, transparent 90%); padding: 0 .04em; }
+/* 副標：前面一條細線，字距拉開 */
+.h1-sub { display: flex; align-items: center; gap: 14px; margin-top: .6em; font-size: clamp(1.05rem, 2.3vw, 1.45rem); font-weight: 500; letter-spacing: .32em; color: var(--ink-2); }
+.h1-sub::before { content: ""; flex: none; width: 34px; height: 1px; background: var(--ink-3); }
+.lead { max-width: 34em; margin: 1.4em 0 1.7em; color: var(--ink-2); font-size: 1.04rem; line-height: 1.85; text-wrap: pretty; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-art { margin: 0; justify-self: end; width: 100%; max-width: 440px; }
+.hero-art svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hero-art figcaption { margin-top: 10px; font-size: .76rem; color: var(--ink-3); text-align: center; letter-spacing: .04em; word-break: keep-all; text-wrap: balance; }
+/* 頁首銀杏枝為靜態插畫（窄螢幕會隱藏；不加進場動畫，避免切換版面時重播） */
+
+/* ---- 今日東京：日期、季節示意、天氣、拍攝時間 ---- */
+.today { padding-bottom: 40px; }
+.today-grid {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.2fr);
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+/* 面板上緣：六階段色譜細條（左右各留圓角的距離） */
+.today-grid::before { content: ""; position: absolute; left: 20px; right: 20px; top: -1px; height: 3px; border-radius: 0 0 3px 3px; background: var(--spectrum); }
+.t-cell { padding: 22px 24px 22px; border-left: 1px solid var(--line); min-width: 0; }
+.t-cell:first-child { border-left: 0; }
+.big { margin: 0; font-family: var(--font-num); font-weight: 500; font-size: 2.6rem; line-height: 1.05; letter-spacing: -.02em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.big small { font-size: .42em; font-weight: 500; letter-spacing: .02em; margin-left: .25em; color: var(--ink-2); }
+.sub { margin: 8px 0 0; font-size: .86rem; color: var(--ink-2); }
+.fine { margin: 6px 0 0; font-size: .78rem; color: var(--ink-3); line-height: 1.6; }
+.t-stage .big { font-family: var(--font-ja); font-weight: 700; font-size: 2.2rem; letter-spacing: .02em; }
+/* 「見頃」下方的中文註解（最佳觀賞期），與 BRIEF 的寫法一致 */
+.t-stage .big .gloss { display: block; margin: 6px 0 0; font-family: var(--font-tc); font-size: .82rem; font-weight: 700; letter-spacing: .04em; color: var(--amber-ink); }
+.t-stage .track { margin-top: 12px; max-width: 220px; }
+.w-row { display: flex; align-items: center; gap: 14px; }
+.w-icon { width: 48px; height: 48px; flex: none; color: var(--amber); }
+.w-cond { font-size: 1rem; font-weight: 700; }
+.w-tip { margin: 12px 0 0; padding: 8px 12px; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; background: var(--wash); font-size: .86rem; color: var(--ink-2); }
+/* 天氣暫時無法取得：雲朵圖示改用淡色 */
+.w-row.is-off .w-icon { color: var(--line-strong); }
+.w-row.is-off .w-cond { margin: 0; }
+/* 行內區塊：文字換行時 ↗ 會緊跟在最後一個字後面，不會被擠到右側 */
+.src-link { display: inline-block; min-height: 44px; padding: 12px 0; font-size: .78rem; line-height: 1.6; color: var(--amber-ink); }
+/* 讀取中：淡奶油色塊，由左到右緩緩掠過一道亮光 */
+.skeleton {
+  display: block; height: 12px; border-radius: 6px; margin-top: 10px;
+  background: linear-gradient(90deg, var(--paper-deep) 0 35%, #FBF1DC 50%, var(--paper-deep) 65% 100%) 0 0 / 300% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+.skeleton.lg { height: 38px; width: 60%; margin-top: 0; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.gold-rows { display: grid; gap: 4px; }
+.gold-row { display: grid; grid-template-columns: 2.6em minmax(0, 1fr); align-items: baseline; gap: 8px; }
+.gold-row .lab { font-size: .82rem; font-weight: 700; color: var(--ink-2); }
+.gold-row .val { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; font-size: 1.7rem; font-weight: 500; letter-spacing: -.01em; line-height: 1.2; white-space: nowrap; }
+.gold-row.is-now .val { color: var(--amber-ink); }
+.now-note { display: inline-block; margin-top: 6px; font-size: .8rem; font-weight: 700; color: var(--amber-ink); }
+/* 一天的光線條（0:00–24:00，裝飾用）：夜間淡褐、白天奶油、兩段柔光金黃、細直線是現在時刻 */
+.daybar { position: relative; height: 8px; margin: 12px 0 4px; border-radius: 4px; background: #E9DCC0; }
+.daybar span { position: absolute; top: 0; bottom: 0; }
+.daybar .db-day { background: #FFF1C9; box-shadow: inset 0 0 0 1px #F0DFAE; }
+.daybar .db-gold { background: var(--s4); }
+.daybar .db-gold.am { border-radius: 4px 0 0 4px; }
+.daybar .db-gold.pm { border-radius: 0 4px 4px 0; }
+.daybar .db-now { top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--brown); }
+.daybar .db-tick { top: 9px; bottom: auto; height: 4px; width: 1px; background: var(--line-strong); }
+
+/* =========================================================
+   3. 區塊標題
+   ========================================================= */
+.sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap; margin-bottom: 18px; }
+.sec-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0; font-size: clamp(1.35rem, 2.6vw, 1.8rem); font-weight: 700; letter-spacing: .02em; }
+/* 區塊編號：等寬數字＋一條短細線（編輯排版式的章節記號） */
+.sec-no { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-num); font-size: .8rem; font-weight: 600; color: var(--amber-ink); letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.sec-no::after { content: ""; width: 22px; height: 1px; background: currentColor; opacity: .55; }
+.sec-title .ja { font-family: var(--font-ja); font-size: .9rem; font-weight: 500; color: var(--ink-3); letter-spacing: .06em; }
+.sec-desc { margin: 8px 0 0; color: var(--ink-2); font-size: .92rem; max-width: 44em; text-wrap: pretty; }
+.honest { margin: 0; font-size: .82rem; color: var(--ink-2); }
+.honest b { font-weight: 700; color: var(--ink); }
+
+/* =========================================================
+   4. 銀杏前線（六階段季節帶）
+   ========================================================= */
+.front { padding: 60px 32px 8px; }
+.band { position: relative; margin-top: 12px; padding: 36px 0 0; }
+.band-years { position: relative; height: 22px; }
+/* 同一天的年份點往上疊（--k）；窄螢幕每天只有幾 px，相鄰日也往上疊（--kn），10 個年份都數得出來 */
+.yr { position: absolute; top: calc(6px - 10px * var(--k, 0)); width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--umber); opacity: .72; box-shadow: 0 0 0 1.5px var(--paper); }
+.yr-label { position: absolute; top: 1px; font-size: .72rem; color: var(--ink-3); white-space: nowrap; letter-spacing: .02em; }
+/* 色帶：圓角長條，段與段之間留一道細縫（像印刷的色票），底下一道很淡的落影 */
+.band-bar { position: relative; display: flex; height: 42px; border-radius: 10px; overflow: hidden; background: var(--paper-deep); box-shadow: 0 1px 0 rgba(255, 255, 255, .7), 0 14px 26px -22px rgba(91, 58, 22, .55); }
+/* 每一段：淡色底＋實色層。實色層由左向右依序填滿（過場）；淡色底讓色帶在填滿前也看得出六段 */
+.seg { position: relative; height: 100%; background: var(--c); background: color-mix(in srgb, var(--c) 32%, var(--paper-deep)); }
+.seg + .seg { border-left: 2px solid var(--paper); }
+.seg::after { content: ""; position: absolute; inset: 0; background: var(--c); transform-origin: left; animation: grow .9s var(--ease) both; animation-delay: inherit; }
+/* 實色層上緣一道柔和的亮面，讓色帶有紙張的厚度（不是發光） */
+.seg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 55%, rgba(60, 35, 10, .06)); pointer-events: none; }
+/* 色帶捲進畫面（.in）時才播放填色；在那之前實色層先收起，避免動畫在畫面外播完 */
+.band.js-reveal:not(.in) .seg::after { animation: none; transform: scaleX(0); }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.band-ticks { position: relative; height: 28px; }
+.tick { position: absolute; top: 6px; transform: translateX(-50%); font-family: var(--font-num); font-size: .74rem; color: var(--ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tick::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: var(--line-strong); }
+.tick.key { font-weight: 600; color: var(--ink-2); }
+.tick.key::before { height: 6px; background: var(--ink-3); }
+.today-mark { position: absolute; top: 0; bottom: 28px; width: 0; border-left: 2px solid var(--brown); z-index: 2; }
+/* 今天：色帶中央一個奶油色圓點（像路線圖上的現在位置） */
+.today-mark::after { content: ""; position: absolute; left: -6px; bottom: 16px; width: 10px; height: 10px; border-radius: 50%; background: #FFF8E8; border: 2px solid var(--brown); }
+.today-mark span {
+  position: absolute; top: -4px; left: 0; transform: translateX(-50%);
+  white-space: nowrap; font-size: .74rem; font-weight: 700; color: #FFF8E8; background: var(--brown);
+  padding: 2px 10px; border-radius: 999px; letter-spacing: .04em;
+}
+.today-mark.at-start span { transform: translateX(-2px); border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+.today-mark.at-end span { transform: translateX(calc(-100% + 2px)); border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+.legend { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; margin: 22px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.legend li { position: relative; padding: 14px 14px 12px 0; min-width: 0; }
+/* 圖例色票：六片自繪銀杏葉，顏色由綠轉金再轉褐 */
+.legend .sw { display: block; width: 24px; height: 24px; margin-bottom: 6px; }
+.legend .sw svg { display: block; width: 100%; height: 100%; transform: rotate(-18deg); }
+.legend .ln { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; }
+.legend .ln .n { font-family: var(--font-num); font-size: .76rem; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.legend .ln b { font-family: var(--font-ja); font-size: 1rem; word-break: keep-all; line-break: strict; }
+/* 「最佳觀賞期」與名稱同一行，六欄的日期與說明才會對齊 */
+.legend .gloss { display: inline; margin-left: 2px; font-size: .72rem; color: var(--amber-ink); font-weight: 700; }
+.legend .rg { display: block; margin-top: 2px; font-family: var(--font-num); font-size: .8rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+/* 日期一行、說明一行；說明以整個詞組換行（不拆成「為／主」） */
+.legend .ds { display: block; font-size: .8rem; color: var(--ink-2); word-break: keep-all; text-wrap: pretty; }
+.legend li.is-now .ln b { text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+/* 目前階段：上緣一條該階段顏色的粗線，壓在圖例的分隔細線上 */
+.legend li.is-now::before { content: ""; position: absolute; left: 0; right: 14px; top: -2px; height: 3px; border-radius: 0 0 2px 2px; background: var(--c); }
+.band-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 32px; margin: 16px 0 0; padding: 16px 0 0; list-style: none; border-top: 1px solid var(--line); font-size: .8rem; color: var(--ink-3); }
+.band-notes li { position: relative; padding-left: 14px; }
+.band-notes li::before { content: ""; position: absolute; left: 0; top: .72em; width: 5px; height: 5px; border-radius: 50%; background: var(--line-strong); }
+
+/* =========================================================
+   5. 中段雙欄：狀態看板＋路線規劃器
+   ========================================================= */
+.desk { display: grid; grid-template-columns: minmax(0, 1.42fr) minmax(0, 1fr); gap: 28px; align-items: start; padding: 40px 32px 72px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; box-shadow: var(--shadow); }
+/* 面板標頭：極淡的暖色漸層，與下方內容以細線分開 */
+.panel-head { padding: 24px 24px 18px; border-bottom: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; background: linear-gradient(180deg, #FFF9EC, rgba(255, 253, 248, 0) 80%); }
+.honest-box { display: grid; gap: 4px; margin-top: 16px; padding: 12px 16px; background: var(--gold-wash); border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; }
+
+/* ---- 狀態看板的每一列 ---- */
+.spots { list-style: none; margin: 0; padding: 0; }
+.spot { padding: 18px 24px 6px; border-top: 1px solid var(--line); animation: rise .6s var(--ease) both; transition: background-color .3s var(--ease); }
+.spot:first-child { border-top: 0; }
+.spot:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+@media (hover: hover) { .spot:hover { background-color: #FFFAEF; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.spot-grid { display: grid; grid-template-columns: 30px minmax(0, 1fr) 156px 128px; gap: 2px 16px; align-items: center; }
+.spot-no { align-self: start; padding-top: 4px; font-family: var(--font-num); font-size: .82rem; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.spot-name { margin: 0; font-family: var(--font-ja); font-size: 1.1rem; font-weight: 700; line-height: 1.4; letter-spacing: .02em; }
+/* 日文地名只在空格處換行（不把「いちょう」拆成「いち／ょう」） */
+.spot-name, .p-name, .stop-name { word-break: keep-all; line-break: strict; }
+
+/* 看板欄位標頭（桌機）：六個圓點各代表哪一階段 */
+.board-key { margin: 12px 0 0; font-size: .8rem; color: var(--ink-2); }
+.board-key-link { display: inline-flex; align-items: center; min-height: 44px; font-size: .84rem; font-weight: 700; }
+.board-cols { display: grid; grid-template-columns: 30px minmax(0, 1fr) 156px 128px; gap: 0 16px; align-items: end; padding: 12px 24px 8px; border-bottom: 1px solid var(--line); background: #FDF8EC; font-size: .72rem; color: var(--ink-3); letter-spacing: .04em; }
+.board-cols .c-track { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); text-align: center; font-family: var(--font-num); font-weight: 600; font-variant-numeric: tabular-nums; }
+.board-cols .c-track span { line-height: 1.2; }
+/* 欄位編號上方一小段該階段的顏色，對應下方每列的六個圓點 */
+.board-cols .c-track span::before { content: ""; display: block; width: 14px; height: 3px; margin: 0 auto 5px; border-radius: 2px; background: var(--c); }
+.board-cols .c-track span:nth-child(1) { --c: var(--s1); } .board-cols .c-track span:nth-child(2) { --c: var(--s2); }
+.board-cols .c-track span:nth-child(3) { --c: var(--s3); } .board-cols .c-track span:nth-child(4) { --c: var(--s4); }
+.board-cols .c-track span:nth-child(5) { --c: var(--s5); } .board-cols .c-track span:nth-child(6) { --c: var(--s6); }
+
+.spot-zh { margin: 2px 0 0; font-size: .84rem; color: var(--ink-2); }
+.spot-zh .area { color: var(--ink-3); }
+.spot-hist { margin: 6px 0 0; font-size: .8rem; color: var(--ink-3); }
+.spot-hist b { color: var(--ink-2); font-weight: 700; }
+.spot-status { display: contents; }
+.spot-stage { display: flex; align-items: center; gap: 8px; }
+.spot-stage svg { width: 30px; height: 30px; flex: none; }
+.spot-stage .nm { display: block; font-family: var(--font-ja); font-weight: 700; font-size: 1rem; line-height: 1.25; white-space: nowrap; }
+.spot-stage .gl { display: block; font-size: .72rem; font-weight: 700; line-height: 1.3; color: var(--amber-ink); white-space: nowrap; }
+.spot-stage .pos { display: block; font-size: .72rem; color: var(--ink-3); white-space: nowrap; }
+/* 每列下方的動作列：展開按鈕＋官方連結（官方連結不收在面板裡，隨時可點；兩者以一條短細線分隔） */
+.spot-actions { grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; }
+.spot-off {
+  position: relative; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding-left: 19px;
+  font-size: .86rem; font-weight: 700; color: var(--amber-ink); text-decoration: none; transition: color .2s var(--ease);
+}
+.spot-off::before { content: ""; position: absolute; left: 0; top: 50%; height: 14px; margin-top: -7px; border-left: 1px solid var(--line-strong); }
+@media (hover: hover) { .spot-off:hover { color: var(--ink); text-decoration: underline; } }
+.more-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 44px; padding: 0; background: none; border: 0; font: inherit; font-size: .86rem; font-weight: 700;
+  color: var(--amber-ink); cursor: pointer;
+}
+.more-btn svg { width: 16px; height: 16px; transition: transform .35s var(--ease); }
+.more-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+@media (hover: hover) { .more-btn:hover { color: var(--ink); } }
+.spot-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .4s var(--ease); }
+/* 收合時完全移出版面：連結不會成為看不見的 Tab 停駐點，也不會被尋找功能找到 */
+.spot-detail[hidden] { display: none; }
+.spot-detail.open { grid-template-rows: 1fr; }
+.spot-detail > .inner { overflow: hidden; min-height: 0; }
+/* 展開後的官方資訊：淡奶油底的資料表，與列本身區隔 */
+.facts { display: grid; grid-template-columns: 7.2em minmax(0, 1fr); gap: 0 16px; margin: 6px 0 0 46px; padding: 6px 18px; font-size: .88rem; background: var(--wash); border: 1px solid #EFE2C6; border-radius: 12px; }
+.facts dt, .facts dd { padding: 9px 0; border-top: 1px solid #EEE1C4; }
+.facts dt:first-of-type, .facts dt:first-of-type + dd { border-top: 0; }
+.facts dt { color: var(--ink-3); font-weight: 500; }
+.facts dd { margin: 0; }
+/* 清單用與色帶說明相同的小圓點 */
+.facts dd ul { margin: 0; padding-left: 14px; list-style: none; }
+.facts dd li { position: relative; }
+.facts dd li::before { content: ""; position: absolute; left: -12px; top: .75em; width: 5px; height: 5px; border-radius: 50%; background: var(--line-strong); }
+.facts dd li + li { margin-top: 2px; }
+.links { list-style: none; margin: 6px 0 16px 46px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+/* 區塊連結：文字換行時 ↗ 緊跟在文字後面 */
+.links a, .f-links a {
+  display: block; min-height: 44px; padding: 11px 0; font-size: .86rem; line-height: 1.6; text-decoration: none; border-bottom: 1px solid var(--line);
+  transition: color .2s var(--ease), border-color .2s var(--ease);
+}
+@media (hover: hover) { .links a:hover { text-decoration: underline; border-bottom-color: var(--gold); } }
+/* 官方連結名稱：中文詞與日文名稱不在字中間拆開，在標點、空格處換行（與頁尾連結相同） */
+.links a { word-break: keep-all; }
+/* 箭頭前加「字連接符」（U+2060）：箭頭不會單獨換到下一行，最後一個字也不會只剩自己和箭頭 */
+.ext::after { content: "\2060↗"; font-size: .85em; margin-left: 2px; }
+
+/* ---- 六階段軌道（每個景點都有） ---- */
+.track { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: center; height: 28px; }
+/* 軌道底線：由六階段色組成的淡色漸層（未到的階段也看得出顏色走向） */
+.track::before { content: ""; position: absolute; left: 8.33%; right: 8.33%; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: linear-gradient(90deg, #A9BC8C, #CBCF86, #E8CF78, #EFBE6A, #D9A57A, #B39880); }
+.track .fill { position: absolute; left: 8.33%; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: var(--c); width: 0; transition: width .8s var(--ease); }
+/* 未到的階段：保留階段色，但外框加深，讓淺黃的圓點在白底上也看得到 */
+.node { position: relative; z-index: 1; justify-self: center; width: 11px; height: 11px; border-radius: 50%; background: var(--panel); border: 2px solid var(--c); border-color: color-mix(in srgb, var(--c) 72%, #2A1E13); }
+.node.past { background: var(--c); }
+/* 目前階段：較大的實心圓點，外圈留一道底色縫再套一圈細環（像路線圖上的停靠站） */
+.node.now { width: 20px; height: 20px; background: var(--c); border-color: var(--c); box-shadow: 0 0 0 3px var(--panel), 0 0 0 4.5px var(--c); }
+
+/* ---- 路線規劃器 ---- */
+.planner-body { padding: 20px 24px 26px; }
+.pick-group { margin: 0; padding: 0; border: 0; min-width: 0; }
+.pick-group + .pick-group { margin-top: 14px; }
+/* 分區標題：後面拉一條細線到右邊 */
+.pick-group legend { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; margin: 0 0 8px; font-size: .76rem; font-weight: 700; letter-spacing: .08em; color: var(--ink-3); }
+.pick-group legend::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
+.pick {
+  position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  min-height: 56px; margin-bottom: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+  cursor: pointer; transition: background-color .25s, border-color .25s, box-shadow .25s;
+}
+@media (hover: hover) { .pick:hover { border-color: var(--line-strong); box-shadow: 0 6px 16px -14px rgba(91, 58, 22, .6); } }
+.pick input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pick:focus-within { outline: 3px solid var(--amber-ink); outline-offset: 2px; }
+/* 產生路線的短暫期間鎖住勾選與清除（避免結果和選擇不一致） */
+.pick-set { margin: 0; padding: 0; border: 0; min-width: 0; }
+.pick-set:disabled .pick, .pick-set:disabled .pick input { cursor: progress; }
+.box { display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid var(--umber); border-radius: 6px; background: #fff; transition: background-color .2s, border-color .2s; }
+.box svg { width: 14px; height: 14px; color: #FFF8E8; opacity: 0; transform: scale(.6); transition: opacity .2s, transform .25s var(--ease); }
+.pick.is-on { background: var(--gold-wash); border-color: #E2BE55; box-shadow: inset 3px 0 0 var(--gold); }
+.pick.is-on .box { background: var(--brown); border-color: var(--brown); }
+.pick.is-on .box svg { opacity: 1; transform: none; }
+.p-name { display: block; font-family: var(--font-ja); font-size: .96rem; font-weight: 700; line-height: 1.35; }
+.p-sub { display: block; font-size: .76rem; color: var(--ink-3); }
+.p-area { font-size: .76rem; color: var(--ink-3); white-space: nowrap; }
+.pick-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin: 6px 0 12px; }
+.counter { display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--ink-2); }
+.counter b { font-family: var(--font-num); font-size: 1.15rem; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.slots { display: inline-flex; gap: 6px; }
+.slots i { display: block; width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--umber); transition: background-color .25s, transform .3s var(--ease); }
+.slots i.on { background: var(--gold); border-color: var(--amber-ink); }
+.counter.flash .slots i { animation: flash .7s var(--ease); }
+@keyframes flash { 0%, 100% { transform: none; } 40% { transform: scale(1.3); } }
+.btn-generate { width: 100%; min-height: 54px; font-size: 1.02rem; }
+.btn-generate[aria-busy="true"] { opacity: .75; cursor: progress; }
+.msg-area { min-height: 0; }
+.msg { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0 0; padding: 10px 14px; border-radius: 10px; font-size: .88rem; background: #FFF4D6; border: 1px solid #EBC566; animation: rise .35s var(--ease) both; }
+.msg.warn { background: #FBE9DC; border-color: #E2A983; }
+/* 產生完成：安靜的一行確認，不用警示框 */
+.msg.ok { background: transparent; border: 0; border-radius: 0; padding: 2px 0 0; color: var(--ink-2); }
+.msg svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--amber-ink); }
+
+/* ---- 路線結果 ---- */
+.route-out { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+.route-title:focus { outline: none; }
+.route-title:focus-visible { outline: 3px solid var(--amber-ink); outline-offset: 4px; }
+.route-empty { padding: 20px 8px 10px; text-align: center; color: var(--ink-3); font-size: .88rem; }
+.route-empty svg { display: block; width: 200px; height: 60px; margin: 0 auto 10px; }
+.route-empty p { margin: 0 auto; max-width: 22em; text-wrap: balance; }
+/* 產生中：一條金色細線在虛線軌道上緩緩前進 */
+.route-empty.is-loading::before {
+  content: ""; display: block; width: 160px; height: 4px; margin: 6px auto 14px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--amber)) 0 0 / 40% 100% no-repeat, repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 9px);
+  animation: travel 1.1s var(--ease) infinite;
+}
+@keyframes travel { from { background-position: -70% 0, 0 0; } to { background-position: 170% 0, 0 0; } }
+.route { animation: rise .45s var(--ease) both; }
+.route.stale { opacity: .55; transition: opacity .3s; }
+.route-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 0; font-size: 1.3rem; letter-spacing: .02em; scroll-margin-top: 16px; }
+.route-title small { font-size: .78rem; font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
+.stale-note { margin: 6px 0 0; font-size: .82rem; font-weight: 700; color: var(--amber-ink); }
+/* 摘要數字：像情報台的數據列，上下細線、欄間細線 */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 16px 0 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); }
+.stat { padding: 10px 0 12px 14px; border-left: 1px solid var(--line); min-width: 0; }
+.stat:first-child { border-left: 0; padding-left: 0; }
+.stat dt { font-size: .74rem; color: var(--ink-3); font-weight: 500; letter-spacing: .04em; }
+.stat dd { margin: 2px 0 0; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; font-size: 1.75rem; font-weight: 500; letter-spacing: -.02em; line-height: 1.15; }
+.stat dd small { font-size: .5em; margin-left: 3px; color: var(--ink-2); letter-spacing: 0; }
+.est-label { margin: 8px 0 0; font-size: .78rem; color: var(--ink-3); text-wrap: pretty; }
+.sketch { margin: 16px 0 8px; }
+.sketch svg { display: block; width: 100%; height: auto; background: #FFFBF0; border: 1px solid var(--line); border-radius: 12px; }
+.sketch figcaption { margin-top: 8px; font-size: .76rem; color: var(--ink-3); }
+
+/* ---- 路線時間軸：像車站路線圖。站點＝白底粗環圓點（起點金、終點深褐），
+        步行段＝琥珀色實線軌道，搭車段＝日本地圖常見的「鐵道」黑白相間軌道（以赭褐色繪製） ---- */
+.timeline { list-style: none; margin: 18px 0 0; padding: 0; }
+.timeline > li { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 14px; animation: rise .5s var(--ease) both; }
+.timeline > li::before { content: ""; position: absolute; left: 17px; top: 0; bottom: 0; width: 6px; background: var(--rail, var(--line-strong)); }
+.timeline > li.stop:first-child::before { top: 18px; }
+.timeline > li.stop:last-child::before { bottom: auto; height: 18px; }
+.timeline > li.stop:only-child::before { display: none; }
+.timeline > li.leg.walk { --rail: var(--amber); }
+.timeline > li.stop::before { background: var(--rail-stop, var(--line-strong)); }
+/* 搭車段（以及接著搭車段的站點下方）：赭褐外框＋奶油／赭褐相間的鐵道紋 */
+.timeline > li.leg.transit::before,
+.timeline > li.stop:has(+ .leg.transit)::before {
+  left: 16.5px; width: 7px;
+  background: repeating-linear-gradient(to bottom, var(--umber) 0 9px, #FFF8E8 9px 18px);
+  box-shadow: 0 0 0 1.5px var(--umber);
+}
+.dot {
+  position: relative; z-index: 1; display: grid; place-items: center; width: 40px; height: 40px; margin-top: -2px; border-radius: 50%;
+  background: #FFFDF8; color: var(--ink); font-family: var(--font-num); font-weight: 700; font-size: 1.02rem; font-variant-numeric: tabular-nums;
+  border: 4px solid var(--s4); box-shadow: 0 0 0 3px var(--panel);
+}
+/* 起點：金色實心；終點：深褐實心（奶油色數字） */
+.timeline > li.stop:first-child .dot { background: var(--gold); border-color: var(--brown); }
+.timeline > li.stop:last-child:not(:first-child) .dot { background: var(--brown); border-color: var(--brown); color: #FFF8E8; }
+.stop-body { padding: 4px 0 16px; min-width: 0; }
+.stop-tag { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .1em; color: var(--amber-ink); }
+.stop-name { margin: 0; font-family: var(--font-ja); font-size: 1.1rem; font-weight: 700; line-height: 1.4; letter-spacing: .02em; }
+.stop-zh { margin: 0; font-size: .8rem; color: var(--ink-3); }
+.stop-meta { list-style: none; margin: 10px 0 0; padding: 0; font-size: .84rem; color: var(--ink-2); display: grid; gap: 4px; }
+.stop-meta b { font-weight: 700; color: var(--ink); margin-right: 4px; }
+.leg-ic { position: relative; z-index: 1; justify-self: center; align-self: center; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--panel); border: 2px solid var(--amber); color: var(--amber-ink); box-shadow: 0 0 0 3px var(--panel); }
+.leg.transit .leg-ic { border-color: var(--umber); color: var(--umber); }
+.leg-ic svg { width: 17px; height: 17px; }
+.leg-card { margin: 8px 0 16px; padding: 12px 16px; background: var(--wash); border: 1px solid #EFE2C6; border-radius: 12px; font-size: .86rem; min-width: 0; }
+.leg.transit .leg-card { background: #FAF0E4; border-color: #EBD3B8; }
+/* 路段標題只在「：」與箭頭前後的空格換行，不把景點名稱從中間拆開 */
+.leg-mode { display: block; font-weight: 700; color: var(--ink); word-break: keep-all; }
+.leg-figs { display: block; margin-top: 4px; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 1.04rem; font-weight: 500; }
+.leg-note { display: block; margin-top: 4px; font-size: .76rem; color: var(--ink-3); text-wrap: pretty; }
+.leg-advice { margin: 10px 0 0; padding: 10px 0 0; list-style: none; display: grid; gap: 4px; border-top: 1px dashed #E3CBAE; }
+.leg-advice b { font-weight: 700; }
+.leg-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 4px; font-weight: 700; font-size: .86rem; text-wrap: balance; }
+.leg-link svg { width: 16px; height: 16px; }
+.route-foot { display: grid; gap: 14px; margin-top: 4px; }
+.route-foot .btn { text-wrap: balance; text-align: center; }
+.tip-box { padding: 14px 16px; border-radius: 0 12px 12px 0; background: var(--gold-wash); border-left: 3px solid var(--gold); font-size: .86rem; }
+.tip-box h4 { margin: 0 0 4px; font-size: .88rem; letter-spacing: .04em; }
+.tip-box ul { margin: 6px 0 0; padding-left: 1.1em; }
+.tip-box li { text-wrap: pretty; }
+.tip-box li + li { margin-top: 3px; }
+.tip-box li::marker { color: var(--amber); }
+.tip-box p { margin: 0; }
+
+/* =========================================================
+   6. 頁尾（Footer）
+   ========================================================= */
+/* 頁尾：深褐底＋上緣六階段色譜細條；右上角一片很淡的大銀杏葉輪廓（裝飾，不壓到文字的對比） */
+.site-footer {
+  position: relative; overflow: hidden; color: #EFE4CC; padding: 64px 0 40px;
+  background: var(--spectrum) top / 100% 4px no-repeat, radial-gradient(70% 60% at 100% 0%, rgba(242, 189, 29, .07), rgba(242, 189, 29, 0) 70%), #2B1F14;
+}
+.site-footer::after {
+  content: ""; position: absolute; right: -60px; top: -40px; width: 360px; height: 360px; pointer-events: none; opacity: .07;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23F6CF5E' stroke-width='.8' stroke-linecap='round'%3E%3Cpath d='M32 47C27 41 14 31 6.5 21 4.3 18 5 14.6 8.2 12.4 15 7.6 23.8 6.2 28.8 9c1.8 1 2.7 3.6 3.2 6.8.5-3.2 1.4-5.8 3.2-6.8 5-2.8 13.8-1.4 20.6 3.4 3.2 2.2 3.9 5.6 1.7 8.6C50 31 37 41 32 47z'/%3E%3Cpath d='M32 46c-.6 6 .6 10.5-1.2 15.5M32 44.5 11.5 17.5M32 44.5 19 11.8M32 44.5 27.6 10.8M32 44.5 36.4 10.8M32 44.5 45 11.8M32 44.5 52.5 17.5'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  transform: rotate(-18deg);
+}
+.site-footer > .wrap { position: relative; z-index: 1; }
+.site-footer a { color: #F6CF5E; }
+@media (hover: hover) { .site-footer a:hover { color: #FFF5DC; } }
+/* 深色頁尾上改用亮金色焦點框 */
+.site-footer :focus-visible { outline-color: #F6CF5E; }
+.statement { margin: 0 0 36px; padding: 6px 0 6px 20px; border-left: 4px solid var(--gold); font-size: clamp(1.08rem, 2.2vw, 1.4rem); font-weight: 700; line-height: 1.65; letter-spacing: .02em; color: #FFF5DC; text-wrap: pretty; }
+/* 必要聲明：只在標點後換行（「官方資料來源。」「非營利性質。」不從字中間拆開） */
+.statement .ph { display: inline-block; }
+.f-title { margin: 0 0 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 245, 220, .14); font-size: 1.1rem; letter-spacing: .04em; color: #FFF5DC; }
+.f-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 36px; }
+.f-col h3 { margin: 0 0 6px; font-size: .8rem; letter-spacing: .1em; color: #D9C9A6; }
+.f-links { list-style: none; margin: 0 0 18px; padding: 0; }
+.f-links a { border-bottom-color: rgba(255, 245, 220, .1); color: #F6CF5E; }
+.f-links a span.ja { font-family: var(--font-ja); }
+/* 頁尾連結：中文詞不在字中間拆開（例如「試算表」），在標點處換行 */
+.f-links a { word-break: keep-all; }
+.f-note { margin: 0 0 10px; font-size: .8rem; color: #D8CBB0; }
+/* 第一欄有兩組（課程資料、天氣）：組末是說明文字時，與下一組標題的距離比照第二、三欄（文字到標題約 29 px） */
+.f-col > .f-note:last-child { margin-bottom: 29px; }
+.f-base { margin-top: 26px; padding-top: 18px; border-top: 1px solid rgba(255, 245, 220, .12); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; font-size: .78rem; color: #D8CBB0; }
+
+/* 換行品質：說明文字避免最後一行只剩一個字（text-wrap: pretty）；
+   日文站名與交通說明只在空格、標點處換行（不把「徒歩」「青山一丁目駅」拆開）；
+   數字＋單位由程式包成不換行片段（「450 日圓」「約 16–18 分」） */
+.facts dd, .stop-meta li, .leg-advice li, .leg-mode, .stop-zh, .spot-zh, .spot-hist,
+.band-notes li, .links a, .f-links a, .f-note, .f-base span, .sub, .fine, .w-tip { text-wrap: pretty; }
+.acc, .acc li { word-break: keep-all; }
+
+/* =========================================================
+   7. 響應式（桌機雙欄 → 平板 → 手機 360px）
+   ========================================================= */
+@media (max-width: 1100px) {
+  .today-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .t-cell:nth-child(3) { border-left: 0; }
+  .t-cell:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+/* 雙欄但看板較窄（約 1000 px 的螢幕）：看板每列改成上下排列，名稱與紀錄有完整寬度 */
+@media (min-width: 981px) and (max-width: 1100px) {
+  .board-cols { display: none; }
+  .spot-grid { grid-template-columns: 30px minmax(0, 1fr); }
+  .spot-status { display: flex; grid-column: 2; align-items: center; gap: 18px; margin-top: 8px; }
+  .spot-status .track { flex: 1 1 auto; min-width: 0; max-width: 260px; }
+  .spot-stage { flex: none; }
+  .spot-actions { grid-column: 2; }
+}
+@media (max-width: 980px) {
+  .yr { top: calc(7px - 8px * var(--kn, 0)); width: 7px; height: 7px; margin-left: -3.5px; }
+  .desk { grid-template-columns: minmax(0, 1fr); }
+  .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .band-notes { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding-top: 32px; }
+  .hero-art { display: none; }
+  /* 窄螢幕不放銀杏枝插畫，改在標題右側放三片飄落的小銀杏葉（靜態裝飾） */
+  .hero::after {
+    content: ""; position: absolute; z-index: 0; right: 14px; top: 64px; width: 68px; height: 86px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 86'%3E%3Cdefs%3E%3Cpath id='l' d='M32 47C27 41 14 31 6.5 21 4.3 18 5 14.6 8.2 12.4 15 7.6 23.8 6.2 28.8 9c1.8 1 2.7 3.6 3.2 6.8.5-3.2 1.4-5.8 3.2-6.8 5-2.8 13.8-1.4 20.6 3.4 3.2 2.2 3.9 5.6 1.7 8.6C50 31 37 41 32 47zM32 46c-.6 6 .6 10.5-1.2 15.5l-1.6-.3c1.6-4.6.5-9.2 1.2-15.2z'/%3E%3C/defs%3E%3Cuse href='%23l' fill='%23F2A20F' transform='translate(20 2) scale(.64) rotate(24 32 32)'/%3E%3Cuse href='%23l' fill='%23E5BE2C' transform='translate(2 40) scale(.42) rotate(-34 32 32)'/%3E%3Cuse href='%23l' fill='%23CB7428' transform='translate(38 60) scale(.34) rotate(150 32 32)'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .hero-text { position: relative; z-index: 1; }
+  /* 頁內導覽：改成品牌下方的第二列（與桌機同樣四個連結，每個仍是 44 px 高） */
+  .topbar .wrap { flex-wrap: wrap; gap: 0 16px; min-height: 0; padding-top: 10px; }
+  .topnav { width: 100%; border-top: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .topnav::-webkit-scrollbar { display: none; }
+  .topnav a { flex: none; padding: 0 10px; font-size: .86rem; }
+  .topnav a::after { left: 10px; right: 10px; }
+  .topnav a:first-child { padding-left: 0; }
+  .topnav a:first-child::after { left: 0; }
+  .tick.minor { display: none; }
+}
+@media (max-width: 640px) {
+  .yr { top: calc(8px - 7px * var(--kn, 0)); width: 6px; height: 6px; margin-left: -3px; }
+  .wrap { padding: 0 16px; }
+  .hero { padding: 28px 16px 26px; }
+  .front { padding: 36px 16px 4px; }
+  .desk { padding: 26px 16px 48px; gap: 22px; }
+  #front, #board, #planner, #sources, #legend { scroll-margin-top: 16px; }
+  .today { padding-bottom: 26px; }
+  /* 今日東京：日期與季節示意並排，天氣與拍攝時間各佔一整列 */
+  .today-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .t-cell { border-left: 0; border-top: 1px solid var(--line); padding: 14px 14px 16px; }
+  .t-cell.t-date, .t-cell.t-stage { border-top: 0; }
+  .t-date { border-right: 1px solid var(--line); }
+  .t-weather, .t-photo { grid-column: 1 / -1; }
+  /* 並排的兩格：日文副標一律換到第二行，兩格標題下的細線才會對齊 */
+  .t-date .kicker .ja, .t-stage .kicker .ja { flex-basis: 100%; }
+  .big { font-size: 2.2rem; }
+  .t-date .big { font-size: 1.9rem; }
+  .t-stage .big { font-size: 1.6rem; }
+  .t-stage .track { max-width: none; }
+  .panel-head { padding: 18px 16px 14px; }
+  .board-cols { display: none; }
+  .spot { padding: 14px 16px 4px; }
+  .spot-grid { grid-template-columns: 26px minmax(0, 1fr); }
+  .spot-status { display: flex; grid-column: 2; align-items: center; gap: 14px; margin-top: 8px; }
+  .spot-status .track { flex: 1 1 auto; min-width: 0; }
+  .spot-stage { flex: none; }
+  .spot-actions { grid-column: 2; }
+  .facts { grid-template-columns: minmax(0, 1fr); gap: 0; margin-left: 0; padding: 4px 14px; }
+  .facts dt { padding: 10px 0 2px; }
+  .facts dd { padding: 0 0 10px; border-top: 0; }
+  .links { margin-left: 0; grid-template-columns: minmax(0, 1fr); }
+  .planner-body { padding: 16px 16px 20px; }
+  /* 勾選卡：地區改放在名稱下方，名稱有完整寬度 */
+  .pick { grid-template-columns: 24px minmax(0, 1fr); row-gap: 0; }
+  .pick .box { grid-row: 1 / span 2; }
+  .p-area { grid-column: 2; }
+  .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat dd { font-size: 1.35rem; }
+  .stat dt { letter-spacing: 0; }
+  .leg-card { padding: 10px 14px; }
+  .f-grid { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+  .site-footer { padding-top: 40px; }
+}
+
+/* 減少動態：關閉所有動畫與過場 */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+.nojs-note { margin: 0; padding: 14px 18px; background: var(--gold-wash); border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; font-size: .92rem; color: var(--ink); }
+/* 320px 級的窄手機：眉標前的短線縮短，標題旁的小樹枝不顯示，避免換行與壓字 */
+@media (max-width: 350px) {
+  .eyebrow::before { width: 16px; margin-right: 8px; }
+  .hero::after { display: none; }
+}
+</style>
+<!-- 未啟用 JavaScript 時：收起只會一直顯示「讀取中」的今日東京面板，改顯示說明 -->
+<noscript><style>.today-grid { display: none; }</style></noscript>
+</head>
+<body>
+<!-- 共用圖形：自繪銀杏葉（葉身＋葉柄＋放射狀葉脈），以 currentColor 上色 -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="leaf" viewBox="0 0 64 64">
+      <path fill="currentColor" d="M32 47C27 41 14 31 6.5 21 4.3 18 5 14.6 8.2 12.4 15 7.6 23.8 6.2 28.8 9c1.8 1 2.7 3.6 3.2 6.8.5-3.2 1.4-5.8 3.2-6.8 5-2.8 13.8-1.4 20.6 3.4 3.2 2.2 3.9 5.6 1.7 8.6C50 31 37 41 32 47z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M32 46c-.6 6 .6 10.5-1.2 15.5"/>
+      <g fill="none" stroke="#FFF8E6" stroke-opacity=".5" stroke-width="1" stroke-linecap="round">
+        <path d="M32 44.5 11.5 17.5"/><path d="M32 44.5 19 11.8"/><path d="M32 44.5 27.6 10.8"/>
+        <path d="M32 44.5 36.4 10.8"/><path d="M32 44.5 45 11.8"/><path d="M32 44.5 52.5 17.5"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">跳到主要內容</a>
+
+<!-- =========================================================
+     頁首：標題、頁內導覽、今日東京（日期／季節示意／天氣／拍攝時間）
+     ========================================================= -->
+<header class="masthead" id="top">
+  <div class="spectrum" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#top" aria-label="東京銀杏前線（回到頁首）">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#leaf"/></svg>
+        <span><span class="brand-name">東京銀杏前線</span> <span class="brand-sub" lang="ja">いちょう前線情報</span></span>
+      </a>
+      <nav class="topnav" aria-label="頁內導覽">
+        <a href="#front">銀杏前線</a>
+        <a href="#board">狀態看板</a>
+        <a href="#planner">散步路線</a>
+        <a href="#sources">資料來源</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="hero wrap">
+    <div class="hero-text">
+      <p class="eyebrow"><span id="heroYear" class="num">2026</span> 年秋　東京銀杏情報與散步規劃</p>
+      <h1>
+        <span class="h1-main">東京<mark>銀杏</mark>前線</span>
+        <span class="h1-sub">情報與散步地圖</span>
+      </h1>
+      <p class="lead">把東京八處銀杏名所的季節示意、官方交通與開放資訊整理在同一頁。勾選 <span class="nw">2～3 個</span>景點，就能排出一條附步行時間與轉乘建議的<span class="nw">散步路線。</span></p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#planner">規劃散步路線</a>
+        <a class="btn btn-ghost" href="#board">看銀杏狀態</a>
+      </div>
+    </div>
+    <!-- 裝飾插畫：一根銀杏枝，葉色依六個階段由綠轉金，最後一片落下 -->
+    <figure class="hero-art" aria-hidden="true">
+      <!-- 每片葉子以葉柄末端為旋轉中心：x = 附著點x − 尺寸×0.484，y = 附著點y − 尺寸×0.961 -->
+      <svg viewBox="0 -10 440 320">
+        <!-- 背景：淡金色的秋日圓盤（加一圈細線），以及地面的一條點線 -->
+        <circle cx="258" cy="132" r="122" fill="#FBE8B4" fill-opacity=".62"/>
+        <circle cx="258" cy="132" r="136" fill="none" stroke="#E7D3A1" stroke-width="1" stroke-dasharray="1 6" stroke-linecap="round"/>
+        <path d="M150 302H436" stroke="#D3BE93" stroke-width="1.2" stroke-dasharray="1 5" stroke-linecap="round"/>
+        <!-- 已經落在地上的兩片葉子（琥珀、赭褐） -->
+        <use href="#leaf" x="300" y="270" width="34" height="34" transform="rotate(96 317 287)" style="color:var(--s5)"/>
+        <use href="#leaf" x="388" y="276" width="28" height="28" transform="rotate(-62 402 290)" style="color:var(--s6)"/>
+        <path d="M18 286C96 250 168 222 226 168S330 72 414 26" fill="none" stroke="#7A5A3A" stroke-width="3.2" stroke-linecap="round"/>
+        <g class="lf"><use href="#leaf" x="29.3" y="181.3" width="84" height="84" transform="rotate(-28 70 262)" style="color:var(--s1)"/></g>
+        <g class="lf"><use href="#leaf" x="93.3" y="161.1" width="80" height="80" transform="rotate(115 132 238)" style="color:var(--s2)"/></g>
+        <g class="lf"><use href="#leaf" x="147.4" y="115.4" width="88" height="88" transform="rotate(-12 190 200)" style="color:var(--s3)"/></g>
+        <g class="lf"><use href="#leaf" x="201.6" y="47.9" width="100" height="100" transform="rotate(160 250 144)" style="color:var(--s4)"/></g>
+        <g class="lf"><use href="#leaf" x="260.5" y="6.6" width="92" height="92" transform="rotate(10 305 95)" style="color:var(--s5)"/></g>
+        <g class="lf"><use href="#leaf" x="344.9" y="113.2" width="66" height="66" transform="rotate(-160 377 176.6)" style="color:var(--s6)"/></g>
+        <g class="lf"><use href="#leaf" x="344.9" y="-1.8" width="56" height="56" transform="rotate(125 372 52)" style="color:var(--s4)"/></g>
+      </svg>
+      <figcaption>青葉 → 色づき始め → 黃葉進行 → <span class="nw">見頃（最佳觀賞期）</span>→ 落葉始め → 落葉</figcaption>
+    </figure>
+  </div>
+
+  <section class="today wrap" aria-labelledby="todayTitle">
+    <h2 id="todayTitle" class="visually-hidden">今日東京</h2>
+    <noscript><p class="nojs-note">本網站的今日季節示意、當前天氣、銀杏狀態看板與散步路線規劃都需要啟用 JavaScript，請開啟後重新整理頁面。</p></noscript>
+    <div class="today-grid">
+      <!-- 今天（日本時間） -->
+      <div class="t-cell t-date">
+        <p class="kicker">今日東京 <span class="ja" lang="ja">本日の東京</span></p>
+        <p class="big" id="todayBig">--.--</p>
+        <p class="sub" id="todayLong">　</p>
+        <p class="fine" id="todayClock">日本時間 --:--</p>
+      </div>
+      <!-- 今天的季節示意（全東京共用） -->
+      <div class="t-cell t-stage">
+        <p class="kicker">季節示意（推估）<span class="ja" lang="ja">いちょうの様子</span></p>
+        <p class="big" id="todayStage">--</p>
+        <div id="todayTrack"></div>
+        <p class="sub" id="todayCount">　</p>
+      </div>
+      <!-- 當前天氣提示（Open-Meteo，日本氣象廳 JMA 模式） -->
+      <div class="t-cell t-weather" id="weather" aria-live="polite" aria-busy="true">
+        <p class="kicker">當前天氣提示 <span class="ja" lang="ja">いまの天気</span></p>
+        <div id="weatherBody">
+          <span class="skeleton lg"></span><span class="skeleton"></span><span class="skeleton" style="width:70%"></span>
+          <p class="fine">讀取東京即時天氣中…</p>
+        </div>
+      </div>
+      <!-- 最佳拍攝時間建議（日出後、日落前約 1 小時） -->
+      <div class="t-cell t-photo" id="photo">
+        <p class="kicker">最佳拍攝時間建議 <span class="ja" lang="ja">撮影のおすすめ</span></p>
+        <div id="photoBody"></div>
+      </div>
+    </div>
+  </section>
+</header>
+
+<main id="main" tabindex="-1">
+  <!-- =========================================================
+       銀杏前線：六階段季節帶（依氣象廳東京平年值推估）
+       ========================================================= -->
+  <section class="front wrap" id="front" aria-labelledby="frontTitle">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title" id="frontTitle"><span class="sec-no">01</span>銀杏前線 <span class="ja" lang="ja">いちょう前線</span></h2>
+        <p class="sec-desc">銀杏的六個階段依序為：<span class="nw">青葉</span> → <span class="nw">色づき始め</span> → <span class="nw">黃葉進行</span> → <span class="nw">見頃（最佳觀賞期）</span> → <span class="nw">落葉始め</span> → <span class="nw">落葉</span>。下方色帶是 <span id="bandYear" class="num">2026</span> 年東京的季節示意。</p>
+      </div>
+      <p class="honest"><b>依氣象廳東京平年值推估之季節示意，非各園實測</b></p>
+    </div>
+    <div class="band" id="band" role="img" aria-label="銀杏六階段季節色帶"></div>
+    <ol class="legend" id="legend"></ol>
+    <ul class="band-notes" id="bandNotes"></ul>
+  </section>
+
+  <!-- =========================================================
+       中段雙欄：左＝銀杏狀態看板；右＝散步路線規劃器
+       ========================================================= -->
+  <div class="desk wrap">
+    <section class="panel board" id="board" aria-labelledby="boardTitle">
+      <div class="panel-head">
+        <h2 class="sec-title" id="boardTitle"><span class="sec-no">02</span>銀杏狀態看板 <span class="ja" lang="ja">季節の目安</span></h2>
+        <p class="sec-desc">八處東京銀杏名所，每一處都標出目前位在六個階段的哪一格，並附官方連結。展開「官方資訊與交通」可看開放時間、最近車站與更多官方頁面。</p>
+        <div class="honest-box">
+          <p class="honest"><b>全東京共用同一季節推估</b>：依氣象廳東京平年值推估之季節示意，非各園實測。</p>
+          <p class="honest">截至資料核對日 2026-10-02，各景點官方都還沒有發布 2026 年的銀杏葉況；列出的過往官方紀錄只作歷史參考。</p>
+          <p class="honest">各園最新葉況請點各景點的官方連結確認。</p>
+        </div>
+        <!-- 讀圖說明：每列六個圓點由左到右代表的階段 -->
+        <p class="board-key">每列的六個圓點由左到右依序是：1 青葉 → 2 色づき始め → 3 黃葉進行 → <span class="nw">4 見頃（最佳觀賞期）</span>→ 5 落葉始め → 6 落葉，實心大圓點是目前階段。</p>
+        <a class="board-key-link" href="#legend">看六階段說明與日期範圍</a>
+      </div>
+      <!-- 欄位標頭（桌機）：圓點編號與上方「六階段」圖例的編號一致 -->
+      <div class="board-cols" aria-hidden="true">
+        <span></span><span>景點</span>
+        <span class="c-track"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></span>
+        <span>目前階段</span>
+      </div>
+      <ol class="spots" id="spots"></ol>
+    </section>
+
+    <section class="panel planner" id="planner" aria-labelledby="plannerTitle">
+      <div class="panel-head">
+        <h2 class="sec-title" id="plannerTitle"><span class="sec-no">03</span>銀杏散步路線規劃 <span class="ja" lang="ja">散歩ルート</span></h2>
+        <p class="sec-desc">勾選 2～3 個景點，再按「產生推薦散步路線」。同一區的景點可以走路串連；跨區的路段會改給大眾運輸轉乘建議。</p>
+      </div>
+      <div class="planner-body">
+        <form id="planForm" novalidate>
+          <!-- 產生路線的短暫期間會停用整組勾選與「清除選擇」 -->
+          <fieldset class="pick-set" id="pickSet">
+            <legend class="visually-hidden">選擇 2～3 個景點</legend>
+            <div id="pickList"></div>
+            <div class="pick-bar">
+              <p class="counter" id="counter" aria-live="polite"><span>已選 <b id="pickCount">0</b> ／ 3</span><span class="slots" aria-hidden="true"><i></i><i></i><i></i></span></p>
+              <button type="button" class="btn btn-quiet" id="clearBtn">清除選擇</button>
+            </div>
+          </fieldset>
+          <button type="submit" class="btn btn-primary btn-generate" id="genBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 17.2c3-.6 3.4-3 4-5.2s1.4-4.6 4-5.2"/></svg>
+            產生推薦散步路線
+          </button>
+          <div class="msg-area" id="pickMsg" role="status" aria-live="polite"></div>
+        </form>
+        <div class="route-out" id="routeOut"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- =========================================================
+     頁尾：必要聲明、官方資料來源、授權標示
+     ========================================================= -->
+<footer class="site-footer" id="sources">
+  <div class="wrap">
+    <p class="statement"><span class="ph">資料來源：</span><span class="ph">東京銀杏各地點官方資料來源。</span><span class="ph">本網站僅供教學使用，</span><span class="ph">為非營利性質。</span></p>
+    <h2 class="f-title">資料來源與說明</h2>
+    <div class="f-grid" id="footerGrid"></div>
+    <div class="f-base">
+      <span>資料核對日：2026-10-02（官方頁面）。季節階段為推估示意，實際葉況請以各景點官方公告為準。</span>
+      <span>本頁不含任何追蹤或廣告。</span>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+/* =========================================================================
+ * 東京銀杏前線：互動程式（純 JavaScript，無模組，可直接以 file:// 開啟）
+ *   1. 小工具
+ *   2. 季節模型（氣象廳東京 いちょう黄葉日 平年值 11/23）
+ *   3. 景點資料（老師資料表＋官方頁面，2026-10-02 核對）
+ *   4. 今日東京（日期、季節示意）
+ *   5. 銀杏前線色帶
+ *   6. 銀杏狀態看板
+ *   7. 散步路線規劃器（防呆、排序、時間軸、示意圖）
+ *   8. 當前天氣提示（Open-Meteo）
+ *   9. 最佳拍攝時間建議（日出日落天文計算）
+ *  10. 頁尾資料來源
+ * ======================================================================= */
+(function () {
+  'use strict';
+
+  /* =========================================================
+   * 1. 小工具
+   * ======================================================= */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+
+  /* 以 DOM 方式建立元素：文字一律用 textContent，避免把資料當成 HTML */
+  function h(tag, props, kids) {
+    var el = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        var v = props[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === 'class') el.className = v;
+        else if (k === 'text') el.textContent = v;
+        else if (k === 'svg') el.innerHTML = v; /* 只放本檔內建的固定 SVG 字串 */
+        else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+        else el.setAttribute(k, v === true ? '' : v);
+      });
+    }
+    add(el, kids);
+    return el;
+  }
+  function add(el, kids) {
+    if (kids === null || kids === undefined) return;
+    if (!Array.isArray(kids)) kids = [kids];
+    kids.forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+  }
+  /* 把一句話拆成幾個不換行的詞組：只在詞組之間換行（例如「在 Google 地圖／查看這段步行路線」），
+     不會把「查看」「步行」拆到兩行；回傳一個 span */
+  function phrases(parts) {
+    return h('span', null, parts.map(function (t) { return h('span', { class: 'nw', text: t }); }));
+  }
+  /* 把句子裡的「數字＋單位」「時間」「日期（範圍）」「徒歩 N 分」包成不換行片段，其餘文字照常換行，
+     避免出現「450 日／圓」「16–18／分」「徒／歩 8 分」這種斷法；回傳可交給 add() 的陣列 */
+  var UNIT_RE = /\d{4}\s\d{1,2}\/\d{1,2}|(?:徒歩\s?)?(?:約\s?)?\d+(?:[.,:]\d+)*(?:\s?[–～]\s?\d+(?:[.,:]\d+)*)?\s?(?:日圓|分鐘|分|km|m|株|年|月|天|小時)(?![A-Za-z])|\d{1,2}:\d{2}(?:[–～]\d{1,2}:\d{2})?|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}(?:～\d{1,2}\/\d{1,2})?|徒歩/g;
+  function unitKids(text) {
+    var kids = [], last = 0, m;
+    text = String(text);
+    UNIT_RE.lastIndex = 0;
+    while ((m = UNIT_RE.exec(text))) {
+      if (m.index > last) kids.push(text.slice(last, m.index));
+      kids.push(h('span', { class: 'nw', text: m[0] }));
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) kids.push(text.slice(last));
+    return kids;
+  }
+  /* SVG 字串內插文字時使用的跳脫 */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function hhmm(min) { min = Math.round(min); return pad(Math.floor(min / 60) % 24) + ':' + pad(min % 60); }
+
+  /* 是否減少動態 */
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* 兩點直線距離（公尺，haversine） */
+  function haversine(a, b) {
+    var R = 6371000, t = Math.PI / 180;
+    var dLat = (b.lat - a.lat) * t, dLng = (b.lng - a.lng) * t;
+    var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+  function fmtDist(m) { return m < 1000 ? '約 ' + (Math.round(m / 10) * 10) + ' m' : '約 ' + (m / 1000).toFixed(1) + ' km'; }
+  function fmtMin(min) {
+    if (min < 60) return '約 ' + min + ' 分鐘';
+    var hr = Math.floor(min / 60), mm = min % 60;
+    return '約 ' + hr + ' 小時' + (mm ? ' ' + mm + ' 分' : '');
+  }
+  var WALK_M_PER_MIN = 80;     /* 步行速度：每分鐘 80 公尺 */
+  var WALK_LIMIT_M = 3000;     /* 直線超過約 3 km 的路段改建議大眾運輸 */
+
+  /* 小圖示（同一種線條風格） */
+  var ICON = {
+    chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12.5" cy="4" r="1.9"/><path d="M12 7.6l-1.2 5.6-2.6 7.3M10.8 13.2l3.4 2.8 1.2 4.5M11.8 8.6L8.4 11l-.6 2.8M12.2 8.8l2.6 2.6 2.4.8"/></svg>',
+    train: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 10.5h14M9 21l1.5-4M15 21l-1.5-4"/><circle cx="9" cy="13.7" r=".9"/><circle cx="15" cy="13.7" r=".9"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.1"/></svg>',
+    map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4z"/><path d="M9 4v14M15 6v14"/></svg>'
+  };
+  function leafSvg(color, cls) {
+    return '<svg class="' + (cls || '') + '" viewBox="0 0 64 64" aria-hidden="true" style="color:' + color + '"><use href="#leaf"/></svg>';
+  }
+
+  /* =========================================================
+   * 2. 季節模型（依氣象廳東京 いちょう黄葉日 平年值 11/23）
+   *    D＝11/23（黃葉平年日）＝「見頃」第一天；
+   *    落葉起日＝D+10＝12/3（氣象廳いちょう落葉日平年值）；
+   *    其餘分界是所有網站共用的示意參數（RESEARCH_NOTES）。
+   * ======================================================= */
+  /* 「今天」一律以日本時間（UTC+9，日本無日光節約時間）為準 */
+  function tokyoNow() {
+    var t = new Date(Date.now() + 9 * 3600 * 1000);
+    return {
+      y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate(),
+      wd: t.getUTCDay(), min: t.getUTCHours() * 60 + t.getUTCMinutes()
+    };
+  }
+  function dayNum(y, m, d) { return Date.UTC(y, m - 1, d) / 864e5; }
+  function md(dn) { var t = new Date(dn * 864e5); return (t.getUTCMonth() + 1) + '/' + t.getUTCDate(); }
+
+  var NOW = tokyoNow();
+  /* 季節年：1～3 月仍屬前一年的銀杏季（樹已落葉、春天才發新芽），
+     所以 D 取前一年的 11/23，階段落在「落葉」（D+10 之後）；4 月起才換成當年。
+     階段參數（各階段相對 D 的天數）不變，與其他網站一致。 */
+  var YEAR = NOW.m <= 3 ? NOW.y - 1 : NOW.y;
+  var TODAY = dayNum(NOW.y, NOW.m, NOW.d);
+  var D = dayNum(YEAR, 11, 23);
+  var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+
+  /* 六個階段（名稱照學生 BRIEF：青葉 → 色づき始め → 黃葉進行 → 見頃（最佳觀賞期） → 落葉始め → 落葉） */
+  var STAGES = [
+    { name: '青葉',       gloss: '',           from: -Infinity, to: -29, color: '#6E8F3A', desc: '葉片仍以綠色為主' },
+    { name: '色づき始め', gloss: '',           from: -28, to: -15,       color: '#ABB136', desc: '開始轉黃' },
+    { name: '黃葉進行',   gloss: '',           from: -14, to: -1,        color: '#E5BE2C', desc: '黃葉範圍擴大' },
+    { name: '見頃',       gloss: '最佳觀賞期', from: 0, to: 5,           color: '#F2A20F', desc: '整體轉為金黃' },
+    { name: '落葉始め',   gloss: '',           from: 6, to: 9,           color: '#CB7428', desc: '開始落葉' },
+    { name: '落葉',       gloss: '',           from: 10, to: Infinity,   color: '#8A5A35', desc: '大部分葉片落下' }
+  ];
+  function stageIndex(dn) {
+    var off = dn - D;
+    for (var i = 0; i < STAGES.length; i++) if (off >= STAGES[i].from && off <= STAGES[i].to) return i;
+    return STAGES.length - 1;
+  }
+  var NOW_STAGE = stageIndex(TODAY);
+  function stageLabel(i) { return STAGES[i].name + (STAGES[i].gloss ? '（' + STAGES[i].gloss + '）' : ''); }
+  function stageRange(i) {
+    var s = STAGES[i];
+    var a = isFinite(s.from) ? md(D + s.from) : '', b = isFinite(s.to) ? md(D + s.to) : '';
+    if (!a) return '～' + b;
+    if (!b) return a + '～';
+    return a + '–' + b;
+  }
+
+  /* 氣象廳東京觀測：近 10 年いちょう黄葉日（累年值 CSV） */
+  var JMA_YELLOW = [[2016, 11, 21], [2017, 11, 17], [2018, 11, 19], [2019, 11, 29], [2020, 11, 26],
+    [2021, 11, 28], [2022, 11, 19], [2023, 12, 1], [2024, 12, 3], [2025, 11, 22]];
+
+  /* 捲動進場：元素進入畫面約 25% 時才執行一次 fn（播放過場）。
+     減少動態或瀏覽器不支援 IntersectionObserver 時，立即執行。 */
+  var revealIO = (!REDUCED && 'IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      revealIO.unobserve(e.target);
+      var fn = e.target._reveal;
+      e.target._reveal = null;
+      if (fn) fn();
+    });
+  }, { threshold: 0.25 }) : null;
+  function onReveal(el, fn) {
+    if (!revealIO) { fn(); return; }
+    el._reveal = fn;
+    revealIO.observe(el);
+  }
+
+  /* 六階段軌道（看板與今日東京共用） */
+  function buildTrack(idx, label) {
+    var c = STAGES[idx].color;
+    var tr = h('div', { class: 'track', role: 'img', 'aria-label': label, style: '--c:' + c });
+    var fill = h('span', { class: 'fill' });
+    tr.appendChild(fill);
+    STAGES.forEach(function (s, i) {
+      tr.appendChild(h('span', {
+        class: 'node' + (i < idx ? ' past' : '') + (i === idx ? ' now' : ''),
+        style: '--c:' + s.color, title: (i + 1) + ' ' + stageLabel(i)
+      }));
+    });
+    /* 進度線：從第 1 格畫到目前這一格（捲進畫面時才伸長，形成過場） */
+    var w = (idx / 6 * 100);
+    if (REDUCED) fill.style.width = w + '%';
+    else onReveal(tr, function () { requestAnimationFrame(function () { fill.style.width = w + '%'; }); });
+    return tr;
+  }
+
+  /* =========================================================
+   * 3. 景點資料：學生指定的 4 處（外苑、昭和紀念公園、代代木、東大本鄉）
+   *    ＋ 4 處適合串連散步的資料表景點（駒場、新宿御苑、北之丸、日比谷）。
+   *    文字整理自老師資料表與官方頁面（2026-10-02 核對）；
+   *    座標為近似值；過往紀錄只作有日期的歷史參考。
+   * ======================================================= */
+  /* 開放時間函式 hoursFn(月, 日, 年, 星期)：回傳 [開園分鐘, 閉園分鐘]；
+     官方休園日回傳 { closed: 說明文字 }（own: true 表示說明已是完整句子，不再加景點名稱） */
+  /* 1 月第 3 個週一的日期（昭和紀念公園：1 月第 3 個週一至週五休園） */
+  function janThirdMonday(y) {
+    var wd1 = new Date(Date.UTC(y, 0, 1)).getUTCDay();
+    return 1 + ((8 - wd1) % 7) + 14;
+  }
+  /* 新宿御苑「早朝開園」日（國民公園協會 2026-09-25 公告）：7:00 開園，7:00–9:00 只開新宿門，入園料照常 */
+  var GYOEN_EARLY = ['2026-10-11', '2026-10-25', '2026-11-08', '2026-12-13', '2027-01-24', '2027-02-06', '2027-02-28', '2027-03-14'];
+  function gyoenEarly(y, m, d) { return GYOEN_EARLY.indexOf(y + '-' + pad(m) + '-' + pad(d)) !== -1; }
+
+  var GRADE = {
+    S: 'S：公園管理協會官方資料',
+    A: 'A：官方附日期的現地觀測',
+    B: 'B：官方來源，銀杏專項資料待補',
+    C: 'C：官方網站或入口，無日期觀測'
+  };
+
+  var SPOTS = [
+    {
+      key: 'gaien', sheet: 'TKG-023', grade: 'C', group: 'west',
+      ja: '明治神宮外苑 いちょう並木', zh: '明治神宮外苑 銀杏大道', short: '外苑',
+      area: '港區・新宿區', point: '並木中點',
+      lat: 35.6739, lng: 139.7199,
+      coordNote: '並木中點（多個來源相差 150 m 內）',
+      ginkgo: '官方介紹：從青山口到外苑中央廣場圓周道路約 300 m，共 146 株，以聖徳記念絵画館為端景（官方歷史數值，不代表 2026 現況）。',
+      season: null,
+      history: [{ date: '2022-11-17', text: '外苑便り「イチョウ並木が見頃です」（官方最近一則銀杏貼文）', url: 'https://www.meijijingugaien.jp/gaien-news/' }],
+      hours: '官方未列開放時間與費用（資料未提供）',
+      brief: '官方未列（資料未提供）',
+      access: ['東京メトロ銀座線「外苑前駅」「青山一丁目駅」', '東京メトロ半蔵門線「青山一丁目駅」', '都営大江戸線「国立競技場駅」「青山一丁目駅」', 'JR中央・総武線「信濃町駅」「千駄ヶ谷駅」', '官方交通圖未列步行時間'],
+      near: '外苑前駅、青山一丁目駅等（官方未列步行時間）',
+      notes: ['這裡是明治神宮「外苑」，不是明治神宮（內苑）。', '並木位在港區北青山一帶；外苑的所在地址是新宿區霞ヶ丘町。', '2026 年神宮外苑いちょう祭り：官方尚未公告。'],
+      /* links[0] 是看板每列直接顯示的官方連結：選各園發布最新消息的官方頁面 */
+      links: [['外苑便り（官方公告）', 'https://www.meijijingugaien.jp/gaien-news/'],
+        ['外苑官方：いちょう並木の春夏秋冬', 'https://www.meijijingugaien.jp/walk/sight/season.html'],
+        ['外苑官方：交通圖', 'https://www.meijijingugaien.jp/information/access-map.html']],
+      hoursFn: null
+    },
+    {
+      key: 'showa', sheet: 'TKG-014', grade: 'A', group: 'tama',
+      ja: '国営昭和記念公園', zh: '國營昭和紀念公園', short: '昭和紀念公園',
+      area: '立川市・昭島市', point: 'カナールのイチョウ並木（立川口附近）',
+      lat: 35.7028, lng: 139.4022,
+      coordNote: 'カナール銀杏並木（多個來源一致，並與官方「立川口步行約 1 分」相符）',
+      ginkgo: 'カナール的銀杏並木與「かたらいのイチョウ並木」是兩處不同並木；後者在園區西側（距西立川口約 730 m，確切位置未核實，本站只以文字介紹）。',
+      season: '官方花卉指南：イチョウ（黄葉）「10月下旬～11月下旬」。秋の夜散歩頁：カナール約 11 月上旬～中旬、かたらいのイチョウ並木約 11 月中旬～下旬轉色（官方慣例說明，非 2026 實測）。',
+      history: [{ date: '2025-11-06～12-04', text: '官方「花だより」在這段期間連續多期刊登銀杏（イチョウ）資訊', url: 'https://www.showakinen-koen.jp/hanadayori/' }],
+      hours: '10 月 9:30–17:00；11～2 月 9:30–16:30（活動期間可能調整）；10/29～11/29 秋の夜散歩期間開放至 21:00（最終入園 20:30；夜間只能從西立川口、立川口進出）',
+      closed: '年末年始（12/31、1/1）、1 月第 3 個週一至週五；天候不佳可能臨時休園',
+      fee: '入園料：大人 450 日圓、65 歲以上 210 日圓、國中生以下免費',
+      brief: '10 月 9:30–17:00（11～2 月至 16:30）；10/29～11/29 秋の夜散歩期間開放至 21:00（最終入園 20:30）・入園 450 日圓',
+      event: '黄葉・紅葉まつり＆秋の夜散歩2026：2026-10-29～11-29，點燈 16:30–20:30（カナール與かたらいのイチョウ並木只需入園料）',
+      access: ['立川口：JR中央線「立川駅」北口 約 18 分；多摩都市モノレール「立川北駅」約 16 分（カナール在立川口附近）', '西立川口：JR青梅線「西立川駅」約 2 分', 'あけぼの口：JR「立川駅」北口 約 10 分'],
+      near: '立川駅北口、立川北駅（至立川口約 16–18 分）',
+      notes: ['位在東京西部，距都心各景點直線約 26–32 km，往返都心請搭電車。'],
+      links: [['官方：花だより', 'https://www.showakinen-koen.jp/hanadayori/'],
+        ['官方：花・植物ガイド', 'https://www.showakinen-koen.jp/flower-information/'],
+        ['官方：秋の夜散歩2026', 'https://www.showakinen-koen.jp/autumn-night-walk/'],
+        ['官方：交通方式', 'https://www.showakinen-koen.jp/access/'],
+        ['官方：開園時間・休園日', 'https://www.showakinen-koen.jp/park-information/schedule/']],
+      /* 開放時間（分鐘）：官方休園日（12/31、1/1、1 月第 3 個週一至週五）回傳休園；
+         2026 秋の夜散歩（10/29～11/29）閉園 21:00（最終入園 20:30）；
+         其餘為一般開園時間 10 月 9:30–17:00、11～2 月 9:30–16:30 */
+      hoursFn: function (m, d, y) {
+        if ((m === 12 && d === 31) || (m === 1 && d === 1)) return { closed: '今天依官方休園日休園（年末年始 12/31、1/1）' };
+        if (m === 1) {
+          var mon3 = janThirdMonday(y);
+          if (d >= mon3 && d <= mon3 + 4) return { closed: '今天依官方休園日休園（1 月第 3 個週一至週五）' };
+        }
+        if (y === 2026 && ((m === 10 && d >= 29) || (m === 11 && d <= 29))) return [570, 1260];
+        if (m === 10) return [570, 1020];
+        if (m >= 11 || m <= 2) return [570, 990];
+        return null;
+      },
+      /* 秋の夜散歩期間（2026 年）：路線提醒用 */
+      nightWalk: function (m, d, y) { return y === 2026 && ((m === 10 && d >= 29) || (m === 11 && d <= 29)); }
+    },
+    {
+      key: 'yoyogi', sheet: 'TKG-012', grade: 'S', group: 'west',
+      ja: '代々木公園', zh: '代代木公園', short: '代代木公園',
+      area: '澀谷區', point: '園區代表點（銀杏位置官方未載明）',
+      lat: 35.6717, lng: 139.6965, approx: true,
+      coordNote: '園區代表點',
+      ginkgo: '官方「花の見ごろ情報」秋季列有イチョウ，但未載明園內位置；2025 年度東京都公園協會紅葉情報名單列有本園銀杏（老師資料表）。',
+      season: null,
+      history: [],
+      hours: '常時開園（服務中心與設施年末年始休）',
+      fee: '免費（部分設施收費）',
+      brief: '常時開園・免費',
+      access: ['JR山手線「原宿駅」徒歩 3 分', '東京メトロ千代田線「代々木公園駅」（C02）徒歩 3 分', '東京メトロ千代田線・副都心線「明治神宮前〈原宿〉駅」（C03、F15）徒歩 3 分', '小田急線「代々木八幡駅」徒歩 6 分'],
+      near: '原宿駅（JR）、代々木公園駅（千代田線），皆步行約 3 分',
+      notes: ['官方黃葉公告只代表原文指明的區域，不代表全園。'],
+      links: [['東京都公園協會：代々木公園', 'https://www.tokyo-park.or.jp/park/yoyogi/'],
+        ['2025 年度紅葉情報（新聞稿 PDF）', 'https://www.tokyo-park.or.jp/association/assets/20251104_2025autumnleaves_pressrelease.pdf']],
+      hoursFn: function () { return [0, 1440]; }
+    },
+    {
+      key: 'hongo', sheet: 'TKG-040', grade: 'C', group: 'palace',
+      ja: '東京大学 本郷キャンパス 銀杏並木', zh: '東京大學 本鄉校區 銀杏大道', short: '東大本鄉',
+      area: '文京區', point: '正門～安田講堂（並木中點）',
+      lat: 35.7131, lng: 139.7606,
+      coordNote: '並木中點（OSM「銀杏並木」步道，與正門、安田講堂位置吻合）',
+      ginkgo: '銀杏佐證來自東大官方網站：「本郷キャンパスの銀杏並木」。',
+      proof: 'https://www.u-tokyo.ac.jp/ja/about/campus-guide/1km_of_campus.html',
+      season: null,
+      history: [],
+      hours: '校園見學 7:00–18:00（官方 Q&A）；正門週末及假日關閉，小門 7:00–24:30 開放',
+      brief: '見學 7:00–18:00・照片不可刊登於社群網站',
+      rules: '官方見學規則：可以拍照，但不可刊登於刊物或社群網站；禁止商業攝影與婚紗攝影；建築物內原則禁止進入；15 人以上團體需於 7 天前登記。',
+      access: ['東京メトロ南北線「東大前駅」徒歩 1 分', '都営大江戸線「本郷三丁目駅」徒歩 6 分', '東京メトロ丸ノ内線「本郷三丁目駅」徒歩 8 分', '東京メトロ千代田線「湯島駅」「根津駅」徒歩 8 分', '都営三田線「春日駅」徒歩 10 分', '（官方步行時間是到校區，不是到銀杏並木）'],
+      near: '東大前駅（南北線）、本郷三丁目駅（大江戸線・丸ノ内線）',
+      notes: ['本鄉、駒場、小石川植物園是三個不同地點。'],
+      links: [['東大官方：キャンパス周辺案内（本郷キャンパスの銀杏並木）', 'https://www.u-tokyo.ac.jp/ja/about/campus-guide/1km_of_campus.html'],
+        ['東大官方：本郷キャンパスの見学について', 'https://www.u-tokyo.ac.jp/ja/about/campus-guide/public02_05.html'],
+        ['東大官方：キャンパスガイド', 'https://www.u-tokyo.ac.jp/ja/about/campus-guide/index.html']],
+      hoursFn: function () { return [420, 1080]; }
+    },
+    {
+      key: 'komaba', sheet: 'TKG-040', grade: 'C', group: 'west',
+      ja: '東京大学 駒場キャンパス 銀杏並木', zh: '東京大學 駒場校區 銀杏大道', short: '東大駒場',
+      area: '目黑區', point: '1 號館北側的東西向道路（推定）',
+      lat: 35.6604, lng: 139.6852,
+      coordNote: '由官方文字與 OSM 樹列推定，誤差約 ±80 m',
+      ginkgo: '銀杏佐證來自東大官方網站：「秋には銀杏並木がメインストリートを黄色に染め上げる」。',
+      proof: 'https://kimino.ct.u-tokyo.ac.jp/kotohajime/komaba-campus/',
+      season: null,
+      history: [],
+      hours: '駒場 I 校區見學規則：資料未提供（請洽官方）',
+      brief: '資料未提供',
+      access: ['京王井の頭線「駒場東大前駅」徒歩 0 分（東口即正門）', '「代々木上原駅」（小田急線・千代田線）徒歩 12 分', '小田急線「東北沢駅」徒歩 8 分'],
+      near: '駒場東大前駅（京王井の頭線，步行 0 分）',
+      notes: ['本鄉、駒場、小石川植物園是三個不同地點。', '駒場 II 校區除公開活動外不對外開放。'],
+      links: [['東大官方：駒場キャンパス（銀杏並木）', 'https://kimino.ct.u-tokyo.ac.jp/kotohajime/komaba-campus/'],
+        ['東大官方：キャンパスガイド', 'https://www.u-tokyo.ac.jp/ja/about/campus-guide/index.html']],
+      hoursFn: null
+    },
+    {
+      key: 'gyoen', sheet: 'TKG-015', grade: 'A', group: 'west',
+      ja: '新宿御苑', zh: '新宿御苑', short: '新宿御苑',
+      area: '新宿區・澀谷區', point: '大温室附近（官方稱溫室旁是人氣拍攝點）',
+      lat: 35.6867, lng: 139.7126,
+      coordNote: '大温室建築位置；銀杏在溫室附近，誤差約數十公尺',
+      ginkgo: '官方「季節のみどころ」：11 月的看點包含紅葉（イチョウ、プラタナスなど）。',
+      season: null,
+      history: [{ date: '2025-11-28', text: '國民公園協會：園內各處銀杏正值見頃（みごろ），溫室附近是人氣拍攝點', url: 'https://fng.or.jp/shinjuku/2025/11/28/20251128_03/' }],
+      hours: '10/1～3/14：9:00–16:30（16:00 停止入園）；早朝開園日 7:00 開園（見「官方活動」）',
+      closed: '每週一（遇假日順延至次一平日）、12/29～1/3；特別開園期間（秋 11/1～11/15、春 3/25～4/24）無休',
+      fee: '一般 500 日圓；65 歲以上、學生（高中以上）250 日圓；國中生以下免費',
+      brief: '9:00–16:30（16:00 停止入園；早朝開園日 7:00 起）・週一休・500 日圓',
+      event: '早朝開園：2026 年 10/11、10/25、11/8、12/13，2027 年 1/24、2/6、2/28、3/14，7:00 開園（7:00–9:00 只開新宿門，入園料照常；天候等因素可能中止或變更）',
+      access: ['新宿門：JR・京王・小田急「新宿駅」南口 徒歩 10 分；丸ノ内線「新宿御苑前駅」出口 1 徒歩 5 分；副都心線・都営新宿線「新宿三丁目駅」徒歩 5 分', '大木戸門：丸ノ内線「新宿御苑前駅」出口 2 徒歩 5 分', '千駄ヶ谷門：JR「千駄ヶ谷駅」徒歩 5 分；都営大江戸線「国立競技場駅」A5 徒歩 5 分'],
+      near: '新宿御苑前駅（丸ノ内線，步行 5 分）、千駄ヶ谷駅（JR，至千駄ヶ谷門 5 分）',
+      notes: ['大木戸門因工程自 2026-10-06 起至 11 月下旬（預定）實施通行管制（官方 2026-10-01 公告）。', '過去的官方文章只作歷史參考，不代表今年狀態。'],
+      links: [['國民公園協會：新宿御苑 最新消息', 'https://fng.or.jp/shinjuku/news/'],
+        ['新宿御苑：入園案內', 'https://fng.or.jp/shinjuku/guide/'],
+        ['新宿御苑：交通方式', 'https://fng.or.jp/shinjuku/access/'],
+        ['2025-11-28 官方銀杏紀錄', 'https://fng.or.jp/shinjuku/2025/11/28/20251128_03/'],
+        ['大木戸門通行管制公告', 'https://fng.or.jp/shinjuku/2026/10/01/20261001-01/'],
+        ['早朝開園公告（2026-09-25）', 'https://fng.or.jp/shinjuku/2026/09/25/20260925-03/']],
+      /* 開放時間（分鐘）：12/29～1/3 休園；週一原則休園（特別開園期間無休；遇假日順延至次一平日，
+         本站不推算日本假日，只提醒以官方公告為準）；早朝開園日 7:00 開園 */
+      hoursFn: function (m, d, y, wd) {
+        if ((m === 12 && d >= 29) || (m === 1 && d <= 3)) return { closed: '今天依官方休園日休園（12/29～1/3）' };
+        var special = (m === 11 && d <= 15) || (m === 3 && d >= 25) || (m === 4 && d <= 24);
+        if (wd === 1 && !special) return { closed: '今天是週一，新宿御苑原則休園（遇假日順延至次一平日，請以官方公告為準）', own: true };
+        var open = gyoenEarly(y, m, d) ? 420 : 540;
+        if (m >= 10 || m <= 2 || (m === 3 && d <= 14)) return [open, 990];
+        if ((m === 6 && d >= 11) || m === 7) return [open, 1140];
+        return [open, 1080];
+      },
+      earlyFn: gyoenEarly
+    },
+    {
+      key: 'kitanomaru', sheet: 'TKG-030', grade: 'B', group: 'palace',
+      ja: '北の丸公園', zh: '北之丸公園', short: '北之丸公園',
+      area: '千代田區', point: '園區代表點；大イチョウ在日本武道館前',
+      lat: 35.6915, lng: 139.7511, approx: true,
+      coordNote: '園區代表點',
+      ginkgo: '銀杏佐證來自國民公園協會官方網站：「日本武道館の前には大イチョウと呼ばれる特別大きなイチョウの木」。',
+      proof: 'https://fng.or.jp/koukyo/2023/11/24/kitanomarukouennnokouyou/',
+      season: null,
+      history: [
+        { date: '2024-11-13', text: '國民公園協會：「園内のイチョウは色づき始めたばかり」', url: 'https://fng.or.jp/koukyo/2024/11/13/irodukukitanomarukouen/' },
+        { date: '2023-11-24', text: '國民公園協會：武道館前的大イチョウ，文中寫「見ごろは12月上旬」', url: 'https://fng.or.jp/koukyo/2023/11/24/kitanomarukouennnokouyou/' }
+      ],
+      hours: '常時開放、無休（國家活動特別警備時除外）；夜間約 22 時熄燈',
+      fee: '免費',
+      brief: '常時開放・免費',
+      access: ['九段下駅 2 出口 徒歩約 5 分（都営新宿線・東西線・半蔵門線）', '竹橋駅 1a・1b 出口 徒歩約 8 分（東西線）'],
+      near: '九段下駅（2 出口，步行約 5 分）、竹橋駅（約 8 分）',
+      notes: ['北之丸公園不是皇居外苑，也不是皇居東御苑。', '紅葉期官方注意事項：禁止長時間占位、全面禁菸、垃圾請帶走。'],
+      links: [['國民公園協會：皇居外苑・北の丸公園', 'https://fng.or.jp/koukyo/news/'],
+        ['國民公園協會：交通方式（含北の丸公園）', 'https://fng.or.jp/koukyo/access/'],
+        ['2023-11-24 官方銀杏文章', 'https://fng.or.jp/koukyo/2023/11/24/kitanomarukouennnokouyou/'],
+        ['2024-11-13 官方銀杏文章', 'https://fng.or.jp/koukyo/2024/11/13/irodukukitanomarukouen/']],
+      hoursFn: function () { return [0, 1440]; }
+    },
+    {
+      key: 'hibiya', sheet: 'TKG-011', grade: 'S', group: 'palace',
+      ja: '日比谷公園', zh: '日比谷公園', short: '日比谷公園',
+      area: '千代田區', point: '首賭けイチョウ（松本楼附近・概略）',
+      lat: 35.6737, lng: 139.7559,
+      coordNote: '概略位置（約 ±50–100 m）',
+      ginkgo: '官方介紹「首賭けイチョウ」：推定樹齡 400～500 年、幹圍約 7 m，1902 年（明治 35 年）由本多静六博士移植，是公園的象徵。',
+      season: null,
+      history: [],
+      hours: '常時開園',
+      fee: '免費（部分設施收費）',
+      brief: '常時開園・免費・部分區域施工中',
+      access: ['東京メトロ丸ノ内線・千代田線「霞ケ関駅」B2 出口すぐ', '東京メトロ日比谷線・千代田線・都営三田線「日比谷駅」A10・A14 出口すぐ', '東京メトロ有楽町線「桜田門駅」出口 5 徒歩 5 分', 'JR「有楽町駅」徒歩 8 分'],
+      near: '霞ケ関駅、日比谷駅（出站即到）',
+      notes: ['公園再生整備工程中：大噴水、噴水廣場等部分區域暫時不能進入（2026 年 10 月）。', '葉況與施工、通行公告請分開看。'],
+      links: [['東京都公園協會：日比谷公園', 'https://www.tokyo-park.or.jp/park/hibiya/']],
+      hoursFn: function () { return [0, 1440]; }
+    }
+  ];
+  var BY_KEY = {};
+  SPOTS.forEach(function (s) { BY_KEY[s.key] = s; });
+
+  /* 路線規劃器的分區（同區多半可步行串連） */
+  var GROUPS = [
+    { key: 'west', name: '青山・新宿・澀谷', keys: ['gaien', 'gyoen', 'yoyogi', 'komaba'] },
+    { key: 'palace', name: '皇居周邊・本鄉', keys: ['kitanomaru', 'hibiya', 'hongo'] },
+    { key: 'tama', name: '多摩・立川', keys: ['showa'] }
+  ];
+
+  /* =========================================================
+   * 4. 今日東京：日期與季節示意
+   * ======================================================= */
+  function renderToday() {
+    $('#heroYear').textContent = YEAR;
+    $('#bandYear').textContent = YEAR;
+    $('#todayBig').innerHTML = '';
+    add($('#todayBig'), [pad(NOW.m) + '.' + pad(NOW.d), h('small', { text: '（' + WEEK[NOW.wd] + '）' })]);
+    /* 日期和星期各自不換行，窄螢幕時只在兩者之間斷行 */
+    var tl = $('#todayLong'); tl.textContent = '';
+    tl.appendChild(h('span', { 'class': 'nw', text: NOW.y + ' 年 ' + NOW.m + ' 月 ' + NOW.d + ' 日' }));
+    tl.appendChild(document.createTextNode('　'));
+    tl.appendChild(h('span', { 'class': 'nw', text: '星期' + WEEK[NOW.wd] }));
+    updateClock();
+
+    /* 階段名稱；「見頃」下方加註「最佳觀賞期」（BRIEF 的寫法：見頃（最佳觀賞期）） */
+    var ts = $('#todayStage');
+    ts.textContent = STAGES[NOW_STAGE].name;
+    if (STAGES[NOW_STAGE].gloss) ts.appendChild(h('span', { class: 'gloss', text: STAGES[NOW_STAGE].gloss }));
+    var tt = $('#todayTrack');
+    tt.appendChild(buildTrack(NOW_STAGE, '今日季節示意：' + stageLabel(NOW_STAGE) + '，第 ' + (NOW_STAGE + 1) + '／6 階段'));
+    var off = TODAY - D, txt;
+    /* 「還有 N 天」「第 N 天」數字與單位不拆行 */
+    if (off < 0) txt = ['距黃葉平年日（11/23）', h('span', { class: 'nw', text: '還有 ' + (-off) + ' 天' })];
+    else if (off === 0) txt = ['今天就是黃葉平年日（11/23）'];
+    else txt = ['黃葉平年日（11/23）後', h('span', { class: 'nw', text: '第 ' + off + ' 天' })];
+    $('#todayCount').textContent = '';
+    add($('#todayCount'), txt);
+  }
+  function updateClock() {
+    var n = tokyoNow();
+    $('#todayClock').textContent = '日本時間 ' + hhmm(n.min);
+  }
+
+  /* =========================================================
+   * 5. 銀杏前線色帶：10/1～12/15，標出今天與近 10 年氣象廳實測黃葉日
+   * ======================================================= */
+  function renderBand() {
+    var start = dayNum(YEAR, 10, 1), end = dayNum(YEAR, 12, 15) + 1, span = end - start;
+    function pct(dn) { return Math.max(0, Math.min(100, (dn - start) / span * 100)); }
+    var band = $('#band');
+
+    /* 近 10 年實測黃葉日（小圓點） */
+    var years = h('div', { class: 'band-years' });
+    var firstPct = Math.min.apply(null, JMA_YELLOW.map(function (r) { return pct(dayNum(YEAR, r[1], r[2])); }));
+    years.appendChild(h('span', { class: 'yr-label', style: 'right:calc(' + (100 - firstPct) + '% + 10px)', text: '近 10 年東京實測黃葉日', 'aria-hidden': 'true' }));
+    /* 依日期排序後計算疊放層數：k＝同一天的第幾個；kn＝同一天或相鄰日連續的第幾個 */
+    var dots = JMA_YELLOW.map(function (r) { return { r: r, dn: dayNum(YEAR, r[1], r[2]) }; })
+      .sort(function (a, b) { return a.dn - b.dn || a.r[0] - b.r[0]; });
+    dots.forEach(function (o, i) {
+      var prev = dots[i - 1];
+      o.k = prev && prev.dn === o.dn ? prev.k + 1 : 0;
+      o.kn = prev && o.dn - prev.dn <= 1 ? prev.kn + 1 : 0;
+      years.appendChild(h('span', { class: 'yr', style: 'left:' + pct(o.dn) + '%;--k:' + o.k + ';--kn:' + o.kn, title: o.r[0] + ' 年 ' + o.r[1] + '/' + o.r[2] }));
+    });
+    band.appendChild(years);
+
+    /* 六段色帶（寬度依天數比例） */
+    var bar = h('div', { class: 'band-bar' });
+    STAGES.forEach(function (s, i) {
+      var a = isFinite(s.from) ? D + s.from : start, b = isFinite(s.to) ? D + s.to + 1 : end;
+      a = Math.max(a, start); b = Math.min(b, end);
+      var w = Math.max(0, (b - a) / span * 100);
+      bar.appendChild(h('span', { class: 'seg', style: '--c:' + s.color + ';width:' + w + '%;animation-delay:' + (i * 0.06) + 's', title: s.name + ' ' + stageRange(i) }));
+    });
+    band.appendChild(bar);
+
+    /* 日期刻度：分界日；手機只留重點刻度 */
+    var ticks = h('div', { class: 'band-ticks', 'aria-hidden': 'true' });
+    [[start, '10/1', 'minor'], [D - 28, md(D - 28), 'key'], [D - 14, md(D - 14), 'minor'], [D, md(D), 'key'],
+      [D + 6, md(D + 6), 'minor'], [D + 10, md(D + 10), 'key'], [end - 1, md(end - 1), 'minor']].forEach(function (t) {
+      var p = pct(t[0]);
+      var el = h('span', { class: 'tick ' + t[2], style: 'left:' + p + '%', text: t[1] });
+      if (p < 3) el.style.transform = 'translateX(0)';
+      if (p > 97) el.style.transform = 'translateX(-100%)';
+      ticks.appendChild(el);
+    });
+    band.appendChild(ticks);
+
+    /* 今天的位置（超出範圍時貼齊邊緣並說明） */
+    var inRange = TODAY >= start && TODAY < end;
+    var label = '今天 ' + (NOW.y !== YEAR ? NOW.y + '/' : '') + NOW.m + '/' + NOW.d + (inRange ? '' : (TODAY < start ? '（色帶之前）' : '（色帶之後）'));
+    var p = pct(TODAY + 0.5);
+    var mark = h('div', { class: 'today-mark' + (p < 8 ? ' at-start' : '') + (p > 92 ? ' at-end' : ''), style: 'left:' + p + '%' }, h('span', { text: label }));
+    band.appendChild(mark);
+    /* 色帶捲進畫面時才播放「依序伸長」的過場 */
+    if (revealIO) {
+      band.classList.add('js-reveal');
+      onReveal(band, function () { band.classList.add('in'); });
+    }
+    band.setAttribute('aria-label', '銀杏六階段季節色帶：' + STAGES.map(function (s, i) { return s.name + ' ' + stageRange(i); }).join('，') + '。' + label + '，季節示意為' + STAGES[NOW_STAGE].name + '。');
+
+    /* 圖例：六階段名稱與日期範圍 */
+    var lg = $('#legend');
+    STAGES.forEach(function (s, i) {
+      lg.appendChild(h('li', { class: i === NOW_STAGE ? 'is-now' : null, style: '--c:' + s.color, 'aria-current': i === NOW_STAGE ? 'true' : null }, [
+        h('span', { class: 'sw', 'aria-hidden': 'true', svg: leafSvg(s.color) }),   /* 色票：該階段顏色的銀杏葉 */
+        h('span', { class: 'ln' }, [
+          h('span', { class: 'n', text: String(i + 1) }),
+          h('b', { text: s.name, lang: /[づめ]/.test(s.name) ? 'ja' : null }),
+          s.gloss ? h('span', { class: 'gloss', text: s.gloss }) : null
+        ]),
+        h('span', { class: 'rg', text: stageRange(i) }),
+        h('span', { class: 'ds', text: s.desc })
+      ]));
+    });
+
+    /* 推估方式說明 */
+    var notes = [
+      '「見頃」起日＝氣象廳東京いちょう黄葉日平年值 11/23；「落葉」起日＝いちょう落葉日平年值 12/3（1991–2020 平年值）。其餘分界為示意參數。',
+      '氣象廳定義：黃葉日是標本木整體看來大部分葉子變黃的第一天；落葉日是約 80% 葉子落下的第一天。',
+      '色帶上方小點是近 10 年氣象廳東京實測黃葉日：' + JMA_YELLOW.map(function (r) { return r[0] + ' ' + r[1] + '/' + r[2]; }).join('、') + '。',
+      '近年 2023 年 12/1、2024 年 12/3、2025 年 11/22，實際季節可能前後相差約一週；2026 年氣象廳尚未觀測（2026-10-02 核對）。'
+    ];
+    var nl = $('#bandNotes');
+    notes.forEach(function (t) { nl.appendChild(h('li', null, unitKids(t))); });
+  }
+
+  /* =========================================================
+   * 6. 銀杏狀態看板
+   * ======================================================= */
+  /* cls：dd 的額外樣式（交通清單用 acc：日文站名只在空格、標點處換行） */
+  function factRow(dl, label, value, cls) {
+    if (!value) return;
+    dl.appendChild(h('dt', { text: label }));
+    if (Array.isArray(value)) dl.appendChild(h('dd', { class: cls }, h('ul', null, value.map(function (v) { return h('li', null, unitKids(v)); }))));
+    else dl.appendChild(h('dd', { class: cls }, unitKids(value)));
+  }
+
+  function renderBoard() {
+    var list = $('#spots');
+    var stage = STAGES[NOW_STAGE];
+    SPOTS.forEach(function (s, i) {
+      var li = h('li', { class: 'spot', style: 'animation-delay:' + (i * 0.05) + 's' });
+      var grid = h('div', { class: 'spot-grid' });
+      grid.appendChild(h('span', { class: 'spot-no', text: pad(i + 1), 'aria-hidden': 'true' }));
+
+      /* 名稱、中文名、過往官方紀錄 */
+      var hist = s.history[0];
+      var main = h('div', { class: 'spot-main' }, [
+        h('h3', { class: 'spot-name', lang: 'ja', text: s.ja }),
+        h('p', { class: 'spot-zh' }, [s.zh + '　', h('span', { class: 'area', text: s.area })]),
+        h('p', { class: 'spot-hist' }, hist
+          ? [h('b', { text: '過往官方紀錄 ' }), hist.date + '：' + hist.text + '（歷史紀錄，非今年狀態）']
+          : [h('b', { text: '過往官方紀錄 ' }), '資料未提供（本站未取得可查證的附日期官方銀杏紀錄）'])
+      ]);
+      grid.appendChild(main);
+
+      /* 六階段軌道＋目前階段 */
+      var status = h('div', { class: 'spot-status' }, [
+        buildTrack(NOW_STAGE, s.zh + '季節示意：' + stageLabel(NOW_STAGE) + '，第 ' + (NOW_STAGE + 1) + '／6 階段（依氣象廳東京平年值推估）'),
+        h('div', { class: 'spot-stage' }, [
+          h('span', { svg: leafSvg(stage.color) }),
+          h('span', null, [
+            h('span', { class: 'nm', text: stage.name }),
+            stage.gloss ? h('span', { class: 'gl', text: stage.gloss }) : null,   /* 見頃 → 最佳觀賞期 */
+            h('span', { class: 'pos', text: (NOW_STAGE + 1) + '／6・推估' })
+          ])
+        ])
+      ]);
+      grid.appendChild(status);
+
+      /* 展開「官方資訊與交通」 */
+      var detailId = 'detail-' + s.key;
+      var btn = h('button', { type: 'button', class: 'more-btn', 'aria-expanded': 'false', 'aria-controls': detailId }, [
+        h('span', { text: '官方資訊與交通' }), h('span', { svg: ICON.chevron, style: 'display:inline-flex' })
+      ]);
+      /* 官方連結：放在收合面板外、每列都看得到，提醒讀者最新葉況以官方頁面為準；
+         完整的官方連結清單仍在展開面板裡 */
+      var offLink = s.links[0];
+      var official = h('a', {
+        class: 'ext spot-off', href: offLink[1], target: '_blank', rel: 'noopener noreferrer',
+        title: offLink[0], 'aria-label': s.zh + ' 官方連結：' + offLink[0], text: '官方連結'
+      });
+      grid.appendChild(h('div', { class: 'spot-actions' }, [btn, official]));
+      li.appendChild(grid);
+
+      var dl = h('dl', { class: 'facts' });
+      factRow(dl, '季節示意', stageLabel(NOW_STAGE) + '（全東京共用同一季節推估，非本園實測）');
+      factRow(dl, '銀杏說明', s.ginkgo);
+      factRow(dl, '官方季節說明', s.season);
+      if (s.history.length) factRow(dl, '過往官方紀錄', s.history.map(function (r) { return r.date + '：' + r.text; }));
+      factRow(dl, '開放時間', s.hours);
+      factRow(dl, '休園日', s.closed);
+      factRow(dl, '費用', s.fee);
+      factRow(dl, '官方活動', s.event);
+      factRow(dl, '交通（官方）', s.access, 'acc');
+      factRow(dl, '見學規則', s.rules);
+      factRow(dl, '注意', s.notes);
+      factRow(dl, '座標', '座標為近似值｜' + s.lat.toFixed(4) + ', ' + s.lng.toFixed(4) + '｜' + s.coordNote);
+      factRow(dl, '資料表等級', s.sheet + '｜' + GRADE[s.grade]);
+      var links = h('ul', { class: 'links' }, s.links.map(function (l) {
+        return h('li', null, h('a', { class: 'ext', href: l[1], target: '_blank', rel: 'noopener noreferrer', text: l[0] }));
+      }));
+      var detail = h('div', { class: 'spot-detail', id: detailId, hidden: true }, h('div', { class: 'inner' }, [dl, links]));
+      li.appendChild(detail);
+
+      /* 展開／收合：先移除 hidden，再於下一個畫格加上 open，讓高度平順過場；
+         收合過場中先設為 inert，裡面的連結立刻不能被 Tab 到 */
+      btn.addEventListener('click', function () {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!open));
+        if (!open) {
+          detail.hidden = false;
+          detail.inert = false;
+          requestAnimationFrame(function () { requestAnimationFrame(function () { detail.classList.add('open'); }); });
+        } else {
+          detail.inert = true;
+          detail.classList.remove('open');
+          setTimeout(function () { if (btn.getAttribute('aria-expanded') === 'false') detail.hidden = true; }, REDUCED ? 0 : 420);
+        }
+      });
+      list.appendChild(li);
+    });
+  }
+
+  /* =========================================================
+   * 7. 散步路線規劃器
+   * ======================================================= */
+  var selected = [];          /* 依勾選順序記錄景點 key（勾選框本身就不會重複） */
+  var hasRoute = false;
+
+  function renderPicker() {
+    var wrap = $('#pickList');
+    GROUPS.forEach(function (g) {
+      var fs = h('fieldset', { class: 'pick-group' }, h('legend', { text: g.name }));
+      g.keys.forEach(function (k) {
+        var s = BY_KEY[k];
+        /* 可及名稱＝畫面上看得到的文字（日文名、中文名、地區），以空格分隔 */
+        var id = 'pk-' + k;
+        var input = h('input', { type: 'checkbox', name: 'spot', value: k, id: id, 'aria-labelledby': id + '-ja ' + id + '-zh ' + id + '-area' });
+        var lab = h('label', { class: 'pick', 'data-key': k, for: id }, [
+          input,
+          h('span', { class: 'box', svg: ICON.check, 'aria-hidden': 'true' }),
+          h('span', null, [h('span', { class: 'p-name', id: id + '-ja', lang: 'ja', text: s.ja }), h('span', { class: 'p-sub', id: id + '-zh', text: s.zh })]),
+          h('span', { class: 'p-area', id: id + '-area', text: s.area })
+        ]);
+        input.addEventListener('change', function () { onPick(input, lab, k); });
+        fs.appendChild(lab);
+      });
+      wrap.appendChild(fs);
+    });
+  }
+
+  function showMsg(text, kind) {
+    var area = $('#pickMsg');
+    area.innerHTML = '';
+    if (!text) return;
+    area.appendChild(h('p', { class: 'msg' + (kind ? ' ' + kind : '') }, [h('span', { svg: kind === 'ok' ? ICON.check : ICON.info, style: 'display:inline-flex' }), h('span', { text: text })]));
+  }
+
+  function onPick(input, lab, key) {
+    if (input.checked) {
+      /* 防呆：最多 3 個景點，第 4 個不勾上並提示 */
+      if (selected.length >= 3) {
+        input.checked = false;
+        showMsg('最多只能選 3 個景點喔！請先取消其中一個，再勾選新的景點。', 'warn');
+        flashCounter();
+        return;
+      }
+      if (selected.indexOf(key) === -1) selected.push(key);
+      lab.classList.add('is-on');
+    } else {
+      selected = selected.filter(function (k) { return k !== key; });
+      lab.classList.remove('is-on');
+    }
+    updateCounter();
+    /* 選得剛好時清掉舊提示；已經有路線時，提醒要重新產生 */
+    if (selected.length >= 2) showMsg('');
+    else if (selected.length === 1) showMsg('再選 1～2 個景點，就能串成散步路線。');
+    else showMsg('');
+    markStale();
+  }
+
+  function updateCounter() {
+    $('#pickCount').textContent = selected.length;
+    var dots = document.querySelectorAll('#counter .slots i');
+    for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('on', i < selected.length);
+  }
+  function flashCounter() {
+    var c = $('#counter');
+    c.classList.remove('flash');
+    void c.offsetWidth; /* 重新觸發動畫 */
+    c.classList.add('flash');
+  }
+  function markStale() {
+    var r = $('#routeOut .route');
+    if (!r || r.classList.contains('stale')) return;
+    r.classList.add('stale');
+    var note = h('p', { class: 'stale-note', text: '景點選擇已變更：按「產生推薦散步路線」更新路線。' });
+    var head = r.querySelector('.route-title');
+    if (head) head.parentNode.insertBefore(note, head.nextSibling);
+  }
+
+  function clearAll() {
+    /* 若正在產生路線，先取消並解除忙碌狀態 */
+    cancelPending();
+    selected = [];
+    var labs = document.querySelectorAll('#pickList .pick');
+    for (var i = 0; i < labs.length; i++) { labs[i].classList.remove('is-on'); labs[i].querySelector('input').checked = false; }
+    updateCounter();
+    showMsg('');
+    renderEmpty();
+  }
+
+  /* 三個景點時，從 6 種順序中挑直線總距離最短的一種（平手時保留勾選順序） */
+  function bestOrder(keys) {
+    if (keys.length < 3) return { order: keys.slice(), changed: false };
+    var perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+    var best = null, bestD = Infinity;
+    perms.forEach(function (p) {
+      var ks = p.map(function (i) { return keys[i]; });
+      var d = haversine(BY_KEY[ks[0]], BY_KEY[ks[1]]) + haversine(BY_KEY[ks[1]], BY_KEY[ks[2]]);
+      if (d < bestD - 1) { best = ks; bestD = d; }
+    });
+    return { order: best, changed: best.join() !== keys.join() };
+  }
+
+  function gmaps(a, b, mode, via) {
+    var u = 'https://www.google.com/maps/dir/?api=1&origin=' + a.lat + ',' + a.lng +
+      '&destination=' + b.lat + ',' + b.lng + '&travelmode=' + mode;
+    if (via && via.length) u += '&waypoints=' + via.map(function (p) { return p.lat + ',' + p.lng; }).join('%7C');
+    return u;
+  }
+
+  function renderEmpty() {
+    var out = $('#routeOut');
+    out.innerHTML = '';
+    hasRoute = false;
+    /* 空狀態插圖：一條還沒畫好的點線路線，三個空的站點圓環，第一站旁飄著一片銀杏葉 */
+    out.appendChild(h('div', { class: 'route-empty' }, [
+      h('span', { svg: '<svg viewBox="0 0 200 60" aria-hidden="true"><path d="M24 36C60 36 64 24 100 24S140 36 176 36" fill="none" stroke="#D3BE93" stroke-width="3" stroke-dasharray="1 8" stroke-linecap="round"/><circle cx="24" cy="36" r="9" fill="#FFFDF8" stroke="#E2BE55" stroke-width="3.5"/><circle cx="100" cy="24" r="9" fill="#FFFDF8" stroke="#E2BE55" stroke-width="3.5"/><circle cx="176" cy="36" r="9" fill="#FFFDF8" stroke="#E2BE55" stroke-width="3.5"/><use href="#leaf" x="34" y="2" width="20" height="20" transform="rotate(28 44 12)" style="color:#F2A20F"/></svg>' }),
+      h('p', { text: '還沒有路線。勾選 2～3 個景點後，按「產生推薦散步路線」。' })
+    ]));
+  }
+
+  /* 產生中的計時器；產生期間停用勾選與「清除選擇」 */
+  var pendingGen = null;
+  function setBusy(on) {
+    var btn = $('#genBtn');
+    btn.disabled = on;
+    if (on) btn.setAttribute('aria-busy', 'true'); else btn.removeAttribute('aria-busy');
+    $('#pickSet').disabled = on;
+  }
+  function cancelPending() {
+    if (pendingGen !== null) { clearTimeout(pendingGen); pendingGen = null; }
+    setBusy(false);
+  }
+
+  /* 產生路線：檢查 → 短暫的產生中狀態 → 渲染時間軸 */
+  function onGenerate(ev) {
+    ev.preventDefault();
+    if (pendingGen !== null) return;
+    if (selected.length < 2) {
+      showMsg(selected.length === 0 ? '請先勾選 2～3 個景點，才能產生散步路線。' : '目前只選了 1 個景點，請再勾選 1～2 個。', 'warn');
+      flashCounter();
+      var first = document.querySelector('#pickList input:not(:checked)');
+      if (first) first.focus();
+      return;
+    }
+    if (selected.length > 3) { showMsg('最多只能選 3 個景點，請取消多的景點。', 'warn'); return; }
+    var picked = selected.slice();   /* 以按下按鈕當下的選擇為準 */
+    setBusy(true);
+    showMsg('');
+    var out = $('#routeOut');
+    out.innerHTML = '';
+    out.appendChild(h('div', { class: 'route-empty is-loading' }, h('p', { text: '正在排出路線…' })));
+    pendingGen = setTimeout(function () {
+      pendingGen = null;
+      setBusy(false);
+      /* 再檢查一次（防呆）：不是 2～3 站就回到空狀態 */
+      if (picked.length < 2 || picked.length > 3) { renderEmpty(); return; }
+      var info = renderRoute(picked);
+      if (!info) return;
+      /* 狀態列只念一句摘要；長的路線內容不再自動朗讀 */
+      showMsg('已產生 ' + info.stops + ' 站路線，直線距離合計約 ' + info.km + ' km，詳見下方。', 'ok');
+      /* 把結果捲進畫面，並把焦點移到路線標題 */
+      var title = $('#routeOut .route-title');
+      var rect = title.getBoundingClientRect();
+      if (rect.top > window.innerHeight * 0.6 || rect.top < 0) title.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+      try { title.focus({ preventScroll: true }); } catch (e) { title.focus(); }
+    }, REDUCED ? 0 : 380);
+  }
+
+  function renderRoute(keys) {
+    /* 防呆：少於 2 站不畫路線 */
+    if (!keys || keys.length < 2) { renderEmpty(); return null; }
+    var res = bestOrder(keys);
+    var stops = res.order.map(function (k) { return BY_KEY[k]; });
+    var legs = [];
+    var total = 0, walkMin = 0, transitCount = 0;
+    for (var i = 0; i < stops.length - 1; i++) {
+      var d = haversine(stops[i], stops[i + 1]);
+      var min = Math.max(1, Math.round(d / WALK_M_PER_MIN));
+      var mode = d <= WALK_LIMIT_M ? 'walk' : 'transit';
+      legs.push({ a: stops[i], b: stops[i + 1], d: d, min: min, mode: mode });
+      total += d;
+      if (mode === 'walk') walkMin += min; else transitCount++;
+    }
+
+    var out = $('#routeOut');
+    out.innerHTML = '';
+    hasRoute = true;
+    var route = h('div', { class: 'route' });
+
+    route.appendChild(h('h3', { class: 'route-title', tabindex: '-1' }, [
+      '推薦散步路線',
+      h('small', { text: res.changed ? '已依直線距離排成總距離最短的順序' : (stops.length === 3 ? '依勾選順序（已是直線距離最短）' : '依勾選順序') })
+    ]));
+
+    /* 摘要數字 */
+    var stats = h('dl', { class: 'stats' }, [
+      h('div', { class: 'stat' }, [h('dt', { text: '景點' }), h('dd', null, [String(stops.length), h('small', { text: '站' })])]),
+      h('div', { class: 'stat' }, [h('dt', { text: '直線距離合計' }), h('dd', null, [(total / 1000).toFixed(1), h('small', { text: 'km' })])]),
+      h('div', { class: 'stat' }, transitCount
+        ? [h('dt', { text: '步行段／搭車段' }), h('dd', null, [String(legs.length - transitCount), h('small', { text: '段' }), ' / ' + transitCount, h('small', { text: '段' })])]
+        : [h('dt', { text: '步行估算' }), h('dd', null, [String(walkMin), h('small', { text: '分鐘' })])])
+    ]);
+    route.appendChild(stats);
+    /* 有搭車段時，另外說明步行段合計；全程搭車時改給建議，不顯示「0 分鐘」 */
+    var estExtra = '';
+    if (transitCount && walkMin > 0) estExtra = '步行段合計約 ' + walkMin + ' 分鐘。';
+    else if (transitCount) estExtra = '本路線各段直線皆超過約 3 km，建議全程搭乘大眾運輸。';
+    route.appendChild(h('p', { class: 'est-label' }, unitKids('距離與時間：依直線距離估算，不含繞路與停留（步行以每分鐘 80 m 計）。' + estExtra)));
+
+    /* 路線相對位置示意圖 */
+    var sk = sketchSvg(stops, legs);
+    route.appendChild(h('figure', { class: 'sketch' }, [
+      h('div', { svg: sk.svg }),
+      h('figcaption', null, phrases(['相對位置示意：', '依概略座標繪製，', '以直線連接，', '不是實際道路。', '實線＝建議步行，',
+        '虛線＝建議搭乘大眾運輸' + (sk.compressed ? '；' : '。')].concat(sk.compressed ? ['跨區的長距離路段長度已壓縮', '（以 // 斷線記號標示）。'] : [])))
+    ]));
+
+    /* 時間軸：站點與路段交錯 */
+    var tl = h('ol', { class: 'timeline' });
+    var n = 0;
+    stops.forEach(function (s, i) {
+      var stop = h('li', { class: 'stop', style: 'animation-delay:' + (n++ * 0.07) + 's' + (i < legs.length ? ';--rail-stop:' + (legs[i].mode === 'walk' ? 'var(--amber)' : 'var(--umber)') : '') });
+      var tag = i === 0 ? '起點' : (i === stops.length - 1 ? '終點' : '第 ' + (i + 1) + ' 站');
+      /* 數字＋單位不拆行；最近車站一列只在空格、標點處換行（日文站名完整） */
+      var meta = h('ul', { class: 'stop-meta' }, [
+        h('li', null, [h('b', { text: '季節示意' }), stageLabel(NOW_STAGE) + '（推估）']),
+        h('li', null, [h('b', { text: '開放' })].concat(unitKids(s.brief))),
+        h('li', { class: 'acc' }, [h('b', { text: '最近車站（官方）' })].concat(unitKids(s.near)))
+      ]);
+      if (s.key === 'gyoen') meta.appendChild(h('li', null, [h('b', { text: '注意' }), '大木戸門 2026-10-06～11 月下旬（預定）通行管制']));
+      if (s.key === 'showa') meta.appendChild(h('li', null, [h('b', { text: '補充' })].concat(unitKids('かたらいのイチョウ並木在園區西側（距西立川口約 730 m，確切位置未核實），與カナール是兩處並木'))));
+      stop.appendChild(h('span', { class: 'dot', 'aria-hidden': 'true', text: String(i + 1) }));
+      stop.appendChild(h('div', { class: 'stop-body' }, [
+        h('span', { class: 'stop-tag', text: tag }),
+        h('h4', { class: 'stop-name', lang: 'ja', text: s.ja }),
+        h('p', { class: 'stop-zh', text: s.zh + '・' + s.point }),
+        meta
+      ]));
+      tl.appendChild(stop);
+
+      if (i < legs.length) {
+        var L = legs[i];
+        var leg = h('li', { class: 'leg ' + L.mode, style: 'animation-delay:' + (n++ * 0.07) + 's' });
+        leg.appendChild(h('span', { class: 'leg-ic', svg: L.mode === 'walk' ? ICON.walk : ICON.train, 'aria-hidden': 'true' }));
+        var card = h('div', { class: 'leg-card' });
+        if (L.mode === 'walk') {
+          add(card, [
+            h('span', { class: 'leg-mode', text: '步行：' + L.a.short + ' → ' + L.b.short }),
+            /* 數字與單位成組不拆行：「直線 約 1.6 km」・「步行約 20 分鐘」 */
+            h('span', { class: 'leg-figs' }, [h('span', { class: 'nw', text: '直線 ' + fmtDist(L.d) }), '・', h('span', { class: 'nw', text: '步行' + fmtMin(L.min) })]),
+            h('span', { class: 'leg-note', text: '依直線距離估算，不含繞路與停留' }),
+            h('a', { class: 'leg-link', href: gmaps(L.a, L.b, 'walking'), target: '_blank', rel: 'noopener noreferrer' }, [h('span', { svg: ICON.map, style: 'display:inline-flex' }), phrases(['在 Google 地圖', '查看這段步行路線'])])
+          ]);
+        } else {
+          add(card, [
+            h('span', { class: 'leg-mode', text: '建議搭乘大眾運輸：' + L.a.short + ' → ' + L.b.short }),
+            h('span', { class: 'leg-figs', text: '直線 ' + fmtDist(L.d) }),
+            h('span', { class: 'leg-note' }, unitKids('依直線距離估算，不含繞路與停留；直線超過約 3 km，不建議步行（若步行' + fmtMin(L.min) + '）')),
+            h('ul', { class: 'leg-advice acc' }, [
+              h('li', null, [h('b', { text: '出發：' })].concat(unitKids(L.a.zh + '附近的' + L.a.near))),
+              h('li', null, [h('b', { text: '抵達：' })].concat(unitKids(L.b.zh + '附近的' + L.b.near)))
+            ]),
+            h('a', { class: 'leg-link', href: gmaps(L.a, L.b, 'transit'), target: '_blank', rel: 'noopener noreferrer' }, [h('span', { svg: ICON.map, style: 'display:inline-flex' }), phrases(['在 Google 地圖', '查詢大眾運輸路線'])]),
+            h('span', { class: 'leg-note', text: '轉乘建議：最近車站依官方資訊；實際路線與時間請以 Google 地圖查詢為準' })
+          ]);
+        }
+        leg.appendChild(card);
+        tl.appendChild(leg);
+      }
+    });
+    route.appendChild(tl);
+
+    /* 路線尾端：整條路線連結、季節與拍攝提醒 */
+    var foot = h('div', { class: 'route-foot' });
+    if (!transitCount) {
+      foot.appendChild(h('a', { class: 'btn btn-ghost', href: gmaps(stops[0], stops[stops.length - 1], 'walking', stops.slice(1, -1)), target: '_blank', rel: 'noopener noreferrer' }, [h('span', { svg: ICON.map, style: 'display:inline-flex' }), phrases(['用 Google 地圖', '開啟整條步行路線'])]));
+    }
+    foot.appendChild(routeTips(stops));
+    route.appendChild(foot);
+    out.appendChild(route);
+    return { stops: stops.length, km: (total / 1000).toFixed(1) };
+  }
+
+  /* 路線提醒：今日季節示意＋柔光時段與各站開放時間是否重疊 */
+  function routeTips(stops) {
+    var box = h('div', { class: 'tip-box' });
+    box.appendChild(h('h4', { text: '出發前提醒' }));
+    var ul = h('ul');
+    var off = TODAY - D;
+    if (NOW_STAGE < 3) ul.appendChild(h('li', null, unitKids('今天的季節示意是「' + STAGES[NOW_STAGE].name + '」；依平年值，見頃（最佳觀賞期）約從 11/23 開始' + (off < 0 ? '，還有 ' + (-off) + ' 天' : '') + '。')));
+    else if (NOW_STAGE === 3) ul.appendChild(h('li', { text: '今天的季節示意是「見頃（最佳觀賞期）」，但這是平年值推估，出發前請看各景點官方公告。' }));
+    /* 落葉始め～平年日後約 30 天：地面可能鋪滿落葉；再之後（含 1～3 月）已過落葉期 */
+    else if (off <= 30 && NOW.m > 3) ul.appendChild(h('li', { text: '今天的季節示意已進入「' + STAGES[NOW_STAGE].name + '」，地面可能鋪滿落葉，步行請留意腳下。' }));
+    else ul.appendChild(h('li', { text: '依平年值，銀杏已過落葉期（冬季多為裸木）；下一季見頃（最佳觀賞期）約從 11/23 開始。' }));
+
+    /* 今天依官方休園日休園的景點（新宿御苑週一休園另有完整說明） */
+    var closedToday = {};
+    if (SUN) {
+      var mStart = SUN.rise, mEnd = SUN.rise + 60, eStart = SUN.set - 60, eEnd = SUN.set;
+      ul.appendChild(h('li', null, unitKids('今日柔光時段：清晨 ' + hhmm(mStart) + '–' + hhmm(mEnd) + '、傍晚 ' + hhmm(eStart) + '–' + hhmm(eEnd) + '（東京）。')));
+      var open24 = [];
+      stops.forEach(function (s) {
+        /* 傳入今天的年、月、日、星期，才能判斷官方休園日與早朝開園日 */
+        var r = s.hoursFn ? s.hoursFn(NOW.m, NOW.d, NOW.y, NOW.wd) : null;
+        if (!r) return;
+        if (r.closed) {
+          closedToday[s.key] = true;
+          ul.appendChild(h('li', null, unitKids((r.own ? '' : s.zh + '：') + r.closed + '。')));
+          return;
+        }
+        if (r[0] === 0 && r[1] === 1440) { open24.push(s.zh); return; }
+        var msgs = [];
+        if (r[0] > mEnd) msgs.push(hhmm(r[0]) + ' 才開放，趕不上清晨柔光');
+        else if (r[0] > mStart) msgs.push(hhmm(r[0]) + ' 開放，只趕得上清晨柔光的後段');
+        if (r[1] <= eStart) msgs.push(hhmm(r[1]) + ' 閉園，傍晚柔光時段已無法入內');
+        else if (r[1] < eEnd) msgs.push(hhmm(r[1]) + ' 閉園，只趕得上傍晚柔光的前段');
+        /* 昭和紀念公園的秋の夜散歩：活動期間併入同一條提醒（官方：夜間只能從西立川口、立川口進出） */
+        if (s.nightWalk && s.nightWalk(NOW.m, NOW.d, NOW.y)) msgs.push('秋の夜散歩期間（10/29～11/29）點燈 16:30–20:30，開放至 21:00（最終入園 20:30）；夜間只能從西立川口、立川口進出');
+        /* 新宿御苑的早朝開園日：官方 7:00 開園，7:00–9:00 只開新宿門 */
+        var early = s.earlyFn && s.earlyFn(NOW.y, NOW.m, NOW.d) ? '今天是官方早朝開園日（7:00 開園，7:00–9:00 只開新宿門，入園料照常）' : '';
+        if (msgs.length) ul.appendChild(h('li', null, unitKids(s.zh + '：' + (early ? early + '；' : '') + '依官方開放時間，' + msgs.join('；') + '。')));
+        else if (early) ul.appendChild(h('li', null, unitKids(s.zh + '：' + early + '，清晨柔光時段可以入園。')));
+      });
+      if (open24.length) ul.appendChild(h('li', { text: '清晨或傍晚想拍柔光，可優先安排常時開放的地點：' + open24.join('、') + '。' }));
+    }
+    /* 新宿御苑的休園日規則只在路線包含新宿御苑、且今天不是休園日時提醒（休園日已在上面說明） */
+    var hasGyoen = stops.some(function (s) { return s.key === 'gyoen'; });
+    if (hasGyoen && !closedToday.gyoen) ul.appendChild(h('li', null, unitKids('新宿御苑每週一休園（遇假日順延至次一平日）、12/29～1/3 休園；特別開園期間（秋 11/1～11/15、春 3/25～4/24）無休。')));
+    ul.appendChild(h('li', { text: '開放時間、休園日以官方公告為準。' }));
+    box.appendChild(ul);
+    return box;
+  }
+
+  /* 路線相對位置示意圖（SVG）
+   *   以第一站為原點，依各路段的實際方位依序累加位置（公尺）。
+   *   若有跨區長路段（例如往立川），且最長／最短路段差超過 4 倍，
+   *   就把超過 3 km 的部分壓縮，並在線上畫「//」斷線記號；此時不畫比例尺。
+   *   底部預留一條空間放比例尺（或壓縮說明），站點不會壓到它。 */
+  function sketchSvg(stops, legs) {
+    var W = 340, H = 196, P = 36;
+    var rad = Math.PI / 180;
+    var ds = legs.map(function (L) { return L.d; });
+    var compress = legs.length > 1 && Math.max.apply(null, ds) / Math.min.apply(null, ds) > 4 &&
+      legs.some(function (L) { return L.d > WALK_LIMIT_M; });
+    function drawLen(d) { return compress && d > WALK_LIMIT_M ? WALK_LIMIT_M + (d - WALK_LIMIT_M) * 0.25 : d; }
+    var pts = [{ x: 0, y: 0, s: stops[0] }];
+    legs.forEach(function (L, i) {
+      var k = Math.cos((L.a.lat + L.b.lat) / 2 * rad);
+      var dx = (L.b.lng - L.a.lng) * k * 111320, dy = (L.b.lat - L.a.lat) * 110574;
+      var f = drawLen(L.d) / (Math.sqrt(dx * dx + dy * dy) || 1);
+      pts.push({ x: pts[i].x + dx * f, y: pts[i].y - dy * f, s: L.b });
+    });
+    var minX = Math.min.apply(null, pts.map(function (p) { return p.x; })), maxX = Math.max.apply(null, pts.map(function (p) { return p.x; }));
+    var minY = Math.min.apply(null, pts.map(function (p) { return p.y; })), maxY = Math.max.apply(null, pts.map(function (p) { return p.y; }));
+    var sx = Math.max(maxX - minX, 1), sy = Math.max(maxY - minY, 1);
+    /* 底部預留 18 px 給比例尺／壓縮說明，站點整體往上移 9 px，圓點不會壓到比例尺 */
+    var BOTTOM = 18;
+    var scale = Math.min((W - 2 * P - 60) / sx, (H - 2 * P - BOTTOM) / sy);   /* 每公尺幾個像素 */
+    var ox = (W - sx * scale) / 2, oy = (H - sy * scale) / 2 - BOTTOM / 2;
+    pts.forEach(function (p) { p.px = ox + (p.x - minX) * scale; p.py = oy + (p.y - minY) * scale; });
+
+    var g = '';
+    /* 底紋：方格交點上的淡色小點（像方眼紙），比整片格線安靜 */
+    var dots = '';
+    for (var gx = 20; gx < W; gx += 20) for (var gy = 18; gy < H; gy += 20) dots += 'M' + gx + ' ' + gy + 'h.01';
+    g += '<path d="' + dots + '" stroke="#E6D6B4" stroke-width="2.2" stroke-linecap="round"/>';
+    /* 路段：步行＝琥珀實線；大眾運輸＝赭褐虛線；壓縮路段加「//」斷線記號。
+       每條線底下先畫一道較粗的奶油色描邊，線與底紋分得開 */
+    legs.forEach(function (L, i) {
+      var a = pts[i], b = pts[i + 1];
+      var xy = 'x1="' + a.px.toFixed(1) + '" y1="' + a.py.toFixed(1) + '" x2="' + b.px.toFixed(1) + '" y2="' + b.py.toFixed(1) + '"';
+      g += '<line ' + xy + ' stroke="#FFFBF0" stroke-width="9" stroke-linecap="round"/>';
+      g += L.mode === 'walk'
+        ? '<line ' + xy + ' stroke="#D3861A" stroke-width="4" stroke-linecap="round"/>'
+        : '<line ' + xy + ' stroke="#7A4C27" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round"/>';
+      if (compress && L.d > WALK_LIMIT_M) {
+        var len = Math.sqrt(Math.pow(b.px - a.px, 2) + Math.pow(b.py - a.py, 2)) || 1;
+        var ux = (b.px - a.px) / len, uy = (b.py - a.py) / len, nx = -uy, ny = ux;
+        var mx = (a.px + b.px) / 2, my = (a.py + b.py) / 2;
+        g += '<line x1="' + (mx - ux * 7).toFixed(1) + '" y1="' + (my - uy * 7).toFixed(1) + '" x2="' + (mx + ux * 7).toFixed(1) + '" y2="' + (my + uy * 7).toFixed(1) + '" stroke="#FFFBF0" stroke-width="7"/>';
+        [-3.5, 3.5].forEach(function (o) {
+          var cx = mx + ux * o, cy = my + uy * o;
+          g += '<line x1="' + (cx + nx * 7 + ux * 2.5).toFixed(1) + '" y1="' + (cy + ny * 7 + uy * 2.5).toFixed(1) + '" x2="' + (cx - nx * 7 - ux * 2.5).toFixed(1) + '" y2="' + (cy - ny * 7 - uy * 2.5).toFixed(1) + '" stroke="#7A4C27" stroke-width="1.8" stroke-linecap="round"/>';
+        });
+      }
+    });
+    /* 左下角：比例尺（或壓縮說明）；先算好位置，名稱標籤會避開它與右上角的北方記號 */
+    var foot, footW;
+    if (!compress) {
+      /* 比例尺：挑一個不超過 110 px 的整數距離 */
+      var nice = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000];
+      var L = nice[0];
+      for (var j = 0; j < nice.length; j++) { if (nice[j] * scale <= 110) L = nice[j]; }
+      var lw = L * scale, lt = L >= 1000 ? (L / 1000) + ' km' : L + ' m';
+      footW = lw + 6 + lt.length * 6.5 + 4;
+      foot = '<g transform="translate(14 ' + (H - 16) + ')"><path d="M0 -5V0H' + lw.toFixed(1) + 'V-5" fill="none" stroke="#4F3B2A" stroke-width="1.5"/><text x="' + (lw + 6).toFixed(1) + '" y="0" font-size="11" fill="#4F3B2A" stroke="#FFFBF0" stroke-width="4" paint-order="stroke">' + lt + '</text></g>';
+    } else {
+      /* 說明列前面畫一個和線上相同的「//」斷線記號 */
+      footW = 17 + 13 * 11 + 4;
+      foot = '<g transform="translate(14 ' + (H - 16) + ')">' +
+        '<path d="M1.5 3.5L5.5 -6.5M6.5 3.5L10.5 -6.5" stroke="#7A4C27" stroke-width="1.8" stroke-linecap="round"/>' +
+        '<text x="17" y="2" font-size="11" fill="#4F3B2A" stroke="#FFFBF0" stroke-width="4" paint-order="stroke">長距離路段已壓縮，未依比例</text></g>';
+    }
+
+    /* 站點與名稱：相鄰路段偏水平時，名稱放在圓點上方或下方；偏垂直時放在左右側；並避開已放好的名稱 */
+    var boxes = [
+      { x1: 10, x2: 14 + footW, y1: H - 28, y2: H - 8 },        /* 比例尺／壓縮說明 */
+      { x1: W - 32, x2: W - 12, y1: 12, y2: 48 }                /* 北方記號 */
+    ];
+    function hit(b) { return boxes.some(function (q) { return b.x1 < q.x2 && b.x2 > q.x1 && b.y1 < q.y2 && b.y2 > q.y1; }); }
+    /* 站點：與下方時間軸相同的配色（起點金色實心、中途白底金環、終點深褐實心） */
+    pts.forEach(function (p, i) {
+      var first = i === 0, last = i === pts.length - 1;
+      var fill = first ? '#F2BD1D' : (last ? '#33241A' : '#FFFDF8');
+      var ring = first || last ? '#33241A' : '#F2A20F';
+      g += '<circle cx="' + p.px.toFixed(1) + '" cy="' + p.py.toFixed(1) + '" r="10.5" fill="' + fill + '" stroke="' + ring + '" stroke-width="2.6"/>';
+      g += '<text x="' + p.px.toFixed(1) + '" y="' + (p.py + 4.3).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + (last ? '#FFF8E8' : '#2A1E13') + '">' + (i + 1) + '</text>';
+      boxes.push({ x1: p.px - 12, x2: p.px + 12, y1: p.py - 12, y2: p.py + 12 });
+    });
+    /* 路段也是障礙物：名稱不壓在路線上。兩端各略過 12 px（那裡是站點圓點，已由圓點方框處理）；
+       壓縮路段中央的「//」記號另以小方框避開 */
+    var segs = legs.map(function (L, i) {
+      var a = pts[i], b = pts[i + 1];
+      var len = Math.sqrt(Math.pow(b.px - a.px, 2) + Math.pow(b.py - a.py, 2)) || 1;
+      var t = Math.min(12 / len, 0.5), dx = b.px - a.px, dy = b.py - a.py;
+      if (compress && L.d > WALK_LIMIT_M) boxes.push({ x1: (a.px + b.px) / 2 - 10, x2: (a.px + b.px) / 2 + 10, y1: (a.py + b.py) / 2 - 10, y2: (a.py + b.py) / 2 + 10 });
+      return { x1: a.px + dx * t, y1: a.py + dy * t, x2: b.px - dx * t, y2: b.py - dy * t };
+    });
+    /* 線段落在名稱方框（外擴 3 px，含文字白邊與線寬）內的長度：Liang–Barsky 線段裁切 */
+    function segIn(s, b) {
+      var dx = s.x2 - s.x1, dy = s.y2 - s.y1, t0 = 0, t1 = 1;
+      var p = [-dx, dx, -dy, dy], q = [s.x1 - (b.x1 - 3), (b.x2 + 3) - s.x1, s.y1 - (b.y1 - 3), (b.y2 + 3) - s.y1];
+      for (var k = 0; k < 4; k++) {
+        if (p[k] === 0) { if (q[k] < 0) return 0; continue; }
+        var r = q[k] / p[k];
+        if (p[k] < 0) { if (r > t1) return 0; if (r > t0) t0 = r; }
+        else { if (r < t0) return 0; if (r < t1) t1 = r; }
+      }
+      return (t1 - t0) * Math.sqrt(dx * dx + dy * dy);
+    }
+    function lineLen(b) { return segs.reduce(function (sum, s) { return sum + segIn(s, b); }, 0); }
+    function inside(b) { return b.x1 >= 4 && b.x2 <= W - 4 && b.y1 >= 4 && b.y2 <= H - 24; }
+    pts.forEach(function (p, i) {
+      var hx = 0, hy = 0;
+      [pts[i - 1], pts[i + 1]].forEach(function (q) {
+        if (!q) return;
+        var l = Math.sqrt(Math.pow(q.px - p.px, 2) + Math.pow(q.py - p.py, 2)) || 1;
+        hx += Math.abs(q.px - p.px) / l; hy += Math.abs(q.py - p.py) / l;
+      });
+      var tw = p.s.short.length * 13 + 6, th = 16;
+      /* 候選位置（離圓點由近到遠兩圈）：上、下、右、左（依路段方向決定優先順序），
+         再試四個斜角，以及靠左／靠右對齊圓點的上下位置 */
+      var cands = [];
+      [0, 10].forEach(function (e) {
+        var four = [
+          { x: p.px - tw / 2, y: p.py - 18 - th - e }, { x: p.px - tw / 2, y: p.py + 16 + e },
+          { x: p.px + 16 + e, y: p.py - th / 2 }, { x: p.px - 16 - e - tw, y: p.py - th / 2 }
+        ];
+        if (hx <= hy) four = p.px < W / 2 ? [four[2], four[3], four[0], four[1]] : [four[3], four[2], four[0], four[1]];
+        cands = cands.concat(four, [
+          { x: p.px + 10 + e, y: p.py - 14 - th - e }, { x: p.px - 10 - e - tw, y: p.py - 14 - th - e },
+          { x: p.px + 10 + e, y: p.py + 12 + e }, { x: p.px - 10 - e - tw, y: p.py + 12 + e },
+          { x: p.px - 8, y: p.py - 18 - th - e }, { x: p.px - tw + 8, y: p.py - 18 - th - e },
+          { x: p.px - 8, y: p.py + 16 + e }, { x: p.px - tw + 8, y: p.py + 16 + e }
+        ]);
+      });
+      var boxesOf = cands.map(function (q) { return { x1: q.x, x2: q.x + tw, y1: q.y, y2: q.y + th }; });
+      var pick = null;
+      for (var c = 0; c < boxesOf.length && !pick; c++) {
+        if (inside(boxesOf[c]) && !hit(boxesOf[c]) && lineLen(boxesOf[c]) === 0) pick = boxesOf[c];
+      }
+      /* 都擠不下時：把超出邊界的候選推回畫面內，選「重疊面積＋壓到的路線長度」最小的位置 */
+      if (!pick) {
+        var cost = function (b) {
+          return boxes.reduce(function (s, q) {
+            var ow = Math.min(b.x2, q.x2) - Math.max(b.x1, q.x1), oh = Math.min(b.y2, q.y2) - Math.max(b.y1, q.y1);
+            return s + (ow > 0 && oh > 0 ? ow * oh : 0);
+          }, 0) + lineLen(b) * 20;
+        };
+        var bestC = Infinity;
+        boxesOf.map(function (b) {
+          var x = Math.min(Math.max(b.x1, 4), W - 4 - tw), y = Math.min(Math.max(b.y1, 4), H - 24 - th);
+          return { x1: x, x2: x + tw, y1: y, y2: y + th };
+        }).forEach(function (b) { var v = cost(b); if (v < bestC) { bestC = v; pick = b; } });
+      }
+      boxes.push(pick);
+      g += '<text x="' + (pick.x1 + 3).toFixed(1) + '" y="' + (pick.y1 + 12.5).toFixed(1) + '" font-size="12.5" font-weight="700" fill="#2A1E13" stroke="#FFFBF0" stroke-width="4" paint-order="stroke">' + esc(p.s.short) + '</text>';
+    });
+    g += foot;
+    /* 北方：細圓環裡一根羅盤指針（北半深褐、南半留白），下方標 N */
+    g += '<g transform="translate(' + (W - 22) + ' 22)"><circle r="9" fill="#FFFBF0" stroke="#BFA472" stroke-width="1"/><path d="M0 -7L3 0H-3Z" fill="#4F3B2A"/><path d="M0 7L3 0H-3Z" fill="#FFFBF0" stroke="#4F3B2A" stroke-width=".9" stroke-linejoin="round"/><text x="0" y="23" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4F3B2A">N</text></g>';
+    return {
+      compressed: compress,
+      svg: '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="路線相對位置示意：' + esc(stops.map(function (s, i) { return (i + 1) + ' ' + s.short; }).join('，')) + '" font-family="Noto Sans TC, Zen Kaku Gothic New, sans-serif">' + g + '</svg>'
+    };
+  }
+
+  /* =========================================================
+   * 8. 當前天氣提示（Open-Meteo，日本氣象廳 JMA 模式）
+   *    取得失敗時顯示友善訊息與氣象廳東京預報連結，不丟出錯誤。
+   * ======================================================= */
+  var WEATHER_URL = 'https://api.open-meteo.com/v1/jma?latitude=35.6895&longitude=139.6917' +
+    '&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum' +
+    '&timezone=Asia%2FTokyo&forecast_days=1';
+  var JMA_FORECAST = 'https://www.jma.go.jp/bosai/forecast/#area_type=offices&area_code=130000';
+  /* 天氣授權標示的連結文字（換行時「CC BY 4.0」不拆開） */
+  function omAttrKids() { return ['天氣：Open-Meteo（日本氣象廳 JMA 模式），', h('span', { class: 'nw', text: 'CC BY 4.0' })]; }
+
+  /* WMO 天氣代碼 → 繁體中文 */
+  function wmoText(c) {
+    var map = { 0: '晴朗', 1: '大致晴朗', 2: '局部多雲', 3: '陰天', 45: '有霧', 48: '有霧（霧淞）',
+      51: '小毛毛雨', 53: '毛毛雨', 55: '較強毛毛雨', 56: '凍毛毛雨', 57: '凍毛毛雨',
+      61: '小雨', 63: '中雨', 65: '大雨', 66: '凍雨', 67: '凍雨', 71: '小雪', 73: '中雪', 75: '大雪', 77: '米雪',
+      80: '短暫陣雨', 81: '陣雨', 82: '強陣雨', 85: '陣雪', 86: '強陣雪', 95: '雷雨', 96: '雷雨伴有冰雹', 99: '雷雨伴有冰雹' };
+    return map.hasOwnProperty(c) ? map[c] : '—';
+  }
+  function wmoKind(c) {
+    if (c === 0 || c === 1) return 'sun';
+    if (c === 2) return 'partly';
+    if (c === 3) return 'cloud';
+    if (c === 45 || c === 48) return 'fog';
+    if (c >= 95) return 'storm';
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'snow';
+    if (c >= 51) return 'rain';
+    return 'cloud';
+  }
+  var WICON = {
+    sun: '<circle cx="24" cy="24" r="8"/><path d="M24 6v5M24 37v5M6 24h5M37 24h5M11.3 11.3l3.5 3.5M33.2 33.2l3.5 3.5M11.3 36.7l3.5-3.5M33.2 14.8l3.5-3.5"/>',
+    partly: '<circle cx="18" cy="17" r="6"/><path d="M18 5v3M7 17H4M9.5 8.5l2 2M26.5 8.5l-2 2"/><path d="M16 36h19a7 7 0 0 0 0-14 9 9 0 0 0-17 3 5.5 5.5 0 0 0-2 11z"/>',
+    cloud: '<path d="M13 35h22a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-3 13z"/>',
+    rain: '<path d="M13 29h22a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-3 13z"/><path d="M17 34l-2 6M25 34l-2 6M33 34l-2 6"/>',
+    snow: '<path d="M13 29h22a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-3 13z"/><path d="M17 35v.1M24 38v.1M31 35v.1M20 41v.1M28 41v.1"/>',
+    fog: '<path d="M8 18h32M6 25h36M10 32h28M14 39h20"/>',
+    storm: '<path d="M13 28h22a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-3 13z"/><path d="M25 31l-4 7h6l-4 7"/>',
+    /* 夜間：晴朗改用月亮；局部多雲改用月亮＋雲 */
+    moon: '<path d="M29 9.5a15 15 0 1 0 10 25.5A12.5 12.5 0 0 1 29 9.5z"/>',
+    moonPartly: '<path d="M17.5 6.5a8.5 8.5 0 1 0 9.5 11.6 7 7 0 0 1-9.5-11.6z"/><path d="M16 36h19a7 7 0 0 0 0-14 9 9 0 0 0-17 3 5.5 5.5 0 0 0-2 11z"/>'
+  };
+  /* 依白天／夜間選圖示（is_day 缺值時照白天處理） */
+  function wKind(code, isDay) {
+    var k = wmoKind(code);
+    if (isDay === 0) { if (k === 'sun') return 'moon'; if (k === 'partly') return 'moonPartly'; }
+    return k;
+  }
+  function wIcon(kind) {
+    return '<svg class="w-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + WICON[kind] + '</svg>';
+  }
+  /* 依天氣給一句散步提示。
+     夜間（is_day＝0）：以今天白天的預報為準，不給逆光、柔光等白天拍攝建議；雨、雷、雪、霧的安全提醒照常 */
+  function weatherTip(cur, day, tmax, tmin, rain, isDay) {
+    var k = wmoKind(cur), kd = day === null ? null : wmoKind(day);
+    var night = isDay === 0;
+    var tips = [];
+    if (k === 'storm' || kd === 'storm') tips.push('今天可能有雷雨，請避免在大樹下停留，散步行程保留彈性。');
+    else if (k === 'rain' || kd === 'rain' || rain >= 1) tips.push('今天預報有雨，步道與落葉可能濕滑，建議穿防滑的鞋並帶傘。');
+    else if (k === 'snow' || kd === 'snow') tips.push('有降雪，路面濕滑，請注意保暖與腳下安全。');
+    else if (k === 'fog') tips.push(night ? '有霧，夜間能見度較低，步行請留意腳下與來車。' : '有霧，遠景能見度較低，可以改拍近景的葉片。');
+    else if (night) tips.push(day === null ? '目前是夜間，出發前請再確認天氣預報。'
+      : (kd === 'fog' ? '目前是夜間；今天白天預報' + wmoText(day) + '，步行請留意能見度。' : '目前是夜間；今天白天預報' + wmoText(day) + '，適合安排散步。'));
+    else if (k === 'cloud') tips.push('陰天光線柔和均勻，適合拍並木整體與近景。');
+    else tips.push('天氣穩定，適合散步；晴天逆光下的銀杏葉最透亮。');
+    if (tmax !== null && tmax >= 28) tips.push('氣溫偏高，記得補充水分。');
+    else if (tmin !== null && tmin <= 8) tips.push(night ? '早晚偏涼，夜間外出請多帶一件外套。' : '早晚偏涼，清晨拍攝請多帶一件外套。');
+    return tips.join('');
+  }
+  function num(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
+  function fmtT(v) { return v === null ? '—' : (Math.round(v * 10) / 10).toFixed(1) + '°'; }
+
+  function renderWeather(data) {
+    var body = $('#weatherBody');
+    var cur = data.current || {}, day = data.daily || {};
+    var t = num(cur.temperature_2m), code = num(cur.weather_code);
+    var dcode = day.weather_code ? num(day.weather_code[0]) : null;
+    var tmax = day.temperature_2m_max ? num(day.temperature_2m_max[0]) : null;
+    var tmin = day.temperature_2m_min ? num(day.temperature_2m_min[0]) : null;
+    var rain = day.precipitation_sum ? num(day.precipitation_sum[0]) : null;
+    if (t === null || code === null) throw new Error('incomplete');
+    var isDay = num(cur.is_day);
+    var fetched = tokyoNow();
+    /* 副標：每一小段不在字中間換行，段與段之間用「・」分隔 */
+    var parts = ['今日最高 ' + fmtT(tmax) + '／最低 ' + fmtT(tmin)];
+    if (dcode !== null) parts.push('預報 ' + wmoText(dcode));
+    if (rain !== null) parts.push('降水 ' + rain.toFixed(1) + ' mm');
+    var subLine = h('p', { class: 'sub num' });
+    parts.forEach(function (t2, i) {
+      if (i) subLine.appendChild(document.createTextNode('・'));
+      subLine.appendChild(h('span', { class: 'nw', text: t2 }));
+    });
+    body.innerHTML = '';
+    add(body, [
+      h('div', { class: 'w-row' }, [
+        h('span', { svg: wIcon(wKind(code, isDay)), style: 'display:inline-flex' }),
+        h('div', null, [h('p', { class: 'big', text: fmtT(t) }), h('span', { class: 'w-cond', text: wmoText(code) + (isDay === 0 ? '（夜間）' : '') })])
+      ]),
+      subLine,
+      h('p', { class: 'w-tip', text: weatherTip(code, dcode, tmax, tmin, rain || 0, isDay) }),
+      h('p', { class: 'fine', text: '東京都心（新宿附近）・取得於日本時間 ' + hhmm(fetched.min) }),
+      h('a', { class: 'src-link ext', href: 'https://open-meteo.com/', target: '_blank', rel: 'noopener noreferrer' }, omAttrKids())
+    ]);
+  }
+  function renderWeatherFail() {
+    var body = $('#weatherBody');
+    body.innerHTML = '';
+    add(body, [
+      /* 淡色雲朵圖示＋說明（只是外觀，文字不變） */
+      h('div', { class: 'w-row is-off' }, [
+        h('span', { svg: wIcon('cloud'), style: 'display:inline-flex' }),
+        h('p', { class: 'w-cond', text: '暫時無法取得即時天氣' })
+      ]),
+      h('p', { class: 'sub', text: '可能是離線或網路阻擋。其他功能不受影響，可以改看氣象廳的東京都天氣預報。' }),
+      h('a', { class: 'src-link ext', href: JMA_FORECAST, target: '_blank', rel: 'noopener noreferrer', text: '氣象廳：東京都天氣預報' })
+    ]);
+  }
+  function loadWeather() {
+    var box = $('#weather');
+    var done = false;
+    function finish(ok, data) {
+      if (done) return;
+      done = true;
+      box.setAttribute('aria-busy', 'false');
+      if (ok) { try { renderWeather(data); return; } catch (e) { /* 資料不完整時改顯示備用訊息 */ } }
+      renderWeatherFail();
+    }
+    if (!window.fetch) { finish(false); return; }
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); finish(false); }, 9000);
+    fetch(WEATHER_URL, ctrl ? { signal: ctrl.signal } : undefined)
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { clearTimeout(timer); finish(true, d); })
+      .catch(function () { clearTimeout(timer); finish(false); });
+  }
+
+  /* =========================================================
+   * 9. 最佳拍攝時間建議：以天文公式（NOAA 簡化式）計算東京日出日落
+   * ======================================================= */
+  function sunTimes(y, m, d, lat, lng) {
+    var rad = Math.PI / 180;
+    var N = dayNum(y, m, d) - dayNum(y, 1, 1) + 1;
+    var gamma = 2 * Math.PI / 365 * (N - 1);
+    var eq = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+    var decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma) - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+    var cosH = Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl);
+    var ha = Math.acos(Math.max(-1, Math.min(1, cosH))) / rad;
+    return { rise: 720 - 4 * (lng + ha) - eq + 540, set: 720 - 4 * (lng - ha) - eq + 540 };
+  }
+  var SUN = null;
+  function renderPhoto() {
+    var s = sunTimes(NOW.y, NOW.m, NOW.d, 35.6895, 139.6917);
+    SUN = { rise: Math.round(s.rise), set: Math.round(s.set) };
+    var now = tokyoNow().min;
+    var mA = SUN.rise, mB = SUN.rise + 60, eA = SUN.set - 60, eB = SUN.set;
+    var inM = now >= mA && now <= mB, inE = now >= eA && now <= eB;
+    var body = $('#photoBody');
+    body.innerHTML = '';
+    var status = inM || inE ? '現在正是柔光時段' : (now > eB ? '今天的柔光時段已過，明天時間相近' : (now < mA ? '清晨柔光時段還沒開始' : '下一段柔光：傍晚 ' + hhmm(eA) + ' 起'));
+    /* 一天的光線條（純裝飾、不念出）：0:00–24:00 中，白天、兩段柔光與現在時刻的相對位置；
+       數值與上面文字完全相同，只是換成圖形 */
+    function pc(min) { return (Math.max(0, Math.min(1440, min)) / 1440 * 100).toFixed(2) + '%'; }
+    var bar = h('div', { class: 'daybar', 'aria-hidden': 'true' }, [
+      h('span', { class: 'db-day', style: 'left:' + pc(mA) + ';width:' + pc(eB - mA) }),
+      h('span', { class: 'db-gold am', style: 'left:' + pc(mA) + ';width:' + pc(mB - mA) }),
+      h('span', { class: 'db-gold pm', style: 'left:' + pc(eA) + ';width:' + pc(eB - eA) }),
+      h('span', { class: 'db-tick', style: 'left:25%' }), h('span', { class: 'db-tick', style: 'left:50%' }), h('span', { class: 'db-tick', style: 'left:75%' }),
+      h('span', { class: 'db-now', style: 'left:' + pc(now) })
+    ]);
+    add(body, [
+      h('div', { class: 'gold-rows' }, [
+        h('div', { class: 'gold-row' + (inM ? ' is-now' : '') }, [h('span', { class: 'lab', text: '清晨' }), h('span', { class: 'val', text: hhmm(mA) + '–' + hhmm(mB) })]),
+        h('div', { class: 'gold-row' + (inE ? ' is-now' : '') }, [h('span', { class: 'lab', text: '傍晚' }), h('span', { class: 'val', text: hhmm(eA) + '–' + hhmm(eB) })])
+      ]),
+      bar,
+      h('span', { class: 'now-note', text: status }),
+      h('p', { class: 'sub' }, unitKids('日出後約 1 小時、日落前約 1 小時光線柔和，斜射光讓銀杏葉更有層次。這是一般攝影建議，不是各景點的實測。')),
+      h('p', { class: 'fine num' }, unitKids('日出 ' + hhmm(SUN.rise) + '・日落 ' + hhmm(SUN.set) + '（東京都心，依天文公式（NOAA）計算，可能有 1～2 分鐘誤差）'))
+    ]);
+  }
+
+  /* =========================================================
+   * 10. 頁尾資料來源（各景點官方連結、氣象廳、課程資料表、天氣授權）
+   * ======================================================= */
+  function renderFooter() {
+    var grid = $('#footerGrid');
+    function col(title, items, note) {
+      var c = h('div', { class: 'f-col' }, h('h3', { text: title }));
+      if (items && items.length) c.appendChild(h('ul', { class: 'f-links' }, items.map(function (it) {
+        /* 連結文字可以是字串，或是已分段（含不換行片段）的節點陣列 */
+        var isKids = Array.isArray(it[0]);
+        return h('li', null, h('a', { class: 'ext', href: it[1], target: '_blank', rel: 'noopener noreferrer', text: isKids ? null : it[0] }, isKids ? it[0] : null));
+      })));
+      (note || []).forEach(function (t) { c.appendChild(h('p', { class: 'f-note', text: t })); });
+      return c;
+    }
+    var c1 = h('div');
+    c1.appendChild(col('課程資料與季節推估', [
+      ['課程資料表：東京銀杏官方來源整理（Google 試算表）', 'https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?gid=164385659'],
+      ['氣象廳：いちょうの黄葉日', 'https://www.data.jma.go.jp/sakura/data/phn_012.html'],
+      ['氣象廳：いちょうの落葉日', 'https://www.data.jma.go.jp/sakura/data/phn_013.html'],
+      ['氣象廳：生物季節觀測累年值', 'https://www.data.jma.go.jp/sakura/data/download_ruinenchi.html'],
+      ['氣象廳：生物季節觀測的定義', 'https://www.data.jma.go.jp/kagoshima/obs/seibutsu_kisetsu.html']
+    ], ['季節階段：依氣象廳東京平年值推估之季節示意，非各園實測。全東京共用同一季節推估。']));
+    c1.appendChild(col('天氣與拍攝時間', [
+      [omAttrKids(), 'https://open-meteo.com/'],
+      ['授權條款：CC BY 4.0', 'https://creativecommons.org/licenses/by/4.0/'],
+      ['氣象廳：東京都天氣預報', JMA_FORECAST]
+    ], ['日出、日落依天文公式計算；柔光時段為一般攝影建議。']));
+    grid.appendChild(c1);
+
+    var half = Math.ceil(SPOTS.length / 2);
+    [SPOTS.slice(0, half), SPOTS.slice(half)].forEach(function (group, gi) {
+      var c = h('div');
+      group.forEach(function (s) {
+        c.appendChild(col(s.zh + '（' + s.sheet + '）', s.links));
+      });
+      if (gi === 1) c.appendChild(h('p', { class: 'f-note', text: '座標為近似值；路線距離依直線距離估算，不含繞路與停留；轉乘建議的最近車站依官方資訊，實際路線與時間請以 Google 地圖查詢為準。' }));
+      grid.appendChild(c);
+    });
+  }
+
+  /* =========================================================
+   * 啟動
+   * ======================================================= */
+  function init() {
+    renderToday();
+    renderBand();
+    renderBoard();
+    renderPicker();
+    renderEmpty();
+    renderPhoto();
+    renderFooter();
+    $('#planForm').addEventListener('submit', onGenerate);
+    $('#clearBtn').addEventListener('click', clearAll);
+    loadWeather();
+    /* 每 30 秒更新時鐘與柔光時段狀態（只改文字，不重排版面） */
+    setInterval(function () { updateClock(); renderPhoto(); }, 30000);
+  }
+  init();
+})();
+</script>
+</body>
+</html>

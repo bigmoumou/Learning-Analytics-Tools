@@ -219,7 +219,7 @@ if (fs.existsSync(worksDataPath)) {
     const html = fs.readFileSync(f, "utf8");
     for (const m of html.matchAll(/\s(?:href|src)\s*=\s*["']([^"']+)["']/gi)) {
       const ref = m[1].trim();
-      if (/^(https?:|\/\/|mailto:|tel:|data:|javascript:|#|\{|\$)/i.test(ref) || ref.includes("${")) continue;
+      if (/^(https?:|\/\/|mailto:|tel:|data:|javascript:|#|%23|\{|\$)/i.test(ref) || ref.includes("${")) continue;
       const target = resolveRef(f, ref);
       if (target && !exists(target)) warn(`${rel(f)}：${ref} 找不到（學生的網頁）`);
     }
