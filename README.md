@@ -69,6 +69,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 網站上方的「[作品集](https://learning-analytics-tools.pages.dev/works/)」展示學生同意公開的作業網頁：
 
 - 依作業分類（第一個是 Week 4 的 HW1），每件作品一張縮圖；點開後直接在網站裡瀏覽學生做的網頁，可以切換上一位、下一位，或在新分頁開啟。
+- 老師推薦的作品標上 ★（最多三顆），排在最前面，給同學參考。
 - 只收錄學生同意公開的作品（同意公開也包括放在這個公開的 GitHub repo），學生也可以隨時要求撤下。
 - 作品只以遮蔽後的學號標示（通常只露出前 2 碼和後 2 碼，和別人重複時再多露出一碼，直到分得開）；完整學號與對照表不會放進這個公開的 repo。
 - 學生作品的著作權屬於學生本人，不適用本專案的授權（見「授權」與 [NOTICE.md](NOTICE.md)）。
@@ -245,6 +246,7 @@ The site follows one format, "every week: short videos and a few key points", so
 The [showcase](https://learning-analytics-tools.pages.dev/works/) (作品集 in the site's top bar) shows homework web pages that students have agreed to publish:
 
 - Work is grouped by assignment (the first is HW1 in Week 4), with one thumbnail per piece. Opening a piece shows the student's web page inside the site, with buttons to move to the previous or next student or to open the page in a new tab.
+- Work the teacher recommends is marked with ★ (up to three) and listed first, as an example for classmates.
 - Only work that students agree to publish is included (consent covers hosting in this public GitHub repository), and students can ask for their work to be taken down at any time.
 - Each piece is labeled only by a masked student ID that normally shows just the first two and last two characters (one more character at a time if two IDs would otherwise look the same). Full student IDs and the lookup table never go into this public repository.
 - Student work remains the copyright of the student who made it and is not covered by this project's licenses (see "License" and [NOTICE.md](NOTICE.md)).
