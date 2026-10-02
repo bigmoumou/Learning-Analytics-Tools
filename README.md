@@ -28,11 +28,12 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 - AI 教學影片的做法：見下方「AI 教學影片怎麼做」，從教材來源、動態素材、三個方案、結構化 prompt，到審查與發布。
 - 教學影片生成 prompt 與製作經驗（規劃中）：每支影片的結構化 prompt（`brief.md`）、素材規格、審查紀錄和學到的教訓，移除個人資訊後陸續公開。
 
-### 教育意義
+### 教學目標
 
-- AI 示範教學：這門課教學生實際使用 AI 程式助理（AI coding agent），包括工作資料夾與路徑、用 `AGENTS.md` 當長期記憶、管理上下文，以及讓 AI 操作瀏覽器。教材影片本身也是在教師指導下用 AI 工具做出來的。學生看到課程內容，也同時看到一套完整的做法：教師負責教材、方向和品質，AI 負責大部分的製作工作。
-- 學生參與：短影片、可以點的章節和精簡的重點，讓學生挑自己需要的段落回看。作業影片帶學生動手。影片先呈現一個常見的錯誤（把整份題目一次貼給 AI），再示範比較好的做法：先規劃 `AGENTS.md` 的規則，把資料存在本地並自己確認。學生依這個做法，用 Codex 完成一個真實的資料收集任務。課堂練習的作品之後會在網站上展示（即將推出）。
-- 教材的嚴謹：影片裡的事實只取自教師的投影片與教材，投影片上的錯字會更正而不照抄。作業影片不揭露答案，美術館的營業時間和票價以灰色長條代替，留給學生自己找。影片中的學生是虛構角色「小安」，畫面模仿真實的介面（Week 4 的 Blockbench 段落是教師實際操作的瀏覽器錄影），但不出現真實的帳號、路徑或學生資料。
+- 學會使用 AI Agent：學習分析工具課程教學生實際使用 AI Agent（例如 Codex 這類 AI 程式助理），包括工作資料夾與路徑、用 `AGENTS.md` 當長期記憶、管理上下文，以及讓 AI 操作瀏覽器。
+- AI 示範教學：教材影片本身也是在教師指導下用 AI 工具做出來的。學生看到課程內容，也同時看到一套完整的做法：教師負責教材、方向和品質，AI 負責大部分的製作工作。
+- 學生參與：短影片、可以點的章節和精簡的重點，讓學生挑自己需要的段落回看；作業影片示範常見的錯誤和比較好的做法，再讓學生用 AI Agent 動手完成實際的任務。課堂練習的作品之後會在網站上展示（即將推出）。
+- 教材的嚴謹：影片裡的事實只取自教師的投影片與教材。影片中的學生是虛構角色「小安」，畫面模仿真實的介面（Week 4 的 Blockbench 段落是教師實際操作的瀏覽器錄影），但不出現真實的帳號、路徑或學生資料。
 - 公開、可重複使用：程式碼開源、內容開放授權，製作方法寫在下方，prompt 與製作經驗也會陸續公開（規劃中）；其他教師可以檢視、改作，用在自己的課程（教材內容限非商業用途），不必從頭做起。
 
 ### AI 教學影片
@@ -52,7 +53,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 網站的形式是「每週：短影片＋幾則重點」，讓學生課後回來複習，也能和影片互動：
 
-- 作業：Week 3 影片 03 是作業說明。學生開一個新的專案資料夾和新的對話，只用 Codex 收集佛羅倫斯美術館的營業時間和票價：先請 Codex 規劃 `AGENTS.md` 的規則，看懂後補上自己的規則；資料存在本地，並自己打開檔案確認；最後用 Mermaid 在 `ARCHITECTURE.md` 畫出資料流程。提早做完的同學，可以再用 `@Build Web Apps` 做一個簡單的展示網站。
+- 作業：Week 3 影片 03 是作業說明。學生只用 AI Agent（Codex）動手完成一個資料收集任務：先規劃 `AGENTS.md` 的規則，把資料存在本地並自己確認，再用 Mermaid 在 `ARCHITECTURE.md` 畫出流程。提早做完的同學，可以再用 `@Build Web Apps` 做一個簡單的展示網站。
 - 章節：一週一頁，每支影片下方是章節和編號重點。點章節就跳到那個時間播放，正在播的章節會標示出來。
 - 時間連結：週次頁網址加上 `#t=30`，會從這週第一支影片的第 30 秒開始播放；加上 `#02-agents-md-context&t=30` 則指定某一支影片的某一秒。教師可以把連結貼給學生，指到要複習的那一刻，例如 [Week 3 影片 02 的第 30 秒](https://learning-analytics-tools.pages.dev/weeks/week03/#02-agents-md-context&t=30)。
 - 播放清單與觀看進度：一週有兩支以上影片時，頁面自動變成播放清單。每支有縮圖、長度和觀看進度，看到 95% 以上會打勾；播完會出現「下一支」，點了才播。沒選到的影片不會先下載，一次只播一支。桌機的清單在右側，手機的清單在播放器上方，可以左右滑動。
@@ -78,7 +79,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ![Week 3 影片 02〈AGENTS.md 與上下文管理〉的封面](weeks/week03/video/02-agents-md-context/poster.jpg)
 
-1. 教材來源：教師的投影片、先前的課程網頁或螢幕錄影。影片裡的事實只能來自這些來源；投影片上的錯字會更正，投影片刻意不揭曉的答案也維持不揭曉。
+1. 教材來源：教師的投影片、先前的課程網頁或螢幕錄影。影片裡的事實只能來自這些來源。
 2. 動態素材先確認：投影片先由 Claude Code 的子代理做成一段段 12–20 秒的動態畫面（HTML/CSS/JS），教師在總覽頁確認後才規劃影片。這一步從 Week 3 影片 02 開始採用。
 3. 三個方案：提出三個方向不同的影片方案（穩健、新的視覺語言、大膽的結構），各附一張預覽畫面或幾秒的試片，由教師選定。Week 3 影片 03 沿用影片 02 的做法，省略了這一步。
 4. 結構化 prompt：選定後寫成 `brief.md`，分成 `<role>` `<inputs>` `<direction>` `<structure>` `<build>` `<gotchas>` `<start>` 等區塊（Week 3 影片 03 沒有 `<start>`），是這支影片完整的製作指示，也可以換個主題重複使用。這些 `brief.md` 就是規劃公開的「教學影片生成 prompt」。
@@ -99,7 +100,6 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 | 製作經驗：逐輪審查紀錄與整理過的教訓 | 規劃中，整理後公開 |
 | 製作專案（場景程式、音訊腳本）與 mp4 原檔 | 目前不在這個 repo；repo 只放要公開的成品 |
 | 原始投影片、螢幕錄影原檔、介面截圖（Week 4 影片 01 只放剪輯、加速後的片段） | 不公開：含未發布的教材或個人資訊 |
-| 作業答案（例如美術館實際的營業時間與票價） | 不公開：留給學生自己找 |
 
 公開 prompt 與經驗之前，會先移除本機路徑、帳號和私人備註，把只在本機能用的指令改成通用的寫法；用到 opus-video skill 的文字或程式時，會保留原作者的 MIT 授權聲明。公開的每個檔案都會標明授權，其中的腳本與程式以 MIT 授權。
 
@@ -204,11 +204,12 @@ This repository is the website itself; every file the site serves is here.
 - The method behind the AI teaching videos: see "How the AI teaching videos are made" below, from source material, animated materials, three plans and the structured prompt to review and publishing.
 - Teaching-video prompts and production experience (planned): each video's structured prompt (`brief.md`), the material specs, review logs and lessons, released step by step once personal details are removed.
 
-### Educational value
+### Teaching goals
 
-- AI demonstration teaching: the course teaches students to use AI coding agents in practice, including working folders and paths, `AGENTS.md` as long-term memory, managing the context, and letting an AI control a browser. The teaching videos were themselves made with AI tools under the teacher's direction. So students see the course content and, at the same time, a complete way of working: the teacher is responsible for the material, the direction and the quality, and the AI does most of the production work.
-- Student participation: short videos, clickable chapters and concise key points let students go back to just the parts they need. The homework video gets students working. It first shows a common mistake (pasting the whole assignment into the AI at once), then a better way: plan the `AGENTS.md` rules first, save the data locally and open the file to check it. Students then follow it to complete a real data-collection task with Codex. Work from class exercises will be shown on the site later (coming soon).
-- Care with the material: facts in the videos come only from the teacher's slides and course material, and typos on the slides are corrected rather than copied. The homework video does not give away the answer: museum opening hours and ticket prices are shown as grey placeholder bars, left for students to find. The student in the videos is a fictional character, 小安 (An). The videos imitate real software interfaces (the Blockbench part of Week 4 is a real recording of the teacher's browser), but no real accounts, paths or student data appear.
+- Learning to use AI agents: the Learning Analytics Tools course teaches students to use AI agents (AI coding assistants such as Codex) in practice, including working folders and paths, `AGENTS.md` as long-term memory, managing the context, and letting an AI control a browser.
+- AI demonstration teaching: the teaching videos were themselves made with AI tools under the teacher's direction. So students see the course content and, at the same time, a complete way of working: the teacher is responsible for the material, the direction and the quality, and the AI does most of the production work.
+- Student participation: short videos, clickable chapters and concise key points let students go back to just the parts they need; the homework video shows a common mistake and a better way, and students then use an AI agent to complete a real task themselves. Work from class exercises will be shown on the site later (coming soon).
+- Care with the material: facts in the videos come only from the teacher's slides and course material. The student in the videos is a fictional character, 小安 (An). The videos imitate real software interfaces (the Blockbench part of Week 4 is a real recording of the teacher's browser), but no real accounts, paths or student data appear.
 - Open and reusable: the code is open source, the content is openly licensed, the production method is described below, and the prompts and production experience will follow (planned), so other teachers can inspect and adapt them and use them in their own courses (the course content non-commercially) instead of starting from scratch.
 
 ### AI teaching videos
@@ -228,7 +229,7 @@ The videos have no voice-over. Each one explains a single topic with animation, 
 
 The site follows one format, "every week: short videos and a few key points", so students can come back after class to review and interact with the videos:
 
-- Homework: Week 3 video 03 is the homework brief. Students open a new project folder and a new conversation and collect the opening hours and ticket prices of museums in Florence using only Codex. They first ask Codex to plan the rules in `AGENTS.md`, make sure they understand them and add their own; save the data locally and open the file to check it; and finally draw the data flow in `ARCHITECTURE.md` with Mermaid. Students who finish early can also build a simple showcase site with `@Build Web Apps`.
+- Homework: Week 3 video 03 is the homework brief. Using only an AI agent (Codex), students complete a data-collection task themselves: they plan the rules in `AGENTS.md` first, save the data locally and check it, and then draw the flow in `ARCHITECTURE.md` with Mermaid. Students who finish early can also build a simple showcase site with `@Build Web Apps`.
 - Chapters: one page per week, with each video's chapters and numbered key points below it. Clicking a chapter jumps to that time and plays, and the chapter currently playing is highlighted.
 - Time links: adding `#t=30` to a week page's address starts its first video at 30 seconds, and adding `#02-agents-md-context&t=30` picks a specific video and second. A teacher can send students a link to the exact moment to review, for example [Week 3 video 02 at 30 seconds](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#02-agents-md-context&t=30).
 - Playlist and watch progress: when a week has two or more videos, the page turns into a playlist. Each video has a thumbnail, its length and the viewer's progress, and gets a check mark at 95% or more; when a video ends, an "Up next" button appears and plays the next video only when clicked. Videos that are not selected are not downloaded in advance, and only one plays at a time. On desktop the list sits on the right; on phones it sits above the player as a row you can swipe.
@@ -254,7 +255,7 @@ The visuals are mainly animated web pages written in HTML, CSS and JavaScript an
 
 ![Poster of Week 3 video 02, "AGENTS.md and Context Management"](weeks/week03/video/02-agents-md-context/poster.jpg)
 
-1. Source material: the teacher's slides, an earlier course web page or a screen recording. Facts in a video may come only from these sources; typos on the slides are corrected, and answers a slide deliberately withholds stay hidden.
+1. Source material: the teacher's slides, an earlier course web page or a screen recording. Facts in a video may come only from these sources.
 2. Animated materials approved first: Claude Code subagents turn the slides into animated scenes of 12 to 20 seconds each (HTML/CSS/JS), and the video is planned only after the teacher approves them on an overview page. This step has been used since Week 3 video 02.
 3. Three plans: three clearly different plans are proposed (a safe one, a new visual language, a bold structure), each with a preview still or a few-second clip, and the teacher picks one. Week 3 video 03 reused the approach of video 02 and skipped this step.
 4. A structured prompt: the chosen plan is written up as `brief.md`, in up to seven blocks (`<role>` `<inputs>` `<direction>` `<structure>` `<build>` `<gotchas>` `<start>`; Week 3 video 03 has no `<start>`). It is the complete production instruction for that video and can be reused with a new topic. These `brief.md` files are the teaching-video prompts planned for release.
@@ -275,7 +276,6 @@ The visuals are mainly animated web pages written in HTML, CSS and JavaScript an
 | Production experience: round-by-round review logs and the lessons drawn from them | Planned, to be released once cleaned up |
 | Production projects (scene code, audio scripts) and master mp4 files | Not in this repository for now; it holds only the published results |
 | Original slides, raw screen recordings and interface screenshots (Week 4 video 01 contains only a cut, sped-up excerpt) | Not public: they contain unreleased material or personal details |
-| Homework answers (such as the museums' actual hours and prices) | Not public: left for students to find |
 
 Before the prompts and experience are released, local paths, account names and private notes will be removed, and commands that only work on the teacher's machine will be rewritten in a generic form. Wherever the text or scripts of the opus-video skill are used, its author's MIT license notice will be kept. Each released file will state its license, and the scripts and code among them will be under MIT.
 
