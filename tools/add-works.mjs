@@ -1,6 +1,6 @@
 // 匯入學生作品到作品集：
-//   node tools/add-works.mjs <分類代號> <學生作品資料夾> [--title "第一次課堂練習"] [--week 3]
-//   例：node tools/add-works.mjs class-01 "../製作/works/class-01/收到的作品"
+//   node tools/add-works.mjs <分類代號> <學生作品資料夾> [--title "HW1"] [--week 4]
+//   例：node tools/add-works.mjs hw1 "../製作/works/hw1/收到的作品"
 //
 // <學生作品資料夾> 裡每位學生一個資料夾或一個 .zip，名稱以學號開頭（例如 41000000A、41000000A_姓名.zip）。
 // 每份作品要有 index.html；只有一個 .html 時會自動補一個 index.html 轉過去；包了一層資料夾也找得到。
@@ -31,7 +31,7 @@ const JUNK = new Set(["__MACOSX", ".DS_Store", "Thumbs.db", "desktop.ini", ".git
 const TEXT = new Set([".html", ".htm", ".css", ".js", ".mjs", ".json", ".md", ".txt", ".csv", ".svg", ".xml"]);
 
 /* ---------- 參數 ---------- */
-const usage = '用法：node tools/add-works.mjs <分類代號> <學生作品資料夾> [--title "第一次課堂練習"] [--week 3]';
+const usage = '用法：node tools/add-works.mjs <分類代號> <學生作品資料夾> [--title "HW1"] [--week 4]';
 const args = process.argv.slice(2);
 const opt = (name) => { const i = args.indexOf(name); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v; };
 const title = opt("--title");

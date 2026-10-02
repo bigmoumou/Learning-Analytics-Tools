@@ -4,18 +4,18 @@
    - 每件作品在 works/<分類>/<code>/，縮圖在 works/<分類>/_thumbs/<code>.jpg。 */
 window.WORKS = [
   {
-    "slug": "class-01",
-    "title": "第一次課堂練習",
-    "week": 3,
+    "slug": "hw1",
+    "title": "HW1",
+    "week": 4,
     "i18n": {
       "zh-Hans": {
-        "title": "第一次课堂练习"
+        "title": "HW1"
       },
       "en": {
-        "title": "Class Exercise 1"
+        "title": "HW1"
       },
       "vi": {
-        "title": "Bài tập trên lớp 1"
+        "title": "HW1"
       }
     },
     "items": []
