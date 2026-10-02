@@ -47,7 +47,7 @@ Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片中重現或提到
 
 ### 學生作品
 
-網站的學生作品展示即將推出，目前尚未上線，也還沒有收錄任何作品。上線後：
+網站的學生作品展示（作品集，https://learning-analytics-tools.pages.dev/works/，檔案在 `works/`）：
 
 - 著作權：`works/` 裡每位學生的作品資料夾及其縮圖，著作權屬於學生本人，不適用本專案的 MIT 或 CC BY-NC-SA 4.0 授權。除了下面說的 GitHub 上的檢視與 fork，未經作者同意，請勿重製、改作或散布。
 - 公開：只展示學生同意公開的作品。學生同意公開，也包括作品放在這個公開的 GitHub repo；依 GitHub 服務條款，其他使用者可以在 GitHub 上檢視與 fork。
@@ -107,7 +107,7 @@ The videos were made with Claude Code (Anthropic), using the opus-video skill (C
 
 ### Student work
 
-The site's student work showcase is coming soon. It is not live yet, and no student work has been added. Once it is live:
+The site's student work showcase (https://learning-analytics-tools.pages.dev/works/; files under `works/`):
 
 - Copyright: each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this project's MIT or CC BY-NC-SA 4.0 licenses. Apart from viewing and forking on GitHub as described below, do not copy, adapt or redistribute them without the author's permission.
 - Publication: only work that students agree to publish is shown. Consent covers hosting in this public GitHub repository, where GitHub's Terms of Service let other users view and fork it on GitHub.

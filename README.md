@@ -1,8 +1,8 @@
 # AI 影片示範教學網站：Learning Analytics Tools（NTNU）
 
-國立臺灣師範大學學習分析工具課程的 AI 示範教學網站：AI 教學影片、學生參與的互動複習，以及即將推出的學生作品展示。網站程式開源（MIT），AI 教學影片與教材開放授權（CC BY-NC-SA 4.0，限非商業使用）；製作影片用的教學影片生成 prompt 與經驗也會陸續公開（規劃中）。
+國立臺灣師範大學學習分析工具課程的 AI 示範教學網站：AI 教學影片、學生參與的互動複習，以及學生作品展示。網站程式開源（MIT），AI 教學影片與教材開放授權（CC BY-NC-SA 4.0，限非商業使用）；製作影片用的教學影片生成 prompt 與經驗也會陸續公開（規劃中）。
 
-An AI teaching-video demonstration site for the Learning Analytics Tools course at National Taiwan Normal University (NTNU): AI-made teaching videos, interactive review for students, and a student work showcase (coming soon). The code is open source (MIT), and the AI teaching videos and course material are openly licensed for non-commercial use (CC BY-NC-SA 4.0). The prompts and production experience behind the videos will be released too (planned).
+An AI teaching-video demonstration site for the Learning Analytics Tools course at National Taiwan Normal University (NTNU): AI-made teaching videos, interactive review for students, and a student work showcase. The code is open source (MIT), and the AI teaching videos and course material are openly licensed for non-commercial use (CC BY-NC-SA 4.0). The prompts and production experience behind the videos will be released too (planned).
 
 [![Code: MIT](https://img.shields.io/badge/Code-MIT-555.svg)](LICENSE) [![Content: CC BY-NC-SA 4.0](https://img.shields.io/badge/Content-CC%20BY--NC--SA%204.0-555.svg)](LICENSE-CONTENT.md) [![Website](https://img.shields.io/badge/Website-learning--analytics--tools.pages.dev-555.svg)](https://learning-analytics-tools.pages.dev/)
 
@@ -14,7 +14,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 這是臺師大課程 Learning Analytics Tools Implementation Applications 的教材網站，也是一個公開的 AI 示範教學實例：這門課教學生怎麼和 AI 工具合作，而這門課自己的教學影片，也是用 AI 工具做出來的。網站程式碼以 MIT 授權開源，影片與教材內容以 CC BY-NC-SA 4.0 開放授權（限非商業使用）。
 
-每週的 AI 教學影片由 Claude Code 以程式碼製作，授課教師提供教材、選定方向，並在每個階段審核。學生在網站上看短影片、點章節、讀重點，依自己的步調互動複習；課堂練習的學生作品也會在這裡展示（即將推出）。製作這些影片用的教學影片生成 prompt 與製作經驗，會陸續整理公開（規劃中）。
+每週的 AI 教學影片由 Claude Code 以程式碼製作，授課教師提供教材、選定方向，並在每個階段審核。學生在網站上看短影片、點章節、讀重點，依自己的步調互動複習；學生同意公開的作業作品，也在這裡的[作品集](https://learning-analytics-tools.pages.dev/works/)展示。製作這些影片用的教學影片生成 prompt 與製作經驗，會陸續整理公開（規劃中）。
 
 網站：<https://learning-analytics-tools.pages.dev/>
 
@@ -22,8 +22,8 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 這個 repo 就是網站本身，網站上的每一個檔案都在這裡。
 
-- 網站程式（MIT）：每週一頁的版型、HLS 影片播放、章節時間軸、播放清單與觀看進度、四種語言、深淺色主題、首頁膠捲。純 HTML、CSS、JavaScript，沒有建置步驟，也沒有 npm 套件；唯一內附的函式庫是 hls.js。
-- 發布影片的工具（MIT）：`tools/new-video.sh` 建立新影片和週次頁，`tools/publish-video.sh` 把 mp4 轉成 HLS 並擷取封面與縮圖，`tools/check.mjs` 在推上去之前檢查連結、檔案大小和翻譯是否齊全（只用 Node.js 內建模組）。
+- 網站程式（MIT）：每週一頁的版型、HLS 影片播放、章節時間軸、播放清單與觀看進度、四種語言、深淺色主題、首頁膠捲、學生作品集。純 HTML、CSS、JavaScript，沒有建置步驟，也沒有 npm 套件；唯一內附的函式庫是 hls.js。
+- 發布影片的工具（MIT）：`tools/new-video.sh` 建立新影片和週次頁，`tools/publish-video.sh` 把 mp4 轉成 HLS 並擷取封面與縮圖，`tools/add-works.mjs` 匯入學生作品（遮蔽學號、檢查、截縮圖），`tools/check.mjs` 在推上去之前檢查連結、檔案大小和翻譯是否齊全（只用 Node.js 內建模組）。
 - AI 教學影片與課程文字（CC BY-NC-SA 4.0）：非商業用途可以使用、改作，標示出處並以相同授權分享即可。
 - AI 教學影片的做法：見下方「AI 教學影片怎麼做」，從教材來源、動態素材、三個方案、結構化 prompt，到審查與發布。
 - 教學影片生成 prompt 與製作經驗（規劃中）：每支影片的結構化 prompt（`brief.md`）、素材規格、審查紀錄和學到的教訓，移除個人資訊後陸續公開。
@@ -32,7 +32,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 - 學會使用 AI Agent：學習分析工具課程教學生實際使用 AI Agent（例如 Codex 這類 AI 程式助理），包括工作資料夾與路徑、用 `AGENTS.md` 當長期記憶、管理上下文，以及讓 AI 操作瀏覽器。
 - AI 示範教學：教材影片本身也是在教師指導下用 AI 工具做出來的。學生看到課程內容，也同時看到一套完整的做法：教師負責教材、方向和品質，AI 負責大部分的製作工作。
-- 學生參與：短影片、可以點的章節和精簡的重點，讓學生挑自己需要的段落回看；作業影片示範常見的錯誤和比較好的做法，再讓學生用 AI Agent 動手完成實際的任務。課堂練習的作品之後會在網站上展示（即將推出）。
+- 學生參與：短影片、可以點的章節和精簡的重點，讓學生挑自己需要的段落回看；作業影片示範常見的錯誤和比較好的做法，再讓學生用 AI Agent 動手完成實際的任務。作業作品放在網站的「作品集」，同學可以互相觀摩。
 - 教材的嚴謹：影片裡的事實只取自教師的投影片與教材。影片中的學生是虛構角色「小安」，畫面模仿真實的介面（Week 4 的 Blockbench 段落是教師實際操作的瀏覽器錄影），但不出現真實的帳號、路徑或學生資料。
 - 公開、可重複使用：程式碼開源、內容開放授權，製作方法寫在下方，prompt 與製作經驗也會陸續公開（規劃中）；其他教師可以檢視、改作，用在自己的課程（教材內容限非商業用途），不必從頭做起。
 
@@ -64,11 +64,11 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ![Week 3 頁面：影片播放器、章節、重點與播放清單](docs/images/week.jpg)
 
-### 學生作品展示（即將推出）
+### 學生作品展示
 
-作品展示頁面正在開發，尚未上線，目前也還沒有收錄任何作品。規劃中的樣子：
+網站上方的「[作品集](https://learning-analytics-tools.pages.dev/works/)」展示學生同意公開的作業網頁：
 
-- 依課堂練習分類，每件作品一張縮圖；點開後直接在網站裡瀏覽學生做的網頁，可以切換上一位、下一位，或在新分頁開啟。
+- 依作業分類（第一個是 Week 4 的 HW1），每件作品一張縮圖；點開後直接在網站裡瀏覽學生做的網頁，可以切換上一位、下一位，或在新分頁開啟。
 - 只收錄學生同意公開的作品（同意公開也包括放在這個公開的 GitHub repo），學生也可以隨時要求撤下。
 - 作品只以遮蔽後的學號標示（通常只露出前 2 碼和後 2 碼，和別人重複時再多露出一碼，直到分得開）；完整學號與對照表不會放進這個公開的 repo。
 - 學生作品的著作權屬於學生本人，不適用本專案的授權（見「授權」與 [NOTICE.md](NOTICE.md)）。
@@ -95,7 +95,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 | 網站程式（HTML、CSS、JavaScript）、工具（`tools/`）、範本與說明文件 | 已公開，MIT 授權 |
 | AI 教學影片（HLS）、封面、縮圖，以及每週的文字（繁體中文原文與簡中、英文、越南文翻譯） | 已公開，CC BY-NC-SA 4.0 |
 | Week 5 到 Week 16 | 依課程進度陸續開放 |
-| 學生作品展示 | 即將推出 |
+| 學生作品展示（作品集） | 已上線，陸續加入學生同意公開的作品；著作權屬於各作者 |
 | 教學影片生成 prompt：每支影片的 `brief.md`、動態素材規格、三方案提案 | 規劃中，整理後公開 |
 | 製作經驗：逐輪審查紀錄與整理過的教訓 | 規劃中，整理後公開 |
 | 製作專案（場景程式、音訊腳本）與 mp4 原檔 | 目前不在這個 repo；repo 只放要公開的成品 |
@@ -155,7 +155,7 @@ python -m http.server 8000
 
 - 程式碼：[MIT](LICENSE)。包括 HTML 結構、CSS、JavaScript（`assets/` 裡的程式，含 `assets/i18n-strings.js` 的介面文字；`assets/vendor/` 的 hls.js 除外）、`tools/` 與範本、`_redirects` 與 `404.html`，以及說明文件（`README.md`、`docs/維護說明.md`）。
 - 教材內容：[創用CC 姓名標示-非商業性-相同方式分享 4.0 國際](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant)（CC BY-NC-SA 4.0），著作權人 JUNHAO CHEN，見 [LICENSE-CONTENT.md](LICENSE-CONTENT.md)。包括 `weeks/*/video/` 裡的影片、封面與縮圖，週次頁和 `assets/course.js` 裡的課程文字與翻譯，以及 `docs/images/` 的截圖。
-- 學生作品：作品展示上線後，`works/` 裡每位學生的作品資料夾與縮圖，著作權屬於學生本人，不適用本專案的 MIT 或 CC BY-NC-SA 授權；除了 GitHub 服務條款允許的在 GitHub 上檢視與 fork，未經作者同意，請勿重製或改作。
+- 學生作品：`works/` 裡每位學生的作品資料夾與縮圖，著作權屬於學生本人，不適用本專案的 MIT 或 CC BY-NC-SA 授權；除了 GitHub 服務條款允許的在 GitHub 上檢視與 fork，未經作者同意，請勿重製或改作。
 - 第三方元件與素材依各自的授權：hls.js 1.6.15（Apache-2.0）；由 Google Fonts 載入的 Noto Sans TC、Noto Sans SC、JetBrains Mono（SIL Open Font License 1.1，不在 repo 裡）；Week 3 影片 03 開頭的三張 Wikimedia Commons 圖片（兩張 CC0 照片與一幅公有領域畫作），不受影片的 CC BY-NC-SA 授權限制（義大利文化資產的商業使用另有規定，見 NOTICE.md）；Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片中重現或提到的 Codex 等第三方軟體名稱與介面，屬於各自的權利人，本專案與它們沒有隸屬或背書關係。詳見 [NOTICE.md](NOTICE.md)。
 - 國立臺灣師範大學的名稱與標誌不在上述授權範圍內；本網站是課程教材，不代表學校官方立場。
 
@@ -190,7 +190,7 @@ JUNHAO CHEN（[@bigmoumou](https://github.com/bigmoumou)），課程教師。問
 
 This is an AI teaching-video demonstration site: the course website for Learning Analytics Tools Implementation Applications at National Taiwan Normal University (NTNU), and a public example of AI demonstration teaching, in which the course shows students how to work with AI tools and its own teaching videos are made with them. The site's code is open source under the MIT License, and the videos and course content are openly licensed under CC BY-NC-SA 4.0 (non-commercial use).
 
-Each week's AI teaching videos are made in code with Claude Code, while the teacher supplies the material, chooses the direction and reviews every stage. Students watch short videos, jump to chapters and read the key points to review at their own pace, and student work from class exercises will be shown here too (coming soon). The prompts used to generate the teaching videos and the production experience behind them will be cleaned up and released step by step (planned).
+Each week's AI teaching videos are made in code with Claude Code, while the teacher supplies the material, chooses the direction and reviews every stage. Students watch short videos, jump to chapters and read the key points to review at their own pace, and homework that students agree to publish is shown here too, in the [showcase](https://learning-analytics-tools.pages.dev/works/). The prompts used to generate the teaching videos and the production experience behind them will be cleaned up and released step by step (planned).
 
 Website: <https://learning-analytics-tools.pages.dev/>
 
@@ -198,8 +198,8 @@ Website: <https://learning-analytics-tools.pages.dev/>
 
 This repository is the website itself; every file the site serves is here.
 
-- The site code (MIT): the one-page-per-week layout, HLS video playback, chapter timeline, playlist with watch progress, four languages, light and dark themes, and the homepage film strip. It is plain HTML, CSS and JavaScript with no build step and no npm packages; the only bundled library is hls.js.
-- The publishing tools (MIT): `tools/new-video.sh` scaffolds a new video and week page, `tools/publish-video.sh` turns an mp4 into HLS and grabs a poster and a thumbnail, and `tools/check.mjs` checks links, file sizes and translation coverage before you push (it uses only Node.js built-in modules).
+- The site code (MIT): the one-page-per-week layout, HLS video playback, chapter timeline, playlist with watch progress, four languages, light and dark themes, the homepage film strip and the student showcase. It is plain HTML, CSS and JavaScript with no build step and no npm packages; the only bundled library is hls.js.
+- The publishing tools (MIT): `tools/new-video.sh` scaffolds a new video and week page, `tools/publish-video.sh` turns an mp4 into HLS and grabs a poster and a thumbnail, `tools/add-works.mjs` imports student work (masking student IDs, checking files and taking thumbnails), and `tools/check.mjs` checks links, file sizes and translation coverage before you push (it uses only Node.js built-in modules).
 - The AI teaching videos and course text (CC BY-NC-SA 4.0): use and adapt them for non-commercial purposes, with credit, and share adaptations under the same license.
 - The method behind the AI teaching videos: see "How the AI teaching videos are made" below, from source material, animated materials, three plans and the structured prompt to review and publishing.
 - Teaching-video prompts and production experience (planned): each video's structured prompt (`brief.md`), the material specs, review logs and lessons, released step by step once personal details are removed.
@@ -208,7 +208,7 @@ This repository is the website itself; every file the site serves is here.
 
 - Learning to use AI agents: the Learning Analytics Tools course teaches students to use AI agents (AI coding assistants such as Codex) in practice, including working folders and paths, `AGENTS.md` as long-term memory, managing the context, and letting an AI control a browser.
 - AI demonstration teaching: the teaching videos were themselves made with AI tools under the teacher's direction. So students see the course content and, at the same time, a complete way of working: the teacher is responsible for the material, the direction and the quality, and the AI does most of the production work.
-- Student participation: short videos, clickable chapters and concise key points let students go back to just the parts they need; the homework video shows a common mistake and a better way, and students then use an AI agent to complete a real task themselves. Work from class exercises will be shown on the site later (coming soon).
+- Student participation: short videos, clickable chapters and concise key points let students go back to just the parts they need; the homework video shows a common mistake and a better way, and students then use an AI agent to complete a real task themselves. Homework is shown in the site's showcase, so classmates can learn from each other's work.
 - Care with the material: facts in the videos come only from the teacher's slides and course material. The student in the videos is a fictional character, 小安 (An). The videos imitate real software interfaces (the Blockbench part of Week 4 is a real recording of the teacher's browser), but no real accounts, paths or student data appear.
 - Open and reusable: the code is open source, the content is openly licensed, the production method is described below, and the prompts and production experience will follow (planned), so other teachers can inspect and adapt them and use them in their own courses (the course content non-commercially) instead of starting from scratch.
 
@@ -240,11 +240,11 @@ The site follows one format, "every week: short videos and a few key points", so
 
 ![Week 3 page: video player, chapters, key points and the playlist](docs/images/week.jpg)
 
-### Student work showcase (coming soon)
+### Student work showcase
 
-The showcase pages are in development. They are not live yet, and no student work has been added. What is planned:
+The [showcase](https://learning-analytics-tools.pages.dev/works/) (作品集 in the site's top bar) shows homework web pages that students have agreed to publish:
 
-- Work is grouped by class exercise, with one thumbnail per piece. Opening a piece shows the student's web page inside the site, with buttons to move to the previous or next student or to open the page in a new tab.
+- Work is grouped by assignment (the first is HW1 in Week 4), with one thumbnail per piece. Opening a piece shows the student's web page inside the site, with buttons to move to the previous or next student or to open the page in a new tab.
 - Only work that students agree to publish is included (consent covers hosting in this public GitHub repository), and students can ask for their work to be taken down at any time.
 - Each piece is labeled only by a masked student ID that normally shows just the first two and last two characters (one more character at a time if two IDs would otherwise look the same). Full student IDs and the lookup table never go into this public repository.
 - Student work remains the copyright of the student who made it and is not covered by this project's licenses (see "License" and [NOTICE.md](NOTICE.md)).
@@ -271,7 +271,7 @@ The visuals are mainly animated web pages written in HTML, CSS and JavaScript an
 | Site code (HTML, CSS, JavaScript), tools (`tools/`), templates and documentation | Published, MIT License |
 | AI teaching videos (HLS), posters and thumbnails, and each week's text in Traditional Chinese with its Simplified Chinese, English and Vietnamese translations | Published, CC BY-NC-SA 4.0 |
 | Weeks 5 to 16 | Opening one by one as the course goes on |
-| Student work showcase | Coming soon |
+| Student work showcase | Live; more work is added as students agree to publish it; copyright stays with each author |
 | Teaching-video prompts: each video's `brief.md`, the specs for the animated materials, and the three-plan proposals | Planned, to be released once cleaned up |
 | Production experience: round-by-round review logs and the lessons drawn from them | Planned, to be released once cleaned up |
 | Production projects (scene code, audio scripts) and master mp4 files | Not in this repository for now; it holds only the published results |
@@ -331,7 +331,7 @@ The code is open source under the MIT License. The course content is openly lice
 
 - Code: [MIT](LICENSE). This covers the HTML structure, CSS, JavaScript (the scripts in `assets/`, including the interface text in `assets/i18n-strings.js`, but not hls.js in `assets/vendor/`), `tools/` and the templates, `_redirects` and `404.html`, and the documentation (`README.md`, `docs/維護說明.md`).
 - Course content: [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/) (CC BY-NC-SA 4.0), copyright JUNHAO CHEN; see [LICENSE-CONTENT.md](LICENSE-CONTENT.md). This covers the videos, posters and thumbnails in `weeks/*/video/`, the course text and translations in the week pages and in `assets/course.js`, and the screenshots in `docs/images/`.
-- Student work: once the showcase is live, each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this project's MIT or CC BY-NC-SA licenses. Apart from viewing and forking on GitHub as GitHub's Terms of Service allow, do not copy or adapt them without the author's permission.
+- Student work: each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this project's MIT or CC BY-NC-SA licenses. Apart from viewing and forking on GitHub as GitHub's Terms of Service allow, do not copy or adapt them without the author's permission.
 - Third-party components and media keep their own licenses: hls.js 1.6.15 (Apache-2.0); Noto Sans TC, Noto Sans SC and JetBrains Mono, loaded from Google Fonts (SIL Open Font License 1.1, not stored in this repository); and three Wikimedia Commons images at the start of Week 3 video 03 (two CC0 photos and a public-domain painting), which are not restricted by the CC BY-NC-SA license on the videos (commercial use of Italian cultural heritage images has separate rules; see NOTICE.md). The Blockbench interface in the recording in Week 4 video 01, and the names and interfaces of Codex and other third-party software shown or recreated in the videos, belong to their owners; this project is not affiliated with or endorsed by them. See [NOTICE.md](NOTICE.md) for details.
 - The name and marks of National Taiwan Normal University are not licensed under any of the above. This site is course material and does not represent the university's official position.
 

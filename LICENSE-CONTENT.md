@@ -45,7 +45,7 @@ Copyright © 2026 JUNHAO CHEN
 
 ### 不在本授權範圍內
 
-- 學生作品：作品展示上線後，`works/` 裡每位學生的作品資料夾與縮圖，著作權屬於學生本人，不適用本授權。
+- 學生作品：`works/` 裡每位學生的作品資料夾與縮圖，著作權屬於學生本人，不適用本授權。
 - 第三方元件與素材：hls.js、Google Fonts 字型、影片中使用的 Wikimedia Commons 圖片等，依各自的授權，見 [NOTICE.md](NOTICE.md)。
 - 影片中的第三方軟體畫面與商標：Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片中重現或提到的 Codex、Visual Studio Code、Claude Code、Chrome 等軟體的名稱與介面，屬於各自的權利人；本專案與它們沒有隸屬或背書關係。
 - 國立臺灣師範大學的名稱與標誌。本授權也不授予人格權、肖像權、隱私權、專利權或商標權。
@@ -105,7 +105,7 @@ For an adaptation:
 
 ### Not covered by this license
 
-- Student work: once the showcase is live, each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this license.
+- Student work: each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this license.
 - Third-party components and media, such as hls.js, the Google Fonts typefaces and the Wikimedia Commons images used in the videos, keep their own licenses; see [NOTICE.md](NOTICE.md).
 - Third-party software and trademarks in the videos: the Blockbench interface in the recording in Week 4 video 01, and the names and interfaces of Codex, Visual Studio Code, Claude Code, Chrome and other software shown or recreated in the videos, belong to their owners; this project is not affiliated with or endorsed by them.
 - The name and marks of National Taiwan Normal University. This license also does not grant moral rights, publicity or privacy rights, patent rights or trademark rights.

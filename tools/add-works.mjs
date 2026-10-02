@@ -196,7 +196,7 @@ for (const s of students) {
     for (const ref of refs) {
       const v = ref.trim();
       if (/^(https?:)?\/\//i.test(v)) { try { hosts.add(new URL(v, "https://x/").hostname); } catch (e) { /* 略過 */ } continue; }
-      if (/^(data:|mailto:|tel:|javascript:|#|\{|\$)/i.test(v) || v.includes("${")) continue;
+      if (/^(data:|mailto:|tel:|javascript:|#|%23|\{|\$)/i.test(v) || v.includes("${")) continue;
       const clean = decodeURI(v.split("#")[0].split("?")[0]);
       if (!clean || clean.startsWith("/")) { if (clean.startsWith("/")) missing.add(`${relf} → ${v}（開頭的 / 在作品集裡會指到網站根目錄）`); continue; }
       const relDir = path.dirname(relf) === "." ? "" : path.dirname(relf) + "/";

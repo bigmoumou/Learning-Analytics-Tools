@@ -9,7 +9,7 @@ abstract: >-
   An AI teaching-video demonstration site: the course website for the NTNU
   course Learning Analytics Tools Implementation Applications, with AI-made
   teaching videos with chapters and key points, an interactive weekly review
-  site in four languages, and a student work showcase (coming soon). The code
+  site in four languages, and a student work showcase. The code
   is licensed under MIT (LICENSE); the course content (videos, posters,
   thumbnails and course text) is licensed under CC BY-NC-SA 4.0
   (LICENSE-CONTENT.md). Student work and third-party items are not covered
