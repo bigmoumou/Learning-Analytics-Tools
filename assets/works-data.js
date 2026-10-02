@@ -18,6 +18,11 @@ window.WORKS = [
         "title": "HW1"
       }
     },
-    "items": []
+    "items": [
+      {
+        "code": "41xxxxx5h",
+        "label": "41•••••5H"
+      }
+    ]
   }
 ];

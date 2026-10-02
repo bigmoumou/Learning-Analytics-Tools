@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>東京銀杏黃葉地圖</title>
+  <meta name="description" content="東京銀杏黃葉的季節示意、各景點官方資訊快照與位置，並可串成散步路線。課程教學用途。">
+  <meta name="theme-color" content="#f6f1e7">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Shippori+Mincho:wght@600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="view-map">
+  <!-- 共用銀杏葉形（刊頭、季節模組、空結果插畫共用） -->
+  <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <path id="gk-leaf" d="M0 0C-6-5-15-12.5-22.6-19.6C-25-22-24.6-24-22-25.9C-16-29.8-8-31.2-1.8-30.4L0-26.2L1.8-30.4C8-31.2 16-29.8 22-25.9C24.6-24 25-22 22.6-19.6C15-12.5 6-5 0 0Z"/>
+      <path id="gk-veins" d="M0-1.5L-20.5-21M0-1.5L-16-25.6M0-1.5L-11-28.2M0-1.5L-6.2-29.4M0-1.5L-2-27.8M0-1.5L2-27.8M0-1.5L6.2-29.4M0-1.5L11-28.2M0-1.5L16-25.6M0-1.5L20.5-21"/>
+    </defs>
+  </svg>
+
+  <!-- 刊頭 -->
+  <header class="masthead">
+    <div class="wrap">
+      <div class="masthead-top">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <g transform="translate(32 41) scale(1.12)">
+              <path class="leaf-stem" d="M0-2C0 6-.8 12-3 18"/>
+              <use class="leaf-outline" href="#gk-leaf"/>
+              <use class="leaf-vein" href="#gk-veins"/>
+            </g>
+          </svg>
+          <div>
+            <p class="brand-ja" lang="ja">東京イチョウ黄葉情報</p>
+            <h1 class="brand-title">東京銀杏黃葉地圖</h1>
+          </div>
+        </div>
+        <p class="masthead-meta">資料快照 <time datetime="2026-10-02">2026-10-02</time></p>
+      </div>
+      <svg class="masthead-art" viewBox="0 -14 360 110" aria-hidden="true" focusable="false">
+        <path class="twig" d="M8 80C74 74 132 60 190 50S300 30 352 20"/>
+        <circle class="spur" cx="72" cy="71" r="1.6"/>
+        <path class="petiole" d="M72 71L62.4 59.5"/>
+        <use class="lf lf-a" href="#gk-leaf" transform="translate(62.4 59.5) rotate(-40) scale(0.62)"/>
+        <path class="petiole" d="M72 71L70.2 54.1"/>
+        <use class="lf lf-b" href="#gk-leaf" transform="translate(70.2 54.1) rotate(-6) scale(0.7)"/>
+        <path class="petiole" d="M72 71L79.4 59.1"/>
+        <use class="lf lf-a" href="#gk-leaf" transform="translate(79.4 59.1) rotate(32) scale(0.58)"/>
+        <circle class="spur" cx="150" cy="56" r="1.6"/>
+        <path class="petiole" d="M150 56L156.5 67.3"/>
+        <use class="lf lf-b" href="#gk-leaf" transform="translate(156.5 67.3) rotate(150) scale(0.55)"/>
+        <path class="petiole" d="M150 56L145.9 70.4"/>
+        <use class="lf lf-a" href="#gk-leaf" transform="translate(145.9 70.4) rotate(196) scale(0.6)"/>
+        <circle class="spur" cx="208" cy="46" r="1.6"/>
+        <path class="petiole" d="M208 46L200.5 31.9"/>
+        <use class="lf lf-a" href="#gk-leaf" transform="translate(200.5 31.9) rotate(-28) scale(0.66)"/>
+        <path class="petiole" d="M208 46L210.5 28.2"/>
+        <use class="lf lf-c" href="#gk-leaf" transform="translate(210.5 28.2) rotate(8) scale(0.74)"/>
+        <path class="petiole" d="M208 46L217.7 35.9"/>
+        <use class="lf lf-b" href="#gk-leaf" transform="translate(217.7 35.9) rotate(44) scale(0.56)"/>
+        <circle class="spur" cx="292" cy="31" r="1.6"/>
+        <path class="petiole" d="M292 31L287.4 16.7"/>
+        <use class="lf lf-b" href="#gk-leaf" transform="translate(287.4 16.7) rotate(-18) scale(0.62)"/>
+        <path class="petiole" d="M292 31L299 16.6"/>
+        <use class="lf lf-a" href="#gk-leaf" transform="translate(299 16.6) rotate(26) scale(0.66)"/>
+        <path class="petiole" d="M292 31L294.1 42.8"/>
+        <use class="lf lf-a" href="#gk-leaf" transform="translate(294.1 42.8) rotate(170) scale(0.5)"/>
+        <use class="lf lf-c drift" href="#gk-leaf" transform="translate(118 30) rotate(-24) scale(.42)"/>
+        <use class="lf lf-a drift" href="#gk-leaf" transform="translate(252 82) rotate(38) scale(.36)"/>
+      </svg>
+      <p class="lede">給想在東京賞銀杏的旅人：一頁看懂季節進度、各景點的官方資訊快照與位置，再串成一條散步路線。</p>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 今日東京：季節示意 -->
+    <section class="season" aria-labelledby="season-title">
+      <div class="wrap">
+        <div class="season-grid">
+          <div class="season-now">
+            <p class="kicker" id="season-title">所選日期的東京季節示意</p>
+            <p class="season-date"><span id="sel-date">10月15日</span><span class="season-dow" id="sel-dow">（四）</span></p>
+            <div class="season-stage">
+              <svg class="season-leaf" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <g transform="translate(32 40) scale(1.16)">
+                  <path class="leaf-stem" d="M0-2C0 6-.8 12-3 18"/>
+                  <use class="leaf-fill" href="#gk-leaf"/>
+                  <use class="leaf-vein" href="#gk-veins"/>
+                </g>
+              </svg>
+              <div>
+                <p class="stage-name"><span id="stage-ja" lang="ja">青葉</span><small id="stage-zh">綠葉期</small></p>
+                <p class="stage-desc" id="stage-desc">葉片仍以綠色為主。</p>
+              </div>
+            </div>
+            <p class="stage-count" id="stage-count"></p>
+          </div>
+
+          <div class="season-control">
+            <div class="slider-head">
+              <label for="date-slider" class="slider-label">拖動選擇日期 <span class="slider-range">10/15～12/31</span></label>
+              <button type="button" class="text-btn" id="reset-date">回到今天</button>
+            </div>
+            <div class="slider-track">
+              <div class="stage-band" id="stage-band" aria-hidden="true"></div>
+              <input type="range" id="date-slider" min="0" max="77" step="1" value="0">
+            </div>
+            <div class="slider-scale" id="slider-scale" aria-hidden="true"></div>
+
+            <ol class="legend" id="legend" aria-label="六階段圖例（地圖標記、圖例、徽章同色）"></ol>
+
+            <p class="notice-key">依往年平均推估的季節示意，各地最新狀況請點官方連結</p>
+            <p class="model-line" id="model-line"></p>
+            <details class="model-note">
+              <summary>這個季節示意怎麼算？</summary>
+              <div class="model-body" id="model-body"></div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 地圖＋清單 -->
+    <div class="workspace" id="workspace">
+      <div class="toolbar" id="toolbar">
+        <div class="filter-row">
+          <span class="filter-label" id="area-label">區域</span>
+          <div class="chip-scroll" role="group" aria-labelledby="area-label" id="area-chips"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label" id="grade-label">來源等級</span>
+          <div class="chip-row" role="group" aria-labelledby="grade-label" id="grade-chips"></div>
+          <button type="button" class="near-btn" id="near-btn" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3.2M12 18.3v3.2M2.5 12h3.2M18.3 12h3.2"/><circle cx="12" cy="12" r="7.2"/></svg>
+            <span id="near-label">我附近</span>
+          </button>
+        </div>
+        <p class="grade-key" id="grade-key"></p>
+        <div class="tabs" role="tablist" aria-label="切換地圖與清單">
+          <button type="button" role="tab" id="tab-map" aria-controls="map-col" aria-selected="true" data-view="map">地圖</button>
+          <button type="button" role="tab" id="tab-list" aria-controls="list-panel" aria-selected="false" data-view="list" tabindex="-1">清單 <span class="tab-count" id="tab-count">26</span></button>
+        </div>
+      </div>
+      <p class="geo-msg" id="geo-msg" role="status" aria-live="polite" hidden></p>
+
+      <section class="map-col" id="map-col" role="tabpanel" aria-labelledby="tab-map" aria-label="地圖與路線">
+        <div class="map-frame">
+          <a class="skip-link" href="#route-title" id="skip-map">跳過地圖標記</a>
+          <div id="map" class="map" aria-label="銀杏景點地圖"></div>
+          <div class="map-msg" id="map-msg" hidden></div>
+          <p class="map-note">座標為近似值</p>
+        </div>
+
+        <section class="route" id="route" aria-labelledby="route-title">
+          <div class="route-head">
+            <h2 id="route-title" tabindex="-1">銀杏散步路線</h2>
+            <span class="route-count" id="route-count">0／5 站</span>
+          </div>
+          <p class="route-live" id="route-live" role="status" aria-live="polite"></p>
+          <div id="route-body"></div>
+        </section>
+      </section>
+
+      <section class="list-panel" id="list-panel" role="tabpanel" aria-labelledby="tab-list">
+        <div class="list-head">
+          <h2>景點清單</h2>
+          <p class="list-status" id="list-status" aria-live="polite"></p>
+        </div>
+        <div class="spot-list" id="spot-list"></div>
+        <div class="empty" id="empty" hidden>
+          <svg class="empty-art" viewBox="-30 -36 60 58" aria-hidden="true" focusable="false">
+            <path class="leaf-stem" d="M0-2C0 6-.8 12-3 18"/>
+            <use class="leaf-outline" href="#gk-leaf"/>
+            <use class="leaf-vein" href="#gk-veins"/>
+          </svg>
+          <p class="empty-title">沒有符合條件的景點</p>
+          <p>試著放寬區域或來源等級。</p>
+          <button type="button" class="ghost-btn" id="empty-clear">清除篩選</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 頁尾：資料來源、授權、聲明 -->
+  <footer class="site-foot" id="sources">
+    <div class="wrap">
+      <h2 class="foot-title">資料來源</h2>
+      <div id="source-list"></div>
+
+      <h2 class="foot-title">地圖授權</h2>
+      <ul class="credit-list">
+        <li>地圖資料 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>（ODbL 授權）</li>
+        <li>地圖函式庫 <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a>（<a href="https://github.com/Leaflet/Leaflet/blob/main/LICENSE" target="_blank" rel="noopener">BSD 2-Clause 授權</a>）</li>
+      </ul>
+
+      <p class="foot-statement">本網站為課程教學用途，非營利；資訊以官方公告為準</p>
+    </div>
+  </footer>
+
+  <!-- 手機：清單模式下的路線摘要列 -->
+  <div class="route-bar" id="route-bar" hidden>
+    <p class="route-bar-text" id="route-bar-text"></p>
+    <button type="button" class="route-bar-btn" id="route-bar-btn">查看路線</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
