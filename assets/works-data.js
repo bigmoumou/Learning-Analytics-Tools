@@ -31,7 +31,8 @@ window.WORKS = [
       },
       {
         "code": "41xxxxx3l",
-        "label": "41•••••3L"
+        "label": "41•••••3L",
+        "stars": 2
       },
       {
         "code": "41xxxxx2e",
