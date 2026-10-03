@@ -9,3 +9,12 @@
 /weeks/week03/video/hls/*      /weeks/week03/video/01-report-journey/hls/:splat   301
 /weeks/week03/video/poster.jpg /weeks/week03/video/01-report-journey/poster.jpg   301
 /weeks/week03/video/thumb.jpg  /weeks/week03/video/01-report-journey/thumb.jpg    301
+# 作品集的學號改成露出後 3 碼（2026-10-03）：舊的作品網址轉到新代號
+/works/hw1/41xxxxx5h/*  /works/hw1/41xxxx25h/:splat  301
+/works/hw1/41xxxxx5h    /works/hw1/41xxxx25h/        301
+/works/hw1/41xxxxx1s/*  /works/hw1/41xxxx01s/:splat  301
+/works/hw1/41xxxxx1s    /works/hw1/41xxxx01s/        301
+/works/hw1/41xxxxx3l/*  /works/hw1/41xxxx33l/:splat  301
+/works/hw1/41xxxxx3l    /works/hw1/41xxxx33l/        301
+/works/hw1/41xxxxx2e/*  /works/hw1/41xxxx02e/:splat  301
+/works/hw1/41xxxxx2e    /works/hw1/41xxxx02e/        301

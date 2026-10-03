@@ -204,7 +204,7 @@ if (fs.existsSync(worksDataPath)) {
     const codes = new Set();
     for (const it of c.items || []) {
       codes.add(it.code);
-      if (!/x/.test(it.code)) warn(`作品集 ${c.slug}/${it.code}：代號沒有遮蔽（應該像 41xxxxx23）`);
+      if (!/x/.test(it.code)) warn(`作品集 ${c.slug}/${it.code}：代號沒有遮蔽（應該像 41xxxx123）`);
       if (it.stars !== undefined && !(Number.isInteger(it.stars) && it.stars >= 1 && it.stars <= 3)) warn(`作品集 ${c.slug}/${it.code}：stars 要是 1–3 的整數（現在是 ${JSON.stringify(it.stars)}）`);
       if (!fs.existsSync(path.join(dir, it.code, "index.html"))) error(`作品集 ${c.slug}/${it.code}/ 少了 index.html`);
       if (!fs.existsSync(path.join(dir, "_thumbs", `${it.code}.jpg`))) error(`作品集 ${c.slug}/_thumbs/${it.code}.jpg 不存在（用 tools/add-works.mjs 重新匯入會補上）`);

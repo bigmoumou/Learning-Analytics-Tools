@@ -214,7 +214,7 @@ window.I18N_STRINGS = {
     "works.prev": "Previous",
     "works.next": "Next",
     "works.open": "Open in a new tab",
-    "works.of": "{a} of {b}",
+    "works.of": "{a} / {b}",
     "works.frame": "Work by {a}",
     "works.missing": "This work can't be found; it may have been removed.",
     "works.stars": "Teacher's pick: {n} of 3 stars",

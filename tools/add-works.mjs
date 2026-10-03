@@ -6,7 +6,7 @@
 // 每份作品要有 index.html；只有一個 .html 時會自動補一個 index.html 轉過去；包了一層資料夾也找得到。
 //
 // 會做的事：
-//   1. 學號遮蔽成代號：只留前 2 碼和後 2 碼（41000000A → 41•••••0A，網址和資料夾用 41xxxxx0a）；
+//   1. 學號遮蔽成代號：只留前 2 碼和後 3 碼（41000000A → 41••••00A，網址和資料夾用 41xxxx00a）；
 //      遮完和別人一樣時，多露出一碼，直到分得開。學號 → 代號的對照表存在 repo 外面
 //      （../製作/works/<分類>/ids.json），完整學號不會進到這個公開的 repo。之後重新匯入同一位，代號不變。
 //   2. 作品原封不動複製到 works/<分類>/<代號>/（略過 __MACOSX、.DS_Store、.git、node_modules 這類檔案）。
@@ -67,7 +67,7 @@ const ids = fs.existsSync(idsPath) ? JSON.parse(fs.readFileSync(idsPath, "utf8")
 function mask(id, taken) {
   const up = id.toUpperCase();
   if (up.length <= 4) return { label: up, code: up.toLowerCase() };
-  for (let tail = 2; tail <= up.length - 2; tail++) {
+  for (let tail = 3; tail <= up.length - 2; tail++) {
     const label = up.slice(0, 2) + "•".repeat(up.length - 2 - tail) + up.slice(-tail);
     const code = label.replace(/•/g, "x").toLowerCase();
     if (!taken.has(code)) return { label, code };
@@ -281,7 +281,8 @@ const header = `/* 作品集的資料：練習分類和每件作品。
    - 作品由 tools/add-works.mjs 匯入時自動加進來，通常不用手改；分類的標題、翻譯可以手改。
    - code 是遮蔽後的學號（網址和資料夾名稱），label 是畫面上顯示的樣子；完整學號不放進這個 repo。
    - 每件作品在 works/<分類>/<code>/，縮圖在 works/<分類>/_thumbs/<code>.jpg。
-   - stars（可省略，1–3）：老師推薦的星數，手動加；頁面上有星的排在最前面，星多的在前，同星數照原本順序。重新匯入不會清掉。 */
+   - stars（可省略，1–3）：老師推薦的星數，手動加；頁面上有星的排在最前面，星多的在前，同星數照原本順序。重新匯入不會清掉。
+   - was（可省略）：代號改過的作品留下舊代號；舊網址 ?s=舊代號 會自動換成新的（資料夾網址另由 _redirects 轉）。 */
 `;
 fs.writeFileSync(dataPath, header + "window.WORKS = " + JSON.stringify(WORKS, null, 2) + ";\n");
 fs.mkdirSync(privDir, { recursive: true });

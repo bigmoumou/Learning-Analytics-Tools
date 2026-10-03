@@ -2,7 +2,8 @@
    - 作品由 tools/add-works.mjs 匯入時自動加進來，通常不用手改；分類的標題、翻譯可以手改。
    - code 是遮蔽後的學號（網址和資料夾名稱），label 是畫面上顯示的樣子；完整學號不放進這個 repo。
    - 每件作品在 works/<分類>/<code>/，縮圖在 works/<分類>/_thumbs/<code>.jpg。
-   - stars（可省略，1–3）：老師推薦的星數，手動加；頁面上有星的排在最前面，星多的在前，同星數照原本順序。重新匯入不會清掉。 */
+   - stars（可省略，1–3）：老師推薦的星數，手動加；頁面上有星的排在最前面，星多的在前，同星數照原本順序。重新匯入不會清掉。
+   - was（可省略）：代號改過的作品留下舊代號；舊網址 ?s=舊代號 會自動換成新的（資料夾網址另由 _redirects 轉）。 */
 window.WORKS = [
   {
     "slug": "hw1",
@@ -21,22 +22,34 @@ window.WORKS = [
     },
     "items": [
       {
-        "code": "41xxxxx5h",
-        "label": "41•••••5H",
-        "stars": 1
+        "code": "41xxxx25h",
+        "label": "41••••25H",
+        "stars": 1,
+        "was": [
+          "41xxxxx5h"
+        ]
       },
       {
-        "code": "41xxxxx1s",
-        "label": "41•••••1S"
+        "code": "41xxxx01s",
+        "label": "41••••01S",
+        "was": [
+          "41xxxxx1s"
+        ]
       },
       {
-        "code": "41xxxxx3l",
-        "label": "41•••••3L",
-        "stars": 2
+        "code": "41xxxx33l",
+        "label": "41••••33L",
+        "stars": 2,
+        "was": [
+          "41xxxxx3l"
+        ]
       },
       {
-        "code": "41xxxxx2e",
-        "label": "41•••••2E"
+        "code": "41xxxx02e",
+        "label": "41••••02E",
+        "was": [
+          "41xxxxx2e"
+        ]
       },
       {
         "code": "41xxxx15h",

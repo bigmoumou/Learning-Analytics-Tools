@@ -93,6 +93,14 @@
     u.hash = "";
     return u.pathname + u.search;
   }
+  // 代號改過的作品（works-data.js 的 was）：舊網址 ?s=舊代號 換成新代號，不留一筆上一頁紀錄
+  function resolveCode(code) {
+    if (!code || items.some((it) => it.code === code)) return code;
+    const it = items.find((x) => (x.was || []).includes(code));
+    if (!it) return code;
+    history.replaceState(null, "", urlFor(it.code));
+    return it.code;
+  }
   function buildViewer() {
     viewer = document.createElement("div");
     viewer.className = "viewer";
@@ -171,7 +179,7 @@
   function render() {
     if (!cat) return renderIndex();
     renderList();
-    show(codeFromUrl());
+    show(resolveCode(codeFromUrl()));
   }
 
   render();
@@ -182,7 +190,7 @@
       e.preventDefault();
       go(a.dataset.code, true);
     });
-    window.addEventListener("popstate", () => show(codeFromUrl()));
+    window.addEventListener("popstate", () => show(resolveCode(codeFromUrl())));
     document.addEventListener("keydown", (e) => {
       if (!document.body.classList.contains("is-viewing") || e.altKey || e.ctrlKey || e.metaKey) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "")) return;

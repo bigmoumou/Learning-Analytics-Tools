@@ -51,7 +51,7 @@ Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片中重現或提到
 
 - 著作權：`works/` 裡每位學生的作品資料夾及其縮圖，著作權屬於學生本人，不適用本專案的 MIT 或 CC BY-NC-SA 4.0 授權。除了下面說的 GitHub 上的檢視與 fork，未經作者同意，請勿重製、改作或散布。
 - 公開：只展示學生同意公開的作品。學生同意公開，也包括作品放在這個公開的 GitHub repo；依 GitHub 服務條款，其他使用者可以在 GitHub 上檢視與 fork。
-- 個人資料：作品只以遮蔽後的學號標示（通常只露出前 2 碼和後 2 碼，和別人重複時再多露出一碼，直到分得開）；完整學號與對照表不放進這個公開的 repo。
+- 個人資料：作品只以遮蔽後的學號標示（通常只露出前 2 碼和後 3 碼，和別人重複時再多露出一碼，直到分得開）；完整學號與對照表不放進這個公開的 repo。
 - 撤下：學生可以隨時要求撤下自己的作品，直接告訴課程教師即可；也可以在 [GitHub Issues](https://github.com/bigmoumou/Learning-Analytics-Tools/issues) 提出，但請只寫遮蔽後的代號，不要寫完整學號或姓名。
 
 ### 校名與標誌
@@ -111,7 +111,7 @@ The site's student work showcase (https://learning-analytics-tools.pages.dev/wor
 
 - Copyright: each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this project's MIT or CC BY-NC-SA 4.0 licenses. Apart from viewing and forking on GitHub as described below, do not copy, adapt or redistribute them without the author's permission.
 - Publication: only work that students agree to publish is shown. Consent covers hosting in this public GitHub repository, where GitHub's Terms of Service let other users view and fork it on GitHub.
-- Personal data: each piece is labeled only by a masked student ID that normally shows just the first two and last two characters (one more character at a time if two IDs would otherwise look the same). Full student IDs and the lookup table are never put in this public repository.
+- Personal data: each piece is labeled only by a masked student ID that normally shows just the first two and last three characters (one more character at a time if two IDs would otherwise look the same). Full student IDs and the lookup table are never put in this public repository.
 - Takedown: students can ask for their work to be taken down at any time; telling the course teacher directly is enough. You can also open a [GitHub issue](https://github.com/bigmoumou/Learning-Analytics-Tools/issues), but give only the masked code, never a full student ID or name.
 
 ### University name and marks
