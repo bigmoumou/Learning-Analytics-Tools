@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>練習用的 Mac｜學習分析工具</title>
+<meta name="description" content="在瀏覽器裡練習 Week 3：一台練習用的 Mac，可以操作終端機、Finder，並把資料夾拖進 Codex。這是教學模擬，不是真的 Mac。">
+<meta name="robots" content="noindex">
+<meta name="author" content="JUNHAO CHEN">
+<meta name="copyright" content="© 2026 JUNHAO CHEN">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f6efdc'/%3E%3Cpath d='M9.5 24v-5M16 24v-9M22.5 24V8' stroke='%238a5400' stroke-width='4.2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- 字型不擋畫面：樣式表先以 media=print 載入，載完才套用；字型網站連不上時（例如學校防火牆）練習照樣開得起來，只是先用系統字型 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap"></noscript>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/window.css">
+<link rel="stylesheet" href="css/mission.css">
+<link rel="stylesheet" href="css/finder.css">
+<link rel="stylesheet" href="css/terminal.css">
+<link rel="stylesheet" href="css/codex.css">
+<link rel="stylesheet" href="css/editors.css">
+<!-- 多語系要比其他程式先載入（不要 defer）；練習版只有繁體中文，boot.js 會把 <html lang> 鎖回 zh-Hant -->
+<script src="../../assets/i18n-strings.js"></script>
+<script src="../../assets/i18n.js"></script>
+</head>
+<body>
+<div id="lab-root">
+  <aside id="lab-rail" aria-label="任務卡">
+    <div class="lab-page-foot">Copyright © 2026 JUNHAO CHEN</div>
+  </aside>
+  <main id="lab-screen">
+    <div id="lab-stage" role="application" aria-label="練習用的 Mac 桌面">
+      <canvas id="lab-wall" aria-hidden="true"></canvas>
+      <div id="lab-desktop"></div>
+      <div id="lab-windows"></div>
+      <div id="lab-menubar"></div>
+      <div id="lab-dock"></div>
+      <div id="lab-overlays"></div>
+      <div id="lab-dnd"></div>
+    </div>
+  </main>
+</div>
+<div id="lab-modal-root"></div>
+<noscript><p style="padding:24px;font:16px/1.7 system-ui,sans-serif">這個練習需要 JavaScript，請在瀏覽器裡開啟 JavaScript 後重新整理。</p></noscript>
+
+<script src="js/lab.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/store.js"></script>
+<script src="js/vfs.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/wm.js"></script>
+<script src="js/apps.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/dnd.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/finder.js"></script>
+<script src="js/terminal.js"></script>
+<script src="js/codex.js"></script>
+<script src="js/textedit.js"></script>
+<script src="js/code.js"></script>
+<script src="js/about.js"></script>
+<script src="js/missions-week3.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>

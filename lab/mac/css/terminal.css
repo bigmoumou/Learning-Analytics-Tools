@@ -1,0 +1,115 @@
+/* terminal.css — 終端機 window (.tm-*). The real default "Basic" profile: light, black on white, grey block cursor. DESIGN §4.2.
+   Palette variables are declared here (the only place a Terminal colour is defined). */
+.tm-root {
+  --tm-bg: #fff;
+  --tm-fg: #000;
+  --tm-sel: #b3d7ff;
+  --tm-cursor: #7f7f7f;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  background: var(--tm-bg);
+  color: var(--tm-fg);
+  font-family: var(--lab-font-mono);
+  font-size: 12px;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.tm-screen {
+  --tm-lh: 16.25px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  bottom: 6px;                        /* fit() replaces this with an exact whole number of rows */
+  padding: 0 6px;
+  overflow-x: hidden;
+  overflow-y: scroll;                  /* always reserve the (transparent, thin) scrollbar so the column count never flips when it appears */
+  background: var(--tm-bg);
+  color: var(--tm-fg);
+  font-family: var(--lab-font-mono);
+  font-size: 12px;
+  line-height: var(--tm-lh);
+  font-variant-ligatures: none;
+  cursor: text;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-font-smoothing: auto;
+}
+.tm-screen *::selection, .tm-screen::selection { background: var(--tm-sel); color: var(--tm-fg); }
+.tm-screen ::-moz-selection { background: var(--tm-sel); color: var(--tm-fg); }
+
+.tm-hist, .tm-live { position: relative; }
+.tm-spacer { height: 0; }
+
+.tm-row {
+  height: var(--tm-lh);
+  line-height: var(--tm-lh);
+  white-space: pre;
+  overflow: visible;
+}
+
+/* every two-column character (CJK) sits in a cell exactly two columns wide */
+.tm-w {
+  display: inline-block;
+  width: 2ch;
+  text-align: center;
+  overflow: visible;
+  white-space: pre;
+}
+
+/* zsh's PROMPT_EOL_MARK: a reverse-video % after output that did not end in a newline */
+.tm-eol { background: var(--tm-fg); color: var(--tm-bg); }
+
+/* IME composition shown inline, underlined */
+.tm-comp { text-decoration: underline; text-underline-offset: 2px; }
+
+/* non-blinking block cursor; hollow when the window is not the active one */
+.tm-cursor { background: var(--tm-cursor); color: var(--tm-fg); }
+.lab-win.is-inactive .tm-cursor { background: transparent; box-shadow: inset 0 0 0 1px var(--tm-cursor); }
+
+/* the real input: 1 px wide, invisible, but sitting at the cursor cell so the IME candidate window appears there */
+.tm-input {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 1px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-family: var(--lab-font-mono);
+  font-size: 12px;
+  -webkit-user-select: text;
+  user-select: text;
+  z-index: 1;
+}
+.tm-input::selection { background: transparent; }
+
+/* measuring probe: 100 zeros in the terminal font, never visible */
+.tm-probe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
+  font-family: var(--lab-font-mono);
+  font-size: 12px;
+  font-variant-ligatures: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-screen { scroll-behavior: auto; }
+}

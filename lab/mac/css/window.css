@@ -1,0 +1,115 @@
+/* window.css — window chrome: traffic lights, bars, resize handles, shadows (DESIGN §3.6, §2.10). */
+.lab-win {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  background: var(--mac-win-bg);
+  color: var(--mac-text);
+  border-radius: var(--mac-radius);
+  box-shadow: var(--mac-shadow-off);
+  font-size: 13px;
+  outline: none;
+}
+.lab-win[hidden] { display: none !important; }
+.lab-win.is-active { box-shadow: var(--mac-shadow-on); }
+
+.lab-win-bar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  background: var(--mac-bar);
+  border-radius: var(--mac-radius) var(--mac-radius) 0 0;
+  -webkit-user-select: none; user-select: none;
+}
+.bar-plain .lab-win-bar { height: 28px; border-bottom: 1px solid var(--mac-bar-line); }
+.bar-unified .lab-win-bar { height: 52px; border-bottom: 1px solid var(--mac-bar-line); }
+.bar-hidden .lab-win-bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; background: transparent; z-index: 4; border-radius: var(--mac-radius) var(--mac-radius) 0 0; }
+.bar-hidden .lab-win-bar .lab-win-tools, .bar-hidden .lab-win-bar .lab-win-title { display: none; }
+
+.lab-win-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  contain: layout paint;
+  border-radius: 0 0 var(--mac-radius) var(--mac-radius);
+}
+.bar-hidden .lab-win-body { border-radius: var(--mac-radius); }
+
+.lab-win-title {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 84px;
+  font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--mac-text);
+}
+.bar-unified .lab-win-title { display: none; }
+.lab-win-tools { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; position: relative; z-index: 1; }
+.bar-plain .lab-win-tools { flex: none; }
+.lab-win.is-inactive .lab-win-title { opacity: .5; }
+
+/* traffic lights */
+.lab-tl { position: relative; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 13px; height: 100%; flex: none; }
+.bar-hidden .lab-tl { height: 40px; }
+.lab-tl-btn {
+  position: relative;
+  width: 12px; height: 12px; padding: 0; margin: 0; border: 0; border-radius: 50%;
+  background: var(--mac-light-off);
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .22);
+  display: flex; align-items: center; justify-content: center;
+  cursor: default;
+}
+.lab-tl-btn svg { opacity: 0; width: 12px; height: 12px; pointer-events: none; transition: opacity .1s; }
+.lab-win.is-active .lab-tl-close, .lab-tl:hover .lab-tl-close { background: var(--mac-red); }
+.lab-win.is-active .lab-tl-min, .lab-tl:hover .lab-tl-min { background: var(--mac-yellow); }
+.lab-win.is-active .lab-tl-zoom, .lab-tl:hover .lab-tl-zoom { background: var(--mac-green); }
+.lab-tl:hover .lab-tl-btn svg { opacity: 1; }
+.lab-tl-btn:disabled { background: var(--mac-light-off) !important; }
+.lab-win.theme-dark.is-inactive .lab-tl:not(:hover) .lab-tl-btn { background: #4a4a4d; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .10); }
+
+/* resize handles (5 px edge zones, 10 px corners) */
+.lab-rz { position: absolute; z-index: 6; }
+.lab-rz-n { top: -3px; left: 10px; right: 10px; height: 6px; cursor: ns-resize; }
+.lab-rz-s { bottom: -3px; left: 10px; right: 10px; height: 6px; cursor: ns-resize; }
+.lab-rz-e { right: -3px; top: 10px; bottom: 10px; width: 6px; cursor: ew-resize; }
+.lab-rz-w { left: -3px; top: 10px; bottom: 10px; width: 6px; cursor: ew-resize; }
+.lab-rz-ne { top: -3px; right: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+.lab-rz-nw { top: -3px; left: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+.lab-rz-se { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+.lab-rz-sw { bottom: -3px; left: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+
+/* dark apps (Codex, Code) */
+.lab-win.theme-dark { background: #1f1f1f; color: #e2e2e2; }
+.theme-dark .lab-win-bar { background: #2b2b2e; border-bottom-color: #1a1a1c; }
+.theme-dark .lab-win-title { color: #d8d8d8; }
+.theme-dark.bar-hidden .lab-win-bar { background: transparent; }
+.lab-win.theme-dark.is-active { box-shadow: 0 22px 60px rgba(0, 0, 0, .5), 0 0 0 .5px rgba(255, 255, 255, .16); }
+.lab-win.theme-dark.is-inactive { box-shadow: 0 8px 24px rgba(0, 0, 0, .35), 0 0 0 .5px rgba(255, 255, 255, .12); }
+
+/* motion (gentle, 150–300 ms) */
+.lab-win.is-opening, .lab-win.is-restoring { animation: lab-win-in .2s var(--lab-ease); }
+@keyframes lab-win-in { from { opacity: 0; transform: scale(.965); } to { opacity: 1; transform: scale(1); } }
+.lab-win.is-minimizing { transition: transform .25s var(--lab-ease), opacity .25s var(--lab-ease); transform: scale(.94) translateY(10px); opacity: 0; pointer-events: none; }
+.lab-win.is-animating { transition: left .2s var(--lab-ease), top .2s var(--lab-ease), width .2s var(--lab-ease), height .2s var(--lab-ease); }
+
+/* placeholder apps (apps.js, replaced by the real apps) */
+.lab-ph { height: 100%; overflow: auto; padding: 14px 16px; color: #222; font-size: 13px; background: #fff; }
+.theme-dark .lab-ph { background: #1f1f1f; color: #d8d8d8; }
+.lab-ph h2 { font-size: 16px; margin: 0 0 8px; }
+.lab-ph p { margin: 0 0 8px; }
+.lab-ph-note { color: var(--mac-text-2); font-size: 12px; }
+.theme-dark .lab-ph-note { color: #9a9a9a; }
+.lab-ph-path { font-weight: 700; margin-bottom: 8px; }
+.lab-ph-row { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 5px; }
+.lab-ph-row:hover { background: var(--mac-sel); }
+.lab-ph-split { display: flex; height: 100%; padding-top: 40px; margin: 0 -16px -14px; }
+.lab-ph-zone { flex: 1; padding: 14px; border-right: 1px solid #333; color: #9a9a9a; }
+.lab-ph-zone:first-child { flex: none; width: 220px; background: #181818; }
+.lab-ph-zone.is-drop { background: rgba(59, 130, 246, .18); }
+
+/* performance: lighter shadows */
+html[data-perf="low"] .lab-win, html[data-perf="low"] .lab-win.is-active, html[data-perf="low"] .lab-win.theme-dark.is-active { box-shadow: 0 4px 12px rgba(0, 0, 0, .28); }
+html[data-perf="low"] .lab-win.is-opening, html[data-perf="low"] .lab-win.is-restoring { animation-duration: .1s; }
