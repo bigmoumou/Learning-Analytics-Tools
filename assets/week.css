@@ -168,6 +168,8 @@ main.has-reel > .unit { grid-column: 1; grid-row: 2; margin-top: 0; } /* 一次�
   padding: 1rem 0 1.05rem; border: 0; background: none; text-align: left; cursor: pointer;
 }
 .reel li:last-child .reel-item { border-bottom: 1px solid var(--line); }
+/* 補充教材前面的小標：和「本週影片」同一種字，上面一條細線收住前一支 */
+.reel-sep { border-top: 1px solid var(--line); margin-top: .4rem; font-family: var(--font-mono); font-size: .76rem; font-weight: 700; letter-spacing: .14em; color: var(--ink-3); padding: 1.3rem 0 .4rem; }
 /* 上緣的細線就是觀看進度：看到哪裡就填到哪裡 */
 .reel-bar { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--line); overflow: hidden; }
 .reel-bar > span { position: absolute; inset: 0; background: var(--ink-3); transform: scaleX(var(--p, 0)); transform-origin: left; transition: transform .6s var(--ease), background-color .3s; }
@@ -232,6 +234,7 @@ main.has-reel > .unit { grid-column: 1; grid-row: 2; margin-top: 0; } /* 一次�
   .reel li { scroll-snap-align: start; }
   .reel-item { grid-template-columns: 1fr; gap: .6rem; padding: .9rem 0 .2rem; }
   .reel li:last-child .reel-item { border-bottom: 0; }
+  .reel-sep { display: none; } /* 橫排時不放小標，項目上已經寫「補充 1」 */
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .001ms !important; }

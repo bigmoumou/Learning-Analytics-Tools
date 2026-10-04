@@ -9,6 +9,8 @@
      清單上緣的細線是觀看進度（記在這台瀏覽器的 localStorage）；影片播完會出現「下一支」。
      沒有 JavaScript 時，各個 section 照原本的順序排下來。
    - 網址：#t=秒數 是目前（第一支）影片的那個時間；#NN-slug 選那一支；#NN-slug&t=秒數 選那一支並跳到那個時間。
+   - 補充教材：<section class="unit unit-supp" id="sN-slug">，放在這週影片後面；清單上寫「補充 N」，
+     第一個補充教材前面有一行「補充教材」小標。
    ========================================================================== */
 (function () {
   "use strict";
@@ -146,7 +148,24 @@
       '<span class="reel-thumb"><img alt="" loading="lazy" width="800" height="450"><span class="reel-len"></span></span>' +
       '<span class="reel-text"><span class="reel-n"></span></span>';
     b.querySelector("img").src = (vid.getAttribute("poster") || "").replace(/poster\.jpg$/, "thumb.jpg");
-    b.querySelector(".reel-n").textContent = (num && num.dataset.n) || String(i + 1).padStart(2, "0");
+    const n = b.querySelector(".reel-n");
+    const supp = unit.classList.contains("unit-supp");
+    if (supp && num) {
+      // 補充教材：清單上寫「補充 1」（data-ui 跟著語言換），不寫編號
+      n.dataset.ui = num.dataset.ui;
+      n.dataset.n = num.dataset.n;
+      n.textContent = num.textContent;
+    } else {
+      n.textContent = (num && num.dataset.n) || String(i + 1).padStart(2, "0");
+    }
+    // 第一個補充教材前面加一行小標「補充教材」
+    if (supp && !list.querySelector(".reel-sep")) {
+      const sep = document.createElement("li");
+      sep.className = "reel-sep";
+      sep.dataset.ui = "reel.supp";
+      sep.textContent = "補充教材";
+      list.append(sep);
+    }
     // 標題複製 section 裡那一個（連翻譯屬性一起），換語言時 i18n.js 會一起換
     const t = title ? title.cloneNode(true) : document.createElement("span");
     if (!title) t.textContent = unit.querySelector(".unit-title").textContent;

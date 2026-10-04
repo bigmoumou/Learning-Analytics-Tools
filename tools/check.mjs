@@ -7,7 +7,7 @@
 //   3. HTML 裡的本機連結（href、src、poster、data-hls）都找得到檔案
 //   4. HLS 播放清單（.m3u8）列出的小段都在
 //   5. assets/course.js 的 WEEKS 裡的 href、thumb、still 都找得到
-//   6. 每個影片資料夾（weeks/weekNN/video/NN-slug/）都有 hls/index.m3u8、poster.jpg、thumb.jpg，而且週次頁有用到
+//   6. 每個影片資料夾（weeks/weekNN/video/NN-slug/，補充教材是 sN-slug/）都有 hls/index.m3u8、poster.jpg、thumb.jpg，而且週次頁有用到
 //   7. _redirects 轉去的目的地存在
 //   8. 多語系：assets/i18n-strings.js 四種語言的 key 一樣、沒有空的；每頁都載入 i18n；
 //      data-ui 用到的 key 都存在；data-i18n、data-i18n-attr 的元素都有 data-zh-hans、data-en、data-vi；
@@ -177,7 +177,7 @@ for (const week of fs.existsSync(weeksDir) ? fs.readdirSync(weeksDir) : []) {
   for (const slug of fs.readdirSync(videoDir)) {
     const d = path.join(videoDir, slug);
     if (!fs.statSync(d).isDirectory()) continue;
-    if (!/^\d{2}-[a-z0-9-]+$/.test(slug)) warn(`weeks/${week}/video/${slug}：資料夾名稱建議是「兩位數字-英文小寫」，例如 02-relative-path`);
+    if (!/^(\d{2}|s\d)-[a-z0-9-]+$/.test(slug)) warn(`weeks/${week}/video/${slug}：資料夾名稱建議是「兩位數字-英文小寫」（補充教材用 s1-、s2-），例如 02-relative-path、s1-terminal-mac`);
     for (const need of ["hls/index.m3u8", "poster.jpg", "thumb.jpg"]) {
       if (!fs.existsSync(path.join(d, need))) error(`weeks/${week}/video/${slug}/ 少了 ${need}（用 tools/publish-video.sh 產生）`);
     }
