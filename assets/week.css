@@ -44,6 +44,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.75;
+  text-spacing-trim: trim-start; /* 全形括號「（」排在行首時不留半個字的空白 */
 }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
@@ -110,6 +111,9 @@ body::after {
 .unit + .unit { margin-top: clamp(3.4rem, 9vw, 6rem); }
 .unit-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .9rem; margin-bottom: 1rem; font-size: clamp(1.3rem, 2.6vw, 1.7rem); font-weight: 700; line-height: 1.3; }
 .unit-num { font-family: var(--font-mono); font-size: .76rem; font-weight: 700; letter-spacing: .14em; color: var(--accent); }
+/* 標題、片段名稱裡的（…）、(…)：video.js 把它包成一段，要換行就整組一起換，不會剩下孤零零的「（Windows）」 */
+.np { white-space: nowrap; }
+.np-fw.ls { margin-left: -.5em; } /* video.js 發現字型沒有把行首「（」左邊的半個字空白收掉時，補上這一行 */
 
 /* ---------- 影片：放在一段膠捲裡 ---------- */
 .film {
@@ -154,6 +158,33 @@ body::after {
 .points p { font-size: clamp(1.02rem, 1.7vw, 1.14rem); line-height: 1.8; text-wrap: pretty; }
 .points strong { font-weight: 700; }
 .points code { background: var(--btn); border-radius: 6px; padding: .05em .4em; white-space: nowrap; }
+/* 窄螢幕：很長的路徑（例如 /Users/an/Desktop/Project/output/report.md）不能撐寬頁面，需要時在路徑裡換行 */
+@media (max-width: 760px) {
+  .points code { white-space: normal; overflow-wrap: anywhere; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+}
+
+/* ---------- 課堂練習（section.unit-lab）：不是影片，膠捲裡放一張筆電的圖，點了進到練習用的電腦 ----------
+   版面和影片段落一樣（標題、膠捲、重點），清單上它也是一格（video.js 用 data-thumb 當縮圖）。 */
+.lab-shot { display: block; width: 100%; height: 100%; }
+.lab-shot:focus-visible { outline-offset: -4px; }
+.lab-shot img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.player:hover .lab-shot img { transform: scale(1.012); }
+/* 圖下方的按鈕：和「下一支」同一種琥珀色，但不蓋住筆電 */
+.lab-go {
+  position: absolute; left: 50%; bottom: clamp(.7rem, 4.2%, 1.5rem); transform: translateX(-50%); z-index: 2;
+  display: inline-flex; align-items: center; gap: .6rem; max-width: calc(100% - 2rem); padding: .6rem 1.2rem;
+  border-radius: 999px; background: #f0b545; color: #141210; font-size: .95rem; font-weight: 700; line-height: 1.4; text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35); transition: background-color .2s;
+}
+.lab-go:hover { background: #f6c460; }
+.lab-go:focus-visible { outline-color: #fff; }
+.lab-go .arrow { font-family: var(--font-mono); }
+.lab-go { white-space: nowrap; }
+@media (max-width: 760px) {
+  .lab-go { bottom: 3%; padding: .38rem .85rem; font-size: .8rem; gap: .4rem; }
+}
+.lab-intro { max-width: 46rem; margin-top: 1.4rem; font-size: clamp(1.02rem, 1.7vw, 1.14rem); line-height: 1.8; color: var(--ink-2); text-wrap: pretty; }
+.lab-note { max-width: 46rem; margin-top: .6rem; font-size: .86rem; line-height: 1.6; color: var(--ink-3); }
 
 /* ---------- 一週兩支以上影片：播放清單（video.js 產生 .reel，並在 main 加上 .has-reel） ----------
    和片段、重點同一套樣子：細線分隔、等寬編號、黃色標出目前這支，不用卡片。 */
@@ -230,11 +261,12 @@ main.has-reel > .unit { grid-column: 1; grid-row: 2; margin-top: 0; } /* 一次�
   .page > main.has-reel { display: block; }
   .reel { position: static; margin-bottom: 1.6rem; }
   .reel-label { padding-top: 0; }
-  .reel ol { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(10rem, 1fr); gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; }
-  .reel li { scroll-snap-align: start; }
+  .reel ol { flex-direction: row; gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .reel li { flex: 1 0 10rem; min-width: 0; scroll-snap-align: start; }
   .reel-item { grid-template-columns: 1fr; gap: .6rem; padding: .9rem 0 .2rem; }
   .reel li:last-child .reel-item { border-bottom: 0; }
-  .reel-sep { display: none; } /* 橫排時不放小標，項目上已經寫「補充 1」 */
+  /* 橫排時，每一組的小標是前面的一小欄：左邊一條細線把組和組分開，字和項目的上緣對齊 */
+  .reel li.reel-sep { flex: 0 0 auto; max-width: 5.6rem; margin: 0; padding: .9rem 0 0 .9rem; border-top: 0; border-left: 1px solid var(--line); line-height: 1.5; letter-spacing: .08em; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .001ms !important; }

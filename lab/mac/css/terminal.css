@@ -1,10 +1,11 @@
-/* terminal.css — 終端機 window (.tm-*). The real default "Basic" profile: light, black on white, grey block cursor. DESIGN §4.2.
+/* terminal.css — 終端機 window (.tm-*). Matches the owner's own Mac (ref-ui/terminal-window.png): white title bar, dark navy-grey body
+   (sampled #232c3a), light text, grey block cursor. DESIGN §4.2.
    Palette variables are declared here (the only place a Terminal colour is defined). */
 .tm-root {
-  --tm-bg: #fff;
-  --tm-fg: #000;
-  --tm-sel: #b3d7ff;
-  --tm-cursor: #7f7f7f;
+  --tm-bg: #232c3a;
+  --tm-fg: #f2f2f2;
+  --tm-sel: #44577a;
+  --tm-cursor: #8f9398;
   position: absolute;
   left: 0;
   right: 0;
@@ -24,9 +25,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 6px;
-  bottom: 6px;                        /* fit() replaces this with an exact whole number of rows */
-  padding: 0 6px;
+  top: 8px;
+  bottom: 8px;                        /* fit() replaces this with an exact whole number of rows */
+  padding: 0 8px;
   overflow-x: hidden;
   overflow-y: scroll;                  /* always reserve the (transparent, thin) scrollbar so the column count never flips when it appears */
   background: var(--tm-bg);
@@ -70,14 +71,14 @@
 .tm-comp { text-decoration: underline; text-underline-offset: 2px; }
 
 /* non-blinking block cursor; hollow when the window is not the active one */
-.tm-cursor { background: var(--tm-cursor); color: var(--tm-fg); }
+.tm-cursor { background: var(--tm-cursor); color: var(--tm-bg); }
 .lab-win.is-inactive .tm-cursor { background: transparent; box-shadow: inset 0 0 0 1px var(--tm-cursor); }
 
 /* the real input: 1 px wide, invisible, but sitting at the cursor cell so the IME candidate window appears there */
 .tm-input {
   position: absolute;
-  left: 6px;
-  top: 6px;
+  left: 8px;
+  top: 8px;
   width: 1px;
   height: 16px;
   margin: 0;
@@ -109,6 +110,10 @@
   font-size: 12px;
   font-variant-ligatures: none;
 }
+
+/* the body is dark although the window theme is "light": give the overlay scrollbar a light thumb */
+#lab-stage .tm-screen:hover, #lab-stage .tm-screen.lab-scrolling { scrollbar-color: rgba(255, 255, 255, .32) transparent; }
+#lab-stage .tm-screen:hover::-webkit-scrollbar-thumb, #lab-stage .tm-screen.lab-scrolling::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .32); }
 
 @media (prefers-reduced-motion: reduce) {
   .tm-screen { scroll-behavior: auto; }

@@ -4,7 +4,7 @@
 // 檢查項目：
 //   1. 每個檔案都小於 25 MiB（Cloudflare Pages 的上限，超過時整個部署會失敗）
 //   2. 每個 .html 都有 github.io 轉址程式（舊網址才轉得過來）和版權聲明
-//   3. HTML 裡的本機連結（href、src、poster、data-hls）都找得到檔案
+//   3. HTML 裡的本機連結（href、src、poster、data-hls、data-thumb）都找得到檔案
 //   4. HLS 播放清單（.m3u8）列出的小段都在
 //   5. assets/course.js 的 WEEKS 裡的 href、thumb、still 都找得到
 //   6. 每個影片資料夾（weeks/weekNN/video/NN-slug/，補充教材是 sN-slug/）都有 hls/index.m3u8、poster.jpg、thumb.jpg，而且週次頁有用到
@@ -124,7 +124,7 @@ for (const page of pages) {
   if (!html.includes(REDIRECT_MARK)) error(`${rel(page)} 少了 github.io 轉址程式（從 weeks/week03/index.html 的 <head> 複製）`);
   if (!html.includes(COPYRIGHT)) error(`${rel(page)} 少了版權聲明「${COPYRIGHT}」（從 weeks/week03/index.html 的頁尾複製）`);
   if (html.includes("待填")) warn(`${rel(page)} 還有「待填」的地方`);
-  for (const m of html.matchAll(/\s(href|src|poster|data-hls)="([^"]*)"/g)) {
+  for (const m of html.matchAll(/\s(href|src|poster|data-hls|data-thumb)="([^"]*)"/g)) {
     const ref = m[2];
     if (/^(https?:|mailto:|data:|javascript:|#)/.test(ref) || ref === "") continue;
     const target = resolveRef(page, ref);

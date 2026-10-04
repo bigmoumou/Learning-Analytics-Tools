@@ -721,11 +721,18 @@
         { separator: true },
         { label: '全選', shortcut: '⌘A', enabled: !!ta, action: function () { if (ta) { ta.focus({ preventScroll: true }); ta.select(); } } }
       ] },
+      { label: '選取項目', items: [
+        { label: '全選', shortcut: '⌘A', enabled: !!ta, action: function () { if (ta) { ta.focus({ preventScroll: true }); ta.select(); } } },
+        off('展開選取範圍', '^⇧⌘→'),
+        off('縮小選取範圍', '^⇧⌘←')
+      ] },
       { label: '檢視', items: [
         { label: '探索', shortcut: '⇧⌘E', enabled: !!c, action: function () { if (c) c.toggleSidebar(true); } },
         { label: '切換側邊欄', shortcut: '⌘B', enabled: !!c, checked: function () { return !!(c && c.isSidebarOpen()); }, action: function () { if (c) c.toggleSidebar(); } }
       ] },
-      { label: '前往', items: [off('前往檔案⋯', '⌘P'), off('前往行⋯', '^G')] },
+      { label: '移至', items: [off('前往檔案⋯', '⌘P'), off('前往行/欄⋯', '^G')] },
+      { label: '執行', items: [off('開始偵錯', 'F5'), off('不偵錯就執行', '^F5')] },
+      { label: '終端機', items: [off('新增終端機', '^⇧`'), off('執行工作⋯')] },
       { label: '視窗', items: LAB.menu.windowMenu(false) },
       { label: '說明', items: [off('歡迎使用'), { separator: true }, { label: '關於這個練習', action: function () { LAB.apps.launch('about', { tab: 'about' }); } }] }
     ];

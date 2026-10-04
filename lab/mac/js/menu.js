@@ -17,6 +17,11 @@
 
   menu.register = function (appId, fn) { registry.set(appId, fn); };
 
+  /* The glyph at the far left of the menu bar: our own drawing of a plain apple (body, bite, leaf), not Apple's artwork file.
+     It opens the practice menu (about, shortcuts, progress code, reset). */
+  LAB.icons.add('apple-mark', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="2.4 2.4 19.2 19.2">' +
+    '<path fill="currentColor" d="M12 8.5C11 7.7 9.4 7.3 8 7.9C5.6 8.9 4.4 11.7 5 14.7C5.6 17.7 7.6 21 9.6 21C10.6 21 11.2 20.4 12 20.4C12.8 20.4 13.4 21 14.5 21C16.1 21 17.7 18.6 18.8 16.2C17.4 15.5 16.3 14.2 16.3 12.6C16.3 11.1 17.1 9.9 18.2 9.2C17.3 7.9 15.9 7.2 14.5 7.3C13.6 7.4 12.7 8.1 12 8.5ZM12.7 6.4C12.7 5 13.6 3.6 15.1 3C15.2 4.5 14.3 6 12.7 6.4Z"/></svg>');
+
   function overlays() { return document.getElementById('lab-overlays'); }
   function evalFlag(v, dflt) {
     if (typeof v === 'function') { try { return !!v(); } catch (e) { return dflt; } }
@@ -103,7 +108,7 @@
     barTitles = [];
     var titles = [];
     titles.push({ kind: 'practice', node: h('span', { class: 'lab-mb-mark', 'aria-hidden': 'true' }), label: '練習', aria: '練習選單', cls: 'lab-mb-markbtn' });
-    titles[0].node.innerHTML = LAB.icons.get('mark', { size: 16 });
+    titles[0].node.innerHTML = LAB.icons.get('apple-mark', { size: 18 });
     titles.push({ kind: 'app', label: cm.name, cls: 'lab-mb-app' });
     cm.menus.forEach(function (m, i) { titles.push({ kind: 'menu', index: i, label: m.label, cls: 'lab-mb-menu' }); });
     titles.forEach(function (t, idx) {

@@ -918,7 +918,7 @@
     var sa = (LAB.stage && LAB.stage.spawnArea) ? LAB.stage.spawnArea() : { w: 900, h: 620 };
     var root = h('div', { class: 'cx-root', lang: 'en', dataset: { lab: 'cx-root' } });
     var win = LAB.wm.open({
-      appId: 'codex', title: 'Codex', width: Math.min(900, sa.w), height: Math.min(620, sa.h), minW: 720, minH: 480,
+      appId: 'codex', title: 'Codex', width: Math.min(900, sa.w), height: Math.min(620, sa.h), minW: 720, minH: 440,
       bar: 'hidden', theme: 'dark', content: root, singleton: 'codex', icon: 'app-codex'
     });
     initView(win, root);

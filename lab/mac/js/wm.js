@@ -67,6 +67,9 @@
     var y = sa.y + Math.max(0, (sa.h - hh) / 2 - 20) + off;
     x = Math.max(sa.x, Math.min(x, sa.x + Math.max(0, sa.w - w)));
     y = Math.max(sa.y, Math.min(y, sa.y + Math.max(0, sa.h - hh)));
+    // still too wide for the room right of the mission pill (narrow screens): keep the desktop icons clear and start below the pill
+    var below = w > sa.w && stage().belowCard ? stage().belowCard() : null;
+    if (below !== null) { x = Math.max(24, Math.min(x, stage().w - 130 - w)); y = Math.max(y, below); }
     return { x: Math.round(x), y: Math.round(y) };
   };
 
@@ -86,7 +89,11 @@
     var wa = work();
     var width = Math.max(minW, Math.min(opts.width || 640, wa.w));
     var height = Math.max(minH, Math.min(opts.height || 420, wa.h));
+    // a new window wider than the room right of the mission card first gets narrower (never below its minimum width)
+    if (opts.x === undefined || opts.y === undefined) width = Math.max(minW, Math.min(width, stage().spawnArea().w));
     var pos = (opts.x === undefined || opts.y === undefined) ? wm.spawnRect(width, height, appId) : { x: opts.x, y: opts.y };
+    // a new window stops above the Dock: when it starts low (below the mission pill) it gets shorter rather than reaching behind it
+    if ((opts.x === undefined || opts.y === undefined) && stage().dockTop) height = Math.max(minH, Math.min(height, stage().dockTop() - 8 - pos.y));
     var rect = clampRect({ x: pos.x, y: pos.y, w: width, h: height }, minW, minH);
 
     var id = LAB.util.uid('w');

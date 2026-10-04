@@ -23,7 +23,7 @@
   border-radius: var(--mac-radius) var(--mac-radius) 0 0;
   -webkit-user-select: none; user-select: none;
 }
-.bar-plain .lab-win-bar { height: 28px; border-bottom: 1px solid var(--mac-bar-line); }
+.bar-plain .lab-win-bar { height: var(--mac-bar-h); border-bottom: 1px solid var(--mac-bar-line); }
 .bar-unified .lab-win-bar { height: 52px; border-bottom: 1px solid var(--mac-bar-line); }
 .bar-hidden .lab-win-bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; background: transparent; z-index: 4; border-radius: var(--mac-radius) var(--mac-radius) 0 0; }
 .bar-hidden .lab-win-bar .lab-win-tools, .bar-hidden .lab-win-bar .lab-win-title { display: none; }
@@ -41,7 +41,7 @@
 .lab-win-title {
   position: absolute; left: 0; right: 0; top: 0; bottom: 0;
   display: flex; align-items: center; justify-content: center;
-  padding: 0 84px;
+  padding: 0 92px;
   font-weight: 600;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: var(--mac-text);
@@ -52,23 +52,31 @@
 .lab-win.is-inactive .lab-win-title { opacity: .5; }
 
 /* traffic lights */
-.lab-tl { position: relative; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 13px; height: 100%; flex: none; }
+.lab-tl { position: relative; z-index: 3; display: flex; align-items: center; gap: var(--mac-tl-gap); padding: 0 8px 0 9px; height: 100%; flex: none; }
 .bar-hidden .lab-tl { height: 40px; }
 .lab-tl-btn {
   position: relative;
-  width: 12px; height: 12px; padding: 0; margin: 0; border: 0; border-radius: 50%;
+  width: var(--mac-tl); height: var(--mac-tl); padding: 0; margin: 0; border: 0; border-radius: 50%;
   background: var(--mac-light-off);
   box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .22);
   display: flex; align-items: center; justify-content: center;
   cursor: default;
 }
-.lab-tl-btn svg { opacity: 0; width: 12px; height: 12px; pointer-events: none; transition: opacity .1s; }
+.lab-tl-btn svg { opacity: 0; width: var(--mac-tl); height: var(--mac-tl); pointer-events: none; transition: opacity .1s; }
 .lab-win.is-active .lab-tl-close, .lab-tl:hover .lab-tl-close { background: var(--mac-red); }
 .lab-win.is-active .lab-tl-min, .lab-tl:hover .lab-tl-min { background: var(--mac-yellow); }
 .lab-win.is-active .lab-tl-zoom, .lab-tl:hover .lab-tl-zoom { background: var(--mac-green); }
 .lab-tl:hover .lab-tl-btn svg { opacity: 1; }
 .lab-tl-btn:disabled { background: var(--mac-light-off) !important; }
 .lab-win.theme-dark.is-inactive .lab-tl:not(:hover) .lab-tl-btn { background: #4a4a4d; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .10); }
+
+/* Terminal: leading-aligned title with a small folder icon after the lights, plain white bar (as on the owner's Mac) */
+.lab-win[data-app="terminal"] .lab-win-bar { background: #fff; border-bottom: 0; }
+.lab-win[data-app="terminal"] .lab-win-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", var(--mac-font); justify-content: flex-start; padding: 0 16px 0 84px; color: #4a4a4a; }
+.lab-win[data-app="terminal"] .lab-win-title::before {
+  content: ""; flex: none; width: 16px; height: 16px; margin-right: 5px;
+  background: var(--ticon, none) center / contain no-repeat;
+}
 
 /* resize handles (5 px edge zones, 10 px corners) */
 .lab-rz { position: absolute; z-index: 6; }

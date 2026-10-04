@@ -17,6 +17,7 @@
   var lastSig = '';
   var tickTimer = null;
   var rail = null, liveEl = null;
+  var lastFace = null;                       // 'card' or 'pill' at the last render
   var ui = { listOpen: false, mapOpen: false, codeOpen: false, copied: null };
   var welcomeShown = false;
   var missions = {};
@@ -458,7 +459,7 @@
 
   function stripText() {
     var m = missions.current();
-    if (!m) return '任務';
+    if (!m) return '選一個任務';
     var r = rec(m.id);
     if (r.doneAt) return '任務完成';
     var total = m.steps.length;
@@ -514,7 +515,12 @@
     var attn = !!(mode === 'drawer' && !open && m && r && !data.freePlay && (bubbleText || r.doneAt));
     var curStepText = '';
     if (m && r && !r.doneAt && firstUndone(m, r) >= 0) curStepText = plain(m.steps[firstUndone(m, r)].text);
-    var strip = h('button', { type: 'button', class: 'lab-rail-strip' + (attn ? ' is-attn' : ''), 'aria-label': '展開任務卡' + (curStepText ? '。目前這一步：' + curStepText : ''), title: curStepText || null,
+    // which face of the card is showing: the full card or the pill. Only a change between them animates (render rebuilds the card often)
+    var face = (mode === 'drawer' && !open) ? 'pill' : 'card';
+    var entering = lastFace !== null && lastFace !== face;
+    lastFace = face;
+    var strip = h('button', { type: 'button', class: 'lab-rail-strip lab-glass' + (attn ? ' is-attn' : '') + (entering && face === 'pill' ? ' is-entering' : ''),
+      'aria-label': '展開任務卡' + (curStepText ? '。目前這一步：' + curStepText : ''), title: curStepText || null,
       'data-lab': 'rail-strip', 'data-fk': 'strip' },
       h('span', { class: 'lab-rail-chev', 'aria-hidden': 'true' }, '›'),
       h('span', { class: 'lab-rail-dot', 'aria-hidden': 'true' }),
@@ -526,7 +532,7 @@
         h('span', { class: 'lab-peek-eyebrow' }, bubbleKind === 'nudge' ? '提醒' : '做好了'),
         h('span', { class: 'lab-peek-text' }, bubbleText));
       bmain.addEventListener('click', function () { LAB.layout.openDrawer(); });
-      bubble = h('div', { class: 'lab-peek is-' + bubbleKind, dataset: { lab: 'rail-peek', kind: bubbleKind } }, bmain);
+      bubble = h('div', { class: 'lab-peek lab-glass is-' + bubbleKind, dataset: { lab: 'rail-peek', kind: bubbleKind } }, bmain);
       if (bubbleKind === 'nudge') {
         var bx = h('button', { type: 'button', class: 'lab-peek-x', 'aria-label': '先關掉這個提醒', 'data-fk': 'peekx' }, '×');
         bx.addEventListener('click', function () { nudgeShut = nudgeKey(); render(true); });
@@ -535,18 +541,20 @@
     }
 
     // header
+    // pinned: the card stays open. Drawer: it folds into the pill whenever the student clicks the Mac
     var ctl = [];
-    if (mode === 'pinned') ctl.push(link('‹', 'pin', function () { LAB.layout.setRailMode('drawer'); }, { 'data-lab': 'rail-pin', 'aria-label': '把任務卡收成側邊抽屜', title: '收成抽屜' }));
+    if (mode === 'pinned') ctl.push(link('收起', 'pin', function () { LAB.layout.setRailMode('drawer'); }, { 'data-lab': 'rail-pin', title: '收成左上角的小膠囊，點一下再打開' }));
     else {
       ctl.push(link('收起', 'close', function () { LAB.layout.closeDrawer(); }, { 'data-lab': 'rail-close' }));
-      ctl.push(link('固定在左邊', 'pin', function () { LAB.layout.setRailMode('pinned'); }, { 'data-lab': 'rail-pin' }));
+      ctl.push(link('釘住', 'pin', function () { LAB.layout.setRailMode('pinned'); }, { 'data-lab': 'rail-pin', title: '一直開著，點 Mac 時不收起' }));
     }
     var head = h('div', { class: 'lab-rail-head' },
       h('a', { class: 'lab-rail-link', href: '../../weeks/week03/' }, '← Week 3'),
       h('span', { class: 'lab-rail-label' }, '練習用的 Mac'),
       h('span', { class: 'lab-rail-ctl' }, ctl));
 
-    var parts = [head];
+    // the header is the card's own title row (outside the scroller): 收起 / 釘住 stay reachable and nothing scrolls under it
+    var parts = [];
 
     // mission list
     if (registry.length) {
@@ -663,7 +671,7 @@
       links.appendChild(link('自由練習', 'free', function () { missions.setFreePlay(!data.freePlay); }, { 'data-lab': 'rail-free' }));
     }
     if (LAB.layout && LAB.layout.canFullscreen && LAB.layout.canFullscreen()) {
-      links.appendChild(link('全螢幕', 'fullscreen', function () { LAB.layout.toggleFullscreen(); }, { 'data-lab': 'rail-fullscreen', title: '只放大右邊的 Mac 畫面；按 Esc 離開' }));
+      links.appendChild(link('全螢幕', 'fullscreen', function () { LAB.layout.toggleFullscreen(); }, { 'data-lab': 'rail-fullscreen', title: '把練習用的 Mac 放大到整個螢幕；按 Esc 離開' }));
     }
     links.appendChild(link('進度代碼', 'code', function () { ui.codeOpen = !ui.codeOpen; render(true); }, { 'data-lab': 'rail-code-toggle' }));
     links.appendChild(link('重設全部', 'resetall', function () {
@@ -687,7 +695,7 @@
     parts.push(foot);
 
     var scroll = h('div', { class: 'lab-rail-scroll' }, parts);
-    var bodyEl = h('div', { class: 'lab-rail-body', 'aria-hidden': (mode === 'drawer' && !open) ? 'true' : null }, scroll);
+    var bodyEl = h('div', { class: 'lab-rail-body lab-glass' + (entering && face === 'card' ? ' is-entering' : ''), 'aria-hidden': (mode === 'drawer' && !open) ? 'true' : null }, head, scroll);
     if (mode === 'drawer' && !open) bodyEl.setAttribute('inert', '');
     rail.textContent = '';
     rail.appendChild(strip);
@@ -760,10 +768,10 @@
     var freeBtn = h('button', { type: 'button', class: 'lab-textbtn', dataset: { lab: 'welcome-free' } }, '自由練習');
     startBtn.addEventListener('click', function () { close(true); });
     freeBtn.addEventListener('click', function () { close(false); });
-    var panel = h('div', { class: 'lab-welcome', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'lab-welcome-t' },
+    var panel = h('div', { class: 'lab-welcome lab-glass', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'lab-welcome-t' },
       h('h1', { id: 'lab-welcome-t' }, '歡迎來到練習用的 Mac'),
       h('p', null, '這不是真的 Mac，是在瀏覽器裡執行的模擬環境。你可以放心亂點、亂打指令，弄壞了隨時可以重來，不會影響你自己的電腦。建議先看過 Week 3 的影片。'),
-      h('p', null, '左邊是任務卡：照著步驟做，做對了會自動打勾；卡住了可以按「提示」。也可以選「自由練習」，自己隨便玩。'),
+      h('p', null, '左上角那張半透明的任務卡（螢幕窄時會縮成一顆小膠囊，點一下就展開）是這次的任務：照著步驟做，做對了會自動打勾；卡住了可以按「提示」。也可以選「自由練習」，自己隨便玩。'),
       h('p', null, '用 Windows 鍵盤時，Command 請用 Ctrl，Return 就是 Enter。'),
       h('p', null, '你的進度只存在這個瀏覽器裡。如果是學校的共用電腦，用完請按「重設全部」。'),
       LAB.store.available ? null : h('p', { class: 'lab-store-notice' }, '這個瀏覽器不能儲存進度，關掉這一頁後進度會消失。'),

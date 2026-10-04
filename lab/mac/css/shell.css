@@ -1,32 +1,39 @@
 /* shell.css — menu bar, menus, Dock, desktop icons, Spotlight, toasts, alert sheets, drag ghost (DESIGN §2). */
 
 /* ------------------------------------------------------------- menu bar */
+/* Transparent over the wallpaper, white text (as on the owner's Mac). Only a very soft shade at the top keeps the white text
+   readable over the bright sky of the photo; it fades to nothing, so no bar edge is visible. */
 #lab-menubar {
   height: 28px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 8px 0 6px;
-  background: rgba(18, 20, 32, .42);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  backdrop-filter: blur(20px) saturate(1.4);
+  background: linear-gradient(180deg, rgba(8, 28, 56, .2) 0%, rgba(8, 28, 56, .08) 60%, rgba(8, 28, 56, 0) 100%);
   color: #fff;
-  font-size: 13px; font-weight: 400;
+  font-size: 13px; font-weight: 500;
+  text-shadow: 0 0 3px rgba(0, 20, 50, .35);
   white-space: nowrap;
 }
 .lab-mb-left, .lab-mb-right { display: flex; align-items: center; height: 100%; }
 .lab-mb-right { gap: 2px; }
 .lab-mb-title, .lab-mb-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  height: 22px; padding: 0 9px; margin: 0;
+  height: 22px; padding: 0 10.5px; margin: 0;
   background: none; border: 0; border-radius: 5px;
-  color: #fff; font: inherit; font-weight: 400; line-height: 1;
+  color: #fff; font: inherit; font-weight: 500; line-height: 1; text-shadow: inherit;
   cursor: default;
 }
 .lab-mb-title:hover, .lab-mb-title.is-open, .lab-mb-btn:hover, .lab-mb-btn.is-open { background: rgba(255, 255, 255, .18); }
 .lab-mb-app { font-weight: 700; }
 .lab-mb-markbtn { padding: 0 10px; }
-.lab-mb-mark { display: inline-flex; color: #fff; }
-.lab-mb-btn { padding: 0 7px; }
-.lab-mb-ime { font-size: 12px; min-width: 34px; }
+.lab-mb-mark { display: inline-flex; color: #fff; filter: drop-shadow(0 0 2px rgba(0, 20, 50, .3)); }
+.lab-mb-btn { padding: 0 9px; }
+.lab-mb-btn svg { filter: drop-shadow(0 0 2px rgba(0, 20, 50, .3)); }
+/* input-method badge: white rounded box with a dark character, like the 注 badge on the real menu bar */
+.lab-mb-right .lab-mb-ime, .lab-mb-right .lab-mb-ime:hover, .lab-mb-right .lab-mb-ime.is-open {
+  width: 26px; height: 18px; min-width: 0; padding: 0; margin: 0 6px;
+  background: rgba(255, 255, 255, .96); color: #1d1d1f; border-radius: 5px;
+  font-size: 12.5px; font-weight: 700; text-shadow: none;
+}
 .lab-mb-clock { padding: 0 8px 0 10px; }
 
 /* ---------------------------------------------------------------- menus */
@@ -69,36 +76,38 @@
 .lab-cc-row input[type=range] { flex: 1; }
 .lab-cc-note { color: var(--mac-text-2); font-size: 12px; }
 
-/* ----------------------------------------------------------------- Dock */
+/* ----------------------------------------------------------------- Dock
+   Tahoe-style light frosted bar. Proportions follow the real Dock (icon : gap : bar height = 1 : .33 : 1.5):
+   58 px tile (the art leaves ~5% margin, so about 54 px is visible), 14 px gap, 16 px side padding, 28 px radius. */
 #lab-dock { display: flex; justify-content: center; }
 .lab-dock-bar {
   pointer-events: auto;
-  display: flex; align-items: flex-end; gap: 8px;
-  padding: 8px 10px 4px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, .28);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
-  backdrop-filter: blur(24px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, .35);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .25);
+  display: flex; align-items: flex-end; gap: 14px;
+  padding: 10px 16px 5px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .32));
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) brightness(1.12);
+  backdrop-filter: blur(30px) saturate(1.8) brightness(1.12);
+  border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 .5px rgba(255, 255, 255, .18);
 }
-.lab-dock-sec { display: flex; align-items: flex-end; gap: 8px; }
-.lab-dock-div { width: 1px; align-self: stretch; margin: 4px 2px 8px; background: rgba(255, 255, 255, .42); }
+.lab-dock-sec { display: flex; align-items: flex-end; gap: 14px; }
+.lab-dock-div { width: 1px; align-self: stretch; margin: 2px 0 6px; background: rgba(20, 30, 40, .34); }
 .lab-dock-item {
   position: relative;
-  width: 52px; height: 60px; padding: 0; margin: 0;
+  width: 58px; height: 68px; padding: 0; margin: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-  background: none; border: 0; border-radius: 12px;
+  background: none; border: 0; border-radius: 14px;
   cursor: default;
 }
-.lab-dock-icon { display: block; width: 52px; height: 52px; transform-origin: 50% 100%; transition: transform .08s ease-out; border-radius: 12px; }
-.lab-dock-icon svg { display: block; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .25)); }
-.lab-dock-dot { position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: rgba(255, 255, 255, .92); opacity: 0; }
+.lab-dock-icon { display: block; width: 58px; height: 58px; transform-origin: 50% 100%; transition: transform .08s ease-out; border-radius: 14px; }
+.lab-dock-icon svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); }
+.lab-dock-dot { position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: rgba(20, 24, 30, .78); opacity: 0; }
 .lab-dock-item.is-running .lab-dock-dot { opacity: 1; }
-.lab-dock-item.is-drop .lab-dock-icon { background: rgba(255, 255, 255, .38); box-shadow: 0 0 0 2px rgba(255, 255, 255, .6); }
+.lab-dock-item.is-drop .lab-dock-icon { background: rgba(255, 255, 255, .45); box-shadow: 0 0 0 2px rgba(255, 255, 255, .75); }
 .lab-dock-label {
-  position: absolute; bottom: calc(100% + 24px); left: 50%; transform: translateX(-50%);
-  padding: 3px 10px; border-radius: 6px;
+  position: absolute; bottom: calc(100% + 22px); left: 50%; transform: translateX(-50%);
+  padding: 3px 10px; border-radius: 7px;
   background: rgba(40, 40, 44, .88); color: #fff;
   font-size: 12px; font-weight: 500; white-space: nowrap;
   opacity: 0; pointer-events: none; transition: opacity .12s;
@@ -106,18 +115,18 @@
 }
 .lab-dock-item:hover .lab-dock-label, .lab-dock-item:focus-visible .lab-dock-label { opacity: 1; }
 .lab-dock-item.is-bounce .lab-dock-icon { animation: lab-bounce .24s ease-in-out 3; }
-@keyframes lab-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.lab-dock-mini { gap: 8px; }
-.lab-thumb-win { display: block; width: 46px; height: 34px; margin: 14px 3px 0; border-radius: 5px; background: #f4f4f4; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .3), 0 2px 5px rgba(0, 0, 0, .25); overflow: hidden; transform-origin: 50% 100%; }
+@keyframes lab-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.lab-dock-mini { gap: 14px; }
+.lab-thumb-win { display: block; width: 50px; height: 36px; margin: 22px 4px 0; border-radius: 5px; background: #f4f4f4; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .3), 0 2px 5px rgba(0, 0, 0, .25); overflow: hidden; transform-origin: 50% 100%; }
 .lab-thumb-bar { display: block; height: 7px; background: #dcdcdc; }
 .lab-thumb-line { display: block; height: 3px; margin: 4px 5px 0; border-radius: 2px; background: rgba(0, 0, 0, .14); }
 .lab-thumb-line.is-short { margin-right: 18px; }
 .lab-thumb-win.is-dark { background: #1e1e20; }
 .lab-thumb-win.is-dark .lab-thumb-bar { background: #38383b; }
 .lab-thumb-win.is-dark .lab-thumb-line { background: rgba(255, 255, 255, .22); }
-.lab-thumb-more { display: flex; align-items: center; justify-content: center; margin-top: 14px; font-size: 14px; font-weight: 700; color: #333; }
+.lab-thumb-more { display: flex; align-items: center; justify-content: center; margin-top: 22px; font-size: 14px; font-weight: 700; color: #333; }
 .lab-dock-thumb[hidden], .lab-dock-more[hidden] { display: none; }
-.lab-thumb-badge { position: absolute; right: -2px; bottom: 8px; width: 22px; height: 22px; display: block; }
+.lab-thumb-badge { position: absolute; right: -2px; bottom: 12px; width: 22px; height: 22px; display: block; }
 
 /* -------------------------------------------------------- desktop icons */
 .lab-dicon {
@@ -131,8 +140,8 @@
 .lab-dicon.is-drop .lab-dicon-img { background: rgba(255, 255, 255, .34); box-shadow: 0 0 0 2px rgba(10, 108, 255, .8); }
 .lab-dicon-label {
   margin-top: 4px; max-width: 92px; padding: 1px 6px; border-radius: 5px;
-  font-size: 12px; line-height: 1.25; text-align: center; color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+  font-size: 12px; font-weight: 700; line-height: 1.25; text-align: center; color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 0 5px rgba(0, 0, 0, .28);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all;
 }
 .lab-dicon.is-sel .lab-dicon-label { background: var(--mac-accent); text-shadow: none; }
@@ -196,7 +205,7 @@
   color: #1d1d1f; font-size: 13px; line-height: 1.45;
   -webkit-user-select: text; user-select: text;
 }
-.lab-sheet.is-attached { top: 28px; transform: translate(-50%, -14px); opacity: 0; border-radius: 0 0 12px 12px; transition: transform .2s var(--lab-ease), opacity .2s; }
+.lab-sheet.is-attached { top: var(--mac-bar-h); transform: translate(-50%, -14px); opacity: 0; border-radius: 0 0 12px 12px; transition: transform .2s var(--lab-ease), opacity .2s; }
 .bar-unified .lab-sheet.is-attached { top: 52px; }
 .bar-hidden .lab-sheet.is-attached { top: 0; }
 .lab-sheet-scrim.is-in .lab-sheet.is-attached { transform: translate(-50%, 0); opacity: 1; }
@@ -224,8 +233,8 @@
 .lab-ghost-badge.is-link { display: block; background: #8e8e93; font-size: 11px; }
 
 /* --------------------------------------------- performance mode (§2.10) */
-html[data-perf="low"] #lab-menubar { background: rgba(18, 20, 32, .72); -webkit-backdrop-filter: none; backdrop-filter: none; }
-html[data-perf="low"] .lab-dock-bar { background: rgba(120, 130, 160, .55); -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-perf="low"] #lab-menubar { background: linear-gradient(180deg, rgba(8, 28, 56, .5) 0%, rgba(8, 28, 56, .24) 70%, rgba(8, 28, 56, 0) 100%); }
+html[data-perf="low"] .lab-dock-bar { background: rgba(214, 222, 232, .78); -webkit-backdrop-filter: none; backdrop-filter: none; }
 html[data-perf="low"] .lab-menu, html[data-perf="low"] .lab-popover { background: rgba(246, 246, 246, .98); -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: .1s; }
 html[data-perf="low"] .lab-spot-panel { background: rgba(246, 246, 246, .98); -webkit-backdrop-filter: none; backdrop-filter: none; }
 html[data-perf="low"] .lab-sheet { background: rgba(246, 246, 246, 1); }

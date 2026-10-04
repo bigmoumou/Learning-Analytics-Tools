@@ -1,93 +1,138 @@
-/* mission.css — the rail (mission card), first-run welcome, phone notice (DESIGN §6). Calm editorial type, hairlines, one amber accent. */
+/* mission.css — the mission card, first-run welcome, phone notice (DESIGN §6, §16).
+   The card floats over the top-left corner of the fake Mac as Liquid Glass (macOS Tahoe / iOS 26): strong blur and saturation,
+   a bright rim where light catches the edge, large corners, a soft shadow. Inside: calm type, hairlines, one amber accent. */
 
-/* ------------------------------------------------------------------ rail */
+/* --------------------------------------------------------------- glass */
+.lab-glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .74), rgba(255, 255, 255, .62));
+  -webkit-backdrop-filter: blur(26px) saturate(1.9) brightness(1.05);
+  backdrop-filter: blur(26px) saturate(1.9) brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .9),
+    inset 0 0 14px rgba(255, 255, 255, .32),
+    0 0 0 .5px rgba(0, 0, 0, .14),
+    0 2px 6px rgba(0, 0, 0, .06),
+    0 18px 48px rgba(0, 0, 0, .24);
+}
+/* the rim: brightest on the top-left and bottom-right edges, clear in between (the inset shadows above make the thick edge
+   read lighter than the middle, as it does on real glass) */
+.lab-glass::before {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 2;
+  border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .3) 18%, rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, .38) 84%, rgba(255, 255, 255, .85));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* slow computers, and visitors who asked for less transparency: plain frosted white, no blur */
+html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (prefers-reduced-transparency: reduce) {
+  .lab-glass { background: rgba(246, 246, 246, .97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* ------------------------------------------------------------------ card */
 #lab-rail {
-  position: relative; flex: none;
-  height: 100%;
-  background: var(--lab-bg); color: var(--lab-ink);
-  border-right: 1px solid var(--lab-line);
-  font-size: 14px; line-height: 1.7;
-  z-index: 50;
+  /* it sits on the Mac, so it is always the Mac's light glass, even when the page itself is in dark mode */
+  --lab-bg: transparent; --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #4a4a51;
+  --lab-line: rgba(0, 0, 0, .1); --lab-accent: #8a5400;
+  position: absolute; left: 12px; top: calc(var(--lab-mb, 28px) + 10px); z-index: 50;
+  width: clamp(268px, 27vw, 340px);
+  /* --lab-card-bottom (desktop.js): 12px, or the Dock's height when the Dock reaches under the card (narrow screens) */
+  max-height: calc(100% - var(--lab-mb, 28px) - 10px - var(--lab-card-bottom, 12px));
+  display: flex; flex-direction: column; align-items: flex-start;
+  font-family: var(--mac-font); font-size: 13.5px; line-height: 1.65; color: var(--lab-ink);
+  pointer-events: none;                      /* only the card, the pill and the note take clicks */
 }
-#lab-root.rail-pinned #lab-rail { width: 320px; }
-#lab-root.rail-drawer #lab-rail { width: 56px; }
-#lab-root:not(.rail-pinned):not(.rail-drawer) #lab-rail { width: 320px; }
+/* the static copyright in index.html is for readers without JavaScript; the rendered card has its own */
+#lab-rail > .lab-page-foot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
 
+.lab-rail-body {
+  display: flex; flex-direction: column; width: 100%; min-height: 0; max-height: 100%;
+  border-radius: 22px; overflow: hidden; pointer-events: auto;
+  transform-origin: 18px 18px;
+}
+/* collapsed (narrow screens, or the student folded it): the card stays in the page but invisible, and opens in place */
+#lab-root.rail-drawer:not(.rail-open) .lab-rail-body {
+  position: absolute; left: 0; top: 0; max-height: none;
+  visibility: hidden; opacity: 0; pointer-events: none;
+}
+.lab-rail-body.is-entering { animation: lab-card-in .22s var(--lab-ease); }
+@keyframes lab-card-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+.lab-rail-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 22px;
+  /* a soft fade at the bottom edge tells the student the card scrolls */
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 20px), transparent); mask-image: linear-gradient(#000 calc(100% - 20px), transparent);
+  -webkit-user-select: text; user-select: text;
+  scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, .22) transparent;
+}
+
+/* the pill: what is left of the card when it is collapsed */
 .lab-rail-strip {
-  display: none;
-  width: 56px; height: 100%; padding: 14px 0; margin: 0;
-  flex-direction: column; align-items: center; gap: 12px;
-  background: none; border: 0; color: var(--lab-ink-2); cursor: pointer; font: inherit;
+  display: none; pointer-events: auto;
+  align-items: center; gap: 9px;
+  height: 40px; min-width: 188px; padding: 0 14px 0 16px; margin: 0;
+  border: 0; border-radius: 20px;
+  font: inherit; font-size: 13px; line-height: 1; color: var(--lab-ink); cursor: pointer; white-space: nowrap;
 }
-#lab-root.rail-drawer .lab-rail-strip { display: flex; }
-.lab-rail-chev { font-size: 22px; line-height: 1; color: var(--lab-ink); }
-.lab-rail-dot { display: none; width: 8px; height: 8px; border-radius: 50%; background: var(--lab-accent); flex: none; }
-.lab-rail-strip.is-attn .lab-rail-dot { display: block; animation: lab-dot 2.4s ease-in-out infinite; }
+#lab-root.rail-drawer:not(.rail-open) .lab-rail-strip { display: inline-flex; }
+.lab-rail-strip.is-entering { animation: lab-card-in .18s var(--lab-ease); }
+/* the dot always takes its place (only its opacity changes), so the pill never grows over a window that opened beside it */
+.lab-rail-dot { order: 1; display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--lab-accent); flex: none; opacity: 0; }
+.lab-rail-strip.is-attn .lab-rail-dot { opacity: 1; animation: lab-dot 2.4s ease-in-out infinite; }
 @keyframes lab-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
-/* the label reads top to bottom, turned sideways like a book spine (not one upright character per line) */
-.lab-rail-tag, .lab-rail-vert { writing-mode: vertical-rl; text-orientation: sideways; white-space: nowrap; }
-.lab-rail-tag { letter-spacing: .12em; font-size: 14px; font-weight: 700; color: var(--lab-ink); }
-.lab-rail-vert { letter-spacing: .06em; font-size: 13px; }
-.lab-rail-strip:hover .lab-rail-vert { color: var(--lab-ink); }
+.lab-rail-tag { order: 2; font-weight: 600; letter-spacing: .02em; }
+.lab-rail-vert { order: 3; display: inline-flex; align-items: center; gap: 9px; color: var(--lab-ink-2); font-variant-numeric: tabular-nums; }
+.lab-rail-vert::before { content: ""; width: 1px; height: 13px; background: rgba(0, 0, 0, .16); }
+.lab-rail-chev { order: 4; margin-left: auto; font-size: 15px; color: var(--lab-ink-3); transform: rotate(90deg); }
+.lab-rail-strip:hover .lab-rail-chev { color: var(--lab-ink); }
 
-/* one short message next to the closed strip: a nudge or a trap line (stays until it clears), or "step done, next is ..." (9 s) */
+/* one short note under the pill: a nudge or a trap line (stays until it clears), or "step done, next is ..." (9 s).
+   As wide as the pill, so it stays in the column windows keep clear of (a Terminal prompt opens right beside it) */
 .lab-peek {
-  position: absolute; left: calc(100% + 6px); bottom: 14px; z-index: 55;
-  width: max(180px, min(300px, calc((100vw - 511px) / 2 - 8px)));
-  background: var(--lab-bg); color: var(--lab-ink);
-  border: 1px solid var(--lab-line); border-left: 2px solid var(--lab-accent);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, .22);
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 55;
+  width: 188px;
+  border-radius: 16px; pointer-events: auto;
   font-size: 13px; line-height: 1.6;
   animation: lab-peek-in .25s var(--lab-ease);
 }
-.lab-peek.is-ok { border-left-color: var(--lab-line); }
-@keyframes lab-peek-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes lab-peek-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .lab-peek-main {
-  display: block; width: 100%; margin: 0; padding: 8px 28px 9px 12px; text-align: left;
+  display: block; width: 100%; margin: 0; padding: 10px 30px 11px 14px; text-align: left;
   background: none; border: 0; font: inherit; color: inherit; cursor: pointer;
 }
-.lab-peek.is-ok .lab-peek-main { padding-right: 12px; }
-.lab-peek-eyebrow { display: block; font-size: 11px; letter-spacing: .06em; color: var(--lab-accent); }
+.lab-peek.is-ok .lab-peek-main { padding-right: 14px; }
+.lab-peek-eyebrow { display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--lab-accent); }
 .lab-peek.is-ok .lab-peek-eyebrow { color: var(--lab-ink-3); }
-.lab-peek-text { display: block; color: var(--lab-ink-2); overflow-wrap: anywhere; }
-.lab-peek-x { position: absolute; top: 2px; right: 4px; padding: 2px 6px; margin: 0; background: none; border: 0; font: 16px/1 var(--lab-font-ui); color: var(--lab-ink-3); cursor: pointer; }
+.lab-peek-text { display: block; color: var(--lab-ink); overflow-wrap: anywhere; }
+.lab-peek-x { position: absolute; top: 5px; right: 6px; z-index: 3; padding: 2px 6px; margin: 0; background: none; border: 0; font: 16px/1 var(--mac-font); color: var(--lab-ink-3); cursor: pointer; }
 .lab-peek-x:hover { color: var(--lab-ink); }
 @media (prefers-reduced-motion: reduce) {
-  .lab-rail-strip.is-attn .lab-rail-dot, .lab-peek { animation: none; }
+  .lab-rail-strip.is-attn .lab-rail-dot, .lab-peek, .lab-rail-body.is-entering, .lab-rail-strip.is-entering { animation: none; }
 }
-
-.lab-rail-body { display: flex; flex-direction: column; height: 100%; width: 320px; background: var(--lab-bg); }
-#lab-root.rail-drawer .lab-rail-body {
-  position: fixed; left: 0; top: 0; bottom: 0; z-index: 60;
-  border-right: 1px solid var(--lab-line);
-  box-shadow: 8px 0 28px rgba(0, 0, 0, .18);
-  transform: translateX(-104%); visibility: hidden;
-  transition: transform .2s var(--lab-ease), visibility 0s linear .2s;
-}
-#lab-root.rail-drawer.rail-open .lab-rail-body { transform: none; visibility: visible; transition: transform .2s var(--lab-ease), visibility 0s; }
-.lab-rail-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px 20px; -webkit-user-select: text; user-select: text; }
 
 .lab-rail-head {
   display: flex; align-items: baseline; gap: 12px;
-  padding: 16px 0 12px; border-bottom: 1px solid var(--lab-line);
-  font-size: 13px;
+  flex: none; margin: 0 18px; padding: 14px 0 10px; border-bottom: 1px solid var(--lab-line);
+  font-size: 12.5px;
 }
 .lab-rail-link { color: var(--lab-ink-2); text-decoration: none; }
 .lab-rail-link:hover { color: var(--lab-ink); text-decoration: underline; text-underline-offset: 3px; }
 .lab-rail-label { flex: 1; font-size: 11px; letter-spacing: .06em; color: var(--lab-ink-3); }
 .lab-rail-ctl { display: inline-flex; gap: 12px; }
 
-.lab-sec { padding: 14px 0; border-bottom: 1px solid var(--lab-line); }
+.lab-sec { padding: 12px 0; border-bottom: 1px solid var(--lab-line); }
 .lab-sec:last-of-type { border-bottom: 0; }
-.lab-muted { margin: 8px 0 0; color: var(--lab-ink-3); font-size: 13px; line-height: 1.6; }
-.lab-eyebrow { font-size: 11px; letter-spacing: .06em; color: var(--lab-accent); }
-.lab-mtitle { margin: 4px 0 8px; font-size: 22px; line-height: 1.3; font-weight: 700; letter-spacing: .01em; }
+.lab-muted { margin: 8px 0 0; color: var(--lab-ink-3); font-size: 12.5px; line-height: 1.6; }
+.lab-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--lab-accent); }
+.lab-mtitle { margin: 3px 0 6px; font-size: 20px; line-height: 1.3; font-weight: 700; letter-spacing: .01em; }
 .lab-intro { margin: 0; color: var(--lab-ink-2); }
 .lab-mapline { margin: 6px 0 0; color: var(--lab-ink-2); font-size: 13px; }
 
 /* disclosure rows */
 .lab-disc {
-  display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 4px 0; margin: 0;
+  display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 2px 0; margin: 0;
   background: none; border: 0; font: inherit; color: var(--lab-ink); text-align: left; cursor: pointer;
 }
 .lab-disc-t { font-size: 11px; letter-spacing: .06em; color: var(--lab-ink-3); }
@@ -104,17 +149,17 @@
 }
 .lab-mlist li:first-child .lab-mrow { border-top: 0; }
 .lab-mrow:hover { color: var(--lab-ink); }
-.lab-mrow.is-cur { color: var(--lab-ink); font-weight: 500; }
+.lab-mrow.is-cur { color: var(--lab-ink); font-weight: 600; }
 .lab-mt { flex: 1; min-width: 0; }
 .lab-mtag { font-size: 11px; letter-spacing: .06em; color: var(--lab-ink-3); }
 .lab-num { flex: none; width: 1.8em; font-family: var(--lab-font-mono); font-size: 12px; color: var(--lab-accent); }
 .lab-num.is-check { color: var(--lab-accent); }
 .lab-num.is-skip { color: var(--lab-ink-3); }
 
-/* steps */
+/* steps: the current one sits on a lighter patch of the glass, like a selected row in a Mac list */
 .lab-steps { list-style: none; margin: 0; padding: 0; }
-.lab-step { display: flex; gap: 10px; padding: 8px 0 8px 12px; margin-left: -12px; border-left: 2px solid transparent; color: var(--lab-ink-3); }
-.lab-step.is-current { border-left-color: var(--lab-accent); color: var(--lab-ink); }
+.lab-step { display: flex; gap: 10px; padding: 7px 10px; margin: 1px -10px; border-radius: 12px; color: var(--lab-ink-2); }
+.lab-step.is-current { color: var(--lab-ink); background: rgba(255, 255, 255, .58); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .07), 0 1px 3px rgba(0, 0, 0, .05); }
 .lab-step.is-done { color: var(--lab-ink-3); }
 .lab-step .lab-num { margin-top: 2px; transition: opacity .3s; }
 .lab-step.is-done .lab-num { animation: lab-check .3s ease-out; }
@@ -130,26 +175,29 @@
 .lab-copyline { display: inline; }
 .lab-copy { font-size: 12px; margin-left: 2px; }
 .lab-step .lab-mono, .lab-intro .lab-mono, .lab-hinttext .lab-mono, .lab-answertext .lab-mono, .lab-mapline .lab-mono {
-  font-family: var(--lab-font-mono); font-size: .9em; background: rgba(127, 120, 100, .14); padding: 0 .3em; border-radius: 2px;
+  font-family: var(--lab-font-mono); font-size: .9em; background: rgba(0, 0, 0, .06); padding: 0 .3em; border-radius: 4px;
 }
 
 /* progress + links */
-.lab-prog { height: 2px; background: var(--lab-line); }
-.lab-prog-fill { height: 100%; background: var(--lab-accent); transition: width .3s var(--lab-ease); }
+.lab-prog { height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .08); overflow: hidden; }
+.lab-prog-fill { height: 100%; border-radius: 2px; background: var(--lab-accent); transition: width .3s var(--lab-ease); }
 .lab-prog-text { margin-top: 6px; font-size: 12px; color: var(--lab-ink-3); }
 .lab-outro { margin: 12px 0 0; color: var(--lab-ink); }
-.lab-nextbtn { margin-top: 10px; padding: 6px 14px; background: none; border: 1px solid var(--lab-line); border-radius: 0; font: inherit; color: var(--lab-ink); cursor: pointer; }
-.lab-nextbtn:hover { border-color: var(--lab-ink-2); }
-.lab-foot-links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
+.lab-nextbtn {
+  margin-top: 10px; padding: 6px 16px; border-radius: 999px;
+  background: rgba(255, 255, 255, .62); border: 0; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .14), 0 1px 3px rgba(0, 0, 0, .08);
+  font: inherit; color: var(--lab-ink); cursor: pointer;
+}
+.lab-nextbtn:hover { background: rgba(255, 255, 255, .85); }
+.lab-foot-links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; }
 .lab-tips { margin: 10px 0 0; padding-left: 1.2em; color: var(--lab-ink-2); }
 .lab-tips li { margin: 4px 0; }
 .lab-codeline { display: flex; gap: 10px; align-items: baseline; }
-.lab-codeinput { flex: 1; min-width: 0; padding: 3px 6px; border: 1px solid var(--lab-line); background: transparent; color: var(--lab-ink); font: 12px var(--lab-font-mono); }
-.lab-page-foot { padding: 14px 0 0; border-top: 1px solid var(--lab-line); font-size: 12px; color: var(--lab-ink-3); line-height: 1.6; }
-.lab-rail-scroll > .lab-page-foot { margin-top: 8px; }
-.lab-page-foot .lab-muted { margin-top: 4px; font-size: 12px; }
+.lab-codeinput { flex: 1; min-width: 0; padding: 3px 8px; border: 0; border-radius: 6px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .18); background: rgba(255, 255, 255, .5); color: var(--lab-ink); font: 12px var(--lab-font-mono); }
+.lab-page-foot { padding: 12px 0 0; border-top: 1px solid var(--lab-line); font-size: 11.5px; color: var(--lab-ink-3); line-height: 1.6; }
+.lab-rail-scroll > .lab-page-foot { margin-top: 6px; }
+.lab-page-foot .lab-muted { margin-top: 4px; font-size: 11.5px; }
 .lab-store-notice { margin-top: 6px; font-size: 12px; color: var(--lab-accent); }
-#lab-rail > .lab-page-foot { padding: 16px; }
 
 /* ---------------------------------------------------- welcome + phone */
 .lab-welcome-scrim, .lab-phone {
@@ -158,26 +206,30 @@
   background: rgba(10, 10, 10, .55);
   padding: 16px;
 }
+/* the welcome is a glass sheet over the Mac, like the card */
+.lab-welcome-scrim { background: rgba(0, 0, 0, .22); }
 .lab-welcome {
+  --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #4a4a51; --lab-line: rgba(0, 0, 0, .12); --lab-accent: #8a5400;
   width: 520px; max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
   padding: 28px 32px 24px;
-  background: var(--lab-bg); color: var(--lab-ink);
-  border: 1px solid var(--lab-line);
+  border-radius: 26px;
+  font-family: var(--mac-font);
+  color: var(--lab-ink);
 }
-.lab-welcome h1 { margin: 0 0 14px; font-size: 24px; line-height: 1.3; font-weight: 700; }
+.lab-welcome h1 { margin: 0 0 14px; font-size: 22px; line-height: 1.3; font-weight: 700; }
 .lab-welcome p { margin: 0 0 10px; color: var(--lab-ink-2); line-height: 1.75; }
 .lab-welcome-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.lab-welcome .lab-textbtn {
+  padding: 7px 18px; border: 0; border-radius: 999px;
+  background: rgba(255, 255, 255, .62); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .14), 0 1px 3px rgba(0, 0, 0, .08);
+}
+.lab-welcome .lab-textbtn:hover { background: rgba(255, 255, 255, .88); }
+.lab-welcome .lab-textbtn.is-primary { background: #1d1d1f; color: #fff; text-decoration: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+.lab-welcome .lab-textbtn.is-primary:hover { background: #000; }
+/* glass buttons take the Mac's blue focus ring, not the page's amber one */
+.lab-welcome .lab-textbtn:focus-visible, .lab-nextbtn:focus-visible { outline: 3px solid rgba(10, 108, 255, .5); outline-offset: 1px; }
 .lab-phone { background: var(--lab-bg); color: var(--lab-ink); text-align: center; }
 .lab-phone-in { max-width: 420px; }
 .lab-phone h1 { margin: 0 0 12px; font-size: 24px; font-weight: 700; }
 .lab-phone p { margin: 0 0 12px; color: var(--lab-ink-2); line-height: 1.75; }
 .lab-phone-note { font-size: 13px; color: var(--lab-ink-3) !important; }
-
-/* ------------------------------------------------------------- narrow */
-@media (max-width: 759px) {
-  #lab-rail > .lab-page-foot { padding: 12px 16px; }
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lab-welcome-scrim, :root:not([data-theme="light"]) .lab-phone { background: rgba(0, 0, 0, .6); }
-  :root:not([data-theme="light"]) .lab-phone { background: var(--lab-bg); }
-}

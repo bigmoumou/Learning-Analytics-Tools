@@ -56,6 +56,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 網站的形式是「每週：短影片＋幾則重點」，讓學生課後回來複習，也能和影片互動：
 
 - 作業：Week 3 影片 03 是作業說明。學生只用 AI Agent（Codex）動手完成一個資料收集任務：先規劃 `AGENTS.md` 的規則，把資料存在本地並自己確認，再用 Mermaid 在 `ARCHITECTURE.md` 畫出流程。提早做完的同學，可以再用 `@Build Web Apps` 做一個簡單的展示網站。
+- 課堂練習（練習用的模擬 Mac）：Week 3 的最後有一台在瀏覽器裡執行的模擬 Mac（[直接進入](https://learning-analytics-tools.pages.dev/lab/mac/)，也在 [Week 3 頁面](https://learning-analytics-tools.pages.dev/weeks/week03/#lab-mac)的播放清單「課堂練習」裡）。它不是影片，是可以真的操作的練習環境：認識桌面和 Finder、用終端機走路與拆包裹、把 Project 拖進 Codex 並按 Trust folder、請 Codex 做事並找 `report.md` 落在哪、New chat 的陷阱，最後是 `AGENTS.md`，共 7 個任務。照著任務卡一步一步做，做對了會自動打勾，卡住可以按「提示」，弄壞了隨時重來。純前端、沒有後端，進度只存在學生自己的瀏覽器；畫面是繁體中文，建議用電腦（滑鼠和鍵盤）操作。Windows 版規劃中。
 - 章節：一週一頁，每支影片下方是章節和編號重點。點章節就跳到那個時間播放，正在播的章節會標示出來。
 - 時間連結：週次頁網址加上 `#t=30`，會從這週第一支影片的第 30 秒開始播放；加上 `#02-agents-md-context&t=30` 則指定某一支影片的某一秒。教師可以把連結貼給學生，指到要複習的那一刻，例如 [Week 3 影片 02 的第 30 秒](https://learning-analytics-tools.pages.dev/weeks/week03/#02-agents-md-context&t=30)。
 - 播放清單與觀看進度：一週有兩支以上影片時，頁面自動變成播放清單。每支有縮圖、長度和觀看進度，看到 95% 以上會打勾；播完會出現「下一支」，點了才播。沒選到的影片不會先下載，一次只播一支。桌機的清單在右側，手機的清單在播放器上方，可以左右滑動。
@@ -99,6 +100,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 | AI 教學影片（HLS）、封面、縮圖，以及每週的文字（繁體中文原文與簡中、英文、越南文翻譯） | 已公開，CC BY-NC-SA 4.0 |
 | Week 5 到 Week 16 | 依課程進度陸續開放 |
 | 學生作品展示（作品集） | 已上線，陸續加入學生同意公開的作品；著作權屬於各作者 |
+| 練習用的模擬 Mac（課堂練習） | Mac 版已上線（Week 3 的 7 個任務）；Windows 版規劃中 |
 | 教學影片生成 prompt：每支影片的 `brief.md`、動態素材規格、三方案提案 | 規劃中，整理後公開 |
 | 製作經驗：逐輪審查紀錄與整理過的教訓 | 規劃中，整理後公開 |
 | 製作專案（場景程式、音訊腳本）與 mp4 原檔 | 目前不在這個 repo；repo 只放要公開的成品 |
@@ -157,9 +159,9 @@ python -m http.server 8000
 程式碼以 MIT 授權開源；教材內容採開放授權，限非商業使用，屬於開放式教育資源（OER），不算開源軟體。
 
 - 程式碼：[MIT](LICENSE)。包括 HTML 結構、CSS、JavaScript（`assets/` 裡的程式，含 `assets/i18n-strings.js` 的介面文字；`assets/vendor/` 的 hls.js 除外）、`tools/` 與範本、`_redirects` 與 `404.html`，以及說明文件（`README.md`、`docs/維護說明.md`）。
-- 教材內容：[創用CC 姓名標示-非商業性-相同方式分享 4.0 國際](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant)（CC BY-NC-SA 4.0），著作權人 JUNHAO CHEN，見 [LICENSE-CONTENT.md](LICENSE-CONTENT.md)。包括 `weeks/*/video/` 裡的影片、封面與縮圖，週次頁和 `assets/course.js` 裡的課程文字與翻譯，以及 `docs/images/` 的截圖。
+- 教材內容：[創用CC 姓名標示-非商業性-相同方式分享 4.0 國際](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hant)（CC BY-NC-SA 4.0），著作權人 JUNHAO CHEN，見 [LICENSE-CONTENT.md](LICENSE-CONTENT.md)。包括 `weeks/*/video/` 裡的影片、封面與縮圖，`weeks/*/lab/` 裡的課堂練習筆電圖，週次頁和 `assets/course.js` 裡的課程文字與翻譯，以及 `docs/images/` 的截圖。
 - 學生作品：`works/` 裡每位學生的作品資料夾與縮圖，著作權屬於學生本人，不適用本專案的 MIT 或 CC BY-NC-SA 授權；除了 GitHub 服務條款允許的在 GitHub 上檢視與 fork，未經作者同意，請勿重製或改作。
-- 第三方元件與素材依各自的授權：hls.js 1.6.15（Apache-2.0）；由 Google Fonts 載入的 Noto Sans TC、Noto Sans SC、JetBrains Mono（SIL Open Font License 1.1，不在 repo 裡）；Week 3 影片 03 開頭的三張 Wikimedia Commons 圖片（兩張 CC0 照片與一幅公有領域畫作），不受影片的 CC BY-NC-SA 授權限制（義大利文化資產的商業使用另有規定，見 NOTICE.md）；Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片中重現或提到的 Codex 等第三方軟體名稱與介面，屬於各自的權利人，本專案與它們沒有隸屬或背書關係。詳見 [NOTICE.md](NOTICE.md)。
+- 第三方元件與素材依各自的授權：hls.js 1.6.15（Apache-2.0）；由 Google Fonts 載入的 Noto Sans TC、Noto Sans SC、JetBrains Mono（SIL Open Font License 1.1，不在 repo 裡）；Week 3 影片 03 開頭的三張 Wikimedia Commons 圖片（兩張 CC0 照片與一幅公有領域畫作），不受影片的 CC BY-NC-SA 授權限制（義大利文化資產的商業使用另有規定，見 NOTICE.md）；練習用模擬 Mac 的桌布（Clara Marie 的 CC0 照片，取自 Wikimedia Commons，見 NOTICE.md）；Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片和練習用模擬 Mac 中重現或提到的 macOS、Finder、終端機、Visual Studio Code、Codex 等第三方軟體名稱與外觀，屬於各自的權利人（模擬 Mac 的圖示和畫面都是自己重新繪製的），本專案與它們沒有隸屬或背書關係。詳見 [NOTICE.md](NOTICE.md)。
 - 國立臺灣師範大學的名稱與標誌不在上述授權範圍內；本網站是課程教材，不代表學校官方立場。
 
 使用教材內容時的標示範例（有修改時，請加註「改作自」並說明改了哪些地方）：
@@ -179,7 +181,7 @@ repo 裡的 [CITATION.cff](CITATION.cff) 會讓 GitHub 頁面右側出現「Cite
 - opus-video skill 的原作者周行（Kianzzz），MIT 授權；本課程使用依需求調整過的版本。
 - 影片製作用到 HyperFrames（HeyGen，Apache-2.0）、GSAP、Playwright、FFmpeg、numpy 與 SciPy。
 - 網站播放器使用 [hls.js](https://github.com/video-dev/hls.js)；字型來自 Google Fonts。
-- 以 CC0 釋出照片的 Jonathan Körner（原刊於 Unsplash）與 Julian Lupyan；兩張照片都取自 Wikimedia Commons。
+- 以 CC0 釋出照片的 Jonathan Körner（原刊於 Unsplash）、Julian Lupyan，以及練習用模擬 Mac 桌布的 Clara Marie（原刊於 Unsplash）；照片都取自 Wikimedia Commons。
 
 ### 維護者
 
@@ -235,6 +237,7 @@ The videos have no voice-over. Each one explains a single topic with animation, 
 The site follows one format, "every week: short videos and a few key points", so students can come back after class to review and interact with the videos:
 
 - Homework: Week 3 video 03 is the homework brief. Using only an AI agent (Codex), students complete a data-collection task themselves: they plan the rules in `AGENTS.md` first, save the data locally and check it, and then draw the flow in `ARCHITECTURE.md` with Mermaid. Students who finish early can also build a simple showcase site with `@Build Web Apps`.
+- In-class practice (a simulated Mac): the end of Week 3 has a simulated Mac that runs in the browser ([open it directly](https://learning-analytics-tools.pages.dev/lab/mac/), or from the "In-class practice" group in the playlist of the [Week 3 page](https://learning-analytics-tools.pages.dev/weeks/week03/#lab-mac)). It is not a video but a practice environment you can really operate: get to know the desktop and Finder, walk around and unpack in the terminal, drag Project into Codex and click Trust folder, ask Codex to work and find where `report.md` lands, the New chat trap, and finally `AGENTS.md`, in 7 missions. Follow the task card step by step: correct steps are ticked off automatically, "Hint" helps when you are stuck, and you can start over whenever something breaks. It is front-end only with no back end, progress stays in the student's own browser, the screen is in Traditional Chinese, and a computer with a mouse and keyboard works best. A Windows version is planned.
 - Chapters: one page per week, with each video's chapters and numbered key points below it. Clicking a chapter jumps to that time and plays, and the chapter currently playing is highlighted.
 - Time links: adding `#t=30` to a week page's address starts its first video at 30 seconds, and adding `#02-agents-md-context&t=30` picks a specific video and second. A teacher can send students a link to the exact moment to review, for example [Week 3 video 02 at 30 seconds](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#02-agents-md-context&t=30).
 - Playlist and watch progress: when a week has two or more videos, the page turns into a playlist. Each video has a thumbnail, its length and the viewer's progress, and gets a check mark at 95% or more; when a video ends, an "Up next" button appears and plays the next video only when clicked. Videos that are not selected are not downloaded in advance, and only one plays at a time. On desktop the list sits on the right; on phones it sits above the player as a row you can swipe.
@@ -278,6 +281,7 @@ The visuals are mainly animated web pages written in HTML, CSS and JavaScript an
 | AI teaching videos (HLS), posters and thumbnails, and each week's text in Traditional Chinese with its Simplified Chinese, English and Vietnamese translations | Published, CC BY-NC-SA 4.0 |
 | Weeks 5 to 16 | Opening one by one as the course goes on |
 | Student work showcase | Live; more work is added as students agree to publish it; copyright stays with each author |
+| Practice environment: a simulated Mac (in-class practice) | Mac version live (7 missions for Week 3); Windows version planned |
 | Teaching-video prompts: each video's `brief.md`, the specs for the animated materials, and the three-plan proposals | Planned, to be released once cleaned up |
 | Production experience: round-by-round review logs and the lessons drawn from them | Planned, to be released once cleaned up |
 | Production projects (scene code, audio scripts) and master mp4 files | Not in this repository for now; it holds only the published results |
@@ -336,9 +340,9 @@ Students, teachers and any other readers are welcome to help improve the site:
 The code is open source under the MIT License. The course content is openly licensed for non-commercial use, which makes it an open educational resource (OER) rather than open-source software.
 
 - Code: [MIT](LICENSE). This covers the HTML structure, CSS, JavaScript (the scripts in `assets/`, including the interface text in `assets/i18n-strings.js`, but not hls.js in `assets/vendor/`), `tools/` and the templates, `_redirects` and `404.html`, and the documentation (`README.md`, `docs/維護說明.md`).
-- Course content: [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/) (CC BY-NC-SA 4.0), copyright JUNHAO CHEN; see [LICENSE-CONTENT.md](LICENSE-CONTENT.md). This covers the videos, posters and thumbnails in `weeks/*/video/`, the course text and translations in the week pages and in `assets/course.js`, and the screenshots in `docs/images/`.
+- Course content: [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/) (CC BY-NC-SA 4.0), copyright JUNHAO CHEN; see [LICENSE-CONTENT.md](LICENSE-CONTENT.md). This covers the videos, posters and thumbnails in `weeks/*/video/`, the laptop images for the in-class practice in `weeks/*/lab/`, the course text and translations in the week pages and in `assets/course.js`, and the screenshots in `docs/images/`.
 - Student work: each student's folder under `works/` and its thumbnail remain the copyright of the student who made it and are not covered by this project's MIT or CC BY-NC-SA licenses. Apart from viewing and forking on GitHub as GitHub's Terms of Service allow, do not copy or adapt them without the author's permission.
-- Third-party components and media keep their own licenses: hls.js 1.6.15 (Apache-2.0); Noto Sans TC, Noto Sans SC and JetBrains Mono, loaded from Google Fonts (SIL Open Font License 1.1, not stored in this repository); and three Wikimedia Commons images at the start of Week 3 video 03 (two CC0 photos and a public-domain painting), which are not restricted by the CC BY-NC-SA license on the videos (commercial use of Italian cultural heritage images has separate rules; see NOTICE.md). The Blockbench interface in the recording in Week 4 video 01, and the names and interfaces of Codex and other third-party software shown or recreated in the videos, belong to their owners; this project is not affiliated with or endorsed by them. See [NOTICE.md](NOTICE.md) for details.
+- Third-party components and media keep their own licenses: hls.js 1.6.15 (Apache-2.0); Noto Sans TC, Noto Sans SC and JetBrains Mono, loaded from Google Fonts (SIL Open Font License 1.1, not stored in this repository); and three Wikimedia Commons images at the start of Week 3 video 03 (two CC0 photos and a public-domain painting), which are not restricted by the CC BY-NC-SA license on the videos (commercial use of Italian cultural heritage images has separate rules; see NOTICE.md); and the wallpaper of the practice Mac (a CC0 photo by Clara Marie from Wikimedia Commons; see NOTICE.md). The Blockbench interface in the recording in Week 4 video 01, and the names and looks of macOS, Finder, Terminal, Visual Studio Code, Codex and other third-party software shown or recreated in the videos and in the practice Mac, belong to their owners (the practice Mac's icons and screens are all redrawn originals); this project is not affiliated with or endorsed by them. See [NOTICE.md](NOTICE.md) for details.
 - The name and marks of National Taiwan Normal University are not licensed under any of the above. This site is course material and does not represent the university's official position.
 
 Example credit line for reusing course content (if you made changes, add "adapted from" and say what you changed):
@@ -358,7 +362,7 @@ The [CITATION.cff](CITATION.cff) file in this repository adds a "Cite this repos
 - 周行 (Kianzzz), the original author of the opus-video skill (MIT License); this course uses a locally adapted version.
 - Video production uses HyperFrames (HeyGen, Apache-2.0), GSAP, Playwright, FFmpeg, numpy and SciPy.
 - The site's player uses [hls.js](https://github.com/video-dev/hls.js); the fonts come from Google Fonts.
-- Jonathan Körner (first published on Unsplash) and Julian Lupyan, for releasing their photos under CC0; both were obtained from Wikimedia Commons.
+- Jonathan Körner (first published on Unsplash), Julian Lupyan, and Clara Marie (first published on Unsplash; the practice Mac's wallpaper), for releasing their photos under CC0; all were obtained from Wikimedia Commons.
 
 ### Maintainer
 

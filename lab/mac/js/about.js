@@ -6,6 +6,7 @@
   var h = LAB.util.h;
 
   var TRADEMARK = 'macOS 與 Finder 是 Apple Inc. 的商標，Codex 是 OpenAI 的商標。這個練習是獨立的教學模擬，與兩家公司都沒有關係。';
+  var WALLPAPER = '桌布照片：「Lake Tahoe, United States (Unsplash).jpg」，Clara Marie 攝，CC0（公眾領域貢獻宣告），取自 Wikimedia Commons。';
   var COPYRIGHT = 'Copyright © 2026 JUNHAO CHEN・程式碼 MIT・內容 CC BY-NC-SA 4.0';
   var RESET_TITLE = '要重設練習環境嗎？';
   var RESET_TEXT = '這會清除你在這個練習裡建立的檔案、對話和任務進度，無法復原。';
@@ -82,12 +83,13 @@
     return h('div', { class: 'ab-body' },
       h('h2', { class: 'ab-h' }, '關於這個練習'),
       p('這是練習用的模擬環境，不是真的 Mac，也不是真的 AI。'),
-      p('你可以在這裡練習「學習分析工具」每週的操作，先從 Week 3 的終端機、Finder 和 Codex 開始。照著左邊的任務卡做，或自己隨便玩；弄壞了隨時可以重來。'),
+      p('你可以在這裡練習「學習分析工具」每週的操作，先從 Week 3 的終端機、Finder 和 Codex 開始。照著左上角的任務卡做，或自己隨便玩；弄壞了隨時可以重來。'),
       p('你的進度只存在這個瀏覽器裡。'),
       notice,
       h('div', { class: 'ab-rule' }),
       p('版本 v1', 'ab-muted'),
       p(TRADEMARK, 'ab-muted'),
+      p(WALLPAPER, 'ab-muted'),
       h('div', { class: 'ab-rule' }),
       p('如果這是學校的共用電腦，用完請按「重設練習環境」。'),
       h('p', { class: 'ab-p' }, resetBtn),

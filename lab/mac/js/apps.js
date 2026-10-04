@@ -157,7 +157,7 @@
   apps._phMenus = {};   // menu.js registers these at its own eval time (it loads after this file)
   var MENU_TITLES = {
     finder: ['檔案', '編輯', '顯示方式', '前往', '視窗', '輔助說明'],
-    terminal: ['殼層', '編輯', '顯示方式', '視窗', '輔助說明'],
+    terminal: ['Shell', '編輯', '顯示方式', '視窗', '輔助說明'],
     codex: ['File', 'Edit', 'View', 'Window', 'Help'],
     code: ['檔案', '編輯', '檢視', '前往', '視窗', '說明'],
     textedit: ['檔案', '編輯', '格式', '顯示方式', '視窗', '輔助說明'],

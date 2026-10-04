@@ -1,14 +1,14 @@
-/* base.css — tokens, reset, page + rail layout, stage (DESIGN §2.1, §2.4). */
+/* base.css — tokens, reset, page layout, stage (DESIGN §2.1, §2.4). The mission card floats over the stage (mission.css, §16). */
 :root {
-  /* page + rail (editorial, like the course site; NOT the Mac) */
+  /* page chrome (editorial, like the course site; NOT the Mac). The mission card and the welcome override these with light glass tokens */
   --lab-bg: #ebe9e4; --lab-ink: #111; --lab-ink-2: #4a4843; --lab-ink-3: #5f5c55;
   --lab-line: rgba(17, 17, 17, .14); --lab-accent: #8a5400; --lab-ease: cubic-bezier(.2, .7, .2, 1);
   /* mac light */
   --mac-win-bg: #fff; --mac-bar: #ececec; --mac-bar-line: #d4d4d4; --mac-text: #1d1d1f; --mac-text-2: #6e6e73;
   --mac-sidebar: rgba(246, 246, 246, .92); --mac-hair: rgba(0, 0, 0, .12); --mac-accent: #0a6cff;
   --mac-sel: rgba(10, 108, 255, .14); --mac-sel-strong: #0a6cff; --mac-sel-inactive: rgba(0, 0, 0, .10);
-  --mac-red: #ff5f57; --mac-yellow: #febc2e; --mac-green: #28c840; --mac-light-off: #d4d4d4;
-  --mac-radius: 12px; --mac-shadow-on: 0 22px 60px rgba(0, 0, 0, .35), 0 0 0 .5px rgba(0, 0, 0, .35);
+  --mac-red: #fe5c60; --mac-yellow: #fac902; --mac-green: #37c85d; --mac-light-off: #d4d4d4;
+  --mac-radius: 20px; --mac-tl: 13px; --mac-tl-gap: 11px; --mac-bar-h: 32px; --mac-shadow-on: 0 22px 60px rgba(0, 0, 0, .35), 0 0 0 .5px rgba(0, 0, 0, .35);
   --mac-shadow-off: 0 8px 24px rgba(0, 0, 0, .22), 0 0 0 .5px rgba(0, 0, 0, .25);
   /* z scale (stage). #lab-windows is one stacking context at --z-windows; the window counter inside it is a plain integer */
   --z-desktop: 1; --z-windows: 2; --z-dock: 900; --z-menubar: 1000; --z-menu: 1100;
@@ -16,10 +16,10 @@
   --lab-font-ui: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   /* the fake Mac prefers the visitor's own system font by name (nothing is shipped); on Windows it falls through to Noto Sans TC */
   --mac-font: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --lab-font-mono: Menlo, "DejaVu Sans Mono", "JetBrains Mono", Consolas, "Noto Sans TC", monospace;
+  --lab-font-mono: "SF Mono", SFMono-Regular, Menlo, "JetBrains Mono", "DejaVu Sans Mono", Consolas, "Noto Sans TC", monospace;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { /* page + rail only: the fake Mac stays as it is */
+  :root:not([data-theme="light"]) { /* page chrome only: the fake Mac and the glass card stay light */
     --lab-bg: #070707; --lab-ink: #f1efe9; --lab-ink-2: #b9b6ae; --lab-ink-3: #85827b;
     --lab-line: rgba(241, 239, 233, .16); --lab-accent: #f0b545;
   }
@@ -74,11 +74,19 @@ button { font-family: inherit; }
   touch-action: none;
 }
 html.lab-small #lab-stage { touch-action: none; }
+/* CC0 photo "Lake Tahoe" (Clara Marie, Wikimedia Commons), cover-fitted. The gradient under it is the fallback if the file
+   does not load, and the colour behind both is the lake blue, so a missing photo never leaves a black screen. */
 #lab-wall {
   position: absolute; left: 0; top: 0;
   width: 100%; height: 100%;
-  image-rendering: auto;
   z-index: 0;
+  background-color: #1f6f93;
+  /* top layer: a soft blue tint under the menu bar (the real one adapts to the picture), so white text stays readable on bright sky */
+  background-image: linear-gradient(180deg, rgba(14, 54, 104, .52) 0, rgba(14, 54, 104, .3) 30px, rgba(14, 54, 104, 0) 140px),
+    url("../img/wallpaper.jpg"), linear-gradient(180deg, #6db3dd 0%, #3b8fc2 38%, #1f7a9c 62%, #155a6e 100%);
+  background-size: 100% 140px, cover, cover;
+  background-position: 0 0, 60% 62%, center;
+  background-repeat: no-repeat, no-repeat, no-repeat;
 }
 #lab-desktop { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-desktop); pointer-events: auto; }
 #lab-windows { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-windows); isolation: isolate; pointer-events: none; }

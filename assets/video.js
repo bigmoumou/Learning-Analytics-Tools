@@ -9,17 +9,66 @@
      清單上緣的細線是觀看進度（記在這台瀏覽器的 localStorage）；影片播完會出現「下一支」。
      沒有 JavaScript 時，各個 section 照原本的順序排下來。
    - 網址：#t=秒數 是目前（第一支）影片的那個時間；#NN-slug 選那一支；#NN-slug&t=秒數 選那一支並跳到那個時間。
-   - 補充教材：<section class="unit unit-supp" id="sN-slug">，放在這週影片後面；清單上寫「補充 N」，
-     第一個補充教材前面有一行「補充教材」小標。
+   - 清單可以分組：<section class="unit unit-supp" id="sN-slug">（補充教材）放在這週影片後面，清單上寫「補充 N」；
+     <section class="unit unit-lab" id="lab-xxx" data-thumb="lab/thumb.jpg">（課堂練習）放在補充教材後面，清單上寫「練習 N」，
+     它不是影片（沒有 <video>）：清單用 data-thumb 的圖當縮圖，沒有長度和觀看進度，也不會被「下一支」自動打開。
+     每一組的第一個項目前面有一行小標（手機橫排時是一小欄），標題裡的（…）不會被拆開。
    ========================================================================== */
 (function () {
   "use strict";
 
   const vids = Array.from(document.querySelectorAll("video[data-hls]"));
-  const units = vids.map((v) => v.closest(".unit")).filter(Boolean);
+  const units = Array.from(document.querySelectorAll("section.unit"));
   const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const I18N = window.I18N;
   const tr = (key, zh) => (I18N ? I18N.t(key) : zh);
+
+  /* 標題裡的（…）、(…) 包成不拆行的一段，換行時整組一起下去，不會剩下孤零零的「（Windows）」。
+     換語言時 i18n.js 會把文字換回去，所以每次 langchange 都再包一次。 */
+  const PAREN = /([（(][^（）()]*[）)])/;
+  function tidyParens(root) {
+    root.querySelectorAll(".reel-t, .unit-title [data-i18n], .chapters .t").forEach((el) => {
+      const hit = [];
+      const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n = w.nextNode(); n; n = w.nextNode()) {
+        if (PAREN.test(n.nodeValue) && !n.parentElement.closest(".np")) hit.push(n);
+      }
+      hit.forEach((n) => {
+        const frag = document.createDocumentFragment();
+        n.nodeValue.split(PAREN).forEach((part, k) => {
+          if (!part) return;
+          if (k % 2) {
+            const sp = document.createElement("span");
+            sp.className = part.charAt(0) === "（" ? "np np-fw" : "np";
+            sp.textContent = part;
+            frag.append(sp);
+          } else {
+            frag.append(part);
+          }
+        });
+        n.replaceWith(frag);
+      });
+    });
+  }
+  /* 「（」排在換行後的行首時，它左邊那半個字的空白要收掉。CSS 的 text-spacing-trim: trim-start 在 Chrome 只管整段的第一行，
+     換行之後的行首不會收，所以在這裡量：「（」那一段落在行首、而且前面還有字（表示是換行換下來的），就加上 .ls，
+     用負的 margin 把空白拉回來。視窗大小改變、換語言後重量。 */
+  function trimLineStart() {
+    const all = Array.from(document.querySelectorAll(".np-fw"));
+    all.forEach((e) => e.classList.remove("ls"));
+    all.forEach((e) => {
+      if (e.closest("[hidden]") || !e.previousSibling) return;
+      const first = e.getClientRects()[0];
+      if (first && first.left - e.parentElement.getBoundingClientRect().left < 1) e.classList.add("ls");
+    });
+  }
+  const tidyAll = () => { tidyParens(document); trimLineStart(); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tidyAll);
+  else tidyAll();
+  document.addEventListener("langchange", tidyAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(trimLineStart);
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(trimLineStart, 120); });
 
   // 影片要看了才接上 HLS（清單裡沒選到的影片先不下載）
   function attach(vid) {
@@ -136,8 +185,14 @@
       .catch(() => el.remove());
   }
 
+  // 分組：class 對應清單上的小標（出現在這一組的第一個項目前面）。小標和項目編號的文字都跟著語言換
+  const GROUPS = [
+    { cls: "unit-supp", key: "reel.supp", zh: "補充教材" },
+    { cls: "unit-lab", key: "reel.lab", zh: "課堂練習" },
+  ];
+
   const items = units.map((unit, i) => {
-    const vid = unit.querySelector("video[data-hls]");
+    const vid = unit.querySelector("video[data-hls]"); // 課堂練習不是影片，這裡是 null
     const num = unit.querySelector(".unit-num");
     const title = unit.querySelector(".unit-title [data-i18n]");
     const b = document.createElement("button");
@@ -145,25 +200,25 @@
     b.className = "reel-item";
     b.innerHTML =
       '<span class="reel-bar" aria-hidden="true"><span></span></span>' +
-      '<span class="reel-thumb"><img alt="" loading="lazy" width="800" height="450"><span class="reel-len"></span></span>' +
+      '<span class="reel-thumb"><img alt="" loading="lazy" width="800" height="450">' + (vid ? '<span class="reel-len"></span>' : "") + "</span>" +
       '<span class="reel-text"><span class="reel-n"></span></span>';
-    b.querySelector("img").src = (vid.getAttribute("poster") || "").replace(/poster\.jpg$/, "thumb.jpg");
+    b.querySelector("img").src = vid ? (vid.getAttribute("poster") || "").replace(/poster\.jpg$/, "thumb.jpg") : (unit.dataset.thumb || "");
     const n = b.querySelector(".reel-n");
-    const supp = unit.classList.contains("unit-supp");
-    if (supp && num) {
-      // 補充教材：清單上寫「補充 1」（data-ui 跟著語言換），不寫編號
+    const grp = GROUPS.find((g) => unit.classList.contains(g.cls));
+    if (grp && num) {
+      // 補充教材、課堂練習：清單上寫「補充 1」「練習 1」（data-ui 跟著語言換），不寫編號
       n.dataset.ui = num.dataset.ui;
       n.dataset.n = num.dataset.n;
       n.textContent = num.textContent;
     } else {
       n.textContent = (num && num.dataset.n) || String(i + 1).padStart(2, "0");
     }
-    // 第一個補充教材前面加一行小標「補充教材」
-    if (supp && !list.querySelector(".reel-sep")) {
+    // 每一組的第一個項目前面加一行小標
+    if (grp && !list.querySelector(`.reel-sep[data-ui="${grp.key}"]`)) {
       const sep = document.createElement("li");
       sep.className = "reel-sep";
-      sep.dataset.ui = "reel.supp";
-      sep.textContent = "補充教材";
+      sep.dataset.ui = grp.key;
+      sep.textContent = grp.zh;
       list.append(sep);
     }
     // 標題複製 section 裡那一個（連翻譯屬性一起），換語言時 i18n.js 會一起換
@@ -173,7 +228,7 @@
     t.classList.add("reel-t");
     b.querySelector(".reel-text").append(t);
     b.addEventListener("click", () => select(unit, { scroll: true, hash: true }));
-    showLength(vid, b.querySelector(".reel-len"));
+    if (vid) showLength(vid, b.querySelector(".reel-len"));
     const li = document.createElement("li");
     li.append(b);
     list.append(li);
@@ -191,6 +246,7 @@
 
   units.forEach((unit, i) => {
     const vid = unit.querySelector("video[data-hls]");
+    if (!vid) return; // 課堂練習：沒有觀看進度
     const item = items[i];
     let best = readP(unit.id), saved = best;
     const paint = () => {
@@ -212,7 +268,8 @@
       best = saved = 1;
       writeP(unit.id, 1);
       paint();
-      if (units[i + 1]) nextUp(unit, units[i + 1], items[i + 1]);
+      // 「下一支」只接影片；後面是課堂練習（不是影片）就不出現，不會自動打開
+      if (units[i + 1] && units[i + 1].querySelector("video[data-hls]")) nextUp(unit, units[i + 1], items[i + 1]);
     });
   });
 
@@ -244,7 +301,21 @@
     box.append(b);
   }
 
-  /* 換影片：其他的暫停、收起來，這一支淡入（只往上移 10px） */
+  /* 手機的清單是橫排的：選到的項目（連同它前面的小標）不在畫面裡時，把清單輕輕捲到它。
+     捲到項目的開頭，剛好是 scroll-snap 的停靠點；桌機的清單是直的，不用捲。 */
+  function revealItem(i, instant) {
+    if (list.scrollWidth <= list.clientWidth + 1) return;
+    const li = items[i].parentElement;
+    const prev = li.previousElementSibling;
+    const from = prev && prev.classList.contains("reel-sep") ? prev : li;
+    const o = list.getBoundingClientRect();
+    const a = from.getBoundingClientRect();
+    const z = li.getBoundingClientRect();
+    if (a.left >= o.left - 1 && z.right <= o.right + 1) return;
+    list.scrollBy({ left: a.left - o.left, behavior: instant || reduceMotion ? "auto" : "smooth" });
+  }
+
+  /* 換一段：其他的暫停、收起來，這一段淡入（只往上移 10px） */
   let current = null;
   function select(unit, opts) {
     opts = opts || {};
@@ -255,7 +326,8 @@
       units.forEach((u) => { u.hidden = u !== unit; });
       items.forEach((b, k) => b.setAttribute("aria-current", units[k] === unit ? "true" : "false"));
       current = unit;
-      attach(vid);
+      if (vid) attach(vid);
+      revealItem(units.indexOf(unit), first);
       if (!first && !reduceMotion) {
         unit.querySelectorAll(".points li").forEach((li, k) => li.style.setProperty("--i", k));
         unit.classList.remove("is-entering");
@@ -270,19 +342,24 @@
         if (top < 0 || top > window.innerHeight * 0.55) unit.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
       }
     }
-    if (opts.play) vid.play().catch(() => {});
+    if (opts.play && vid) vid.play().catch(() => {});
   }
 
+  // #t= 只對影片有用；選到的是課堂練習（沒有影片）就略過
+  const seekTo = (t) => { const v = current.querySelector("video[data-hls]"); if (v && t != null) seek(v, t, false); };
+
   select(hash.unit || units[0]);
-  if (hash.t != null) seek(current.querySelector("video[data-hls]"), hash.t, false);
+  seekTo(hash.t);
   if (hash.unit) hash.unit.scrollIntoView();
 
   // 網址的 # 變了（例如點了頁面裡的 #02-slug 連結）就換到那一支
   window.addEventListener("hashchange", () => {
     const h = parseHash();
     if (h.unit) select(h.unit, { scroll: true });
-    if (h.t != null) seek(current.querySelector("video[data-hls]"), h.t, false);
+    seekTo(h.t);
   });
 
   if (I18N) I18N.apply(reel);
+  tidyParens(reel);
+  trimLineStart();
 })();

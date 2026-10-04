@@ -107,7 +107,7 @@ window.LAB = window.LAB || {};
 
   var fmt = {
     clockMenubar: function (d) {
-      return (d.getMonth() + 1) + '月' + d.getDate() + '日 週' + ZH_DAY[d.getDay()] + ' ' + ampm(d) + h12(d) + ':' + p2(d.getMinutes());
+      return (d.getMonth() + 1) + '月' + d.getDate() + '日週' + ZH_DAY[d.getDay()] + ' ' + ampm(d) + h12(d) + ':' + p2(d.getMinutes());
     },
     finderDate: function (ms) {
       var d = new Date(ms), now = LAB.clock.now();

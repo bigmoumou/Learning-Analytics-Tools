@@ -34,12 +34,9 @@
 </head>
 <body>
 <div id="lab-root">
-  <aside id="lab-rail" aria-label="任務卡">
-    <div class="lab-page-foot">Copyright © 2026 JUNHAO CHEN</div>
-  </aside>
   <main id="lab-screen">
     <div id="lab-stage" role="application" aria-label="練習用的 Mac 桌面">
-      <canvas id="lab-wall" aria-hidden="true"></canvas>
+      <div id="lab-wall" aria-hidden="true"></div>
       <div id="lab-desktop"></div>
       <div id="lab-windows"></div>
       <div id="lab-menubar"></div>
@@ -47,6 +44,10 @@
       <div id="lab-overlays"></div>
       <div id="lab-dnd"></div>
     </div>
+    <!-- 任務卡是浮在 Mac 左上角的玻璃卡片（不屬於假的 Mac，不跟著畫面縮放）；放在 #lab-screen 裡，全螢幕時也看得到 -->
+    <aside id="lab-rail" aria-label="任務卡">
+      <div class="lab-page-foot">Copyright © 2026 JUNHAO CHEN</div>
+    </aside>
   </main>
 </div>
 <div id="lab-modal-root"></div>

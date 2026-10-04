@@ -41,6 +41,15 @@ CC0 與公有領域只涉及著作權。Ponte Vecchio 的照片和 Botticelli �
 
 Week 4 影片 01 錄影裡的 Blockbench 介面，以及影片中重現或提到的 Codex、Visual Studio Code、Claude Code、Chrome 等軟體的名稱與介面，屬於各自的權利人，不適用本專案的授權；本專案與它們沒有隸屬或背書關係。
 
+### 課堂練習的模擬 Mac（`lab/mac/`）
+
+- 桌布：`lab/mac/img/wallpaper.jpg` 是「Lake Tahoe, United States (Unsplash).jpg」，Clara Marie 攝，CC0（原刊於 Unsplash）
+  https://commons.wikimedia.org/wiki/File:Lake_Tahoe,_United_States_(Unsplash).jpg
+  這張照片也出現在 Week 3 頁面的課堂練習圖（`weeks/week03/lab/poster.jpg`、`thumb.jpg`）裡：圖中筆電螢幕上的畫面是模擬 Mac 的截圖，筆電是自己畫的。CC0 不受本專案 CC BY-NC-SA 4.0 授權的限制；這裡列出來源，方便查核。
+- 外觀與商標：模擬 Mac 模仿 macOS、Finder、終端機（Terminal）、Visual Studio Code 和 Codex app 的外觀與操作方式，讓學生之後在真正的電腦上不會陌生。所有圖示、視窗、版面和筆電圖都是自己用 SVG、CSS 重新繪製的，沒有附上 Apple、Microsoft、OpenAI 的圖檔、桌布、字型檔或程式碼（文字只是照訪客電腦上的系統字型顯示）；選單列左邊的圖示是課程自己畫的，不是 Apple 的標誌。
+  macOS、Finder、Terminal 是 Apple Inc. 的商標，Visual Studio Code 是 Microsoft Corporation 的商標，Codex 是 OpenAI 的商標。這些名稱只用來指稱學生會遇到的軟體，用於教學；本專案與這些公司沒有隸屬、贊助或背書關係。
+- 人物與資料：練習裡的使用者「小安」、帳號、電腦名稱和檔案內容都是虛構的，沒有任何真實的學生資料。
+
 ### 製作影片用的工具（不在 repo 裡）
 
 影片以 Claude Code（Anthropic）製作，使用 opus-video skill（Copyright (c) 2026 周行 (Kianzzz)，MIT 授權；本課程使用依需求調整過的版本），並用到 HyperFrames（HeyGen，Apache-2.0）、GSAP、Playwright、FFmpeg、numpy 與 SciPy。這些工具都沒有放在這個 repo。之後公開教學影片生成 prompt 與製作經驗時，用到 opus-video skill 的文字或程式的地方，會保留原作者的 MIT 授權聲明。
@@ -100,6 +109,15 @@ CC0 and public domain concern copyright only. The Ponte Vecchio photo and Bottic
 ### Third-party software and trademarks in the videos
 
 The Blockbench interface in the recording in Week 4 video 01, and the names and interfaces of Codex, Visual Studio Code, Claude Code, Chrome and other software shown or recreated in the videos, belong to their owners and are not covered by this project's licenses; this project is not affiliated with or endorsed by them.
+
+### The simulated Mac for in-class practice (`lab/mac/`)
+
+- Wallpaper: `lab/mac/img/wallpaper.jpg` is "Lake Tahoe, United States (Unsplash).jpg" by Clara Marie, CC0 (originally published on Unsplash)
+  https://commons.wikimedia.org/wiki/File:Lake_Tahoe,_United_States_(Unsplash).jpg
+  The photo also appears in the practice image on the Week 3 page (`weeks/week03/lab/poster.jpg` and `thumb.jpg`): the picture on the laptop's screen is a screenshot of the simulated Mac, and the laptop is our own drawing. CC0 is not restricted by this project's CC BY-NC-SA 4.0 license; the source is listed here so it can be checked.
+- Look and trademarks: the simulated Mac imitates the look and behaviour of macOS, Finder, Terminal, Visual Studio Code and the Codex app, so that students feel at home on a real computer later. All icons, windows, layouts and the laptop image are original drawings made with SVG and CSS; no image files, wallpapers, font files or code from Apple, Microsoft or OpenAI are included (text is simply shown in the visitor's own system fonts), and the icon at the left of the menu bar is the course's own drawing, not Apple's logo.
+  macOS, Finder and Terminal are trademarks of Apple Inc., Visual Studio Code is a trademark of Microsoft Corporation, and Codex is a trademark of OpenAI. The names are used only to identify the software students will meet, for teaching; this project is not affiliated with, sponsored by or endorsed by these companies.
+- People and data: the user "小安", the account, the computer name and the file contents in the practice are fictional, and no real student data is used.
 
 ### Tools used to make the videos (not in this repository)
 

@@ -4,6 +4,11 @@
   'use strict';
 
   var h = LAB.util.h;
+
+  /* Bolder menu-bar status glyphs (our own drawings) so they stay readable on the photo wallpaper, like the real ones */
+  LAB.icons.add('mb-wifi', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M3.16 10.16A12.5 12.5 0 0 1 20.84 10.16M5.99 12.99A8.5 8.5 0 0 1 18.01 12.99M8.82 15.82A4.5 4.5 0 0 1 15.18 15.82"/></g><circle cx="12" cy="19.3" r="1.5" fill="currentColor"/></svg>');
+  LAB.icons.add('mb-search', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.4" cy="10.4" r="6"/><path d="M15 15l5 5"/></g></svg>');
+  LAB.icons.add('mb-cc', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="4.2" width="17" height="6.6" rx="3.3"/><rect x="3.5" y="13.2" width="17" height="6.6" rx="3.3"/></g><circle cx="16.8" cy="7.5" r="1.9" fill="currentColor"/><circle cx="7.2" cy="16.5" r="1.9" fill="currentColor"/></svg>');
   var HOME = '/Users/an';
   var DESKTOP = HOME + '/Desktop';
 
@@ -27,9 +32,58 @@
     var r = el.getBoundingClientRect(), sr = stageEl.getBoundingClientRect(), s = stage.scale;
     return { x: (r.left - sr.left) / s, y: (r.top - sr.top) / s, w: r.width / s, h: r.height / s };
   };
+  /* The mission card floats over the top-left corner (the open card when pinned or when the drawer is open, the pill otherwise).
+     New and zoomed windows start to its right, so the card never hides their title bar. Windows can still be dragged under it.
+     Returns stage px. */
+  function cardShowing() {
+    return !!(LAB.layout && (LAB.layout.railMode() === 'pinned' || LAB.layout.isDrawerOpen()));
+  }
+  stage.reserveLeft = function () {
+    var rail = document.getElementById('lab-rail');
+    if (!rail || !stageEl) return 0;
+    var el = rail.querySelector(cardShowing() ? '.lab-rail-body' : '.lab-rail-strip');
+    if (!el) return 0;
+    var r = el.getBoundingClientRect();
+    if (!r.width) return 0;
+    var sr = stageEl.getBoundingClientRect();
+    return Math.max(0, Math.min(stage.w * 0.45, Math.round((r.right - sr.left) / stage.scale + 16)));
+  };
+  /* drawer mode: the stage y just below the pill (or the open card), for a window too wide to open right of it
+     (wm.spawnRect). null when pinned */
+  stage.belowCard = function () {
+    if (!LAB.layout || LAB.layout.railMode() === 'pinned' || !stageEl) return null;
+    var el = document.querySelector('#lab-rail ' + (LAB.layout.isDrawerOpen() ? '.lab-rail-body' : '.lab-rail-strip'));
+    var r = el && el.getBoundingClientRect();
+    if (!r || !r.height) return null;
+    return Math.round((r.bottom - stageEl.getBoundingClientRect().top) / stage.scale + 10);
+  };
+  /* the stage y of the Dock's top edge (a window that is zoomed or opens fresh stops just above it, as on a real Mac) */
+  stage.dockTop = function () {
+    var bar = dockEl && dockEl.querySelector('.lab-dock-bar');
+    if (bar && stageEl) {
+      var r = bar.getBoundingClientRect();
+      if (r.height) return Math.round((r.top - stageEl.getBoundingClientRect().top) / stage.scale);
+    }
+    return stage.h - 93;
+  };
+  /* the open card stops above the Dock when the Dock reaches under it (narrow screens); otherwise it runs down to the bottom */
+  function updateCardRoom() {
+    var rail = document.getElementById('lab-rail');
+    var bar = dockEl && dockEl.querySelector('.lab-dock-bar');
+    if (!screenEl || !rail || !bar) return;
+    var sr = screenEl.getBoundingClientRect(), br = bar.getBoundingClientRect(), rr = rail.getBoundingClientRect();
+    var room = br.width && br.left < rr.right + 8 ? Math.round(sr.bottom - br.top + 10) : 12;
+    screenEl.style.setProperty('--lab-card-bottom', room + 'px');
+  }
   stage.workArea = function () { return { x: 0, y: stage.menubarH, w: stage.w, h: stage.h - stage.menubarH }; };
-  stage.spawnArea = function () { return { x: 24, y: 44, w: stage.w - 24 - 130, h: stage.h - 44 - stage.dockH - 12 }; };
-  stage.zoomRect = function () { return { x: 0, y: stage.menubarH, w: stage.w, h: stage.h - stage.menubarH - 84 }; };
+  stage.spawnArea = function () {
+    var x = Math.max(24, stage.reserveLeft());
+    return { x: x, y: 44, w: Math.max(240, stage.w - x - 130), h: Math.max(240, stage.dockTop() - 8 - 44) };
+  };
+  stage.zoomRect = function () {
+    var x = stage.reserveLeft();
+    return { x: x, y: stage.menubarH, w: stage.w - x, h: Math.max(200, stage.dockTop() - 8 - stage.menubarH) };
+  };
 
   var measureQueued = false;
   function queueMeasure() {
@@ -46,6 +100,8 @@
     var w = s < 1 ? aw / s : aw, hh = s < 1 ? ah / s : ah;
     var changed = force || Math.abs(w - stage.w) > 0.5 || Math.abs(hh - stage.h) > 0.5 || s !== stage.scale;
     stage.availW = aw; stage.availH = ah; stage.scale = s; stage.w = w; stage.h = hh;
+    // the card is not scaled with the stage; it needs the menu bar's on-screen height to sit just under it
+    screenEl.style.setProperty('--lab-mb', (stage.menubarH * s) + 'px');
     if (s < 1) {
       stageEl.style.width = w + 'px'; stageEl.style.height = hh + 'px';
       stageEl.style.transform = 'scale(' + s + ')'; stageEl.style.transformOrigin = '0 0';
@@ -53,12 +109,14 @@
       stageEl.style.width = '100%'; stageEl.style.height = '100%';
       stageEl.style.transform = 'none';
     }
+    updateCardRoom();
     if (changed) LAB.bus.emit('stage:resize', { w: stage.w, h: stage.h, scale: stage.scale });
   }
 
   /* ===================================================== rail layout (§2.1) */
   var drawerOpen = false;
   var appliedMode = null;
+  var lastReserveMode = null;
   var layout = LAB.layout = {
     railMode: function () {
       var m = LAB.store.get('ui.railMode', null);
@@ -92,6 +150,11 @@
       rootEl.classList.toggle('rail-open', m === 'drawer' && drawerOpen);
       queueMeasure();
       LAB.bus.emit('rail:layout', { mode: m, open: drawerOpen });
+      // pinned card ↔ pill changes the column the card covers: zoomed windows move to the new zoom rectangle
+      if (m !== lastReserveMode) {
+        lastReserveMode = m;
+        requestAnimationFrame(function () { layoutStage(true); });
+      }
     }
   };
 
@@ -119,83 +182,9 @@
     perf.set(low);
   }
 
-  /* ======================================================== wallpaper (§2.5) */
-  var wallTimer = null;
-  function drawWall() {
-    if (!wallEl) return;
-    try {
-      var W = Math.max(64, Math.round(stage.w)), H = Math.max(64, Math.round(stage.h));
-      var qw = Math.max(16, Math.ceil(W / 2)), qh = Math.max(16, Math.ceil(H / 2));
-      var art = document.createElement('canvas');
-      art.width = qw; art.height = qh;
-      var c = art.getContext('2d');
-      c.scale(qw / 1920, qh / 1080);
-      var RW = 1920, RH = 1080;
-      var g = c.createLinearGradient(0, RH, RW, 0);
-      g.addColorStop(0, '#041a1c'); g.addColorStop(0.45, '#0a3236'); g.addColorStop(1, '#16382c');
-      c.fillStyle = g; c.fillRect(0, 0, RW, RH);
-      // silk ribbons: wavy bands, feathered by stacking layers (no ctx.filter)
-      function band(yL, yR, amp, f, ph, th, cols, alpha, op) {
-        var L = 14;
-        c.save();
-        c.globalCompositeOperation = op || 'screen';
-        for (var j = 0; j < L; j++) {
-          var half = (th / 2) * (j + 1) / L;
-          var gr = c.createLinearGradient(0, yL, RW, yR);
-          cols.forEach(function (col, i) { gr.addColorStop(i / (cols.length - 1), col); });
-          c.fillStyle = gr; c.globalAlpha = alpha / L * 1.15;
-          c.beginPath();
-          var x;
-          for (x = -80; x <= RW + 80; x += 8) {
-            var mid = yL + (yR - yL) * (x / RW) + amp * Math.sin(x * f + ph);
-            var hh = half * (0.7 + 0.3 * Math.sin(x * f * 0.8 + ph * 1.3));
-            if (x === -80) c.moveTo(x, mid - hh); else c.lineTo(x, mid - hh);
-          }
-          for (x = RW + 80; x >= -80; x -= 8) {
-            var mid2 = yL + (yR - yL) * (x / RW) + amp * Math.sin(x * f + ph);
-            var hh2 = half * (0.7 + 0.3 * Math.sin(x * f * 0.8 + ph * 1.3));
-            c.lineTo(x, mid2 + hh2);
-          }
-          c.closePath(); c.fill();
-        }
-        c.restore();
-      }
-      band(1050, 330, 90, 0.0024, 0.6, 700, ['#0b3c49', '#0f6b6b', '#1f8a70', '#4d9a4a'], 0.9);
-      band(930, 190, 70, 0.0027, 1.9, 380, ['#128c8c', '#2fb09a', '#7bc47f', '#e0b45a', '#ffb35a'], 0.8);
-      band(880, 90, 55, 0.0031, 3.1, 190, ['#6fe0cf', '#9fe3b0', '#f3e3a0', '#ffd2a0', '#ffbf8a'], 0.65);
-      band(850, 40, 40, 0.0034, 4.4, 70, ['#d5fff2', '#fff2d0', '#fff0e6'], 0.4);
-      band(1250, 560, 110, 0.0019, 5.6, 520, ['#021214', '#06282b', '#0b2f26', '#10261f'], 0.85, 'source-over');
-      // calm areas: bottom strip (dock), right icon column, soft vignette
-      var gb = c.createLinearGradient(0, 780, 0, RH);
-      gb.addColorStop(0, 'rgba(5,7,18,0)'); gb.addColorStop(1, 'rgba(5,7,18,.6)');
-      c.fillStyle = gb; c.fillRect(0, 780, RW, RH - 780);
-      var gr2 = c.createLinearGradient(RW - 240, 0, RW, 0);
-      gr2.addColorStop(0, 'rgba(6,8,22,0)'); gr2.addColorStop(1, 'rgba(6,8,22,.5)');
-      c.fillStyle = gr2; c.fillRect(RW - 240, 0, 240, RH);
-      var vg = c.createRadialGradient(RW * 0.55, RH * 0.45, 500, RW * 0.55, RH * 0.45, 1300);
-      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)');
-      c.fillStyle = vg; c.fillRect(0, 0, RW, RH);
-
-      // final canvas at HALF resolution: upscaled art + seeded grain (±3 per channel)
-      var hw = Math.ceil(W / 2), hh3 = Math.ceil(H / 2);
-      wallEl.width = hw; wallEl.height = hh3;
-      var fc = wallEl.getContext('2d', { willReadFrequently: true });
-      fc.imageSmoothingEnabled = true;
-      try { fc.imageSmoothingQuality = 'high'; } catch (e0) { /* ignore */ }
-      fc.drawImage(art, 0, 0, hw, hh3);
-      var im = fc.getImageData(0, 0, hw, hh3), d = im.data;
-      var seed = 20261004;
-      for (var i = 0; i < d.length; i += 4) {
-        seed = (seed * 16807) % 2147483647;
-        var n = Math.round(((seed - 1) / 2147483646 - 0.5) * 3);
-        d[i] += n; d[i + 1] += n; d[i + 2] += n;
-      }
-      fc.putImageData(im, 0, 0);
-    } catch (e) {
-      console.warn('[desktop] wallpaper failed', e);
-      if (wallEl) wallEl.style.background = 'linear-gradient(135deg,#0a0f2e,#16205a 55%,#2a1a5e)';
-    }
-  }
+  /* ======================================================== wallpaper (§2.5)
+     A CC0 photo (img/wallpaper.jpg, Lake Tahoe, credited in the About window and README) drawn by CSS with background-size: cover
+     (see #lab-wall in base.css). If the file fails to load the CSS gradient under it shows instead, so there is nothing to draw here. */
 
   /* ===================================================== pop-overs (menu bar) */
   var popEl = null, popOff = null, popBtn = null;
@@ -227,7 +216,7 @@
   }
 
   /* ================================================ menu bar right side (§2.2) */
-  var clockEl = null, imeBtn = null, imeAbc = true;
+  var clockEl = null, imeBtn = null, imeAbc = false;
   function updateClock() { if (clockEl) clockEl.textContent = LAB.util.fmt.clockMenubar(LAB.clock.now()); }
 
   function buildMenubar() {
@@ -238,24 +227,24 @@
     menubarEl.appendChild(left);
     menubarEl.appendChild(right);
 
-    imeBtn = h('button', { type: 'button', class: 'lab-mb-btn lab-mb-ime', 'aria-label': '輸入法', title: '輸入法' }, 'ABC');
+    // the badge starts as 注 (zhuyin), like the owner's Mac; a click flips it to A (ABC) and back
+    imeBtn = h('button', { type: 'button', class: 'lab-mb-btn lab-mb-ime', 'aria-label': '輸入法', title: '輸入法' }, '注');
     imeBtn.addEventListener('click', function () {
       imeAbc = !imeAbc;
-      imeBtn.textContent = imeAbc ? 'ABC' : '注';
+      imeBtn.textContent = imeAbc ? 'A' : '注';
       LAB.ui.toast('提醒：在終端機輸入指令前，輸入法要用英文（ABC）');
     });
-    function glyph(name, label) {
+    function glyph(name, label, size) {
       var b = h('button', { type: 'button', class: 'lab-mb-btn', 'aria-label': label, tabindex: '-1' });
-      b.innerHTML = LAB.icons.get(name, { size: 16 });
+      b.innerHTML = LAB.icons.get(name, { size: size || 16 });
       return b;
     }
-    var wifi = glyph('wifi', 'Wi-Fi');
-    var batt = glyph('battery', '電池');
+    var wifi = glyph('mb-wifi', 'Wi-Fi', 18);
     var spot = h('button', { type: 'button', class: 'lab-mb-btn', 'aria-label': 'Spotlight 搜尋', dataset: { lab: 'spotlight-button' } });
-    spot.innerHTML = LAB.icons.get('search', { size: 15 });
+    spot.innerHTML = LAB.icons.get('mb-search', { size: 16 });
     spot.addEventListener('click', function (e) { e.stopPropagation(); LAB.desktop.toggleSpotlight(); });
     var cc = h('button', { type: 'button', class: 'lab-mb-btn', 'aria-label': '控制中心', 'aria-haspopup': 'dialog', 'aria-expanded': 'false' });
-    cc.innerHTML = LAB.icons.get('control-center', { size: 16 });
+    cc.innerHTML = LAB.icons.get('mb-cc', { size: 18 });
     cc.addEventListener('click', function (e) {
       e.stopPropagation();
       var body = h('div', { class: 'lab-cc' },
@@ -269,7 +258,7 @@
       e.stopPropagation();
       openPopover(clockEl, h('div', { class: 'lab-cc' }, h('div', { class: 'lab-cc-note' }, '沒有通知')), 220);
     });
-    [imeBtn, wifi, batt, spot, cc, clockEl].forEach(function (b) { right.appendChild(b); });
+    [imeBtn, wifi, spot, cc, clockEl].forEach(function (b) { right.appendChild(b); });
     updateClock();
     setInterval(updateClock, 15000);
     LAB.menu.mount(left);
@@ -1117,14 +1106,15 @@
       queueMeasure();
     });
 
-    drawWall();
-    var redraw = LAB.util.debounce(drawWall, 300);
-    LAB.bus.on('stage:resize', redraw);
 
     buildMenubar();
     setupDesktop();
     setupDock();
     setupTouch();
+    // the Dock grows when an app outside it runs: keep the card clear of it
+    var dockBar = dockEl.querySelector('.lab-dock-bar');
+    if (dockBar && typeof ResizeObserver !== 'undefined') new ResizeObserver(updateCardRoom).observe(dockBar);
+    updateCardRoom();
 
     // overlay scrollbars: show the thumb while something scrolls (DESIGN §2.4)
     stageEl.addEventListener('scroll', function (e) {

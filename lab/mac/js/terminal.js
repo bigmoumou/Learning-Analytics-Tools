@@ -1703,7 +1703,7 @@
     reset: function () { termState.history.length = 0; termState.lastLogin = null; termState.ttyCount = 0; }
   });
 
-  var PAD = 6;
+  var PAD = 8;
   var FS_DEFAULT = 12, FS_MIN = 11, FS_MAX = 20;
   var instances = new Map();       // winId -> terminal instance
 
@@ -2369,6 +2369,8 @@
       content: root, minW: 320, minH: 160, icon: 'app-terminal'
     });
     win.state.cwd = session.cwd;
+    // small folder icon in front of the title (CSS ::before reads --ticon); the icon is our own static SVG
+    try { win.titleEl.style.setProperty('--ticon', 'url("data:image/svg+xml,' + encodeURIComponent(LAB.icons.get('folder', { size: 32 })) + '")'); } catch (eIco) { /* the icon is cosmetic */ }
 
     var inst = {
       win: win, session: session,
@@ -2454,7 +2456,7 @@
   LAB.menu.register('terminal', function () {
     var t = currentTerminal();
     return [
-      { label: '殼層', items: [
+      { label: 'Shell', items: [
         { label: '新增視窗', shortcut: '⌘N', action: function () { createTerminal({}); } },
         { label: '新增分頁', shortcut: '⌘T', enabled: false },
         { separator: true },
