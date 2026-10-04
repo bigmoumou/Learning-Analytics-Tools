@@ -6,7 +6,8 @@
   var h = LAB.util.h;
 
   /* Bolder menu-bar status glyphs (our own drawings) so they stay readable on the photo wallpaper, like the real ones */
-  LAB.icons.add('mb-wifi', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M3.16 10.16A12.5 12.5 0 0 1 20.84 10.16M5.99 12.99A8.5 8.5 0 0 1 18.01 12.99M8.82 15.82A4.5 4.5 0 0 1 15.18 15.82"/></g><circle cx="12" cy="19.3" r="1.5" fill="currentColor"/></svg>');
+  // Wi-Fi: dot and three arcs as separate shapes (wf0 = dot … wf3 = outer arc), so the joining animation can light them in turn
+  LAB.icons.add('mb-wifi', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path class="wf3" d="M3.16 10.16A12.5 12.5 0 0 1 20.84 10.16"/><path class="wf2" d="M5.99 12.99A8.5 8.5 0 0 1 18.01 12.99"/><path class="wf1" d="M8.82 15.82A4.5 4.5 0 0 1 15.18 15.82"/></g><circle class="wf0" cx="12" cy="19.3" r="1.5" fill="currentColor"/></svg>');
   LAB.icons.add('mb-search', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.4" cy="10.4" r="6"/><path d="M15 15l5 5"/></g></svg>');
   LAB.icons.add('mb-cc', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="4.2" width="17" height="6.6" rx="3.3"/><rect x="3.5" y="13.2" width="17" height="6.6" rx="3.3"/></g><circle cx="16.8" cy="7.5" r="1.9" fill="currentColor"/><circle cx="7.2" cy="16.5" r="1.9" fill="currentColor"/></svg>');
   var HOME = '/Users/an';
@@ -46,6 +47,7 @@
     var r = el.getBoundingClientRect();
     if (!r.width) return 0;
     var sr = stageEl.getBoundingClientRect();
+    if (r.left - sr.left > 48) return 0;            // the student dragged the card away from the left edge
     return Math.max(0, Math.min(stage.w * 0.45, Math.round((r.right - sr.left) / stage.scale + 16)));
   };
   /* drawer mode: the stage y just below the pill (or the open card), for a window too wide to open right of it
@@ -55,6 +57,7 @@
     var el = document.querySelector('#lab-rail ' + (LAB.layout.isDrawerOpen() ? '.lab-rail-body' : '.lab-rail-strip'));
     var r = el && el.getBoundingClientRect();
     if (!r || !r.height) return null;
+    if (r.left - stageEl.getBoundingClientRect().left > 48) return null;   // dragged away: nothing to keep clear
     return Math.round((r.bottom - stageEl.getBoundingClientRect().top) / stage.scale + 10);
   };
   /* the stage y of the Dock's top edge (a window that is zoomed or opens fresh stops just above it, as on a real Mac) */
@@ -109,6 +112,7 @@
       stageEl.style.width = '100%'; stageEl.style.height = '100%';
       stageEl.style.transform = 'none';
     }
+    applyCardPos();
     updateCardRoom();
     if (changed) LAB.bus.emit('stage:resize', { w: stage.w, h: stage.h, scale: stage.scale });
   }
@@ -150,6 +154,7 @@
       rootEl.classList.toggle('rail-open', m === 'drawer' && drawerOpen);
       queueMeasure();
       LAB.bus.emit('rail:layout', { mode: m, open: drawerOpen });
+      applyCardPos();                    // card <-> pill: keep whichever is showing inside the screen
       // pinned card ↔ pill changes the column the card covers: zoomed windows move to the new zoom rectangle
       if (m !== lastReserveMode) {
         lastReserveMode = m;
@@ -157,6 +162,92 @@
       }
     }
   };
+
+  /* ============================================== dragging the card (§17) */
+  /* The glass card can be dragged by its title row, and the pill by itself, anywhere over the Mac; the spot is remembered
+     (ui.cardPos, page px from the top-left of #lab-screen). Dropped near the left edge it snaps back to it. Double-clicking
+     the title row puts it back in the top-left corner. null = the default spot under the menu bar. */
+  var cardDrag = null, suppressClickUntil = 0;
+  function railEl() { return document.getElementById('lab-rail'); }
+  function savedCardPos() {
+    var p = LAB.store.get('ui.cardPos', null);
+    return p && typeof p.x === 'number' && typeof p.y === 'number' && isFinite(p.x) && isFinite(p.y) ? p : null;
+  }
+  function clampCard(x, y) {
+    var r = railEl(), sr = screenEl.getBoundingClientRect();
+    var face = r.querySelector(cardShowing() ? '.lab-rail-body' : '.lab-rail-strip');
+    var w = face && face.offsetWidth ? face.offsetWidth : r.offsetWidth;
+    var top = stage.menubarH * stage.scale + 4;
+    return {
+      x: Math.round(Math.max(6, Math.min(x, sr.width - w - 6))),
+      y: Math.round(Math.max(top, Math.min(y, sr.height - 64)))
+    };
+  }
+  function applyCardPos() {
+    var r = railEl();
+    if (!r || !screenEl || (cardDrag && cardDrag.moved)) return;
+    var p = savedCardPos();
+    if (!p) { r.style.left = ''; r.style.removeProperty('--lab-card-top'); r.classList.remove('is-moved'); return; }
+    var c = clampCard(p.x, p.y);
+    r.style.left = c.x + 'px';
+    r.style.setProperty('--lab-card-top', c.y + 'px');
+    r.classList.add('is-moved');
+  }
+  function setupCardDrag() {
+    var r = railEl();
+    if (!r) return;
+    r.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0 || cardDrag) return;
+      var t = e.target;
+      var onPill = t.closest && t.closest('.lab-rail-strip');
+      if (!onPill && !(t.closest && t.closest('.lab-rail-head'))) return;
+      if (!onPill && t.closest('a, button, input')) return;     // 收起 / 釘住 / ← Week 3 still work as links
+      var rr = r.getBoundingClientRect(), sr = screenEl.getBoundingClientRect();
+      cardDrag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: rr.left - sr.left, oy: rr.top - sr.top, moved: false };
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!cardDrag || e.pointerId !== cardDrag.id) return;
+      var dx = e.clientX - cardDrag.sx, dy = e.clientY - cardDrag.sy;
+      if (!cardDrag.moved) {
+        if (Math.abs(dx) + Math.abs(dy) < 5) return;               // a plain click on the pill still opens the card
+        cardDrag.moved = true;
+        r.classList.add('is-dragging');
+        document.body.classList.add('lab-card-dragging');
+      }
+      e.preventDefault();
+      var c = clampCard(cardDrag.ox + dx, cardDrag.oy + dy);
+      r.style.left = c.x + 'px';
+      r.style.setProperty('--lab-card-top', c.y + 'px');
+    }, { passive: false });
+    function end(e) {
+      if (!cardDrag || (e && e.pointerId !== cardDrag.id)) return;
+      var d = cardDrag;
+      cardDrag = null;
+      if (!d.moved) return;
+      r.classList.remove('is-dragging');
+      document.body.classList.remove('lab-card-dragging');
+      suppressClickUntil = Date.now() + 120;                        // the click that ends a drag must not open or fold the card
+      var rr = r.getBoundingClientRect(), sr = screenEl.getBoundingClientRect();
+      var x = rr.left - sr.left, y = rr.top - sr.top;
+      if (x < 32) x = 12;
+      var home = x === 12 && Math.abs(y - (stage.menubarH * stage.scale + 10)) < 16;
+      LAB.store.set('ui.cardPos', home ? null : { x: Math.round(x), y: Math.round(y) });
+      applyCardPos();
+      updateCardRoom();
+      LAB.bus.emit('card:moved', { x: Math.round(x), y: Math.round(y) });
+    }
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+    r.addEventListener('click', function (e) {
+      if (Date.now() < suppressClickUntil) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+    r.addEventListener('dblclick', function (e) {
+      var t = e.target;
+      if (!t.closest || !t.closest('.lab-rail-head') || t.closest('a, button, input')) return;
+      layout.resetCardPos();
+    });
+  }
+  layout.resetCardPos = function () { LAB.store.set('ui.cardPos', null); applyCardPos(); updateCardRoom(); };
 
   /* ================================================== performance (§2.10) */
   var perf = LAB.perf;
@@ -240,6 +331,9 @@
       return b;
     }
     var wifi = glyph('mb-wifi', 'Wi-Fi', 18);
+    wifi.classList.add('lab-mb-wifi');
+    wifi.setAttribute('data-lab', 'wifi');
+    wifiBtn = wifi;
     var spot = h('button', { type: 'button', class: 'lab-mb-btn', 'aria-label': 'Spotlight 搜尋', dataset: { lab: 'spotlight-button' } });
     spot.innerHTML = LAB.icons.get('mb-search', { size: 16 });
     spot.addEventListener('click', function (e) { e.stopPropagation(); LAB.desktop.toggleSpotlight(); });
@@ -259,10 +353,28 @@
       openPopover(clockEl, h('div', { class: 'lab-cc' }, h('div', { class: 'lab-cc-note' }, '沒有通知')), 220);
     });
     [imeBtn, wifi, spot, cc, clockEl].forEach(function (b) { right.appendChild(b); });
+    // now and then the Wi-Fi rejoins the network for a few seconds, like a real laptop (the first time right after connecting in)
+    if (LAB.bus) LAB.bus.once('connect:done', function () { wifiJoin(2600); scheduleWifi(); });
     updateClock();
     setInterval(updateClock, 15000);
     LAB.menu.mount(left);
   }
+
+  /* Wi-Fi joining animation (shell.css .is-joining): the arcs light up from the dot outward, then it settles as connected */
+  var wifiBtn = null, wifiTimer = null;
+  function wifiJoin(ms) {
+    if (!wifiBtn) return;
+    wifiBtn.classList.add('is-joining');
+    wifiBtn.setAttribute('aria-label', 'Wi-Fi：連線中');
+    clearTimeout(wifiTimer);
+    wifiTimer = setTimeout(function () { wifiBtn.classList.remove('is-joining'); wifiBtn.setAttribute('aria-label', 'Wi-Fi'); }, ms);
+  }
+  function scheduleWifi() {
+    // every 4 to 9 minutes, for 2 to 3.5 s
+    setTimeout(function () { if (!document.hidden) wifiJoin(2000 + Math.random() * 1500); scheduleWifi(); }, (4 + Math.random() * 5) * 60000);
+  }
+  LAB.desktop = LAB.desktop || {};
+  LAB.desktop.wifiJoin = wifiJoin;
 
   /* ============================================================ file moves */
   /* Shared by the desktop, the Dock and (indirectly) others: move or copy `paths` into `destDir`, asking on name collisions. */
@@ -1111,6 +1223,7 @@
     setupDesktop();
     setupDock();
     setupTouch();
+    setupCardDrag();
     // the Dock grows when an app outside it runs: keep the card clear of it
     var dockBar = dockEl.querySelector('.lab-dock-bar');
     if (dockBar && typeof ResizeObserver !== 'undefined') new ResizeObserver(updateCardRoom).observe(dockBar);

@@ -8,6 +8,19 @@
     location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
   }
 </script>
+<script>
+  // 進入前的「連線到遠端電腦」畫面（js/connect.js）：?connect=0 或測試時跳過；在任何東西畫出來之前就決定，畫面才不會先閃一下
+  (function () {
+    var q = location.search, skip = /[?&](connect|welcome)=0(&|$)/.test(q);
+    document.documentElement.className += skip ? " lab-noconnect" : " lab-connecting";
+    // 液態玻璃的折射（SVG 位移濾鏡套在 backdrop-filter 上）只有 Chromium 系瀏覽器（Chrome、Edge）畫得出來；其他瀏覽器用較強的模糊
+    try {
+      var ua = navigator.userAgentData;
+      if (ua && ua.brands && ua.brands.some(function (b) { return /Chromium/.test(b.brand); })) document.documentElement.className += " lab-lg";
+    } catch (e) { /* ignore */ }
+  })();
+</script>
+<noscript><style>#lab-connect { display: none !important; }</style></noscript>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>練習用的 Mac｜學習分析工具</title>
 <meta name="description" content="在瀏覽器裡練習 Week 3：一台練習用的 Mac，可以操作終端機、Finder，並把資料夾拖進 Codex。這是教學模擬，不是真的 Mac。">
@@ -33,6 +46,29 @@
 <script src="../../assets/i18n.js"></script>
 </head>
 <body>
+<!-- 液態玻璃的「水波」：分形雜訊模糊後當位移圖，把玻璃後面的畫面輕輕折彎（mission.css .lab-glass）。#lab-lg 給小玻璃（膠囊、提醒、歡迎），#lab-lg-calm 給文字多的任務卡 -->
+<svg class="lab-svgdefs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <filter id="lab-lg" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="noise"/>
+    <feGaussianBlur in="noise" stdDeviation="3" result="map"/>
+    <feDisplacementMap in="SourceGraphic" in2="map" scale="90" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="lab-lg-calm" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="1" seed="5" result="noise"/>
+    <feGaussianBlur in="noise" stdDeviation="3" result="map"/>
+    <feDisplacementMap in="SourceGraphic" in2="map" scale="70" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<!-- 連線畫面：約 2.5 秒後由 js/connect.js 移除 -->
+<div id="lab-connect" role="status" aria-live="polite">
+  <div class="lab-cn-box">
+    <svg class="lab-cn-mark" viewBox="0 0 64 44" width="64" height="44" aria-hidden="true"><rect x="10" y="3" width="44" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M3 38h58l-3 3.5H6z" fill="currentColor"/></svg>
+    <div class="lab-cn-title">正在連線到 an 的 MacBook Air</div>
+    <div class="lab-cn-host">MacBook-Air.local</div>
+    <div class="lab-cn-bar"><i></i></div>
+    <div class="lab-cn-step">正在建立安全連線…</div>
+  </div>
+</div>
 <div id="lab-root">
   <main id="lab-screen">
     <div id="lab-stage" role="application" aria-label="練習用的 Mac 桌面">
@@ -54,6 +90,7 @@
 <noscript><p style="padding:24px;font:16px/1.7 system-ui,sans-serif">這個練習需要 JavaScript，請在瀏覽器裡開啟 JavaScript 後重新整理。</p></noscript>
 
 <script src="js/lab.js"></script>
+<script src="js/connect.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/store.js"></script>
 <script src="js/vfs.js"></script>

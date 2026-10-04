@@ -1,35 +1,41 @@
-/* mission.css — the mission card, first-run welcome, phone notice (DESIGN §6, §16).
-   The card floats over the top-left corner of the fake Mac as Liquid Glass (macOS Tahoe / iOS 26): strong blur and saturation,
-   a bright rim where light catches the edge, large corners, a soft shadow. Inside: calm type, hairlines, one amber accent. */
+/* mission.css — the mission card, first-run welcome, connecting screen, phone notice (DESIGN §6, §16, §17).
+   The card floats over the Mac as Liquid Glass (macOS Tahoe / iOS 26) and can be dragged. Inside: calm type, hairlines,
+   one amber accent, green checks for ticked steps. */
 
 /* --------------------------------------------------------------- glass */
+/* Three layers under the content, like the owner's reference (lucasromerodb's liquid-glass-effect-macos):
+   ::before  the backdrop, only lightly blurred, and bent as if seen through water (SVG filter #lab-lg in index.html,
+             Chromium only: html.lab-lg is set in <head>; other browsers get a stronger blur instead)
+   ::after   a thin white tint and the bright inner edges (top-left and bottom-right) where light catches the glass
+   The element itself only casts the soft shadow. */
 .lab-glass {
-  position: relative;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .74), rgba(255, 255, 255, .62));
-  -webkit-backdrop-filter: blur(26px) saturate(1.9) brightness(1.05);
-  backdrop-filter: blur(26px) saturate(1.9) brightness(1.05);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .9),
-    inset 0 0 14px rgba(255, 255, 255, .32),
-    0 0 0 .5px rgba(0, 0, 0, .14),
-    0 2px 6px rgba(0, 0, 0, .06),
-    0 18px 48px rgba(0, 0, 0, .24);
+  --glass-tint: .3;
+  position: relative; isolation: isolate;
+  background: none;
+  box-shadow: 0 6px 6px rgba(0, 0, 0, .18), 0 0 20px rgba(0, 0, 0, .1), 0 0 0 .5px rgba(0, 0, 0, .1);
 }
-/* the rim: brightest on the top-left and bottom-right edges, clear in between (the inset shadows above make the thick edge
-   read lighter than the middle, as it does on real glass) */
+.lab-glass::before, .lab-glass::after {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: -1;
+  border-radius: inherit; pointer-events: none;
+}
 .lab-glass::before {
-  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 2;
-  border-radius: inherit; padding: 1.5px; pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .3) 18%, rgba(255, 255, 255, 0) 40%,
-    rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, .38) 84%, rgba(255, 255, 255, .85));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  -webkit-backdrop-filter: blur(9px) saturate(1.5); backdrop-filter: blur(9px) saturate(1.5);
 }
-/* slow computers, and visitors who asked for less transparency: plain frosted white, no blur */
-html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.lab-lg .lab-glass::before {
+  -webkit-backdrop-filter: blur(3px) saturate(1.5); backdrop-filter: blur(3px) saturate(1.5);
+  filter: url(#lab-lg);
+}
+html.lab-lg .lab-glass.lab-glass-calm::before { filter: url(#lab-lg-calm); -webkit-backdrop-filter: blur(4px) saturate(1.5); backdrop-filter: blur(4px) saturate(1.5); }
+.lab-glass::after {
+  background: rgba(255, 255, 255, var(--glass-tint));
+  box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, .55), inset -1px -1px 1px 1px rgba(255, 255, 255, .5);
+}
+/* slow computers, and visitors who asked for less transparency: plain frosted white, no blur, no bending */
+html[data-perf="low"] .lab-glass::before { -webkit-backdrop-filter: none; backdrop-filter: none; filter: none; }
+html[data-perf="low"] .lab-glass { --glass-tint: .95; }
 @media (prefers-reduced-transparency: reduce) {
-  .lab-glass { background: rgba(246, 246, 246, .97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .lab-glass::before, html.lab-lg .lab-glass::before { -webkit-backdrop-filter: none; backdrop-filter: none; filter: none; }
+  .lab-glass { --glass-tint: .95; }
 }
 
 /* ------------------------------------------------------------------ card */
@@ -37,10 +43,11 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
   /* it sits on the Mac, so it is always the Mac's light glass, even when the page itself is in dark mode */
   --lab-bg: transparent; --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #4a4a51;
   --lab-line: rgba(0, 0, 0, .1); --lab-accent: #8a5400;
-  position: absolute; left: 12px; top: calc(var(--lab-mb, 28px) + 10px); z-index: 50;
+  /* --lab-card-top / left: set by desktop.js when the student has dragged the card somewhere else (§17) */
+  position: absolute; left: 12px; top: var(--lab-card-top, calc(var(--lab-mb, 28px) + 10px)); z-index: 50;
   width: clamp(268px, 27vw, 340px);
   /* --lab-card-bottom (desktop.js): 12px, or the Dock's height when the Dock reaches under the card (narrow screens) */
-  max-height: calc(100% - var(--lab-mb, 28px) - 10px - var(--lab-card-bottom, 12px));
+  max-height: calc(100% - var(--lab-card-top, calc(var(--lab-mb, 28px) + 10px)) - var(--lab-card-bottom, 12px));
   display: flex; flex-direction: column; align-items: flex-start;
   font-family: var(--mac-font); font-size: 13.5px; line-height: 1.65; color: var(--lab-ink);
   pointer-events: none;                      /* only the card, the pill and the note take clicks */
@@ -49,10 +56,20 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
 #lab-rail > .lab-page-foot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
 
 .lab-rail-body {
+  --glass-tint: .4;                          /* a little more white than the pill: it carries a lot of text */
   display: flex; flex-direction: column; width: 100%; min-height: 0; max-height: 100%;
   border-radius: 22px; overflow: hidden; pointer-events: auto;
   transform-origin: 18px 18px;
+  /* a faint white halo keeps dark text readable where darker scenery shows through the clear glass */
+  text-shadow: 0 0 10px rgba(255, 255, 255, .55);
 }
+/* dragging: the card lifts a little, like picking up a piece of glass */
+.lab-rail-body, .lab-rail-strip { transition: transform .18s var(--lab-ease), box-shadow .18s var(--lab-ease); }
+#lab-rail.is-dragging .lab-rail-body, #lab-rail.is-dragging .lab-rail-strip {
+  transform: scale(1.02);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .22), 0 0 24px rgba(0, 0, 0, .12), 0 0 0 .5px rgba(0, 0, 0, .1);
+}
+body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; -webkit-user-select: none !important; user-select: none !important; }
 /* collapsed (narrow screens, or the student folded it): the card stays in the page but invisible, and opens in place */
 #lab-root.rail-drawer:not(.rail-open) .lab-rail-body {
   position: absolute; left: 0; top: 0; max-height: none;
@@ -75,6 +92,7 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
   height: 40px; min-width: 188px; padding: 0 14px 0 16px; margin: 0;
   border: 0; border-radius: 20px;
   font: inherit; font-size: 13px; line-height: 1; color: var(--lab-ink); cursor: pointer; white-space: nowrap;
+  touch-action: none;                        /* the pill can be dragged too */
 }
 #lab-root.rail-drawer:not(.rail-open) .lab-rail-strip { display: inline-flex; }
 .lab-rail-strip.is-entering { animation: lab-card-in .18s var(--lab-ease); }
@@ -104,7 +122,6 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
 }
 .lab-peek.is-ok .lab-peek-main { padding-right: 14px; }
 .lab-peek-eyebrow { display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--lab-accent); }
-.lab-peek.is-ok .lab-peek-eyebrow { color: var(--lab-ink-3); }
 .lab-peek-text { display: block; color: var(--lab-ink); overflow-wrap: anywhere; }
 .lab-peek-x { position: absolute; top: 5px; right: 6px; z-index: 3; padding: 2px 6px; margin: 0; background: none; border: 0; font: 16px/1 var(--mac-font); color: var(--lab-ink-3); cursor: pointer; }
 .lab-peek-x:hover { color: var(--lab-ink); }
@@ -116,7 +133,9 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
   display: flex; align-items: baseline; gap: 12px;
   flex: none; margin: 0 18px; padding: 14px 0 10px; border-bottom: 1px solid var(--lab-line);
   font-size: 12.5px;
+  cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;   /* the handle for dragging the card */
 }
+.lab-rail-head a, .lab-rail-head button { cursor: pointer; }
 .lab-rail-link { color: var(--lab-ink-2); text-decoration: none; }
 .lab-rail-link:hover { color: var(--lab-ink); text-decoration: underline; text-underline-offset: 3px; }
 .lab-rail-label { flex: 1; font-size: 11px; letter-spacing: .06em; color: var(--lab-ink-3); }
@@ -165,6 +184,26 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
 .lab-step.is-done .lab-num { animation: lab-check .3s ease-out; }
 @keyframes lab-check { from { opacity: 0; } to { opacity: 1; } }
 .lab-step-body { flex: 1; min-width: 0; }
+/* a ticked step: a green check (macOS green). A fresh tick pops in and draws itself, and its row glows green once;
+   --lab-age (missions.js) is how old the tick is, so a re-render continues the animation instead of restarting it */
+.lab-check { display: inline-flex; width: 18px; height: 18px; vertical-align: -4px; }
+.lab-check svg { display: block; overflow: visible; }
+.lab-check circle { fill: #2fb34f; }
+.lab-check path { fill: none; stroke: #fff; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.lab-check.is-new svg { transform-origin: 50% 50%; animation: lab-check-pop .45s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: var(--lab-age, 0ms); }
+.lab-check.is-new path { stroke-dasharray: 13; stroke-dashoffset: 13; animation: lab-check-draw .3s ease-out forwards; animation-delay: calc(var(--lab-age, 0ms) + .16s); }
+@keyframes lab-check-pop { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes lab-check-draw { to { stroke-dashoffset: 0; } }
+.lab-step.is-justdone { animation: lab-row-done 1.2s ease-out both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-row-done { 0% { background: rgba(52, 199, 89, .26); } 100% { background: rgba(52, 199, 89, 0); } }
+.lab-mrow .lab-check { width: 15px; height: 15px; vertical-align: -3px; }
+.lab-mrow .lab-check svg { width: 15px; height: 15px; }
+.lab-peek-eyebrow .lab-check { width: 14px; height: 14px; margin-right: 5px; vertical-align: -3px; }
+.lab-peek-eyebrow .lab-check svg { width: 14px; height: 14px; }
+.lab-peek.is-ok .lab-peek-eyebrow { color: #1f7a34; }
+@media (prefers-reduced-motion: reduce) {
+  .lab-check.is-new svg, .lab-check.is-new path, .lab-step.is-justdone { animation: none; stroke-dashoffset: 0; }
+}
 .lab-step-text { overflow-wrap: anywhere; }
 .lab-opt { margin-left: 6px; color: var(--lab-ink-3); font-size: 12px; }
 .lab-hintbar { display: flex; gap: 16px; margin-top: 6px; font-size: 13px; }
@@ -209,6 +248,7 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
 /* the welcome is a glass sheet over the Mac, like the card */
 .lab-welcome-scrim { background: rgba(0, 0, 0, .22); }
 .lab-welcome {
+  --glass-tint: .46; text-shadow: 0 0 10px rgba(255, 255, 255, .55);
   --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #4a4a51; --lab-line: rgba(0, 0, 0, .12); --lab-accent: #8a5400;
   width: 520px; max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
   padding: 28px 32px 24px;
@@ -233,3 +273,30 @@ html[data-perf="low"] .lab-glass { background: rgba(246, 246, 246, .97); -webkit
 .lab-phone h1 { margin: 0 0 12px; font-size: 24px; font-weight: 700; }
 .lab-phone p { margin: 0 0 12px; color: var(--lab-ink-2); line-height: 1.75; }
 .lab-phone-note { font-size: 13px; color: var(--lab-ink-3) !important; }
+
+/* ---------------------------------------------- connecting to the remote computer (DESIGN §17) */
+/* dark, plain, centred, like a remote-desktop client before the picture arrives; it covers the page from the first paint */
+#lab-connect {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  background: #0d0e11; color: #e9e9ec;
+  font-family: var(--mac-font); text-align: center;
+  cursor: progress;
+  transition: opacity .5s var(--lab-ease);
+}
+html.lab-noconnect #lab-connect { display: none; }
+#lab-connect.is-leaving { opacity: 0; pointer-events: none; }
+.lab-cn-box { width: 300px; max-width: calc(100vw - 48px); }
+.lab-cn-mark { display: block; margin: 0 auto 18px; color: #c9c9cf; }
+.lab-cn-title { font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+.lab-cn-host { margin-top: 4px; font-size: 12px; color: #8b8b92; font-family: var(--lab-font-mono); }
+.lab-cn-bar { height: 4px; margin: 20px auto 10px; border-radius: 2px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+.lab-cn-bar i { display: block; width: 0; height: 100%; border-radius: 2px; background: #e9e9ec; transition: width .55s cubic-bezier(.3, .6, .2, 1); }
+.lab-cn-step { min-height: 1.5em; font-size: 12.5px; color: #a3a3aa; }
+/* while connecting the desktop waits blurred and dim; it sharpens as the screen fades, like a remote picture arriving */
+#lab-stage { transition: filter .55s var(--lab-ease); }
+html.lab-connecting #lab-stage { filter: blur(10px) brightness(.75); }
+@media (prefers-reduced-motion: reduce) {
+  html.lab-connecting #lab-stage { filter: none; }
+  .lab-cn-bar i { transition: none; }
+}

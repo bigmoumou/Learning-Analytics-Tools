@@ -1304,3 +1304,24 @@ Supersedes the side rail in §2.1 and §6 (the behaviour and every `data-lab` ho
 - **Dock.** When the Dock reaches under the card's column (narrow screens), the open card stops 10 px above it (`--lab-card-bottom`, measured in `updateCardRoom()`, re-measured when the Dock bar resizes).
 - **Welcome.** The first-run welcome is the same glass, on a light scrim; its buttons are capsules (primary dark), with the Mac's blue focus ring.
 - **Tests.** The 1024×640 variant no longer expects a scaled stage (the Mac now gets the full width); it checks drawer mode and a full-width stage instead. `製作/lab-mac/tests/glass_shots.py` takes the card screenshots (1440, 1366, 1024, phone).
+
+## 17. Second owner round (2026-10-04 evening): clearer liquid glass, dragging, connecting screen, green checks
+
+Supersedes the "Look" bullet of §16.
+
+- **Liquid glass.** The owner found the frosted card not real enough and not see-through enough, and pointed to lucasromerodb's liquid-glass-effect-macos (CodePen and freefrontend). `.lab-glass` now has three layers under the content:
+  - `::before` is the backdrop, blurred only 3 px (4 px on the text-heavy card and the welcome). In Chromium (`html.lab-lg`, set in `<head>` from `navigator.userAgentData`) it is bent by an SVG displacement filter: fractal noise, blurred, then `feDisplacementMap`. The filters are in index.html: `#lab-lg` (scale 90) for the pill and notes, `#lab-lg-calm` (scale 70) for the card and welcome. Other browsers get a 9 px blur with no bending.
+  - `::after` is the white tint plus inner edge highlights: `inset 2px 2px 1px` and `inset -1px -1px 1px 1px`.
+  - The element itself only casts the soft shadow.
+  - Tint: pill and notes .3, card .4, welcome .46. The card and welcome add a faint white text halo so dark text stays readable over trees.
+  - `data-perf=low` and `prefers-reduced-transparency` drop the blur and bending and use a .95 tint.
+- **Dragging.** The card is dragged by its title row; the pill is dragged by itself, and a click under 5 px still opens it.
+  - The spot is saved in `ui.cardPos`, in page px from the top-left of `#lab-screen`. The card is kept inside the screen and re-clamped on resize and on the card↔pill switch. Dropped within 32 px of the left edge it snaps to it. Double-clicking the title row resets it (`LAB.layout.resetCardPos()`).
+  - While dragging, the card lifts (scale 1.02, deeper shadow). The click that ends a drag is swallowed for 120 ms.
+  - A card dragged more than 48 px away from the left edge no longer reserves a column for windows (`reserveLeft()` returns 0, `belowCard()` returns null).
+- **Connecting screen** (`js/connect.js`, markup in index.html, CSS in mission.css). Every visit starts with about 2.5 s of a dark remote-desktop connecting screen. It shows an original laptop line glyph, 「正在連線到 an 的 MacBook Air」 and `MacBook-Air.local`, then a progress bar and status lines: 正在建立安全連線… → 正在驗證身分… → 正在準備遠端桌面… → 已連線. At 1.95 s it fades while the desktop under it sharpens (`html.lab-connecting #lab-stage` is blurred and dimmed until then), and it emits `connect:done`. `?connect=0` and `?welcome=0` skip it; `<head>` decides before the first paint. The tests, poster and production check use `connect=0`.
+- **Wi-Fi joining.** The menu-bar Wi-Fi glyph is a dot (`wf0`) and three arcs (`wf1`–`wf3`). `.is-joining` dims them and lights them in turn from the dot outward. It plays for 2.6 s after `connect:done`, then every 4–9 minutes for 2–3.5 s (`LAB.desktop.wifiJoin(ms)`).
+- **Green checks.** A ticked step shows a macOS-green circle check in the number column. A fresh tick (under 1.2 s) pops in (scale), draws its tick, and its row glows green once. The age is passed as a negative `animation-delay` (`--lab-age`), so a re-render continues the animation instead of replaying it. Done missions in the list and the 「做好了」 note also use the green check.
+- **Folder icon.** Two plates only (back with tab + front), like the real one; the viewBox moved up 70 so it sits centred.
+- **Tests.** `製作/lab-mac/tests/features_e2e.py` (23 checks) covers the connecting screen, Wi-Fi, dragging card and pill, green checks and the folder. `lab_e2e.py` (177) still passes.
+

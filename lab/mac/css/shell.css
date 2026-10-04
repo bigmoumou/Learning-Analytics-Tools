@@ -28,6 +28,14 @@
 .lab-mb-mark { display: inline-flex; color: #fff; filter: drop-shadow(0 0 2px rgba(0, 20, 50, .3)); }
 .lab-mb-btn { padding: 0 9px; }
 .lab-mb-btn svg { filter: drop-shadow(0 0 2px rgba(0, 20, 50, .3)); }
+/* Wi-Fi joining a network: dim arcs light up one after another from the dot outward, as on the real menu bar */
+.lab-mb-wifi.is-joining .wf0, .lab-mb-wifi.is-joining .wf1, .lab-mb-wifi.is-joining .wf2, .lab-mb-wifi.is-joining .wf3 {
+  opacity: .3; animation: lab-wifi-join 1.4s ease-in-out infinite;
+}
+.lab-mb-wifi.is-joining .wf1 { animation-delay: .15s; }
+.lab-mb-wifi.is-joining .wf2 { animation-delay: .3s; }
+.lab-mb-wifi.is-joining .wf3 { animation-delay: .45s; }
+@keyframes lab-wifi-join { 0%, 55%, 100% { opacity: .3; } 18%, 38% { opacity: 1; } }
 /* input-method badge: white rounded box with a dark character, like the 注 badge on the real menu bar */
 .lab-mb-right .lab-mb-ime, .lab-mb-right .lab-mb-ime:hover, .lab-mb-right .lab-mb-ime.is-open {
   width: 26px; height: 18px; min-width: 0; padding: 0; margin: 0 6px;

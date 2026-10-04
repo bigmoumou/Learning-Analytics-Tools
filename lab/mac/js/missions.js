@@ -18,6 +18,19 @@
   var tickTimer = null;
   var rail = null, liveEl = null;
   var lastFace = null;                       // 'card' or 'pill' at the last render
+  var justDone = {};                         // 'mission/step' → when it was ticked (memory only): its green check pops in once
+
+  /* the green check for a ticked step. A step ticked under a second ago animates; because render() rebuilds the card,
+     the animation is started at its current age (negative delay) so a re-render continues it instead of replaying it */
+  var POP_MS = 1200;
+  function greenCheck(at) {
+    var age = at ? Date.now() - at : Infinity;
+    var fresh = age < POP_MS;
+    var span = h('span', { class: 'lab-check' + (fresh ? ' is-new' : ''), 'aria-hidden': 'true' });
+    span.innerHTML = '<svg viewBox="0 0 20 20" width="18" height="18"><circle cx="10" cy="10" r="9"/><path d="M5.6 10.4l2.9 2.9 5.9-6.1"/></svg>';
+    if (fresh) span.style.setProperty('--lab-age', (-age) + 'ms');
+    return span;
+  }
   var ui = { listOpen: false, mapOpen: false, codeOpen: false, copied: null };
   var welcomeShown = false;
   var missions = {};
@@ -193,6 +206,7 @@
     var step = m.steps[i];
     r.steps[step.id] = LAB.clock.ms();
     if (skipped) r.skipped[step.id] = 1;
+    else justDone[m.id + '/' + step.id] = Date.now();
     if (nudge.stepId === step.id) nudge = { stepId: null, text: '' };
     var payload = { missionId: m.id, stepId: step.id, index: i };
     if (skipped) payload.skipped = true;
@@ -309,7 +323,7 @@
   function clearPeek() { peek = null; if (peekTimer) { clearTimeout(peekTimer); peekTimer = null; } }
   function setPeek(text) {
     var id = ++peekSeq;
-    peek = { id: id, text: text };
+    peek = { id: id, text: text, at: Date.now() };
     if (peekTimer) clearTimeout(peekTimer);
     peekTimer = setTimeout(function () { if (peek && peek.id === id) { peek = null; render(); } }, 9000);
   }
@@ -529,7 +543,7 @@
     var bubble = null;
     if (bubbleText) {
       var bmain = h('button', { type: 'button', class: 'lab-peek-main', 'data-fk': 'peek', 'aria-label': '打開任務卡。' + bubbleText },
-        h('span', { class: 'lab-peek-eyebrow' }, bubbleKind === 'nudge' ? '提醒' : '做好了'),
+        h('span', { class: 'lab-peek-eyebrow' }, bubbleKind === 'nudge' ? '提醒' : [greenCheck(peek && peek.at), '做好了']),
         h('span', { class: 'lab-peek-text' }, bubbleText));
       bmain.addEventListener('click', function () { LAB.layout.openDrawer(); });
       bubble = h('div', { class: 'lab-peek lab-glass is-' + bubbleKind, dataset: { lab: 'rail-peek', kind: bubbleKind } }, bmain);
@@ -571,7 +585,7 @@
           var xr = data.missions[x.id];
           var isDone = !!(xr && xr.doneAt);
           var row = h('button', { type: 'button', class: 'lab-mrow' + (m && m.id === x.id ? ' is-cur' : ''), 'data-fk': 'row:' + x.id, dataset: { lab: 'rail-mission', id: x.id } },
-            h('span', { class: 'lab-num' + (isDone ? ' is-check' : '') }, isDone ? '✓' : pad2(i + 1)),
+            h('span', { class: 'lab-num' + (isDone ? ' is-check' : '') }, isDone ? greenCheck(0) : pad2(i + 1)),
             h('span', { class: 'lab-mt' }, x.title),
             x.tag ? h('span', { class: 'lab-mtag' }, '補充教材') : null);
           row.addEventListener('click', function () { ui.listOpen = false; missions.start(x.id); render(true); });
@@ -612,11 +626,13 @@
           var done = !!r.steps[st.id];
           var skipped = done && !!r.skipped[st.id];
           var isCur = i === curIdx;
+          var tickedAt = done && !skipped ? justDone[m.id + '/' + st.id] : 0;
           var li = h('li', {
-            class: 'lab-step' + (done ? ' is-done' : '') + (skipped ? ' is-skipped' : '') + (isCur ? ' is-current' : ''),
+            class: 'lab-step' + (done ? ' is-done' : '') + (skipped ? ' is-skipped' : '') + (isCur ? ' is-current' : '') +
+              (tickedAt && Date.now() - tickedAt < POP_MS ? ' is-justdone' : ''),
             dataset: { lab: 'step', step: st.id, done: done ? 'true' : 'false', skipped: skipped ? 'true' : 'false' }
           },
-            h('span', { class: 'lab-num' + (done && !skipped ? ' is-check' : '') + (skipped ? ' is-skip' : '') }, skipped ? '–' : (done ? '✓' : pad2(i + 1))),
+            h('span', { class: 'lab-num' + (done && !skipped ? ' is-check' : '') + (skipped ? ' is-skip' : '') }, skipped ? '–' : (done ? greenCheck(tickedAt) : pad2(i + 1))),
             h('div', { class: 'lab-step-body' },
               h('div', { class: 'lab-step-text' }, inline(st.text), st.optional && (!done || skipped) ? h('span', { class: 'lab-opt' }, skipped ? '（選做，略過了）' : '（選做）') : null)));
           if (isCur) {
@@ -695,7 +711,7 @@
     parts.push(foot);
 
     var scroll = h('div', { class: 'lab-rail-scroll' }, parts);
-    var bodyEl = h('div', { class: 'lab-rail-body lab-glass' + (entering && face === 'card' ? ' is-entering' : ''), 'aria-hidden': (mode === 'drawer' && !open) ? 'true' : null }, head, scroll);
+    var bodyEl = h('div', { class: 'lab-rail-body lab-glass lab-glass-calm' + (entering && face === 'card' ? ' is-entering' : ''), 'aria-hidden': (mode === 'drawer' && !open) ? 'true' : null }, head, scroll);
     if (mode === 'drawer' && !open) bodyEl.setAttribute('inert', '');
     rail.textContent = '';
     rail.appendChild(strip);
@@ -768,7 +784,7 @@
     var freeBtn = h('button', { type: 'button', class: 'lab-textbtn', dataset: { lab: 'welcome-free' } }, '自由練習');
     startBtn.addEventListener('click', function () { close(true); });
     freeBtn.addEventListener('click', function () { close(false); });
-    var panel = h('div', { class: 'lab-welcome lab-glass', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'lab-welcome-t' },
+    var panel = h('div', { class: 'lab-welcome lab-glass lab-glass-calm', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'lab-welcome-t' },
       h('h1', { id: 'lab-welcome-t' }, '歡迎來到練習用的 Mac'),
       h('p', null, '這不是真的 Mac，是在瀏覽器裡執行的模擬環境。你可以放心亂點、亂打指令，弄壞了隨時可以重來，不會影響你自己的電腦。建議先看過 Week 3 的影片。'),
       h('p', null, '左上角那張半透明的任務卡（螢幕窄時會縮成一顆小膠囊，點一下就展開）是這次的任務：照著步驟做，做對了會自動打勾；卡住了可以按「提示」。也可以選「自由練習」，自己隨便玩。'),
