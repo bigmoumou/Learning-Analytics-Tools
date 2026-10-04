@@ -10,18 +10,14 @@
   if (flag('now')) LAB.clock.setOffsetFromISO(flag('now'));
   // ?perf=low|high
   if (flag('perf') === 'low' || flag('perf') === 'high') LAB.perf.forced = flag('perf');
-  // ?welcome=0
+  // ?welcome=0 — no sheets at all; ?intro=0 — no mission sheets and no completion sheets (the first sheet still shows)
   if (flag('welcome') === '0') LAB.missions.skipWelcome = true;
+  if (flag('intro') === '0') LAB.missions.skipIntro = true;
   // ?mission=<id> (one shot)
   var missionFlag = flag('mission');
   if (missionFlag) LAB.missions.pendingStart = missionFlag;
-  // ?reset=1 (one shot): boot from the seed without loading, and make sure nothing written during boot survives from the old state
+  // ?reset=1 is a leftover of the saved-progress days: every visit already starts fresh, so it only has to be stripped from the URL
   var resetFlag = flag('reset') === '1';
-  if (resetFlag) {
-    LAB.store.frozen = true;
-    LAB.store.skipLoad = true;
-    try { window.localStorage.removeItem(LAB.store.KEY); } catch (e2) { /* ignore */ }
-  }
   // ?debug=1
   if (flag('debug') === '1') {
     var baseline = null;
@@ -44,8 +40,7 @@
     document.documentElement.lang = 'zh-Hant';
     LAB.boot.run();
     document.documentElement.lang = 'zh-Hant';
-    if (resetFlag) { LAB.store.frozen = false; LAB.store.markDirty(); }
-    // strip the one-shot parameters so a reload (or the rail's own reset link) does not repeat them
+    // strip the one-shot parameters so a reload does not repeat them
     if (resetFlag || missionFlag) {
       try {
         var u = new URL(window.location.href);
@@ -55,6 +50,9 @@
       } catch (e3) { /* ignore */ }
     }
   }
+
+  // Back / Forward can restore the whole page, with its in-memory state, from the browser's back/forward cache. Every visit must be new.
+  window.addEventListener('pageshow', function (e) { if (e && e.persisted) window.location.reload(); });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

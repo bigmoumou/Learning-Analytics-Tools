@@ -72,8 +72,8 @@
       { label: '關於這個練習…', action: function () { LAB.apps.launch('about', { tab: 'about' }); } },
       { label: '快速鍵一覽…', action: function () { LAB.apps.launch('about', { tab: 'keys' }); } },
       { label: '進度代碼…', action: function () { LAB.apps.launch('about', { tab: 'progress' }); } },
-      { label: '重設練習環境…', action: function () {
-        LAB.ui.confirm(null, { title: '要重設練習環境嗎？', text: '這會清除你在這個練習裡建立的檔案、對話和任務進度，無法復原。', ok: '重設', cancel: '取消', danger: true })
+      { label: '重設全部…', action: function () {
+        LAB.ui.confirm(null, { title: '要重設全部嗎？', text: '這會清除你在這個練習裡建立的檔案、對話和任務進度，無法復原。', ok: '重設', cancel: '取消', danger: true })
           .then(function (ok) { if (ok) LAB.store.reset('all'); });
       } },
       { separator: true },

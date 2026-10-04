@@ -1,4 +1,4 @@
-/* mission.css — the mission card, first-run welcome, connecting screen, phone notice (DESIGN §6, §16, §17).
+/* mission.css — the mission card, the mission sheets (first / start / done), connecting screen, phone notice (DESIGN §6, §16, §17).
    The card floats over the Mac as Liquid Glass (macOS Tahoe / iOS 26) and can be dragged. Inside: calm type, hairlines,
    one amber accent, green checks for ticked steps. */
 
@@ -238,36 +238,61 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 .lab-page-foot .lab-muted { margin-top: 4px; font-size: 11.5px; }
 .lab-store-notice { margin-top: 6px; font-size: 12px; color: var(--lab-accent); }
 
-/* ---------------------------------------------------- welcome + phone */
-.lab-welcome-scrim, .lab-phone {
+/* ------------------------------------------- mission sheets + phone notice */
+/* The mission sheet (DESIGN §18.2): a big glass sheet in the middle of the Mac, the same Liquid Glass as the card, on a light scrim.
+   It announces a mission (first sheet / 「開始任務」) or a finished one (completion sheet). Closing by starting flies it into the card
+   (missions.js animates it with the Web Animations API). */
+.lab-msheet-scrim, .lab-phone {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 3000;
   display: flex; align-items: center; justify-content: center;
   background: rgba(10, 10, 10, .55);
   padding: 16px;
 }
-/* the welcome is a glass sheet over the Mac, like the card */
-.lab-welcome-scrim { background: rgba(0, 0, 0, .22); }
-.lab-welcome {
-  --glass-tint: .46; text-shadow: 0 0 10px rgba(255, 255, 255, .55);
-  --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #4a4a51; --lab-line: rgba(0, 0, 0, .12); --lab-accent: #8a5400;
-  width: 520px; max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
-  padding: 28px 32px 24px;
+.lab-msheet-scrim { background-color: rgba(0, 0, 0, .18); animation: lab-ms-scrim .28s ease-out backwards; }
+.lab-msheet-scrim.is-leaving { pointer-events: none; }
+@keyframes lab-ms-scrim { from { background-color: rgba(0, 0, 0, 0); } }
+.lab-msheet {
+  --glass-tint: .66; text-shadow: 0 0 10px rgba(255, 255, 255, .55);
+  --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #3a3a40; --lab-line: rgba(0, 0, 0, .12); --lab-accent: #6b3f00;
+  width: 460px; max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
+  padding: 30px 34px 26px;
   border-radius: 26px;
-  font-family: var(--mac-font);
+  font-family: var(--mac-font); font-size: 14.5px; line-height: 1.7;
   color: var(--lab-ink);
+  animation: lab-ms-in .32s var(--lab-ease) backwards;
 }
-.lab-welcome h1 { margin: 0 0 14px; font-size: 22px; line-height: 1.3; font-weight: 700; }
-.lab-welcome p { margin: 0 0 10px; color: var(--lab-ink-2); line-height: 1.75; }
-.lab-welcome-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
-.lab-welcome .lab-textbtn {
-  padding: 7px 18px; border: 0; border-radius: 999px;
+@keyframes lab-ms-in { from { opacity: 0; transform: translateY(10px) scale(.975); } }
+.lab-ms-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .06em; line-height: 1.5; color: var(--lab-accent); }
+.lab-ms-title { margin: 4px 0 12px; font-size: 26px; line-height: 1.3; font-weight: 700; letter-spacing: .01em; }
+.lab-ms-intro { margin: 0; color: var(--lab-ink-2); overflow-wrap: anywhere; }
+.lab-ms-step { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--lab-line); }
+.lab-ms-steplabel { font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--lab-ink-3); }
+.lab-ms-steptext { margin: 2px 0 0; color: var(--lab-ink); overflow-wrap: anywhere; }
+.lab-ms-step > .lab-ms-steptext { margin-top: 0; }
+.lab-ms-steptext.is-next { font-weight: 600; }
+.lab-ms-steptext .lab-ms-steplabel { margin-right: 2px; font-weight: 500; letter-spacing: .02em; }
+.lab-ms-note { margin: 14px 0 0; font-size: 12px; line-height: 1.65; color: var(--lab-ink-3); }
+.lab-ms-check { display: block; margin: 0 0 14px; line-height: 0; }
+.lab-ms-check .lab-check, .lab-ms-check .lab-check svg { width: 44px; height: 44px; vertical-align: top; }
+.lab-ms-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.lab-ms-btn {
+  padding: 9px 24px; margin: 0; border: 0; border-radius: 999px;
   background: rgba(255, 255, 255, .62); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .14), 0 1px 3px rgba(0, 0, 0, .08);
+  font: inherit; font-size: 14.5px; line-height: 1.4; color: var(--lab-ink); cursor: pointer;
 }
-.lab-welcome .lab-textbtn:hover { background: rgba(255, 255, 255, .88); }
-.lab-welcome .lab-textbtn.is-primary { background: #1d1d1f; color: #fff; text-decoration: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
-.lab-welcome .lab-textbtn.is-primary:hover { background: #000; }
+.lab-ms-btn:hover { background: rgba(255, 255, 255, .88); }
+.lab-ms-btn.is-primary { background: #1d1d1f; color: #fff; text-shadow: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+.lab-ms-btn.is-primary:hover { background: #000; }
 /* glass buttons take the Mac's blue focus ring, not the page's amber one */
-.lab-welcome .lab-textbtn:focus-visible, .lab-nextbtn:focus-visible { outline: 3px solid rgba(10, 108, 255, .5); outline-offset: 1px; }
+.lab-ms-btn:focus-visible, .lab-nextbtn:focus-visible, .lab-msheet .lab-linkbtn:focus-visible { outline: 3px solid rgba(10, 108, 255, .5); outline-offset: 1px; }
+.lab-msheet .lab-mono { font-family: var(--lab-font-mono); font-size: .9em; background: rgba(0, 0, 0, .06); padding: 0 .3em; border-radius: 4px; }
+@media (max-width: 520px) {
+  .lab-msheet { padding: 24px 22px 20px; border-radius: 22px; }
+  .lab-ms-title { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-msheet-scrim, .lab-msheet { animation: none; }
+}
 .lab-phone { background: var(--lab-bg); color: var(--lab-ink); text-align: center; }
 .lab-phone-in { max-width: 420px; }
 .lab-phone h1 { margin: 0 0 12px; font-size: 24px; font-weight: 700; }

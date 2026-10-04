@@ -32,7 +32,7 @@
     return span;
   }
   var ui = { listOpen: false, mapOpen: false, codeOpen: false, copied: null };
-  var welcomeShown = false;
+  var welcomeShown = false;                  // the first sheet has been shown (or is about to be)
   var missions = {};
 
   missions.freePlayTips = [];
@@ -441,7 +441,7 @@
   };
 
   /* ================================================================= UI */
-  function inline(str) {
+  function inline(str, labHook) {
     var out = [];
     var re = /\[\[([\s\S]+?)\]\]|`([^`]+)`/g, last = 0, m;
     str = String(str);
@@ -449,7 +449,7 @@
       if (m.index > last) out.push(document.createTextNode(str.slice(last, m.index)));
       if (m[1] !== undefined) {
         var sentence = m[1];
-        var link = h('button', { type: 'button', class: 'lab-linkbtn lab-copy', dataset: { lab: 'rail-copy' }, 'data-fk': 'copy:' + sentence.slice(0, 8) }, ui.copied === sentence ? '已複製' : '複製');
+        var link = h('button', { type: 'button', class: 'lab-linkbtn lab-copy', dataset: { lab: labHook || 'rail-copy' }, 'data-fk': 'copy:' + sentence.slice(0, 8) }, ui.copied === sentence ? '已複製' : '複製');
         link.addEventListener('click', function (s, el) {
           return function () {
             LAB.clipboard.setText(s).then(function (ok) {
@@ -588,7 +588,7 @@
             h('span', { class: 'lab-num' + (isDone ? ' is-check' : '') }, isDone ? greenCheck(0) : pad2(i + 1)),
             h('span', { class: 'lab-mt' }, x.title),
             x.tag ? h('span', { class: 'lab-mtag' }, '補充教材') : null);
-          row.addEventListener('click', function () { ui.listOpen = false; missions.start(x.id); render(true); });
+          row.addEventListener('click', function () { ui.listOpen = false; missions.start(x.id); render(true); showMissionSheet(x.id); });
           list.appendChild(h('li', null, row));
         });
         sec.appendChild(list);
@@ -668,7 +668,7 @@
         var nx = nextMission(m);
         if (nx) {
           var nb = h('button', { type: 'button', class: 'lab-nextbtn', 'data-fk': 'next', dataset: { lab: 'rail-next' } }, '下一個任務 →');
-          nb.addEventListener('click', function () { missions.start(nx.id); });
+          nb.addEventListener('click', function () { missions.start(nx.id); showMissionSheet(nx.id); });
           prog.appendChild(nb);
         }
       }
@@ -700,14 +700,14 @@
       var cl = h('div', { class: 'lab-codeline' },
         h('input', { type: 'text', class: 'lab-codeinput', readonly: 'readonly', value: codeVal, 'aria-label': '進度代碼', dataset: { lab: 'rail-code' } }),
         link('複製', 'codecopy', function () { LAB.clipboard.setText(codeVal); }));
-      parts.push(h('div', { class: 'lab-sec' }, cl, h('p', { class: 'lab-muted' }, '換電腦或交給老師時，複製這串進度代碼。')));
+      parts.push(h('div', { class: 'lab-sec' }, cl, h('p', { class: 'lab-muted' }, '要給老師看這次完成了哪些任務，複製這串進度代碼。')));
     }
 
     // page footer
     var foot = h('div', { class: 'lab-page-foot' },
       h('div', null, 'Copyright © 2026 JUNHAO CHEN'),
       LAB.store.noticeText ? h('div', { class: 'lab-store-notice', dataset: { lab: 'rail-notice' } }, LAB.store.noticeText) : null,
-      h('div', { class: 'lab-muted' }, '如果是學校的共用電腦，用完請按「重設全部」。'));
+      h('div', { class: 'lab-muted' }, '每次進來都是一台全新的電腦。重新整理或離開這一頁，這次的進度就不會留下。'));
     parts.push(foot);
 
     var scroll = h('div', { class: 'lab-rail-scroll' }, parts);
@@ -760,57 +760,288 @@
   }
   missions.render = function () { render(); };
 
-  LAB.bus.on('mission:complete', function () { clearPeek(); outroPending = true; revealRail(); });
+  LAB.bus.on('mission:complete', function (p) { clearPeek(); outroPending = true; revealRail(); scheduleDoneSheet(p && p.missionId); });
   LAB.bus.on('rail:layout', function () { render(true); });
   LAB.bus.on('store:notice', function () { render(true); });
   LAB.bus.on('store:reset', function () { nudge = { stepId: null, text: '' }; clearPeek(); nudgeShut = ''; render(true); });
 
-  /* ---------------------------------------------------------------- welcome */
-  function showWelcome() {
-    if (welcomeShown || LAB.store.get('ui.welcomeSeen', false) || missions.skipWelcome) return;
-    var root = document.getElementById('lab-modal-root');
-    if (!root) return;
-    welcomeShown = true;
-    var prev = document.activeElement;
-    var first = registry[0];
-    function close(startFirst) {
-      LAB.store.set('ui.welcomeSeen', true);
-      off();
-      if (scrim.parentNode) scrim.parentNode.removeChild(scrim);
-      if (startFirst && first) missions.start(first.id); else missions.setFreePlay(true);
-      try { if (prev && prev.focus && document.contains(prev)) prev.focus(); } catch (e) { /* ignore */ }
+  /* ----------------------------------------------------- mission sheet (DESIGN §18.2) */
+  /* A large glass sheet in the middle of the Mac announces a mission. Three kinds, one look (the card's Liquid Glass):
+       'first'  right after the connecting screen: mission 1 plus a short note (buttons 「開始任務」 / 「自由練習」)
+       'start'  a mission started from the list, from 「下一個任務 →」 or from the completion sheet (「開始任務」)
+       'done'   a mission just finished (「開始下一個任務」 / 「先留在這裡」)
+     Starting closes the sheet by flying it into the card (FLIP), then the card does one small bump. The sheets live in the
+     UI handlers, never in missions.start(), so tests and tools that call start() programmatically never see one.
+     ?welcome=0 suppresses every sheet, ?intro=0 only the 'start' and 'done' ones. */
+  var sheet = null;                          // the sheet on screen: {kind, scrim, panel, off, prev, closing}
+  var firstPending = false;                  // the first sheet is still waiting for the connecting screen / phone notice
+  var SHEET_FLY_MS = 460;
+
+  function reducedMotion() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; }
+  }
+  missions.sheetOpen = function () { return sheet && !sheet.closing ? sheet.kind : null; };
+  function sheetBusy() { return !!(sheet && !sheet.closing); }      // a sheet that is already flying away does not block the next one
+
+  /* where the sheet should land: the open card (or, if only the pill is showing, the pill), in viewport px */
+  function cardTarget() {
+    if (!rail) return null;
+    var els = [rail.querySelector('.lab-rail-body'), rail.querySelector('.lab-rail-strip')];
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (!el) continue;
+      var r = el.getBoundingClientRect();
+      var vis = true;
+      try { vis = window.getComputedStyle(el).visibility !== 'hidden'; } catch (e) { /* ignore */ }
+      if (vis && r.width > 8 && r.height > 8) return { el: el, rect: r };
     }
-    var startBtn = h('button', { type: 'button', class: 'lab-textbtn is-primary', dataset: { lab: 'welcome-start' } }, '開始第一個任務');
-    var freeBtn = h('button', { type: 'button', class: 'lab-textbtn', dataset: { lab: 'welcome-free' } }, '自由練習');
-    startBtn.addEventListener('click', function () { close(true); });
-    freeBtn.addEventListener('click', function () { close(false); });
-    var panel = h('div', { class: 'lab-welcome lab-glass lab-glass-calm', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'lab-welcome-t' },
-      h('h1', { id: 'lab-welcome-t' }, '歡迎來到練習用的 Mac'),
-      h('p', null, '這不是真的 Mac，是在瀏覽器裡執行的模擬環境。你可以放心亂點、亂打指令，弄壞了隨時可以重來，不會影響你自己的電腦。建議先看過 Week 3 的影片。'),
-      h('p', null, '左上角那張半透明的任務卡（螢幕窄時會縮成一顆小膠囊，點一下就展開）是這次的任務：照著步驟做，做對了會自動打勾；卡住了可以按「提示」。也可以選「自由練習」，自己隨便玩。'),
-      h('p', null, '用 Windows 鍵盤時，Command 請用 Ctrl，Return 就是 Enter。'),
-      h('p', null, '你的進度只存在這個瀏覽器裡。如果是學校的共用電腦，用完請按「重設全部」。'),
-      LAB.store.available ? null : h('p', { class: 'lab-store-notice' }, '這個瀏覽器不能儲存進度，關掉這一頁後進度會消失。'),
-      h('div', { class: 'lab-welcome-btns' }, registry.length ? startBtn : null, freeBtn));
-    var scrim = h('div', { class: 'lab-welcome-scrim' }, panel);
-    root.appendChild(scrim);
+    return null;
+  }
+  /* the card waits a little dimmed while the sheet flies in, then lights up with one small bump (render() rebuilds the card,
+     so it is looked up again). Plain fades when the visitor asked for less motion. */
+  function landedBump(wasDimmed) {
+    if (reducedMotion()) return;
+    var t = cardTarget();
+    if (!t || !t.el.animate) return;
+    var from = wasDimmed ? 0.3 : 1;
+    try {
+      t.el.animate([
+        { transform: 'scale(1)', transformOrigin: '50% 50%', opacity: from },
+        { transform: 'scale(1.025)', transformOrigin: '50% 50%', opacity: 1, offset: 0.4 },
+        { transform: 'scale(1)', transformOrigin: '50% 50%', opacity: 1 }
+      ], { duration: 350, easing: 'cubic-bezier(.3, .7, .3, 1)' });
+    } catch (e) { /* ignore */ }
+  }
+
+  /* close the sheet. how: 'fly' = into the card (the mission is already current), 'fade' = just away */
+  function closeSheet(how) {
+    var s = sheet;
+    if (!s || s.closing) return;
+    s.closing = true;
+    if (s.off) s.off();
+    var panel = s.panel, scrim = s.scrim;
+    panel.removeAttribute('role'); panel.removeAttribute('aria-modal');
+    panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('inert', '');
+    scrim.classList.add('is-leaving');
+    panel.style.animation = 'none';
+    scrim.style.animation = 'none';
+    try { if (s.prev && s.prev.focus && document.contains(s.prev)) s.prev.focus(); } catch (e) { /* ignore */ }
+    var reduced = reducedMotion();
+    var ms = reduced ? 160 : (how === 'fly' ? SHEET_FLY_MS : 220);
+    var flew = false, dimAnim = null;
+    var bumped = false;
+    function bump() {                                  // the card lights up while the sheet is still fading into it
+      if (bumped) return;
+      bumped = true;
+      if (dimAnim) { try { dimAnim.cancel(); } catch (e) { /* ignore */ } }
+      if (flew) landedBump(!!dimAnim);
+    }
+    function finish() {
+      if (s.finished) return;
+      s.finished = true;
+      if (scrim.parentNode) scrim.parentNode.removeChild(scrim);
+      if (sheet === s) sheet = null;
+      bump();
+    }
+    if (!panel.animate) { flew = how === 'fly'; finish(); return; }
+    var panelAnim;
+    if (how === 'fly' && !reduced) {
+      // Make sure the card is open (narrow screens: the drawer), then aim at the card's rectangle on screen.
+      revealRail();
+      var tgt = cardTarget();
+      if (tgt) {
+        var p = panel.getBoundingClientRect(), c = tgt.rect;
+        var sc = Math.min(1, c.width / p.width, c.height / p.height);
+        var dx = (c.left + c.width / 2) - (p.left + p.width / 2);
+        var dy = (c.top + c.height / 2) - (p.top + p.height / 2);
+        flew = true;
+        // the card already shows the new mission: keep it dim behind the sheet
+        try { dimAnim = tgt.el.animate([{ opacity: 0.3 }, { opacity: 0.3 }], { duration: ms, fill: 'forwards' }); } catch (e2) { dimAnim = null; }
+        // the position is eased (fast, then settling); the sheet stays solid until it is nearly there, then fades into the card
+        panelAnim = panel.animate([
+          { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+          { opacity: 1, offset: 0.88 },
+          { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + sc + ')', opacity: 0 }
+        ], { duration: ms, easing: 'cubic-bezier(.25, .75, .3, 1)', fill: 'forwards' });
+        // its text fades out in the first third of the flight, so only the glass flies into the card (no double text over the card)
+        [].forEach.call(panel.children, function (ch) {
+          try { ch.animate([{ opacity: 1 }, { opacity: 0 }], { duration: Math.round(ms * 0.32), easing: 'ease-out', fill: 'forwards' }); } catch (e3) { /* ignore */ }
+        });
+      }
+    }
+    if (!panelAnim) {
+      if (how === 'fly') flew = !reduced;
+      panelAnim = panel.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: reduced ? 'scale(1)' : 'scale(.985)' }], { duration: ms, easing: 'ease-out', fill: 'forwards' });
+    }
+    scrim.animate([{ backgroundColor: 'rgba(0, 0, 0, .18)' }, { backgroundColor: 'rgba(0, 0, 0, 0)' }], { duration: Math.min(ms, 360), delay: reduced ? 0 : 40, easing: 'ease-out', fill: 'forwards' });
+    panelAnim.onfinish = finish;
+    if (flew && !reduced) setTimeout(bump, Math.round(ms * 0.7));
+    setTimeout(finish, ms + 250);            // background tabs do not run animations
+  }
+
+  function nowMs() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
+  /* In fullscreen only the fullscreen element (the Mac's screen) is drawn, so the sheet has to live inside it then. */
+  function sheetHost() { return document.fullscreenElement || document.getElementById('lab-modal-root'); }
+  document.addEventListener('fullscreenchange', function () {
+    if (!sheet || sheet.closing || sheet.finished) return;
+    var host = sheetHost();
+    if (!host || sheet.scrim.parentNode === host) return;
+    host.appendChild(sheet.scrim);                       // moving the node drops focus
+    var pb = sheet.panel.querySelector('.lab-ms-btn.is-primary') || sheet.panel.querySelector('button');
+    if (pb) { try { pb.focus(); } catch (e) { /* ignore */ } }
+  });
+
+  /* open a sheet. spec: {kind, nodes, buttons: [{label, lab, primary, run}], esc: fn} */
+  function openSheet(spec) {
+    if (!document.getElementById('lab-modal-root') || sheetBusy()) return false;
+    var prev = document.activeElement;
+    var btnEls = spec.buttons.map(function (b) {
+      var el = h('button', { type: 'button', class: 'lab-ms-btn' + (b.primary ? ' is-primary' : ''), dataset: { lab: b.lab } }, b.label);
+      el.addEventListener('click', function () { if (sheet && sheet.panel === panel && !sheet.closing) b.run(); });
+      return el;
+    });
+    var primaryBtn = null;
+    spec.buttons.forEach(function (b, i) { if (b.primary) primaryBtn = btnEls[i]; });
+    var panel = h('div', { class: 'lab-msheet lab-glass lab-glass-calm' + (spec.kind === 'first' ? ' lab-welcome' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'lab-msheet-t', dataset: { lab: 'msheet', kind: spec.kind } },
+      spec.nodes, h('div', { class: 'lab-ms-btns' }, btnEls));
+    var scrim = h('div', { class: 'lab-msheet-scrim' }, panel);
+    sheetHost().appendChild(scrim);
+    function tooSoon(e) {
+      // a completion sheet pops up while the student may still be typing: Enter / Space in its first moments are theirs, not an answer
+      return spec.kind === 'done' && (e.repeat || nowMs() - openedAt < 600);
+    }
+    var openedAt = nowMs();
     var off = LAB.keys.modal(function (e) {
-      if (e.key === 'Escape') { close(false); return true; }
-      // the Mac behind the welcome sheet must not react (⌘N, ⌃Space, ⇧⌘G …); the browser's own reload / dev keys still work
-      if (e.metaKey || e.ctrlKey || e.altKey) {
-        if (/^F\d+$/.test(e.key) || (e.shiftKey && /^[ijcIJC]$/.test(e.key)) || (!e.shiftKey && !e.altKey && /^[rR]$/.test(e.key))) return false;
+      if (e.key === 'Escape') { if (spec.esc) spec.esc(); return true; }
+      if (e.key === 'Enter') {
+        if (LAB.ui && LAB.ui.isImeEnter && LAB.ui.isImeEnter(e)) return false;
+        var t = document.activeElement;
+        // a focused secondary button or copy link takes the key itself
+        if (t && t.tagName === 'BUTTON' && panel.contains(t) && t !== primaryBtn) return false;
+        if (tooSoon(e)) return true;
+        if (primaryBtn) primaryBtn.click();
         return true;
       }
+      // the Mac behind the sheet must not react (⌘N, ⌃Space, ⇧⌘G …); the browser's own keys still work
+      // (reload, dev tools, zoom, find, address bar, print: the Mac binds none of them)
+      if (e.metaKey || e.ctrlKey || e.altKey) {
+        if (/^F\d+$/.test(e.key) || (e.shiftKey && /^[ijcIJC]$/.test(e.key)) || (!e.altKey && /^[rR]$/.test(e.key))) return false;
+        if (!e.altKey && (/^[=+\-0]$/.test(e.key) || (!e.shiftKey && /^[flpFLP]$/.test(e.key)))) return false;
+        return true;
+      }
+      if (/^F\d+$/.test(e.key)) return false;
       if (e.key === 'Tab') {
         var f = [].slice.call(panel.querySelectorAll('button'));
+        if (!f.length) return true;
         var i = f.indexOf(document.activeElement);
         var n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i === f.length - 1 ? 0 : i + 1);
         f[n].focus();
         return true;
       }
-      return false;
+      // Space acts on the focused button (as in any dialog); every other plain key stops here, so Space no longer opens Quick Look
+      // and the arrow keys no longer move the Finder selection behind the sheet. The sheet has no text field.
+      if (e.key === ' ') {
+        var tb = document.activeElement;
+        if (tb && tb.tagName === 'BUTTON' && panel.contains(tb) && !tooSoon(e)) tb.click();
+        return true;
+      }
+      return true;
     });
-    (registry.length ? startBtn : freeBtn).focus();
+    sheet = { kind: spec.kind, scrim: scrim, panel: panel, off: off, prev: prev, closing: false, finished: false };
+    (primaryBtn || btnEls[0]).focus();
+    return true;
+  }
+
+  function sheetEyebrow(m) {
+    var idx = registry.indexOf(m);
+    return '第 ' + (idx + 1) + ' 個任務' + (m.minutes ? ' · 約 ' + m.minutes + ' 分鐘' : '') + (m.tag ? ' · Week 3 補充 1' : '');
+  }
+  /* eyebrow, title, intro and the step to begin with: shared by the first sheet and the 「開始任務」 sheets */
+  function announceNodes(m) {
+    var r = data.missions[m.id];
+    var i = r ? firstUndone(m, r) : 0;
+    var nodes = [
+      h('div', { class: 'lab-ms-eyebrow' }, sheetEyebrow(m)),
+      h('h1', { class: 'lab-ms-title', id: 'lab-msheet-t' }, m.title),
+      h('p', { class: 'lab-ms-intro' }, inline(m.intro || '', 'sheet-copy'))
+    ];
+    if (i >= 0 && m.steps[i]) {
+      nodes.push(h('div', { class: 'lab-ms-step', dataset: { lab: 'msheet-step' } },
+        h('div', { class: 'lab-ms-steplabel' }, i === 0 ? '第一步' : '目前這一步'),
+        h('p', { class: 'lab-ms-steptext' }, plain(m.steps[i].text))));
+    }
+    return nodes;
+  }
+
+  /* a mission was started from the card (list row, 「下一個任務 →」): announce it */
+  function showMissionSheet(id) {
+    if (missions.skipWelcome || missions.skipIntro || firstPending || sheetBusy()) return false;
+    var m = missions.get(id);
+    if (!m || data.current !== id || data.freePlay) return false;
+    return openSheet({
+      kind: 'start', nodes: announceNodes(m),
+      buttons: [{ label: '開始任務', lab: 'msheet-start', primary: true, run: function () { closeSheet('fly'); } }],
+      esc: function () { closeSheet('fly'); }
+    });
+  }
+
+  /* the first thing after the connecting screen: mission 1, and what this computer is */
+  function showFirstSheet() {
+    firstPending = false;
+    var first = missions.current() || registry[0];            // ?mission=<id> has already made that mission current
+    if (missions.skipWelcome || welcomeShown || !first || sheetBusy()) return;
+    welcomeShown = true;
+    var nodes = announceNodes(first);
+    nodes.push(h('p', { class: 'lab-ms-note' }, '這台 Mac 弄壞了隨時可以重來；但重新整理頁面會讓一切從頭開始，所以請不要中途重新整理。卡住了可以按任務卡上的「提示」。用 Windows 鍵盤時，Command 用 Ctrl，Return 就是 Enter。'));
+    function begin() { missions.start(first.id); closeSheet('fly'); }
+    function free() { missions.setFreePlay(true); closeSheet('fade'); }
+    openSheet({
+      kind: 'first', nodes: nodes,
+      buttons: [
+        { label: '開始任務', lab: 'welcome-start', primary: true, run: begin },
+        { label: '自由練習', lab: 'welcome-free', run: free }
+      ],
+      esc: free
+    });
+  }
+
+  /* a mission just finished: let the last green check be seen, then offer the next one */
+  function scheduleDoneSheet(id) {
+    if (missions.skipWelcome || missions.skipIntro || data.freePlay) return;
+    setTimeout(function () {
+      var m = missions.get(id), r = m && data.missions[id];
+      if (!m || !r || !r.doneAt || data.freePlay || data.current !== id || sheetBusy() || firstPending) return;
+      showDoneSheet(m);
+    }, 900);
+  }
+  function showDoneSheet(m) {
+    var idx = registry.indexOf(m);
+    function isDone(x) { var r = data.missions[x.id]; return !!(r && r.doneAt); }
+    var allDone = registry.every(isDone);
+    // the next mission after this one that is not finished yet (missions can be done in any order)
+    var nx = null, k;
+    for (k = idx + 1; k < registry.length && !nx; k++) if (!isDone(registry[k])) nx = registry[k];
+    var check = greenCheck(Date.now() + 200);          // pops in a moment after the sheet, so it is seen
+    var nodes = [
+      h('div', { class: 'lab-ms-check', dataset: { lab: 'msheet-check' } }, check),
+      h('h1', { class: 'lab-ms-title', id: 'lab-msheet-t' }, allDone ? 'Week 3 的任務全部完成' : '任務 ' + (idx + 1) + ' 完成'),
+      h('p', { class: 'lab-ms-intro', dataset: { lab: 'msheet-outro' } }, inline(m.outro || '這個任務完成了。', 'sheet-copy'))
+    ];
+    var buttons;
+    if (nx) {
+      nodes.push(h('div', { class: 'lab-ms-step', dataset: { lab: 'msheet-next-info' } },
+        h('p', { class: 'lab-ms-steptext is-next' }, h('span', { class: 'lab-ms-steplabel' }, '下一個：'), '任務 ' + (registry.indexOf(nx) + 1) + ' · ' + nx.title)));
+      buttons = [
+        { label: '開始下一個任務', lab: 'msheet-next', primary: true, run: function () { missions.start(nx.id); closeSheet('fly'); } },
+        { label: '先留在這裡', lab: 'msheet-stay', run: function () { closeSheet('fade'); } }
+      ];
+    } else {
+      nodes.push(h('p', { class: 'lab-ms-note' }, allDone
+        ? '想知道這次做完了哪些任務，點任務卡最下面的「進度代碼」，複製那串字給老師看就可以。'
+        : '還有任務沒做完，可以從任務卡的「任務清單」繼續。想給老師看做完了哪些，點任務卡下方的「進度代碼」複製那串字。'));
+      buttons = [{ label: '關閉', lab: 'msheet-close', primary: true, run: function () { closeSheet('fade'); } }];
+    }
+    openSheet({ kind: 'done', nodes: nodes, buttons: buttons, esc: function () { closeSheet('fade'); } });
   }
 
   /* ----------------------------------------------------------------- boot */
@@ -845,9 +1076,14 @@
     render(true);
   }, 85);
 
+  /* the first sheet comes after the connecting screen (connect:done), and after 「仍要繼續」 on a phone */
   LAB.ready(function () {
-    if (LAB.desktop && LAB.desktop.phoneBlocked) { LAB.bus.once('phone:continue', showWelcome); }
-    else showWelcome();
+    if (missions.skipWelcome || !registry.length) return;
+    var waitConnect = true, waitPhone = !!(LAB.desktop && LAB.desktop.phoneBlocked);
+    firstPending = true;
+    function go() { if (!waitConnect && !waitPhone) showFirstSheet(); }
+    LAB.bus.once('connect:done', function () { waitConnect = false; go(); });
+    if (waitPhone) LAB.bus.once('phone:continue', function () { waitPhone = false; go(); });
   }, 95);
 
   LAB.missions = missions;
