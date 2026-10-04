@@ -38,14 +38,14 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ### AI 教學影片
 
-目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」與 Week 4「AI Agent 內建瀏覽器」：共 4 支影片加 2 支補充教材（合計 17 分 52 秒）、55 個章節、33 則重點。Week 5 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
+目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」與 Week 4「AI Agent 內建瀏覽器」：共 4 支影片加 2 支補充教材（合計 18 分鐘）、56 個章節、33 則重點。Week 5 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
 
 影片沒有旁白，用動畫、字卡和程式合成的配樂說明一個主題，長度從 1 分多到 4 分鐘左右。課程教的是 AI 程式助理的實際用法，影片中示範的工具主要是 OpenAI 的 Codex。
 
 | | 影片 | 長度 | 章節／重點 | 內容 |
 |---|---|---|---|---|
 | <img src="weeks/week03/video/01-report-journey/thumb.jpg" width="180" alt="Week 3 影片 01 縮圖"> | Week 3・01<br>[report.md 的旅程](https://learning-analytics-tools.pages.dev/weeks/week03/#01-report-journey) | 1:24 | 8／5 | 把資料夾拖進 Codex 變成專案；在專案外開的對話會把檔案放到別處，怎麼找回來、開工前要確認什麼 |
-| <img src="weeks/week03/video/02-agents-md-context/thumb.jpg" width="180" alt="Week 3 影片 02 縮圖"> | Week 3・02<br>[AGENTS.md 與上下文管理](https://learning-analytics-tools.pages.dev/weeks/week03/#02-agents-md-context) | 3:16 | 11／5 | 用 `AGENTS.md` 當長期記憶；上下文視窗是短期記憶，噪音、幻覺與成本；編輯、分支與 side chat |
+| <img src="weeks/week03/video/02-agents-md-context/thumb.jpg" width="180" alt="Week 3 影片 02 縮圖"> | Week 3・02<br>[AGENTS.md 與上下文管理](https://learning-analytics-tools.pages.dev/weeks/week03/#02-agents-md-context) | 3:24 | 12／5 | 用 `AGENTS.md` 當長期記憶；上下文視窗是短期記憶，噪音、幻覺與成本；編輯、分支與 side chat |
 | <img src="weeks/week03/video/03-homework-firenze/thumb.jpg" width="180" alt="Week 3 影片 03 縮圖"> | Week 3・03<br>[作業：佛羅倫斯美術館資料收集](https://learning-analytics-tools.pages.dev/weeks/week03/#03-homework-firenze) | 2:43 | 8／6 | 只用 Codex 收集美術館資料：先看把整份題目貼給 AI 的錯誤示範，再規劃 `AGENTS.md`、資料存在本地並自己確認、`ARCHITECTURE.md` 流程圖、有效率又精準的 prompt |
 | <img src="weeks/week03/video/s1-terminal-mac/thumb.jpg" width="180" alt="Week 3 補充 1 縮圖"> | Week 3・補充 1<br>[終端機介紹（Mac）](https://learning-analytics-tools.pages.dev/weeks/week03/#s1-terminal-mac) | 4:01 | 10／6 | 什麼是終端機、怎麼打開、看懂提示字元；用狐狸小安收包裹的故事教 `~`、`cd`、`ls`、`mv`、`unzip`，最後照同一個故事練習（附練習檔 `week3.zip`） |
 | <img src="weeks/week03/video/s2-terminal-win/thumb.jpg" width="180" alt="Week 3 補充 2 縮圖"> | Week 3・補充 2<br>[終端機介紹（Win）](https://learning-analytics-tools.pages.dev/weeks/week03/#s2-terminal-win) | 4:03 | 10／6 | 同一個狐狸小安的故事搬到 Windows 11：從搜尋打開終端機、看懂 `PS C:\Users\an>` 提示字元、`ls` 的表格輸出、`mv`，解壓縮改用內建的 `tar -xvf`；練習頁加上 OneDrive 桌面的提醒 |
@@ -219,14 +219,14 @@ This repository is the website itself; every file the site serves is here.
 
 ### AI teaching videos
 
-As of October 2026, Week 3, "The AI Assistant's Working Folder", and Week 4, "AI Agent Built-in Browser", are published: 4 videos plus 2 extras (17 min 52 s in total), 55 chapters and 33 key points. Weeks 5 to 16 open as the course goes on and show as "Coming soon" on the site until then.
+As of October 2026, Week 3, "The AI Assistant's Working Folder", and Week 4, "AI Agent Built-in Browser", are published: 4 videos plus 2 extras (18 min in total), 56 chapters and 33 key points. Weeks 5 to 16 open as the course goes on and show as "Coming soon" on the site until then.
 
 The videos have no voice-over. Each one explains a single topic with animation, text cards and music synthesized in code, and runs between one and about four minutes. The course teaches the practical use of AI coding agents, and the tool shown in the videos is mostly OpenAI's Codex.
 
 | | Video | Length | Chapters / key points | Topic |
 |---|---|---|---|---|
 | <img src="weeks/week03/video/01-report-journey/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 01"> | Week 3 · 01<br>[The Journey of report.md](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#01-report-journey) | 1:24 | 8 / 5 | Dragging a folder into Codex makes it a project; a chat started outside the project puts files elsewhere, how to find them, and what to check before you start |
-| <img src="weeks/week03/video/02-agents-md-context/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 02"> | Week 3 · 02<br>[AGENTS.md and Context Management](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#02-agents-md-context) | 3:16 | 11 / 5 | `AGENTS.md` as long-term memory; the context window as short-term memory, with noise, hallucinations and cost; edit, branch and side chat |
+| <img src="weeks/week03/video/02-agents-md-context/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 02"> | Week 3 · 02<br>[AGENTS.md and Context Management](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#02-agents-md-context) | 3:24 | 12 / 5 | `AGENTS.md` as long-term memory; the context window as short-term memory, with noise, hallucinations and cost; edit, branch and side chat |
 | <img src="weeks/week03/video/03-homework-firenze/thumb.jpg" width="180" alt="Thumbnail of Week 3 video 03"> | Week 3 · 03<br>[Homework: Collecting Florence Museum Data](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#03-homework-firenze) | 2:43 | 8 / 6 | Collecting museum data with Codex only: a demonstration of the mistake of pasting the whole assignment into the AI, then planning `AGENTS.md`, saving data locally and checking it yourself, an `ARCHITECTURE.md` flowchart, and efficient, precise prompts |
 | <img src="weeks/week03/video/s1-terminal-mac/thumb.jpg" width="180" alt="Thumbnail of Week 3 extra 1"> | Week 3 · Extra 1<br>[Intro to the Terminal (Mac)](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#s1-terminal-mac) | 4:01 | 10 / 6 | What a terminal is, how to open it and how to read the prompt; the story of 小安 the fox picking up a parcel teaches `~`, `cd`, `ls`, `mv` and `unzip`, then students repeat the same story as practice (practice file `week3.zip` included) |
 | <img src="weeks/week03/video/s2-terminal-win/thumb.jpg" width="180" alt="Thumbnail of Week 3 extra 2"> | Week 3 · Extra 2<br>[Intro to the Terminal (Win)](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#s2-terminal-win) | 4:03 | 10 / 6 | The same story of 小安 the fox on Windows 11: opening Terminal from Search, reading the `PS C:\Users\an>` prompt, the table output of `ls`, `mv`, and unpacking with the built-in `tar -xvf`; the practice page adds a reminder about a Desktop backed up by OneDrive |
