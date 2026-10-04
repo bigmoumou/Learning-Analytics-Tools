@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>銀杏觀測誌｜東京銀杏地圖・觀賞階段・散步路線</title>
+<meta name="description" content="整理東京銀杏觀賞地點的官方來源：地圖與六個觀賞階段、散步路線規劃、可搜尋的來源清單。只標示有來源的資料，查不到的寫「待確認」。">
+<meta name="theme-color" content="#F5F0E3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 29V17' stroke='%2326211B' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M16 17C9 17 3.5 12 3 5c4.5-1.6 8.6-1.4 11.6.6L16 9l1.4-3.4C20.4 3.6 24.5 3.4 29 5c-.5 7-6 12-13 12z' fill='%23E0A419' stroke='%2326211B' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+TC:wght@400;500;700;900&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到主要內容</a>
+
+<header class="masthead">
+  <div class="wrap masthead__inner">
+    <div class="brand">
+      <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path class="leaf-vein" d="M32 58V34"/>
+        <path class="leaf-blade" d="M32 34C18.5 34 7.6 24.4 6.6 10.8c8.8-3.2 17-2.7 22.9 1.3L32 18.6l2.5-6.5c5.9-4 14.1-4.5 22.9-1.3C56.4 24.4 45.5 34 32 34z"/>
+        <path class="leaf-vein" d="M32 34 20 16M32 34 13 22M32 34l12-18M32 34l19-12"/>
+      </svg>
+      <div class="brand__text">
+        <p class="brand__kicker">東京銀杏觀測筆記・<span class="mono">2026</span> 秋</p>
+        <h1 class="brand__title">銀杏觀測誌</h1>
+        <p class="brand__lede">東京銀杏觀賞地點的地圖、觀賞階段與<span class="nowrap">散步規劃。</span><span class="brand__keep">當季狀態與觀測只採官方來源；<span class="nowrap">查不到的</span>一律標<span class="nowrap">「待確認」。</span></span></p>
+      </div>
+    </div>
+    <dl class="logbook" aria-label="觀測紀錄摘要">
+      <div><dt>資料快照</dt><dd class="mono" id="statSnapshot">2026-10-02</dd></div>
+      <div><dt>銀杏地點</dt><dd class="mono" id="statPlaces">—</dd></div>
+      <div><dt>當季已核實</dt><dd class="mono" id="statVerified">—</dd></div>
+    </dl>
+  </div>
+</header>
+  <nav class="zones" aria-label="主要區域">
+    <div class="wrap">
+      <div class="zones__list" role="tablist" aria-label="主要區域" id="zoneTabs">
+        <button type="button" role="tab" id="tab-map" aria-controls="zone-map" aria-selected="true"><span class="zones__no mono" aria-hidden="true">01</span>地圖與狀態</button>
+        <button type="button" role="tab" id="tab-walk" aria-controls="zone-walk" aria-selected="false" tabindex="-1"><span class="zones__no mono" aria-hidden="true">02</span>散步路線<span class="zones__count mono" id="walkTabCount"></span></button>
+        <button type="button" role="tab" id="tab-src" aria-controls="zone-src" aria-selected="false" tabindex="-1"><span class="zones__no mono" aria-hidden="true">03</span>來源</button>
+      </div>
+    </div>
+  </nav>
+
+<main id="main" tabindex="-1">
+  <noscript><p class="wrap noscript">這個網站的地圖、篩選與散步規劃需要 JavaScript。請允許執行後重新整理頁面。</p></noscript>
+
+  <!-- 01 地圖與狀態 -->
+  <section class="zone" id="zone-map" role="tabpanel" aria-labelledby="tab-map" tabindex="-1">
+    <div class="wrap">
+      <header class="zone__head">
+        <p class="zone__no mono">01 / 03</p>
+        <h2>地圖與狀態</h2>
+        <p class="zone__lede">點選觀賞階段，查看 2026 年秋季已由官方核實的地點；點地圖標記或清單項目，打開該地點的觀測卡。</p>
+      </header>
+
+      <section class="stages" aria-labelledby="stagesTitle">
+        <div class="stages__head">
+          <h3 id="stagesTitle">觀賞階段</h3>
+          <p class="stages__sub mono">2026 秋季 · 當季已核實地點數</p>
+        </div>
+        <ol class="stages__strip" id="stageStrip" aria-label="六個觀賞階段與待確認"></ol>
+        <div class="stages__panel" id="stagePanel" aria-live="polite"></div>
+      </section>
+
+      <div class="toolbar" role="search" aria-label="搜尋與篩選地點">
+        <label class="field field--grow">
+          <span class="field__top"><span class="field__label" id="qLabel">搜尋地點</span><span class="field__eg" id="qEg">例：外苑、TKG-015</span></span>
+          <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="名稱、行政區或編號" aria-labelledby="qLabel" aria-describedby="qEg">
+        </label>
+        <label class="field">
+          <span class="field__label">行政區</span>
+          <select id="ward"></select>
+        </label>
+        <div class="field field--switch">
+          <span class="field__label" id="viewLabel">檢視</span>
+          <div class="seg" role="tablist" aria-labelledby="viewLabel" id="viewTabs">
+            <button type="button" role="tab" id="view-map" aria-controls="mapPane" aria-selected="true">地圖</button>
+            <button type="button" role="tab" id="view-list" aria-controls="listPane" aria-selected="false" tabindex="-1">清單</button>
+          </div>
+        </div>
+      </div>
+      <div class="resultline" id="resultLine">
+        <p class="resultline__text mono" id="resultText" aria-live="polite"></p>
+        <button type="button" class="textbtn" id="clearFilters" hidden>清除搜尋與篩選</button>
+      </div>
+
+      <div class="explore">
+        <div class="explore__main">
+          <div id="mapPane" role="tabpanel" aria-labelledby="view-map" class="mapfig">
+            <div class="map" id="map" role="region" tabindex="0" aria-label="銀杏地點地圖。方向鍵可平移，加號與減號可縮放；按 Tab 移到地點標記後，用方向鍵逐一切換，Enter 打開觀測卡。" aria-describedby="mapHelp">
+              <div class="map__tiles" aria-hidden="true"></div>
+              <div class="map__ctrl">
+                <button type="button" class="map__btn" data-act="in" aria-label="放大地圖"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4v12M4 10h12"/></svg></button>
+                <button type="button" class="map__btn" data-act="out" aria-label="縮小地圖"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h12"/></svg></button>
+                <button type="button" class="map__btn" data-act="fit" aria-label="縮放到顯示所有地點"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg></button>
+              </div>
+              <div class="map__pins"></div>
+              <div class="map__scale mono" aria-hidden="true"><span class="map__scalebar"></span><span class="map__scaletext"></span></div>
+              <div class="map__msg" id="mapMsg" role="status" hidden></div>
+              <div class="map__empty" id="mapEmpty" hidden></div>
+              <p class="map__attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors</p>
+            </div>
+            <div class="mapcap" id="mapHelp">
+              <ul class="legend" id="legend" aria-label="標記圖例"></ul>
+              <p class="mapcap__note">標記是<strong>園區代表點（概略）</strong>，不是銀杏樹的精確位置。地圖圖磚 © OpenStreetMap contributors（ODbL）；地點與狀態整理自課程資料表與各管理單位官方頁面（2026-10-02 查核）；標記座標取自 2026-10-02 共用快照，由 OpenStreetMap／Nominatim、Wikipedia 等公開圖資平均或推定，不是官方座標。拖曳平移；先點一下地圖再用滾輪（或按住 Ctrl 滾動）、雙指或右上按鈕縮放。鍵盤：方向鍵平移、+／− 縮放；Tab 移到地點標記後，用方向鍵切換地點、Enter 打開觀測卡。市中心的標記較密集，放大地圖即可分開。</p>
+            </div>
+          </div>
+          <div id="listPane" role="tabpanel" aria-labelledby="view-list" hidden>
+            <ul class="places" id="placeList" aria-label="地點清單"></ul>
+            <div class="empty" id="listEmpty" hidden></div>
+          </div>
+        </div>
+        <aside class="obs" id="detail" aria-label="地點觀測卡"></aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 散步路線 -->
+  <section class="zone" id="zone-walk" role="tabpanel" aria-labelledby="tab-walk" tabindex="-1" hidden>
+    <div class="wrap">
+      <header class="zone__head">
+        <p class="zone__no mono">02 / 03</p>
+        <h2>散步路線</h2>
+        <p class="zone__lede">自己挑選並排序地點，或從起點自動產生「約 30 分鐘」「約 1 小時」的路線。結果列出順序、每段估時、總時長，並可開啟 Google 地圖步行導航。</p>
+      </header>
+
+      <aside class="assume" aria-labelledby="assumeTitle">
+        <h3 id="assumeTitle" class="assume__title mono">估算假設</h3>
+        <ul class="assume__list">
+          <li>步行時間 = 園區代表點之間的<strong>直線距離</strong> ÷ 每分鐘 80 公尺，每段四捨五入、最少 1 分鐘。</li>
+          <li><strong>不含園內步道與停留</strong>，也不含等紅綠燈、上下坡、繞路與搭車；實際步行通常更久。</li>
+          <li>導航連結的起訖點是園區代表點座標，實際入口請以 Google 地圖與管理單位公告為準。</li>
+          <li>自動規劃只使用本站已有來源的地點；找不到符合時間的地點時會直接說明，不會補上無來源的地點或路段。</li>
+        </ul>
+      </aside>
+
+      <div class="walk">
+        <section class="walk__col" aria-labelledby="mineTitle">
+          <div class="walk__head">
+            <h3 id="mineTitle">我的散步清單</h3>
+            <p class="walk__sub mono" id="mineCount"></p>
+          </div>
+          <div class="addrow">
+            <label class="field field--grow">
+              <span class="field__label">加入地點</span>
+              <select id="addSel"></select>
+            </label>
+            <button type="button" class="btn" id="addBtn">加入清單</button>
+            <p class="addrow__hint" id="addHint" hidden>請先在選單中選擇地點，再按「加入清單」。</p>
+          </div>
+          <ol class="stops" id="mineList" aria-label="散步清單，依順序"></ol>
+          <div class="empty" id="mineEmpty" hidden></div>
+          <div class="walk__tools" id="walkTools">
+            <button type="button" class="textbtn" id="clearWalk">清空清單</button>
+            <span class="walk__undo" id="undoWrap" hidden><span id="undoText"></span> <button type="button" class="textbtn" id="undoBtn">復原</button></span>
+          </div>
+          <div class="routeout" id="mineOut"></div>
+          <p class="walk__store">清單只存在這個瀏覽器（localStorage），不會上傳。</p>
+        </section>
+
+        <section class="walk__col walk__col--auto" aria-labelledby="autoTitle">
+          <div class="walk__head">
+            <h3 id="autoTitle">自動規劃</h3>
+            <p class="walk__sub mono">最近鄰居法 · 直線估算</p>
+          </div>
+          <form class="autoform" id="autoForm" novalidate>
+            <div class="field">
+              <label class="field"><span class="field__label">起點</span>
+              <select id="startSel" aria-describedby="startHint"></select></label>
+              <p class="field__hint" id="startHint">從起點出發，每次加入最近的下一個地點，總步行估時不超過目標時間就繼續。</p>
+            </div>
+            <fieldset class="field">
+              <legend>目標時間</legend>
+              <div class="seg seg--radio">
+                <input type="radio" name="dur" id="dur30" value="30" checked><label for="dur30">約 30 分鐘</label>
+                <input type="radio" name="dur" id="dur60" value="60"><label for="dur60">約 1 小時</label>
+              </div>
+            </fieldset>
+            <button type="submit" class="btn btn--primary">產生路線</button>
+          </form>
+          <div class="routeout" id="autoOut" aria-live="polite"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 來源 -->
+  <section class="zone" id="zone-src" role="tabpanel" aria-labelledby="tab-src" tabindex="-1" hidden>
+    <div class="wrap">
+      <header class="zone__head">
+        <p class="zone__no mono">03 / 03</p>
+        <h2>來源</h2>
+        <p class="zone__lede">每一筆資料的出處、網址、查核日期與它支持的內容。資料表中重複的網址與說明已合併，可搜尋與依分類瀏覽。</p>
+      </header>
+
+      <dl class="srcmeta">
+        <div><dt>最近查核日期</dt><dd class="mono">2026-10-02</dd><dd class="srcmeta__note">共用核實快照（官方頁面再查）</dd></div>
+        <div><dt>資料表逐列查核</dt><dd class="mono">2026-09-29</dd><dd class="srcmeta__note"><a href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?usp=sharing" target="_blank" rel="noopener noreferrer">東京銀杏各地點官方資料來源（Google 試算表）</a></dd></div>
+        <div><dt>來源筆數</dt><dd class="mono" id="srcTotal">—</dd><dd class="srcmeta__note">合併後</dd></div>
+      </dl>
+
+      <div class="disclose">
+        <section aria-labelledby="mergeTitle">
+          <h3 id="mergeTitle">重複合併原則</h3>
+          <ol>
+            <li>同一個網址只列一次，並寫出所有引用它的資料列。例如「2025 年度紅葉情報新聞稿」PDF 被 15 列引用，合併成一筆共用來源。</li>
+            <li>同一列的主要網址與證據頁相同時只顯示一次，並同時標出兩種用途。</li>
+            <li>多列完全相同的說明合併成一則：TKG-002～013 的角色、發現、更新頻率與建議檢查頻率文字相同，合併為「共用說明」，各列只保留自己的注意事項。</li>
+            <li>東京大學（TKG-040）拆成本鄉、駒場兩個地點；「皇居外苑・北之丸公園」（TKG-030）只採用已證實有銀杏的北之丸公園。</li>
+            <li>善福寺川綠地與和田堀公園在 2025 年名單中是同一列，本站依資料表分成兩個地點，但不假設兩處各有獨立觀測。</li>
+            <li>不是單一銀杏觀賞地點的列（入口、氣象廳、觀光入口、第三方平台、楓樹或物種未證實、失效來源）只列在這裡，不放上地圖。</li>
+            <li>顯示時把資料表中零星的簡體字改成繁體字，內容不變。</li>
+          </ol>
+        </section>
+        <section aria-labelledby="limitTitle">
+          <h3 id="limitTitle">資料限制</h3>
+          <ul>
+            <li>截至 2026-10-02 快照，沒有任何官方來源發布 2026 年銀杏葉況，所以所有地點的當季狀態都是「待確認」。</li>
+            <li>過去季的官方紀錄只代表當天，不代表今年；本站不從平年值或往年經驗推測階段。</li>
+            <li>木場公園的官方園區頁與上野恩賜公園的東京都公園協會園區頁都沒有提到銀杏；東京都建設局的上野公園頁在「主な植物」列有イチョウ，但未載明位置。兩處的地點資格依資料表引用的 2025 年度名單。</li>
+            <li>座標是園區代表點（概略），取自 2026-10-02 共用快照：由 OpenStreetMap／Nominatim、Wikipedia 等公開圖資平均或推定，不是官方座標。昭和紀念公園「かたらいのイチョウ並木」的位置未核實，只以文字列出。</li>
+            <li>步行時間是直線距離估算，不含園內步道與停留。</li>
+            <li>中文地名是編輯譯名，不是官方名稱；觀測卡的「官方資訊摘錄」依官方頁面整理，多保留日文用語，不是逐字引文。</li>
+            <li>第三方平台（tenki.jp、Weathernews、WalkerPlus、Jorudan、日本氣象株式會社）沒有用於任何狀態；Weathernews、Jorudan、WalkerPlus 的景點座標只參與部分代表點的取點。</li>
+            <li>本站是靜態網頁，不會自動更新；實際開放與景況以管理單位公告為準。</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="toolbar toolbar--src">
+        <label class="field field--grow">
+          <span class="field__top"><span class="field__label" id="sqLabel">搜尋來源</span><span class="field__eg" id="sqEg">例：氣象廳、新聞稿</span></span>
+          <input id="sq" type="search" autocomplete="off" spellcheck="false" placeholder="名稱、網址或編號" aria-labelledby="sqLabel" aria-describedby="sqEg">
+        </label>
+        <div class="field field--switch">
+          <span class="field__label" id="catLabel">分類</span>
+          <div class="chips" id="srcCats" role="group" aria-labelledby="catLabel"></div>
+        </div>
+      </div>
+      <div class="resultline">
+        <p class="resultline__text mono" id="srcLine" aria-live="polite"></p>
+        <button type="button" class="textbtn" id="clearSrc" hidden>清除搜尋與分類</button>
+      </div>
+      <ol class="srclist" id="srcList"></ol>
+      <div class="empty" id="srcEmpty" hidden></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__inner">
+    <p class="foot__main">教學使用・非營利</p>
+    <p class="foot__text">實際開放與景況以管理單位公告為準。本站資料是 2026-10-02 的整理快照，不會自動更新；「待確認」表示目前沒有可核實的官方資料。</p>
+    <p class="foot__credit mono">地圖圖磚 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> · 地點與來源：課程資料表與各管理單位官方頁面 · 代表點座標：OpenStreetMap 等公開圖資（共用快照，非官方） · 導航：Google 地圖（點選後才開啟）</p>
+  </div>
+</footer>
+
+<div class="sr-only" id="announce" aria-live="polite"></div>
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

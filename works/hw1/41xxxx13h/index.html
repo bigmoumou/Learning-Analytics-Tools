@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>東京銀杏資訊地圖｜銀杏資料來源目錄</title>
+  <meta name="description" content="整理 41 筆東京銀杏資料來源的目錄：可依關鍵字、區域、資料等級與物種查詢，並區分歷史資料、官方入口、銀杏觀測資料與尚未確認即時葉況。教學用途、非商業使用。">
+  <meta name="theme-color" content="#f5eedd">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 40C24 37 12 31 7 20 14 10 25 7 30 10l2 7 2-7c5-3 16 0 23 10-5 11-17 17-25 20z' fill='%23e3b341' stroke='%2324412f' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M32 40v18' stroke='%2324412f' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <noscript>
+    <style>
+      /* 未啟用 JavaScript 時：收起需要程式才能運作的書架、目錄、跳轉連結與動態說明，不留永遠不會結束的載入文字 */
+      .skip-link, .shelf, .catalogue, #rules-groups, #rules-grades { display: none !important; }
+    </style>
+  </noscript>
+</head>
+<body>
+  <a class="skip-link" href="#catalogue">跳到來源目錄</a>
+  <a class="skip-link" href="#q">跳到搜尋與篩選</a>
+
+  <header class="masthead">
+    <div class="wrap masthead__inner">
+      <p class="masthead__kicker">
+        <span>銀杏資料來源目錄</span>
+        <span class="dot" aria-hidden="true">・</span>
+        <span>教學用途、非商業使用</span>
+      </p>
+      <div class="masthead__title-row">
+        <h1 class="masthead__title">東京銀杏資訊地圖</h1>
+        <svg class="masthead__leaf" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+          <path class="leaf-fill" d="M60 74C45 69 22 58 12 37 25 18 46 12 56 18l4 14 4-14c10-6 31 0 44 19-10 21-33 32-48 37z"/>
+          <path class="leaf-vein" d="M60 74 22 38M60 74 33 27M60 74 46 20M60 74 74 20M60 74 87 27M60 74 98 38M60 74 15 44M60 74 105 44"/>
+          <path class="leaf-line" d="M60 74C45 69 22 58 12 37 25 18 46 12 56 18l4 14 4-14c10-6 31 0 44 19-10 21-33 32-48 37z"/>
+          <path class="leaf-line" d="M60 74c0 12-1 24 4 36"/>
+        </svg>
+      </div>
+      <p class="masthead__lede">
+        把課程提供的 41 筆東京銀杏資料來源，依資料性質、資料等級、區域與物種編成一份可以查詢的目錄。資料表沒有經緯度，所以這裡不畫地圖，改用<a href="#area-index">區域索引</a>與來源目錄瀏覽。
+      </p>
+      <dl class="masthead__facts">
+        <div><dt>資料筆數</dt><dd><span class="num" id="fact-total">41</span> 筆</dd></div>
+        <div><dt>資料表最後稽核</dt><dd class="num">2026-09-29</dd></div>
+        <div><dt>本站資料整理</dt><dd class="num">2026-10-02</dd></div>
+        <div><dt>資料來源</dt><dd><a class="ext" href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit" target="_blank" rel="noopener noreferrer">課程提供的 Google 試算表<span class="sr-only">（另開新視窗）</span></a></dd></div>
+      </dl>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="notice wrap" aria-labelledby="notice-title">
+      <h2 class="notice__title" id="notice-title">關於日期與葉況</h2>
+      <p class="notice__body">
+        本站只整理資料來源，<strong>不提供即時葉況</strong>。截至 <span class="date-run">2026-10-02</span>，41 筆資料都沒有官方判定的 2026 季銀杏葉況。卡片上的「證據日期」是試算表記錄的證據日期（公告、文章、照片或讀取日），不是官方的 2026 季葉況日期；2025 年（含）以前的日期一律是歷史紀錄，<strong>不代表目前狀態</strong>。
+      </p>
+    </section>
+
+    <noscript>
+      <div class="wrap">
+        <p class="noscript"><strong>本網站需要啟用 JavaScript 才能顯示資料卡片與篩選功能。</strong>請在瀏覽器設定中啟用 JavaScript 後重新整理頁面；資料來源與整理日期請見下方「資料說明」。</p>
+      </div>
+    </noscript>
+
+    <section class="shelf" id="recommended" aria-labelledby="shelf-title">
+      <div class="wrap">
+        <div class="section-head section-head--shelf">
+          <p class="section-head__eyebrow">推薦</p>
+          <h2 class="section-head__title" id="shelf-title">推薦來源</h2>
+          <p class="section-head__desc">先看資料等級較高、而且有明確證據日期的來源。點書背可以打開詳細資訊。</p>
+        </div>
+        <div class="shelf__rule">
+          <p class="shelf__rule-title">排序規則</p>
+          <ol class="shelf__rule-list">
+            <li>資料等級 S＞A＞B＞C＞O＞T＞X。</li>
+            <li>同等級中，「證據日期」欄寫有完整日期（年-月-日）者在前。</li>
+            <li>再依該欄最新的日期，由新到舊。</li>
+            <li>最後依編號排序。</li>
+          </ol>
+          <p class="shelf__rule-note" id="shelf-note">書架列出等級 S 與 A、而且有完整證據日期的來源。證據日期不等於目前葉況。</p>
+        </div>
+      </div>
+      <div class="shelf__scroller" id="shelf-scroller" tabindex="0" role="region" aria-label="推薦來源書架，可左右捲動">
+        <div class="shelf__inner" id="shelf-list">
+          <p class="state state--loading">正在整理推薦來源…</p>
+        </div>
+      </div>
+      <p class="wrap shelf__hint" aria-hidden="true">左右滑動可看全部書背</p>
+    </section>
+
+    <section class="catalogue wrap" id="catalogue" aria-labelledby="catalogue-title" tabindex="-1">
+      <div class="section-head">
+        <p class="section-head__eyebrow">目錄</p>
+        <h2 class="section-head__title" id="catalogue-title">來源目錄</h2>
+        <p class="section-head__desc">每一張卡片是試算表中的一列。卡片內容照原文顯示；欄位空白時顯示「資料未提供」。</p>
+      </div>
+
+      <div class="catalogue__layout">
+        <aside class="area-index" id="area-index" aria-labelledby="area-index-title">
+          <details class="area-index__details" id="area-details" open>
+            <summary class="area-index__summary">
+              <span class="area-index__title" id="area-index-title">區域索引</span>
+              <span class="area-index__sub">取代地圖</span>
+              <svg class="chev" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4"/></svg>
+            </summary>
+            <p class="area-index__note">資料表沒有經緯度，本站不製作地圖座標，改用區域清單。點選區域即可篩選目錄。</p>
+            <div class="area-index__list" id="area-list"></div>
+          </details>
+        </aside>
+
+        <div class="catalogue__main">
+          <form class="filters" id="filters" role="search" aria-label="搜尋與篩選來源" novalidate>
+            <div class="field field--search">
+              <label class="field__control">
+                <span class="field__label">關鍵字搜尋</span>
+                <span class="search">
+                  <svg class="search__icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.6 12.6 17 17"/></svg>
+                  <input class="search__input" id="q" name="q" type="search" autocomplete="off" enterkeyhint="search"
+                         placeholder="例如：新宿、イチョウ、氣象廳" aria-describedby="q-help">
+                </span>
+              </label>
+              <p class="field__help" id="q-help">搜尋全部欄位（名稱、區域、提供者、摘要、限制等）；可輸入多個詞，以空格分隔。</p>
+            </div>
+            <label class="field field__control">
+              <span class="field__label">區域</span>
+              <select class="select" id="f-area" name="area"><option value="">全部區域</option></select>
+            </label>
+            <label class="field field__control">
+              <span class="field__label">資料等級</span>
+              <select class="select" id="f-grade" name="grade"><option value="">全部等級</option></select>
+            </label>
+            <label class="field field__control">
+              <span class="field__label">物種</span>
+              <select class="select" id="f-species" name="species"><option value="">全部物種</option></select>
+            </label>
+          </form>
+
+          <div class="result-bar">
+            <p class="result-bar__count" id="result-count" aria-live="polite">共 41 筆</p>
+            <div class="result-bar__actions">
+              <button type="button" class="text-btn" id="reset-filters" hidden>清除篩選</button>
+              <a class="text-link" href="#rules-filters">篩選如何分組？</a>
+            </div>
+          </div>
+
+          <nav class="group-nav" id="group-nav" aria-label="依資料性質跳到分類"></nav>
+
+          <div class="groups" id="groups" aria-busy="true">
+            <p class="state state--loading">正在整理資料卡片…</p>
+          </div>
+
+          <div class="empty" id="empty-state" hidden>
+            <svg class="empty__leaf" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+              <path d="M60 74C45 69 22 58 12 37 25 18 46 12 56 18l4 14 4-14c10-6 31 0 44 19-10 21-33 32-48 37z"/>
+              <path d="M60 74c0 12-1 24 4 36"/>
+            </svg>
+            <h3 class="empty__title">沒有符合條件的來源</h3>
+            <p class="empty__text">可以換個關鍵字、放寬篩選條件，或清除全部條件重新瀏覽。</p>
+            <button type="button" class="btn btn--primary" id="empty-reset">清除篩選</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="section-head__eyebrow">說明</p>
+          <h2 class="section-head__title" id="about-title">資料說明</h2>
+        </div>
+        <div class="about__grid">
+          <article class="about__block" id="rules-source">
+            <h3>資料來源與整理日期</h3>
+            <p>資料來源：<a class="ext" href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit" target="_blank" rel="noopener noreferrer">課程提供的 Google 試算表<span class="sr-only">（另開新視窗）</span></a>（CSV 匯出，41 列、18 個欄位）。</p>
+            <p>整理日期：資料表各列的最後稽核日期為 <span class="num">2026-09-29</span>（audited_at 欄）；本站於 <span class="num">2026-10-02</span> 整理成目錄。</p>
+            <p>直接開啟本機檔案時，瀏覽器不允許網頁讀取旁邊的 CSV，所以 CSV 原文已內嵌在 script.js 中，開啟 index.html 即可使用。本站不自行新增景點、座標或葉況。</p>
+            <p class="about__statement">本網站為教學用途、非商業使用。</p>
+          </article>
+
+          <article class="about__block" id="rules-groups">
+            <h3>四種資料性質怎麼分</h3>
+            <p>只依試算表的 grade（資料等級）欄判斷，每一列只屬於一類：</p>
+            <dl class="rule-list" id="group-rules"></dl>
+            <p>另外，截至 <span class="date-run">2026-10-02</span>，全部 41 筆都還沒有官方判定的 2026 季銀杏葉況。</p>
+          </article>
+
+          <article class="about__block" id="rules-grades">
+            <h3>資料等級</h3>
+            <dl class="grade-legend" id="grade-legend"></dl>
+          </article>
+
+          <article class="about__block" id="rules-filters">
+            <h3>篩選的分組方式</h3>
+            <p><b>區域</b>：area 欄是自由文字。先去掉括號內的註記（例如「（入口）」）與結尾的「等」，再以「、」「・」拆開，取出以「區」或「市」結尾的行政區名稱。寫了兩個行政區的列，同時屬於兩區（例如「板橋區、練馬區」）。沒有行政區名稱的列，寫到觀測站或站點的歸入「觀測站尺度」，以「東京都」「東京城市」開頭的歸入「全東京／跨區域」，其餘歸入「未標示區市」。行政區依東京都的區市代碼順序排列。</p>
+            <p><b>物種</b>：species 欄也是自由文字，依序判斷：寫有「混合」或「多物種」→ 多樹種混合；寫有「待確認」或「待補證」→ 銀杏專項待確認；只寫「銀杏」→ 銀杏；寫了銀杏也寫了其他樹種 → 銀杏與其他樹種；其餘 → 非銀杏／不適用。</p>
+            <p><b>關鍵字</b>：搜尋全部欄位，不分大小寫與全形半形；片假名與平假名視為相同（イチョウ＝いちょう），常見的日文與簡體字形也會對應到繁體（例如黄＝黃）。</p>
+            <p>卡片上一律顯示試算表原文，分組只用於篩選。</p>
+          </article>
+
+          <article class="about__block" id="rules-missing">
+            <h3>缺少資料與失效連結</h3>
+            <p>欄位空白時顯示「資料未提供」；沒有網址的連結不做成按鈕，直接寫「資料未提供」。</p>
+            <p>TKG-038 的官方網址在 <span class="date-run">2026-09-29</span> 查核時回傳 404，因此只以文字列出並標示「已失效」，不提供點選。</p>
+          </article>
+
+          <article class="about__block" id="rules-map">
+            <h3>為什麼沒有地圖</h3>
+            <p>試算表沒有經緯度欄位。為了不自行捏造座標，本站不製作地圖，改用區域索引（寬螢幕在目錄左側，平板與手機在目錄上方），以及依資料性質分類的來源目錄。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap site-footer__inner">
+      <p class="site-footer__name">東京銀杏資訊地圖</p>
+      <p>資料來源：<a class="ext" href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit" target="_blank" rel="noopener noreferrer">課程提供的 Google 試算表<span class="sr-only">（另開新視窗）</span></a>・資料表最後稽核 <span class="num">2026-09-29</span>・本站整理 <span class="num">2026-10-02</span></p>
+      <p>本網站為教學用途、非商業使用。不提供即時葉況；各連結內容以原網站為準。</p>
+    </div>
+  </footer>
+
+  <dialog class="drawer" id="detail" aria-labelledby="detail-title">
+    <div class="drawer__panel" id="detail-panel">
+      <div class="drawer__bar">
+        <p class="drawer__callno" id="detail-callno"></p>
+        <button type="button" class="drawer__close" id="detail-close" aria-label="關閉詳細資訊">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 5l10 10M15 5 5 15"/></svg>
+        </button>
+      </div>
+      <div class="drawer__body" id="detail-body"></div>
+    </div>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
