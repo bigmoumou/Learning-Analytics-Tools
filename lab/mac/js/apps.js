@@ -79,7 +79,9 @@
 
   /* ---- path handling ---- */
   var EXT_TEXT = { '.md': 1, '.txt': 1, '.csv': 1, '.json': 1, '.log': 1 };
-  var APP_NAME = { 'codex.app': 'codex', 'code.app': 'code', '文字編輯.app': 'textedit', '終端機.app': 'terminal' };
+  var APP_NAME = { 'codex.app': 'codex', 'code.app': 'code', '文字編輯.app': 'textedit', '終端機.app': 'terminal',
+    'safari.app': 'safari', '系統設定.app': 'settings', '計算機.app': 'calculator', '活動監視器.app': 'activity', '預覽程式.app': 'preview' };
+  var EXT_PREVIEW = { '.pdf': 1, '.png': 1, '.jpg': 1, '.jpeg': 1, '.gif': 1, '.heic': 1, '.webp': 1 };   // 預覽程式 (round 5)
   var BY = { finder: 'finder', desktop: 'desktop', terminal: 'terminal', dock: 'dock', codex: 'codex', spotlight: 'finder', menu: 'finder', open: 'finder' };
 
   apps.defaultFor = function (path) {
@@ -90,6 +92,7 @@
     if (ext === '.zip' || st.kind === 'zip') return 'archive';
     if (st.kind === 'app' || ext === '.app') return APP_NAME[st.name.toLowerCase()] || 'quicklook';
     if (EXT_TEXT[ext]) return 'textedit';
+    if (EXT_PREVIEW[ext] && reg.get('preview')) return 'preview';
     return 'quicklook';
   };
 

@@ -1,0 +1,587 @@
+/* mission.css — the mission card, the mission sheets (picker / completion), cues, the connecting screen, the remote-session bar
+   (DESIGN W8, M§6, M§16–§20). Windows 11 (Fluent) skin: the card, its pill and its notes are light acrylic anchored top-RIGHT
+   (the desktop icons live at the top-left); the sheets and the disconnect dialog are ContentDialogs (white, 8 px, a grey footer band,
+   one filled accent button). One accent (#005fb8), green only for ticks (#0f7b0f), hairlines, no glow, no boxed chips.
+   Animations are transform and opacity (the taskbar flash and the picker's size change are the two small exceptions);
+   prefers-reduced-motion turns them all off. Class names and data-lab hooks are the ones of the Mac lab. */
+
+:root {
+  --fl-font: "Segoe UI Variable Text", "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+  --fl-mono: "Cascadia Mono", "Cascadia Code", Consolas, "Noto Sans Mono", "Noto Sans TC", monospace;
+  --fl-accent: #005fb8; --fl-accent-hover: #0067c0; --fl-accent-press: #1a73c5; --fl-ok: #0f7b0f; --fl-sky: #4cc2ff;
+  --fl-ease: cubic-bezier(.1, .9, .2, 1);          /* Fluent "decelerate" */
+}
+
+/* --------------------------------------------------------------- acrylic */
+/* The card, the pill and the notes under it: light acrylic (a white tint, blurred and saturated backdrop), 1 px hairline, 8 px
+   radius, the Fluent flyout shadow. No SVG displacement filter. The tint is .94, not the .84 of a plain flyout: over a black
+   Terminal window .84 leaves 4.1:1 for the accent links (and less on the selected row), .94 keeps every text colour above 4.5:1
+   (features_e2e_win.py, section contrast, measured the way the Mac test does: the darkest 5 % of the pixels behind each text). */
+.lab-glass {
+  --glass-tint: .94;
+  background: rgba(249, 249, 249, var(--glass-tint));
+  -webkit-backdrop-filter: blur(30px) saturate(1.25); backdrop-filter: blur(30px) saturate(1.25);
+  border: 1px solid rgba(0, 0, 0, .08);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, .14);
+}
+/* slow computers, and visitors who asked for less transparency: a solid #f9f9f9 */
+html[data-perf="low"] .lab-glass { background: #f9f9f9; -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (prefers-reduced-transparency: reduce) {
+  .lab-glass { background: #f9f9f9; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* ------------------------------------------------------------------ card */
+#lab-rail {
+  /* it sits on the PC, so it always uses the light tokens, even when the page itself is in dark mode */
+  --lab-bg: transparent; --lab-ink: #1a1a1a; --lab-ink-2: #424242; --lab-ink-3: #555555;     /* muted: #555 on the card (a touch darker than the #5c5c5c of the dialogs) so it stays >= 4.5:1 on a code chip over a black window */
+  --lab-line: rgba(0, 0, 0, .1); --lab-accent: #005fb8;
+  /* TOP-RIGHT: 12 px from the right edge, 10 px from the top. When the student drags the card, desktop.js sets an inline left
+     (and --lab-card-top, class is-moved); the width is explicit, so the right offset then has no say. */
+  position: absolute; right: 12px; left: auto; top: var(--lab-card-top, calc(var(--lab-mb, 0px) + 10px)); z-index: 50;
+  width: clamp(268px, 27vw, 340px);
+  /* --lab-card-bottom (desktop.js) = the taskbar's height: the card stops 10 px above the taskbar */
+  max-height: calc(100% - var(--lab-card-top, calc(var(--lab-mb, 0px) + 10px)) - var(--lab-card-bottom, 48px) - 10px);
+  display: flex; flex-direction: column; align-items: flex-start;
+  font-family: var(--fl-font); font-size: 13.5px; line-height: 1.6; color: var(--lab-ink);
+  pointer-events: none;                      /* only the card, the pill and the note take clicks */
+}
+#lab-rail.is-moved { right: auto; }
+/* only the pill is showing: the rail is exactly as wide as the pill, so the pill (and the note under it) sit flush at the right edge */
+#lab-root.rail-drawer:not(.rail-open) #lab-rail { width: max-content; }
+/* the static copyright in index.html is for readers without JavaScript; the rendered card has its own */
+#lab-rail > .lab-page-foot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
+
+.lab-rail-body {
+  display: flex; flex-direction: column; width: 100%; min-height: 0; max-height: 100%;
+  border-radius: 8px; overflow: hidden; pointer-events: auto;
+  transform-origin: calc(100% - 18px) 18px;  /* it opens from its top-right corner */
+}
+/* dragging: the card lifts a little */
+.lab-rail-body, .lab-rail-strip { transition: transform .15s var(--fl-ease), box-shadow .15s var(--fl-ease); }
+#lab-rail.is-dragging .lab-rail-body, #lab-rail.is-dragging .lab-rail-strip {
+  transform: scale(1.015);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .26), 0 0 0 .5px rgba(0, 0, 0, .1);
+}
+body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; -webkit-user-select: none !important; user-select: none !important; }
+/* collapsed (narrow screens, or the student folded it): the card stays in the page but invisible, and opens in place */
+#lab-root.rail-drawer:not(.rail-open) .lab-rail-body {
+  position: absolute; right: 0; top: 0; max-height: none;
+  visibility: hidden; opacity: 0; pointer-events: none;
+}
+.lab-rail-body.is-entering { animation: lab-card-in .2s var(--fl-ease); }
+@keyframes lab-card-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+.lab-rail-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 20px;
+  /* a soft fade at the bottom edge tells the student the card scrolls */
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 20px), transparent); mask-image: linear-gradient(#000 calc(100% - 20px), transparent);
+  -webkit-user-select: text; user-select: text;
+  scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, .32) transparent;
+}
+
+/* the pill: what is left of the card when it is collapsed */
+.lab-rail-strip {
+  display: none; pointer-events: auto;
+  align-items: center; gap: 9px;
+  height: 36px; min-width: 188px; padding: 0 12px 0 14px; margin: 0;
+  border-radius: 8px;
+  font: inherit; font-size: 13px; line-height: 1; color: var(--lab-ink); cursor: pointer; white-space: nowrap;
+  touch-action: none;                        /* the pill can be dragged too */
+}
+#lab-root.rail-drawer:not(.rail-open) .lab-rail-strip { display: inline-flex; }
+.lab-rail-strip:hover { background: rgba(255, 255, 255, .95); }
+.lab-rail-strip.is-entering { animation: lab-card-in .18s var(--fl-ease); transform-origin: 100% 0; }
+/* the dot always takes its place (only its opacity changes), so the pill never grows over a window that opened beside it */
+.lab-rail-dot { order: 1; display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--lab-accent); flex: none; opacity: 0; }
+.lab-rail-strip.is-attn .lab-rail-dot { opacity: 1; animation: lab-dot 2.4s ease-in-out infinite; }
+@keyframes lab-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+/* a step was ticked while only the pill shows: the dot flashes green and the pill hops twice (M§19.5) */
+.lab-rail-strip.is-stepped { animation: lab-pill-hop .7s ease-out both; animation-delay: var(--lab-age, 0ms); }
+.lab-rail-strip.is-stepped .lab-rail-dot { opacity: 1; animation: lab-dot-ok .8s ease-out both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-pill-hop {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-6px); animation-timing-function: ease-in; }
+  42% { transform: translateY(0); }
+  64% { transform: translateY(-6px); animation-timing-function: ease-in; }
+}
+@keyframes lab-dot-ok {
+  0% { background: #0f7b0f; transform: scale(1); }
+  30% { background: #0f7b0f; transform: scale(1.9); }
+  70% { background: #0f7b0f; transform: scale(1); }
+  100% { background: var(--lab-accent); transform: scale(1); }
+}
+.lab-rail-tag { order: 2; font-weight: 600; }
+.lab-rail-vert { order: 3; display: inline-flex; align-items: center; gap: 9px; color: var(--lab-ink-2); font-variant-numeric: tabular-nums; }
+.lab-rail-vert::before { content: ""; width: 1px; height: 13px; background: rgba(0, 0, 0, .16); }
+.lab-rail-chev { order: 4; margin-left: auto; font-size: 15px; color: var(--lab-ink-2); transform: rotate(90deg); }
+.lab-rail-strip:hover .lab-rail-chev { color: var(--lab-ink); }
+
+/* one short note under the pill: a nudge or a trap line (stays until it clears), or "step done, next is ..." (9 s).
+   As wide as the pill and flush right with it, so it stays in the column windows keep clear of (a Terminal prompt opens beside it) */
+.lab-peek {
+  position: absolute; right: 0; left: auto; top: calc(100% + 8px); z-index: 55;
+  width: 188px;
+  border-radius: 8px; pointer-events: auto;
+  font-size: 13px; line-height: 1.55;
+  animation: lab-peek-in .22s var(--fl-ease);
+}
+@keyframes lab-peek-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.lab-peek-main {
+  display: block; width: 100%; margin: 0; padding: 9px 30px 10px 12px; text-align: left; border-radius: 7px;
+  background: none; border: 0; font: inherit; color: inherit; cursor: pointer;
+}
+.lab-peek.is-ok .lab-peek-main { padding-right: 12px; }
+.lab-peek-eyebrow { display: block; font-size: 12px; font-weight: 600; color: var(--lab-ink-2); }
+.lab-peek-text { display: block; color: var(--lab-ink); overflow-wrap: anywhere; }
+.lab-peek-x { position: absolute; top: 4px; right: 5px; z-index: 3; padding: 2px 6px; margin: 0; background: none; border: 0; border-radius: 4px; font: 16px/1 var(--fl-font); color: var(--lab-ink-2); cursor: pointer; }
+.lab-peek-x:hover { color: var(--lab-ink); background: rgba(0, 0, 0, .06); }
+@media (prefers-reduced-motion: reduce) {
+  .lab-rail-strip.is-attn .lab-rail-dot, .lab-peek, .lab-rail-body.is-entering, .lab-rail-strip.is-entering, .lab-rail-strip.is-stepped { animation: none; }
+  .lab-rail-strip.is-stepped .lab-rail-dot { animation: none; background: #0f7b0f; }
+}
+
+/* the title row of the card: the handle for dragging it (it also resets with a double click) */
+.lab-rail-head {
+  display: flex; align-items: baseline; gap: 12px;
+  flex: none; margin: 0 16px; padding: 12px 0 8px; border-bottom: 1px solid var(--lab-line);
+  font-size: 12.5px;
+  cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.lab-rail-head a, .lab-rail-head button { cursor: pointer; }
+.lab-rail-link { color: var(--lab-accent); text-decoration: none; }
+.lab-rail-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lab-rail-label { flex: 1; font-size: 12px; color: var(--lab-ink-3); }
+.lab-rail-ctl { display: inline-flex; gap: 12px; }
+
+.lab-sec { padding: 12px 0; border-bottom: 1px solid var(--lab-line); }
+.lab-sec:last-of-type { border-bottom: 0; }
+.lab-muted { margin: 8px 0 0; color: var(--lab-ink-3); font-size: 12.5px; line-height: 1.6; }
+.lab-eyebrow { font-size: 12px; font-weight: 600; color: var(--lab-accent); }
+.lab-mtitle { margin: 2px 0 6px; font-size: 20px; line-height: 1.3; font-weight: 600; }
+.lab-intro { margin: 0; color: var(--lab-ink-2); }
+.lab-mapline { margin: 6px 0 0; color: var(--lab-ink-2); font-size: 13px; }
+
+/* hyperlinks inside the card and the sheets: accent, no underline until hovered (Fluent HyperlinkButton) */
+#lab-rail .lab-linkbtn, .lab-msheet .lab-linkbtn { color: var(--lab-accent); text-decoration: none; border-radius: 3px; }
+#lab-rail .lab-linkbtn:hover, .lab-msheet .lab-linkbtn:hover { color: var(--lab-accent); text-decoration: underline; text-underline-offset: 3px; }
+#lab-rail .lab-linkbtn.is-ready { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+#lab-rail .lab-linkbtn:focus-visible, .lab-msheet .lab-linkbtn:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
+#lab-rail .lab-rail-link:focus-visible, #lab-rail .lab-disc:focus-visible, #lab-rail .lab-pickrow:focus-visible, .lab-rail-strip:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
+
+/* disclosure rows */
+.lab-disc {
+  display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 2px 0; margin: 0;
+  background: none; border: 0; font: inherit; color: var(--lab-ink); text-align: left; cursor: pointer;
+}
+.lab-disc-t { font-size: 12px; color: var(--lab-ink-3); }
+.lab-disc-chev { margin-left: auto; color: var(--lab-ink-3); font-family: var(--fl-mono); }
+.lab-disc-sm { margin-top: 8px; padding: 0; width: auto; gap: 8px; }
+.lab-disc-sm .lab-disc-chev { margin-left: 0; }
+
+/* the picker button: 「任務 3 / 10 · 換任務」 (the list itself is in the picker sheet, M§19.2) */
+.lab-pickrow {
+  display: block; width: 100%; padding: 2px 0; margin: 0; background: none; border: 0; font: inherit; font-size: 12.5px;
+  color: var(--lab-ink-3); text-align: left; cursor: pointer;
+}
+.lab-pickrow-go { color: var(--lab-accent); }
+.lab-pickrow:hover .lab-pickrow-go { text-decoration: underline; text-underline-offset: 3px; }
+.lab-num { flex: none; width: 1.8em; font-family: var(--fl-mono); font-size: 12px; color: var(--lab-accent); }
+.lab-num.is-check { color: var(--lab-accent); }
+.lab-num.is-skip { color: var(--lab-ink-3); }
+
+/* steps: the current one has the Fluent selection mark, a short accent bar at its left edge, and a faint fill (like a selected list item) */
+.lab-steps { list-style: none; margin: 0; padding: 0; }
+.lab-step { position: relative; display: flex; gap: 10px; padding: 7px 10px; margin: 1px -10px; border-radius: 4px; color: var(--lab-ink-2); }
+.lab-step.is-current { color: var(--lab-ink); background: rgba(0, 0, 0, .04); }
+.lab-step.is-current::before {
+  content: ""; position: absolute; left: 0; top: 10px; width: 3px; height: 16px; border-radius: 2px;
+  background: var(--lab-accent); transform-origin: 50% 0;
+}
+/* a step that has just become current (M§19.4): the row bounces in (up 10 px, past, settles; a little bigger on the way), the accent
+   bar is drawn from top to bottom and the number hops twice. --lab-age (missions.js) continues it across re-renders. */
+.lab-step.is-enter { animation: lab-step-in .52s cubic-bezier(.3, 1.35, .45, 1) both; animation-delay: var(--lab-age, 0ms); }
+.lab-step.is-enter::before { animation: lab-rule-draw .24s ease-out both; animation-delay: var(--lab-age, 0ms); }
+.lab-step.is-enter .lab-num { animation: lab-num-hop .62s ease-out both; animation-delay: calc(var(--lab-age, 0ms) + .18s); }
+.lab-step.is-waiting { opacity: 0; }               /* the sheet that announced the mission is still flying in */
+@keyframes lab-step-in {
+  0% { transform: translateY(10px) scale(.98); }
+  55% { transform: translateY(-4px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes lab-rule-draw { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lab-num-hop {
+  0%, 100% { transform: translateY(0); }
+  22% { transform: translateY(-5px); animation-timing-function: ease-in; }
+  46% { transform: translateY(0); }
+  68% { transform: translateY(-5px); animation-timing-function: ease-in; }
+}
+.lab-step.is-done { color: var(--lab-ink-3); }
+.lab-step .lab-num { margin-top: 2px; transition: opacity .3s; }
+.lab-step.is-done .lab-num { animation: lab-check .3s ease-out; }
+@keyframes lab-check { from { opacity: 0; } to { opacity: 1; } }
+.lab-step-body { flex: 1; min-width: 0; }
+/* a ticked step: a green check (Windows green). A fresh tick pops in and draws itself, and its row glows green once;
+   --lab-age (missions.js) is how old the tick is, so a re-render continues the animation instead of restarting it */
+.lab-check { position: relative; display: inline-flex; width: 18px; height: 18px; vertical-align: -4px; }
+.lab-check svg { display: block; overflow: visible; }
+.lab-check circle { fill: #0f7b0f; }
+.lab-check path { fill: none; stroke: #fff; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.lab-check.is-new svg { transform-origin: 50% 50%; animation: lab-check-pop .45s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: var(--lab-age, 0ms); }
+.lab-check.is-new path { stroke-dasharray: 13; stroke-dashoffset: 13; animation: lab-check-draw .3s ease-out forwards; animation-delay: calc(var(--lab-age, 0ms) + .16s); }
+@keyframes lab-check-pop { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes lab-check-draw { to { stroke-dashoffset: 0; } }
+.lab-step.is-justdone { animation: lab-row-done 1.2s ease-out both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-row-done { 0% { background: rgba(15, 123, 15, .16); } 100% { background: rgba(15, 123, 15, 0); } }
+.lab-pk-num .lab-check { width: 16px; height: 16px; vertical-align: -3px; }
+.lab-pk-num .lab-check svg { width: 16px; height: 16px; }
+/* eight small dots fly out of a fresh check (green and accent blue, 14 to 22 px, gone in 550 ms), starting as the check pops */
+.lab-burst-dot {
+  position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; pointer-events: none;
+  opacity: 0;
+  /* they shoot out fast and slow down (ease-out), stay solid for the first half and fade in the second */
+  animation: lab-burst .55s cubic-bezier(.15, .75, .3, 1) both, lab-burst-fade .55s linear both;
+  animation-delay: calc(var(--lab-age, 0ms) + .1s), calc(var(--lab-age, 0ms) + .1s);
+}
+@keyframes lab-burst {
+  0% { transform: translate(0, 0) scale(.8); }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.6); }
+}
+@keyframes lab-burst-fade { 0%, 50% { opacity: 1; } 100% { opacity: 0; } }
+.lab-peek-eyebrow .lab-check { width: 14px; height: 14px; margin-right: 5px; vertical-align: -3px; }
+.lab-peek-eyebrow .lab-check svg { width: 14px; height: 14px; }
+@media (prefers-reduced-motion: reduce) {
+  .lab-check.is-new svg, .lab-check.is-new path, .lab-step.is-justdone { animation: none; stroke-dashoffset: 0; }
+  .lab-burst-dot { display: none; }
+  .lab-step.is-enter, .lab-step.is-enter::before, .lab-step.is-enter .lab-num { animation: none; }
+}
+.lab-step-text { overflow-wrap: anywhere; }
+.lab-opt { margin-left: 6px; color: var(--lab-ink-3); font-size: 12px; }
+.lab-hintbar { display: flex; gap: 16px; margin-top: 6px; font-size: 13px; }
+.lab-hinttext, .lab-answertext { margin: 8px 0 0; color: var(--lab-ink-2); font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.lab-answertext { padding-top: 6px; border-top: 1px solid var(--lab-line); color: var(--lab-ink); }
+.lab-hinttext + .lab-linkbtn { margin-top: 6px; font-size: 13px; }
+.lab-nudge { margin: 8px 0 0; color: var(--lab-ink-2); font-size: 12.5px; line-height: 1.55; }
+.lab-copyline { display: inline; }
+.lab-copy { font-size: 12px; margin-left: 2px; }
+.lab-step .lab-mono, .lab-intro .lab-mono, .lab-hinttext .lab-mono, .lab-answertext .lab-mono, .lab-mapline .lab-mono, .lab-nudge .lab-mono {
+  font-family: var(--fl-mono); font-size: .9em; background: rgba(0, 0, 0, .05); padding: 0 .3em; border-radius: 3px;
+}
+
+/* progress + links */
+.lab-prog { position: relative; height: 4px; border-radius: 2px; background: rgba(0, 0, 0, .1); overflow: hidden; }
+/* the fill is a full-width bar scaled from the left (transform only); a new tick grows it from its old length and a pale light
+   sweeps along the line once (M§19.5) */
+.lab-prog-fill { width: 100%; height: 100%; border-radius: 2px; background: var(--lab-accent); transform-origin: 0 50%; transform: scaleX(var(--to, 0)); }
+.lab-prog-fill.is-grow { animation: lab-prog-grow .55s var(--fl-ease) both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-prog-grow { from { transform: scaleX(var(--from, 0)); } to { transform: scaleX(var(--to, 0)); } }
+.lab-prog-sweep {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 34%; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .85), rgba(255, 255, 255, 0));
+  animation: lab-prog-sweep .7s ease-in-out both; animation-delay: var(--lab-age, 0ms);
+}
+@keyframes lab-prog-sweep { 0% { transform: translateX(-100%); opacity: 1; } 100% { transform: translateX(300%); opacity: 1; } }
+.lab-prog-n { display: inline-block; }
+.lab-prog-n.is-pop { animation: lab-count-pop .45s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-count-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .lab-prog-fill.is-grow, .lab-prog-sweep, .lab-prog-n.is-pop { animation: none; } .lab-prog-sweep { display: none; } }
+.lab-prog-text { margin-top: 6px; font-size: 12px; color: var(--lab-ink-3); }
+.lab-outro { margin: 12px 0 0; color: var(--lab-ink); }
+/* 「下一個任務 →」: the one filled button of the card, once a mission is done */
+.lab-nextbtn {
+  margin-top: 10px; height: 32px; padding: 0 18px; border-radius: 4px;
+  background: var(--fl-accent); border: 1px solid var(--fl-accent); box-shadow: none;
+  font: inherit; color: #fff; cursor: pointer;
+}
+.lab-nextbtn:hover { background: var(--fl-accent-hover); border-color: var(--fl-accent-hover); }
+.lab-nextbtn:active { background: var(--fl-accent-press); border-color: var(--fl-accent-press); }
+.lab-nextbtn:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
+.lab-foot-links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; }
+.lab-codeline { display: flex; gap: 10px; align-items: baseline; }
+.lab-codeinput { flex: 1; min-width: 0; padding: 3px 8px; border: 1px solid #d1d1d1; border-bottom-color: #8a8a8a; border-radius: 4px; background: #fff; color: var(--lab-ink); font: 12px var(--fl-mono); }
+.lab-codeinput:focus { outline: 0; border-bottom: 2px solid var(--fl-accent); padding-bottom: 2px; }
+.lab-page-foot { padding: 12px 0 0; border-top: 1px solid var(--lab-line); font-size: 11.5px; color: var(--lab-ink-3); line-height: 1.6; }
+.lab-rail-scroll > .lab-page-foot { margin-top: 6px; }
+.lab-page-foot .lab-muted { margin-top: 4px; font-size: 11.5px; }
+.lab-store-notice { margin-top: 6px; font-size: 12px; color: var(--lab-accent); }
+
+/* ------------------------------------------- mission sheets (ContentDialog) + phone notice */
+/* The mission sheets (M§18.2, M§19.2): a Fluent ContentDialog in the middle of the PC on a smoke scrim. White, 8 px radius, a grey
+   footer band with right-aligned buttons, the primary one filled with the accent. Two kinds: the picker (the list of missions, and a
+   mission's start page in the same dialog) and the completion sheet. Starting a mission flies the dialog into the card (missions.js,
+   Web Animations API). */
+.lab-msheet-scrim, .lab-phone {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 3000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 10, 10, .55);
+  padding: 16px;
+}
+.lab-msheet-scrim { background-color: rgba(0, 0, 0, .3); animation: lab-ms-scrim .25s ease-out backwards; }
+.lab-msheet-scrim.is-leaving { pointer-events: none; }
+@keyframes lab-ms-scrim { from { background-color: rgba(0, 0, 0, 0); } }
+.lab-msheet {
+  --lab-ink: #1a1a1a; --lab-ink-2: #424242; --lab-ink-3: #5c5c5c; --lab-line: #e5e5e5; --lab-accent: #005fb8;
+  display: flex; flex-direction: column; overflow: hidden;
+  width: 460px; max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
+  padding: 0; margin: 0;
+  background: #fff; border: 1px solid rgba(0, 0, 0, .16); border-radius: 8px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, .28), 0 2px 21px rgba(0, 0, 0, .22);
+  font-family: var(--fl-font); font-size: 14px; line-height: 1.65;
+  color: var(--lab-ink);
+  animation: lab-ms-in .25s var(--fl-ease) backwards;
+}
+@keyframes lab-ms-in { from { opacity: 0; transform: scale(1.04); } }
+.lab-ms-view { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+.lab-ms-body { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 24px 22px; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, .3) transparent; }
+.lab-ms-eyebrow { font-size: 12px; font-weight: 600; line-height: 1.5; color: var(--lab-accent); }
+.lab-ms-title { margin: 2px 0 10px; font-size: 20px; line-height: 1.4; font-weight: 600; }
+.lab-ms-intro { margin: 0; color: var(--lab-ink-2); overflow-wrap: anywhere; }
+.lab-ms-step { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--lab-line); }
+.lab-ms-steplabel { font-size: 12px; font-weight: 600; color: var(--lab-ink-3); }
+.lab-ms-steptext { margin: 2px 0 0; color: var(--lab-ink); overflow-wrap: anywhere; }
+.lab-ms-step > .lab-ms-steptext { margin-top: 0; }
+.lab-ms-steptext.is-next { font-weight: 600; }
+.lab-ms-steptext .lab-ms-steplabel { margin-right: 2px; font-weight: 500; }
+.lab-ms-note { margin: 14px 0 0; font-size: 12px; line-height: 1.65; color: var(--lab-ink-3); }
+.lab-ms-check { display: block; margin: 0 0 12px; line-height: 0; }
+.lab-ms-check .lab-check, .lab-ms-check .lab-check svg { width: 44px; height: 44px; vertical-align: top; }
+/* the footer band (the ContentDialog's command space) */
+.lab-ms-foot { flex: none; padding: 20px 24px; background: #f3f3f3; border-top: 1px solid #e5e5e5; }
+.lab-ms-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; margin: 0; }
+.lab-ms-btn {
+  min-width: 96px; height: 32px; padding: 0 20px; margin: 0; border: 1px solid #d1d1d1; border-bottom-color: #bdbdbd; border-radius: 4px;
+  background: #fff; font: inherit; font-size: 14px; line-height: 1; color: var(--lab-ink); cursor: pointer; white-space: nowrap;
+}
+.lab-ms-btn:hover { background: #f6f6f6; }
+.lab-ms-btn:active { background: #ececec; color: var(--lab-ink-2); }
+.lab-ms-btn.is-primary { background: var(--fl-accent); border-color: var(--fl-accent); border-bottom-color: #00478f; color: #fff; text-align: left; }
+.lab-ms-btn.is-primary:hover { background: var(--fl-accent-hover); border-color: var(--fl-accent-hover); }
+.lab-ms-btn.is-primary:active { background: var(--fl-accent-press); border-color: var(--fl-accent-press); }
+/* a secondary action (「選其他任務」, 「關閉」 next to a primary button, class is-text) is a plain standard button too, like any Windows dialog */
+.lab-ms-btn:focus-visible, .lab-ms-back:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
+.lab-msheet .lab-mono { font-family: var(--fl-mono); font-size: .9em; background: rgba(0, 0, 0, .06); padding: 0 .3em; border-radius: 3px; }
+@media (max-width: 520px) {
+  .lab-ms-body { padding: 20px 18px 18px; }
+  .lab-ms-foot { padding: 14px 18px; }
+  .lab-ms-btns .lab-ms-btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-msheet-scrim, .lab-msheet { animation: none; }
+}
+
+/* ---- the picker (M§19.2): head, a list that scrolls, an optional note, the footer band with the start button. The same parts hold a mission's start page. */
+.lab-msheet.is-pick { width: 560px; max-height: min(80vh, calc(100vh - 32px)); max-height: min(80vh, calc(100dvh - 32px)); }
+.lab-pk-head { flex: none; padding: 24px 24px 8px; }
+.lab-pk-head .lab-ms-title { margin-bottom: 4px; }
+.lab-pk-head.is-start { padding: 16px 24px 0; }
+.lab-pk-sub { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--lab-ink-3); }
+.lab-pk-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 4px 24px 14px; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, .3) transparent;
+  /* a soft fade at the bottom edge: more rows below, as in the card */
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 16px), transparent); mask-image: linear-gradient(#000 calc(100% - 16px), transparent);
+}
+.lab-pk-notebox { flex: none; padding: 0 24px 16px; }
+.lab-pk-notebox .lab-ms-note { margin: 0; }
+.lab-pk-group { margin-top: 12px; }
+.lab-pk-gname { padding-bottom: 5px; border-bottom: 1px solid var(--lab-line); font-size: 12px; font-weight: 600; color: var(--lab-ink-3); }
+.lab-pk-row {
+  position: relative; display: flex; align-items: baseline; gap: 14px; width: 100%; margin: 2px 0 0; padding: 7px 10px; border: 0; border-radius: 4px;
+  background: none; font: inherit; color: var(--lab-ink); text-align: left; cursor: pointer;
+}
+.lab-pk-row:hover { background: rgba(0, 0, 0, .05); }
+.lab-pk-row:focus-visible { background: rgba(0, 0, 0, .05); outline: 2px solid #1a1a1a; outline-offset: -2px; }
+/* the current mission carries the selection mark (a short accent bar at the left), as a selected list item does */
+.lab-pk-row.is-cur::before { content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 16px; margin-top: -8px; border-radius: 2px; background: var(--lab-accent); }
+.lab-pk-num { flex: none; width: 1.9em; font-family: var(--fl-mono); font-size: 13px; color: var(--lab-accent); }
+.lab-pk-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; line-height: 1.5; }
+.lab-pk-meta { flex: none; font-size: 12.5px; color: var(--lab-ink-3); white-space: nowrap; }
+.lab-pk-row.is-cur .lab-pk-meta { color: var(--lab-ink); }
+/* the way back from a start page */
+.lab-ms-back { margin: 0; padding: 3px 6px; margin-left: -6px; background: none; border: 0; border-radius: 4px; font: inherit; font-size: 13.5px; color: var(--lab-accent); cursor: pointer; }
+.lab-ms-back:hover { background: rgba(0, 0, 0, .05); }
+.lab-pk-scroll > .lab-ms-eyebrow { margin-top: 8px; }
+.lab-pk-scroll > .lab-ms-step:last-child { margin-bottom: 4px; }
+/* paper confetti over the completion sheet (missions.js draws it for 1.9 s, then removes the canvas) */
+.lab-confetti { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+/* a short screen (1024x640 is the smallest we support): the same picker with tighter spacing so more rows fit in its 80vh */
+@media (max-height: 720px) {
+  .lab-pk-head { padding: 16px 22px 2px; }
+  .lab-pk-head.is-start { padding: 12px 22px 0; }
+  .lab-pk-head .lab-ms-title { font-size: 18px; margin: 0 0 2px; }
+  .lab-pk-sub { font-size: 12.5px; line-height: 1.5; }
+  .lab-pk-scroll { padding: 0 22px 10px; }
+  .lab-pk-group { margin-top: 6px; }
+  .lab-pk-gname { padding-bottom: 3px; font-size: 11.5px; }
+  .lab-pk-row { padding: 4px 10px; }
+  .lab-pk-title { font-size: 14.5px; line-height: 1.45; }
+  .lab-pk-notebox { padding: 0 22px 10px; }
+  .lab-pk-notebox .lab-ms-note { font-size: 11.5px; line-height: 1.5; }
+  .lab-ms-foot { padding: 12px 22px; }
+  .lab-ms-body { padding: 18px 22px 16px; }
+}
+/* a screen wide enough: the list goes into two columns (File Explorer + Terminal | Codex), so all ten missions show without scrolling,
+   also on 1366x768 and 1280x720 laptops (swapView animates the dialog between the wide list and the narrow start page) */
+@media (min-width: 960px) {
+  .lab-msheet.is-pick[data-view="list"] { width: 860px; }
+  .lab-msheet.is-pick[data-view="list"] .lab-pk-scroll { column-count: 2; column-gap: 40px; }
+  /* the gap goes under each group, so both columns start at the same height */
+  .lab-msheet.is-pick[data-view="list"] .lab-pk-group { break-inside: avoid; margin-top: 0; padding-top: 6px; padding-bottom: 8px; }
+}
+@media (max-width: 620px) {
+  .lab-msheet.is-pick { width: 100%; }
+  .lab-pk-head, .lab-pk-scroll, .lab-pk-notebox { padding-left: 18px; padding-right: 18px; }
+  .lab-pk-meta { white-space: normal; text-align: right; max-width: 7.5em; }
+}
+
+/* ---- cues (M§19.4): the ring that follows the element a step points at, and the taskbar button that asks for attention.
+   The ring is the accent with a hairline of white outside it, so it reads on the light wallpaper and on a dark Terminal alike. */
+.lab-cue {
+  position: absolute; left: 0; top: 0; z-index: 1250; box-sizing: border-box; pointer-events: none;   /* above the taskbar (900), the menus (1100) and the Start / Search panels (1200); under toasts and drag ghosts */
+  border: 2px solid #005fb8; border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .8);
+  animation: lab-cue-in .25s ease-out;
+}
+.lab-cue-wave {
+  position: absolute; top: -2px; right: -2px; bottom: -2px; left: -2px; border: 2px solid #005fb8; border-radius: inherit;
+  opacity: 0; animation: lab-cue-wave 2.4s ease-out infinite;
+}
+@keyframes lab-cue-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lab-cue-wave { 0% { transform: scale(1); opacity: .5; } 70%, 100% { transform: scale(var(--cue-grow, 1.18)); opacity: 0; } }
+/* The taskbar's "needs attention" flash (the class lab-dock-attn that missions.js puts on a taskbar button) is drawn by shell.css
+   (the tile's ::before fades in and out in the accent, and the indicator pill under the icon pulses): the taskbar is its. With reduced
+   motion it stays lit. Targets that are not taskbar buttons (Start, the search box, desktop icons, windows) get the ring above. */
+@media (prefers-reduced-motion: reduce) {
+  .lab-cue, .lab-cue-wave { animation: none; }
+  .lab-cue-wave { display: none; }
+}
+.lab-phone { background: var(--lab-bg); color: var(--lab-ink); text-align: center; font-family: var(--fl-font); }
+.lab-phone-in { max-width: 420px; }
+.lab-phone h1 { margin: 0 0 12px; font-size: 24px; font-weight: 600; }
+.lab-phone p { margin: 0 0 12px; color: var(--lab-ink-2); line-height: 1.75; }
+.lab-phone-note { font-size: 13px; color: var(--lab-ink-3) !important; }
+
+/* ---------------------------------------------- connecting to the remote computer (M§17, DESIGN W8) */
+/* The Remote Desktop connecting screen: dark #1f1f1f, plain, centred, a small monitor-with-arrow glyph, the computer's name, a
+   thin #4cc2ff progress bar and the status line. It covers the page from the first paint. */
+#lab-connect {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  background: #1f1f1f; color: #fff;
+  font-family: var(--fl-font); text-align: center;
+  cursor: progress;
+  transition: opacity .5s var(--fl-ease);
+}
+html.lab-noconnect #lab-connect { display: none; }
+#lab-connect.is-leaving { opacity: 0; pointer-events: none; }
+.lab-cn-box { width: 340px; max-width: calc(100vw - 48px); }
+.lab-cn-mark { display: block; margin: 0 auto 20px; color: #e6e6e6; }
+.lab-cn-title { font-size: 20px; line-height: 1.4; font-weight: 600; }
+.lab-cn-host { margin-top: 2px; font-size: 14px; color: #c8c8c8; }
+.lab-cn-bar { height: 3px; margin: 22px auto 12px; border-radius: 2px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.lab-cn-bar i { display: block; width: 0; height: 100%; border-radius: 2px; background: #4cc2ff; transition: width .5s cubic-bezier(.3, .6, .2, 1); }
+.lab-cn-step { min-height: 1.5em; font-size: 12.5px; color: #b4b4b4; }
+/* while connecting the desktop waits blurred and dim; it sharpens as the screen fades, like a remote picture arriving */
+#lab-stage { transition: filter .55s var(--fl-ease); }
+html.lab-connecting #lab-stage { filter: blur(10px) brightness(.75); }
+@media (prefers-reduced-motion: reduce) {
+  html.lab-connecting #lab-stage { filter: none; }
+  .lab-cn-bar i { transition: none; }
+}
+
+/* ---------------------------------------------- the Remote Desktop connection bar (DESIGN W8, js/remote.js) */
+/* The student's own computer speaks here, not the fake PC: the Windows Remote Desktop connection bar hangs from the top edge at the
+   centre (flat top touching the edge, 6 px bottom corners), light #f3f3f3 with a hairline and a soft shadow, 26 px tall: a pin and
+   three signal bars, the computer's name, 「—」 (folds the bar into a slim 6 px tab that comes back on hover) and 「✕ 中斷連線」.
+   Above the PC and above the mission sheets (the student can always leave). */
+.lab-rb {
+  position: fixed; z-index: 3400; top: 0; left: 50%;
+  display: flex; align-items: stretch; height: 26px; padding: 0 0 0 8px; box-sizing: border-box;
+  border: 1px solid #d6d6d6; border-top: 0; border-radius: 0 0 6px 6px;
+  background: #f3f3f3; color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .22);
+  font: 600 12px/1 var(--fl-font); white-space: nowrap;
+  -webkit-font-smoothing: antialiased; text-shadow: none; -webkit-user-select: none; user-select: none;
+  opacity: 0; transform: translateY(-100%); pointer-events: none;
+  transition: opacity .22s var(--fl-ease), transform .26s var(--fl-ease);
+}
+.lab-rb.is-on { opacity: 1; transform: none; pointer-events: auto; }
+/* folded: only a 6 px tab stays at the edge; hovering (or keyboard focus) brings the bar back. is-fresh = just folded, the pointer is
+   still on the bar, so it stays folded until the pointer has left once */
+.lab-rb.is-on.is-min { transform: translateY(calc(-100% + 6px)); }
+.lab-rb.is-on.is-min:not(.is-fresh):hover, .lab-rb.is-on.is-min:focus-within { transform: none; }
+.lab-rb.is-min::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 8px; }
+.lab-rb.is-min:not(.is-fresh):hover::after, .lab-rb.is-min:focus-within::after { display: none; }
+.lab-rb-pin { display: inline-flex; align-items: center; padding-right: 8px; color: #424242; cursor: default; }
+.lab-rb-pin svg { width: 12px; height: 12px; }
+.lab-rb-sig { display: inline-flex; align-items: center; align-self: center; gap: 2px; height: 10px; margin-right: 10px; }
+.lab-rb-sig i { display: block; width: 2px; border-radius: 1px; background: #0f7b0f; }
+.lab-rb-sig i:nth-child(1) { height: 4px; } .lab-rb-sig i:nth-child(2) { height: 7px; } .lab-rb-sig i:nth-child(3) { height: 10px; }
+.lab-rb-name { display: inline-flex; align-items: center; padding: 0 16px 0 2px; font-weight: 600; letter-spacing: .02em; }
+.lab-rb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.lab-rb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 100%; margin: 0; padding: 0 12px;
+  border: 0; border-radius: 0; background: none; color: #1a1a1a; font: inherit; cursor: pointer;
+  transition: background-color .1s ease;
+}
+.lab-rb-btn svg { flex: none; width: 10px; height: 10px; }
+.lab-rb-min { width: 34px; padding: 0; }
+.lab-rb-min:hover { background: rgba(0, 0, 0, .07); }
+.lab-rb-min:active { background: rgba(0, 0, 0, .12); }
+/* 「✕ 中斷連線」: the caption-style close button with its words, so the way out is seen; red on hover like any Windows close button */
+.lab-rb-close { padding: 0 12px 0 11px; border-radius: 0 0 5px 0; }
+.lab-rb-close:hover { background: #c42b1c; color: #fff; }
+.lab-rb-close:active { background: #b22a1b; color: #fff; }
+.lab-rb-btn:focus-visible { outline: 2px solid #1a1a1a; outline-offset: -3px; }
+.lab-rb-close:hover:focus-visible { outline-color: #fff; }
+/* compact (the middle is too narrow, e.g. next to the card on a small window): the pin and 「✕ 中斷連線」 */
+.lab-rb[data-mode="compact"] .lab-rb-name, .lab-rb[data-mode="compact"] .lab-rb-sig { display: none; }
+.lab-rb[data-mode="compact"] .lab-rb-pin { padding-right: 6px; }
+html[data-perf="low"] .lab-rb { transition: none; }
+body:has(.lab-phone) .lab-rb { display: none; }
+@media (prefers-reduced-motion: reduce) { .lab-rb { transition: opacity .2s linear; } .lab-rb.is-on.is-min { transition: none; } }
+
+/* the dialog before disconnecting: a Windows dialog 「遠端桌面連線」 (a small title strip, the question, a grey footer band, the filled
+   default button 「中斷連線」 and 「取消」) */
+.lab-ra-scrim {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 3600;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .3); animation: lab-ra-fade .2s ease-out;
+}
+.lab-ra {
+  width: 400px; max-width: calc(100vw - 32px); box-sizing: border-box; overflow: hidden; text-align: left;
+  background: #fff; border: 1px solid rgba(0, 0, 0, .18); border-radius: 8px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, .28), 0 2px 21px rgba(0, 0, 0, .22);
+  color: #1a1a1a; font-family: var(--fl-font); -webkit-font-smoothing: antialiased;
+  animation: lab-ra-in .25s var(--fl-ease);
+}
+.lab-ra-bar { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 0 0 12px; font-size: 12px; color: #1a1a1a; }
+.lab-ra-bar svg { width: 16px; height: 16px; flex: none; color: #424242; }
+.lab-ra-bar span { flex: 1; }
+.lab-ra-x { width: 46px; height: 32px; margin: 0; padding: 0; border: 0; background: none; color: #1a1a1a; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.lab-ra-x svg { width: 10px; height: 10px; color: inherit; }
+.lab-ra-x:hover { background: #c42b1c; color: #fff; }
+.lab-ra-body { padding: 8px 24px 24px; }
+.lab-ra-title { margin: 0 0 10px; font-size: 20px; line-height: 1.4; font-weight: 600; }
+.lab-ra-text { margin: 0; font-size: 14px; line-height: 1.65; color: #424242; }
+.lab-ra-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 18px 24px; background: #f3f3f3; border-top: 1px solid #e5e5e5; }
+.lab-ra-foot button {
+  min-width: 96px; height: 32px; margin: 0; padding: 0 20px; border: 1px solid #d1d1d1; border-bottom-color: #bdbdbd; border-radius: 4px;
+  background: #fff; color: #1a1a1a; font: 14px/1 var(--fl-font); cursor: pointer;
+}
+.lab-ra-foot .lab-ra-cancel:hover { background: #f6f6f6; }
+.lab-ra-foot .lab-ra-cancel:active { background: #ececec; }
+.lab-ra-foot .lab-ra-ok { background: #005fb8; border-color: #005fb8; border-bottom-color: #00478f; color: #fff; }
+.lab-ra-foot .lab-ra-ok:hover { background: #0067c0; border-color: #0067c0; }
+.lab-ra-foot .lab-ra-ok:active { background: #1a73c5; border-color: #1a73c5; }
+.lab-ra-foot button:focus-visible, .lab-ra-x:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
+@keyframes lab-ra-in { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+@keyframes lab-ra-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .lab-ra, .lab-ra-scrim { animation: none; } }
+
+/* after 「中斷連線」: the connecting screen's look in reverse, for a moment, then the page goes back */
+.lab-bye {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  background: #1f1f1f; color: #fff; font-family: var(--fl-font); text-align: center; cursor: progress;
+  opacity: 0; transition: opacity .35s var(--fl-ease);
+}
+.lab-bye.is-in { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .lab-bye { transition: none; } }

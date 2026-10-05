@@ -1,0 +1,145 @@
+/* window.css — Windows 11 window chrome: title bar, caption buttons, resize handles, shadows (DESIGN W3, M§3.6, M§2.10).
+   Frame: 8 px corners (0 when maximized flush), 1 px hairline drawn as a spread shadow (no layout effect), shadow only heavy on the active window.
+   Title bar: 32 px (icon + title at the left) or `titlebar:'custom'` (the app draws a tab strip into win.tbc). Caption buttons at the RIGHT, 46 px wide. */
+.lab-win {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  background: var(--win-bg);
+  color: var(--win-text);
+  border-radius: var(--win-r-win);
+  box-shadow: var(--win-shadow-off);
+  font-size: 13px;
+  outline: none;
+}
+.lab-win[hidden] { display: none !important; }
+.lab-win.is-active { box-shadow: var(--win-shadow-on); }
+.lab-win.is-flush { border-radius: 0; box-shadow: none; }
+
+/* ------------------------------------------------------------- title bar */
+.lab-win-bar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  height: var(--win-bar-h);
+  background: var(--win-bar);
+  border-radius: var(--win-r-win) var(--win-r-win) 0 0;
+  -webkit-user-select: none; user-select: none;
+}
+.lab-win.is-inactive .lab-win-bar { background: #fafafa; }
+.lab-win.is-flush .lab-win-bar { border-radius: 0; }
+.bar-custom .lab-win-bar { height: var(--lab-tb-h, 40px); }
+.bar-hidden .lab-win-bar {
+  position: absolute; left: 0; right: 0; top: 0; height: var(--win-bar-h); z-index: 4;
+  background: transparent !important; border-radius: var(--win-r-win) var(--win-r-win) 0 0;
+}
+.bar-hidden .lab-win-icon, .bar-hidden .lab-win-title, .bar-hidden .lab-win-tbc { display: none; }
+
+.lab-win-icon { flex: none; display: block; width: 16px; height: 16px; margin: 8px 0 0 12px; }
+.lab-win-icon svg { display: block; width: 16px; height: 16px; }
+.lab-win-title {
+  flex: 1; min-width: 0;
+  padding: 0 12px 0 10px;
+  font-size: 12px; line-height: var(--win-bar-h); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--win-text);
+}
+.lab-win.is-inactive .lab-win-title { color: var(--win-text-3); }
+.bar-custom .lab-win-title { display: none; }
+
+/* the area an app with its own tab strip fills (Explorer, Terminal, Notepad) */
+.lab-win-tbc { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; position: relative; z-index: 1; }
+
+/* caption buttons: 最小化 / 最大化・還原 / 關閉 */
+.lab-tl { position: relative; z-index: 3; display: flex; align-items: flex-start; flex: none; margin-left: auto; height: var(--lab-cap-h, 32px); padding: 0; }
+.lab-cap-btn {
+  position: relative;
+  width: 46px; height: var(--lab-cap-h, 32px); padding: 0; margin: 0; border: 0; border-radius: 0;
+  background: transparent; color: var(--win-text);
+  display: flex; align-items: center; justify-content: center;
+  cursor: default;
+}
+.lab-cap-btn svg { display: block; width: 10px; height: 10px; pointer-events: none; overflow: visible; }
+.lab-cap-btn:hover { background: var(--win-hover); }
+.lab-cap-btn:active { background: var(--win-press); }
+.lab-tl-close { border-top-right-radius: var(--win-r-win); }
+.lab-win.is-flush .lab-tl-close { border-top-right-radius: 0; }
+.lab-tl-close:hover { background: #c42b1c; color: #fff; }
+.lab-tl-close:active { background: rgba(196, 43, 28, .9); color: rgba(255, 255, 255, .8); }
+.lab-win.is-inactive .lab-cap-btn { color: rgba(0, 0, 0, .45); }
+.lab-win.is-inactive .lab-tl-close:hover { color: #fff; }
+.lab-cap-btn:disabled { opacity: .4; pointer-events: none; }
+/* the zoom button shows 最大化 (one square) or 還原 (two squares) */
+.lab-cap-zoom .g-restore { display: none; }
+.lab-win.is-zoomed .lab-cap-zoom .g-max { display: none; }
+.lab-win.is-zoomed .lab-cap-zoom .g-restore { display: block; }
+
+/* ------------------------------------------------------------------ body */
+.lab-win-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  contain: layout paint;
+  border-radius: 0 0 var(--win-r-win) var(--win-r-win);
+}
+.lab-win.is-flush .lab-win-body { border-radius: 0; }
+.bar-hidden .lab-win-body { border-radius: var(--win-r-win); }
+
+/* resize handles (5 px edge zones, 10 px corners) */
+.lab-rz { position: absolute; z-index: 6; }
+.lab-rz-n { top: -3px; left: 10px; right: 10px; height: 6px; cursor: ns-resize; }
+.lab-rz-s { bottom: -3px; left: 10px; right: 10px; height: 6px; cursor: ns-resize; }
+.lab-rz-e { right: -3px; top: 10px; bottom: 10px; width: 6px; cursor: ew-resize; }
+.lab-rz-w { left: -3px; top: 10px; bottom: 10px; width: 6px; cursor: ew-resize; }
+.lab-rz-ne { top: -3px; right: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+.lab-rz-nw { top: -3px; left: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+.lab-rz-se { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+.lab-rz-sw { bottom: -3px; left: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+.lab-win.is-zoomed .lab-rz { display: none; }
+
+/* ------------------------------------------------- dark apps (Terminal, Code, Codex) */
+.lab-win.theme-dark { background: #1f1f1f; color: #e2e2e2; }
+.theme-dark .lab-win-bar, .theme-dark.is-inactive .lab-win-bar { background: #202020; }
+.theme-dark .lab-win-title { color: #e8e8e8; }
+.theme-dark.is-inactive .lab-win-title { color: rgba(255, 255, 255, .55); }
+.theme-dark .lab-cap-btn { color: #fff; }
+.theme-dark .lab-cap-btn:hover { background: rgba(255, 255, 255, .09); }
+.theme-dark .lab-cap-btn:active { background: rgba(255, 255, 255, .06); }
+.theme-dark .lab-tl-close:hover { background: #c42b1c; }
+.theme-dark.is-inactive .lab-cap-btn { color: rgba(255, 255, 255, .5); }
+.theme-dark.is-inactive .lab-tl-close:hover { color: #fff; }
+.lab-win.theme-dark.is-active { box-shadow: 0 8px 32px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .08); }
+.lab-win.theme-dark.is-inactive { box-shadow: 0 4px 16px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .06); }
+.lab-win.theme-dark.is-flush { box-shadow: none; }
+.theme-dark.bar-hidden .lab-win-bar { background: transparent !important; }
+
+/* ---------------------------------------------------------------- motion (gentle, 150-250 ms) */
+.lab-win.is-opening, .lab-win.is-restoring { animation: lab-win-in .18s var(--lab-ease); }
+@keyframes lab-win-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+.lab-win.is-minimizing { transition: transform .2s var(--lab-ease), opacity .2s var(--lab-ease); transform: translateY(36px) scale(.92); opacity: 0; pointer-events: none; }
+.lab-win.is-animating { transition: left .18s var(--lab-ease), top .18s var(--lab-ease), width .18s var(--lab-ease), height .18s var(--lab-ease); }
+
+/* placeholder apps (apps.js, replaced by the real apps) */
+.lab-ph { height: 100%; overflow: auto; padding: 14px 16px; color: #222; font-size: 13px; background: #fff; }
+.theme-dark .lab-ph { background: #1f1f1f; color: #d8d8d8; }
+.lab-ph h2 { font-size: 16px; margin: 0 0 8px; }
+.lab-ph p { margin: 0 0 8px; }
+.lab-ph-note { color: var(--win-text-3); font-size: 12px; }
+.theme-dark .lab-ph-note { color: #9a9a9a; }
+.lab-ph-path { font-weight: 700; margin-bottom: 8px; }
+.lab-ph-row { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 5px; }
+.lab-ph-row:hover { background: var(--win-sel); }
+.lab-ph-split { display: flex; height: 100%; padding-top: 40px; margin: 0 -16px -14px; }
+.lab-ph-zone { flex: 1; padding: 14px; border-right: 1px solid #333; color: #9a9a9a; }
+.lab-ph-zone:first-child { flex: none; width: 220px; background: #181818; }
+.lab-ph-zone.is-drop { background: rgba(59, 130, 246, .18); }
+
+/* performance: lighter shadows */
+html[data-perf="low"] .lab-win, html[data-perf="low"] .lab-win.is-active, html[data-perf="low"] .lab-win.theme-dark.is-active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .26), 0 0 0 1px rgba(0, 0, 0, .12);
+}
+html[data-perf="low"] .lab-win.is-flush { box-shadow: none; }
+html[data-perf="low"] .lab-win.is-opening, html[data-perf="low"] .lab-win.is-restoring { animation-duration: .1s; }

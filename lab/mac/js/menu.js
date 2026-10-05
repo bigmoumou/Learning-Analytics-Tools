@@ -67,8 +67,52 @@
       { label: '結束 ' + name, shortcut: '⌘Q', enabled: !finder, action: function () { LAB.apps.quit(appId); } }
     ];
   }
-  function practiceMenu() {
+  /* The menu behind the apple glyph (round 5): the real Apple menu of macOS, then (under a line) the practice's own items.
+     The system items live in js/sysapps.js (LAB.sys); a missing one only shows the usual 「還沒安裝」 toast. */
+  function sysCall(fn) {
+    return function () {
+      if (LAB.sys && typeof LAB.sys[fn] === 'function') LAB.sys[fn]();
+      else LAB.ui.toast('這個功能還沒安裝（練習版）');
+    };
+  }
+  function recentItems() {
+    var rec = LAB.sys && LAB.sys.recents ? LAB.sys.recents() : { apps: [], docs: [] };
+    var out = [];
+    if (rec.apps.length) {
+      out.push({ label: '應用程式', enabled: false });
+      rec.apps.forEach(function (id) {
+        var d = LAB.apps.get(id);
+        if (d) out.push({ label: d.title, action: function () { LAB.apps.launch(id, undefined, { bounce: true }); } });
+      });
+    }
+    if (rec.docs.length) {
+      if (out.length) out.push({ separator: true });
+      out.push({ label: '文件', enabled: false });
+      rec.docs.forEach(function (path) {
+        out.push({ label: LAB.vfs.basename(path), action: function () { LAB.apps.openPath(path, { via: 'menu' }); } });
+      });
+    }
+    if (out.length) { out.push({ separator: true }); out.push({ label: '清除選單', action: function () { if (LAB.sys && LAB.sys.clearRecents) LAB.sys.clearRecents(); } }); }
+    return out;
+  }
+  function appleMenu() {
     return [
+      { label: '關於這台 Mac', action: sysCall('aboutThisMac') },
+      { separator: true },
+      { label: '系統設定⋯', action: function () { LAB.apps.launch('settings'); } },
+      { label: 'App Store⋯', action: function () { LAB.ui.toast('練習版沒有 App Store'); } },
+      { separator: true },
+      { label: '最近使用的項目', submenu: recentItems() },
+      { separator: true },
+      { label: '強制結束⋯', shortcut: '⌥⌘⎋', action: sysCall('forceQuit') },
+      { separator: true },
+      { label: '睡眠', action: sysCall('sleep') },
+      { label: '重新啟動⋯', action: sysCall('restart') },
+      { label: '關機⋯', action: sysCall('shutdown') },
+      { separator: true },
+      { label: '鎖定螢幕', shortcut: '⌃⌘Q', action: sysCall('lock') },
+      { label: '登出 an⋯', shortcut: '⇧⌘Q', action: sysCall('logout') },
+      { separator: true },
       { label: '關於這個練習…', action: function () { LAB.apps.launch('about', { tab: 'about' }); } },
       { label: '快速鍵一覽…', action: function () { LAB.apps.launch('about', { tab: 'keys' }); } },
       { label: '進度代碼…', action: function () { LAB.apps.launch('about', { tab: 'progress' }); } },
@@ -76,7 +120,6 @@
         LAB.ui.confirm(null, { title: '要重設全部嗎？', text: '這會清除你在這個練習裡建立的檔案、對話和任務進度，無法復原。', ok: '重設', cancel: '取消', danger: true })
           .then(function (ok) { if (ok) LAB.store.reset('all'); });
       } },
-      { separator: true },
       { label: '回到課程 Week 3', action: function () { window.location.href = '../../weeks/week03/'; } }
     ];
   }
@@ -107,7 +150,7 @@
     leftEl.textContent = '';
     barTitles = [];
     var titles = [];
-    titles.push({ kind: 'practice', node: h('span', { class: 'lab-mb-mark', 'aria-hidden': 'true' }), label: '練習', aria: '練習選單', cls: 'lab-mb-markbtn' });
+    titles.push({ kind: 'apple', node: h('span', { class: 'lab-mb-mark', 'aria-hidden': 'true' }), label: 'Apple', aria: 'Apple 選單', cls: 'lab-mb-markbtn' });
     titles[0].node.innerHTML = LAB.icons.get('apple-mark', { size: 18 });
     titles.push({ kind: 'app', label: cm.name, cls: 'lab-mb-app' });
     cm.menus.forEach(function (m, i) { titles.push({ kind: 'menu', index: i, label: m.label, cls: 'lab-mb-menu' }); });
@@ -128,7 +171,7 @@
   function itemsFor(idx) {
     var t = barTitles[idx].spec;
     var front = LAB.wm.frontmostApp();
-    if (t.kind === 'practice') return practiceMenu();
+    if (t.kind === 'apple') return appleMenu();
     if (t.kind === 'app') return appNameMenu(front);
     var cm = currentMenus();
     return (cm.menus[t.index] && cm.menus[t.index].items) || [];

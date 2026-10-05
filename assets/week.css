@@ -163,25 +163,116 @@ body::after {
   .points code { white-space: normal; overflow-wrap: anywhere; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 }
 
-/* ---------- 課堂練習（section.unit-lab）：不是影片，膠捲裡放一張筆電的圖，點了進到練習用的電腦 ----------
-   版面和影片段落一樣（標題、膠捲、重點），清單上它也是一格（video.js 用 data-thumb 當縮圖）。 */
-.lab-shot { display: block; width: 100%; height: 100%; }
-.lab-shot:focus-visible { outline-offset: -4px; }
-.lab-shot img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
-.player:hover .lab-shot img { transform: scale(1.012); }
-/* 圖下方的按鈕：和「下一支」同一種琥珀色，但不蓋住筆電 */
-.lab-go {
-  position: absolute; left: 50%; bottom: clamp(.7rem, 4.2%, 1.5rem); transform: translateX(-50%); z-index: 2;
-  display: inline-flex; align-items: center; gap: .6rem; max-width: calc(100% - 2rem); padding: .6rem 1.2rem;
-  border-radius: 999px; background: #f0b545; color: #141210; font-size: .95rem; font-weight: 700; line-height: 1.4; text-decoration: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .35); transition: background-color .2s;
+/* ---------- 課堂練習（section.unit-lab）：不是影片，膠捲裡是左右兩台筆電（Mac｜Windows），點哪一台就進哪一個練習 ----------
+   版面和影片段落一樣（標題、膠捲、重點），清單上它也是一格（video.js 用 data-thumb 當縮圖）。
+   筆電外框是這裡用 CSS 畫的，螢幕裡放練習環境的截圖。video.js 的 labDuo 依滑鼠位置在 .lab-side 加 is-on / is-off：
+   滑鼠在哪一半，那一台亮起來（往前一點、放大一點、背後一圈琥珀色的光，螢幕掃過一道光），另一台暗下來；
+   中間那一帶看滑鼠往哪邊移動（往左 Mac、往右 Windows）。手機和鍵盤一樣能用：沒有滑鼠時兩台都亮著，直接點。 */
+.lab-duo {
+  display: grid; grid-template-columns: 1fr 1fr; isolation: isolate;
+  background: radial-gradient(120% 85% at 50% 118%, #23252c 0%, #121317 52%, #0b0c0f 100%);
+  container-type: inline-size;
 }
-.lab-go:hover { background: #f6c460; }
-.lab-go:focus-visible { outline-color: #fff; }
-.lab-go .arrow { font-family: var(--font-mono); }
-.lab-go { white-space: nowrap; }
+/* 中間一條很淡的分隔線 */
+.lab-duo::after {
+  content: ""; position: absolute; left: 50%; top: 16%; bottom: 16%; width: 1px; pointer-events: none;
+  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(255, 255, 255, .12) 70%, rgba(255, 255, 255, 0));
+  transition: opacity .45s var(--ease);
+}
+.lab-duo.is-choosing::after { opacity: 0; }
+.lab-side {
+  position: relative; z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(.55rem, 3.4cqi, 1.35rem); min-width: 0; padding: 7% 5% 6%;
+  color: #ececef; text-decoration: none; -webkit-tap-highlight-color: transparent; container-type: inline-size;
+}
+.lab-side:focus-visible { outline: 2px solid #f0b545; outline-offset: -8px; border-radius: 8px; }
+/* 背後的光：亮起來的那一台才有 */
+.lab-side::before {
+  content: ""; position: absolute; inset: -10% 0 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(52% 46% at 50% 44%, rgba(240, 181, 69, .2) 0%, rgba(240, 181, 69, .06) 55%, rgba(240, 181, 69, 0) 75%);
+  opacity: 0; transition: opacity .5s var(--ease);
+}
+
+/* 筆電：寬度是這一半的 82%，上蓋 16:10 螢幕加邊框，下面是機身 */
+.lp {
+  position: relative; display: block; width: 82%;
+  transform-origin: 50% 80%;
+  filter: brightness(.9) saturate(.92);
+  transition: transform .55s var(--ease), filter .55s var(--ease);
+}
+.lp-lid { position: relative; display: block; padding: 2.6% 2.6% 3%; border-radius: 4.2% / 6.4%; background: #0a0a0c; }
+.lp-screen { position: relative; display: block; overflow: hidden; aspect-ratio: 16 / 10; border-radius: .9% / 1.4%; background: #000; }
+.lp-screen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* 螢幕掃過的一道光（亮起來的那一刻掃一次） */
+.lp-glint {
+  position: absolute; inset: -30% -80%; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, .34) 50%, rgba(255, 255, 255, 0) 58%);
+  transform: translateX(-62%);
+}
+.lab-side.is-flash .lp-glint { animation: lab-glint .8s cubic-bezier(.32, .62, .3, 1) both; }
+@keyframes lab-glint {
+  0% { opacity: 0; transform: translateX(-62%); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(62%); }
+}
+/* 機身下的影子 */
+.lp::after {
+  content: ""; position: absolute; left: -4%; right: -4%; bottom: -5.5%; height: 9%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .7), rgba(0, 0, 0, 0)); transition: opacity .55s var(--ease);
+}
+/* Mac：鋁合金外框、瀏海、銀色機身（正中間有一個開蓋用的凹口） */
+.lp-mac .lp-lid { box-shadow: 0 0 0 1.5px #b8bbc1, 0 0 0 2.5px #8c9097, inset 0 0 0 1px #26272b; }
+.lp-notch { position: absolute; top: 2.6%; left: 50%; width: 10.5%; height: 3.4%; transform: translateX(-50%); border-radius: 0 0 .45em .45em / 0 0 .5em .5em; background: #0a0a0c; }
+.lp-mac .lp-base {
+  position: relative; display: block; width: 116%; margin: 0 0 0 -8%; aspect-ratio: 100 / 3.3;
+  border-radius: 0 0 46% 46% / 0 0 100% 100%;
+  background: linear-gradient(180deg, #eceef1 0%, #c9ccd1 38%, #9a9ea5 78%, #6f737a 100%);
+}
+.lp-mac .lp-base::before {
+  content: ""; position: absolute; top: 0; left: 50%; width: 14%; height: 42%; transform: translateX(-50%);
+  border-radius: 0 0 .6em .6em / 0 0 .5em .5em; background: linear-gradient(180deg, #a5a9b0, #cfd2d6);
+}
+/* Windows：深灰外框、窄邊框、上緣中間一顆鏡頭、比較平的深色機身 */
+.lp-win .lp-lid { padding: 2.2% 2.2% 3.4%; border-radius: 2.6% / 4%; box-shadow: 0 0 0 1.5px #3b3e44, 0 0 0 2.5px #24262a, inset 0 0 0 1px #1b1c1f; }
+.lp-cam { position: absolute; top: .9%; left: 50%; width: .9%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%; background: #1d2633; box-shadow: inset 0 0 0 1px #2c3747; }
+.lp-win .lp-base {
+  position: relative; display: block; width: 110%; margin: 0 0 0 -5%; aspect-ratio: 100 / 2.9;
+  border-radius: 0 0 28% 28% / 0 0 100% 100%;
+  background: linear-gradient(180deg, #5a5e65 0%, #3d4046 40%, #26282c 100%);
+}
+.lp-win .lp-base::before {
+  content: ""; position: absolute; top: 0; left: 50%; width: 18%; height: 34%; transform: translateX(-50%);
+  border-radius: 0 0 .5em .5em / 0 0 .4em .4em; background: linear-gradient(180deg, #2c2e33, #45484e);
+}
+
+/* 說明：系統名稱，下面一顆「進入遠端電腦 →」；亮起來的那一台按鈕變成琥珀色 */
+.lab-cap { display: flex; flex-direction: column; align-items: center; gap: clamp(.35rem, 2.2cqi, .7rem); transition: opacity .45s var(--ease); }
+.lab-os { font-size: clamp(.92rem, 6.2cqi, 1.6rem); font-weight: 700; letter-spacing: .02em; line-height: 1.15; color: #f3f3f5; }
+.lab-cta {
+  display: inline-flex; align-items: center; gap: .45em; padding: .42em 1.05em; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .3); color: #e6e6ea; white-space: nowrap;
+  font-size: clamp(.68rem, 3.4cqi, .95rem); font-weight: 600; line-height: 1.4;
+  transition: background-color .35s var(--ease), border-color .35s var(--ease), color .35s var(--ease);
+}
+.lab-cta .arrow { font-family: var(--font-mono); transition: transform .35s var(--ease); }
+
+/* 亮起來／暗下來 */
+.lab-side.is-on::before { opacity: 1; }
+.lab-side.is-on .lp { transform: translateY(-2.5%) scale(1.05); filter: brightness(1.05) saturate(1.04); }
+.lab-side.is-on .lab-cta { background: #f0b545; border-color: #f0b545; color: #141210; }
+.lab-side.is-on .lab-cta .arrow { transform: translateX(.18em); }
+.lab-side.is-off .lp { transform: scale(.955); filter: brightness(.46) saturate(.55); }
+.lab-side.is-off .lp::after { opacity: .5; }
+.lab-side.is-off .lab-cap { opacity: .42; }
+
 @media (max-width: 760px) {
-  .lab-go { bottom: 3%; padding: .38rem .85rem; font-size: .8rem; gap: .4rem; }
+  .lab-side { padding: 6% 3.5% 5%; }
+  .lab-cta { padding: .34em .8em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp, .lab-side::before, .lab-cap, .lab-cta, .lab-cta .arrow { transition-duration: .01s; }
+  .lab-side.is-on .lp, .lab-side.is-off .lp { transform: none; }
+  .lab-side.is-flash .lp-glint { animation: none; }
 }
 .lab-intro { max-width: 46rem; margin-top: 1.4rem; font-size: clamp(1.02rem, 1.7vw, 1.14rem); line-height: 1.8; color: var(--ink-2); text-wrap: pretty; }
 .lab-note { max-width: 46rem; margin-top: .6rem; font-size: .86rem; line-height: 1.6; color: var(--ink-3); }

@@ -22,6 +22,118 @@
   }
   function p2(n) { return (n < 10 ? '0' : '') + n; }
 
+  /* colour: commands print ANSI SGR codes (only when stdout is the screen); events and pipes get the plain text */
+  var ESC = '\x1b';
+  var ANSI_RE = /\x1b\[[0-9;?]*[A-Za-z]/g;
+  function stripAnsi(s) { return String(s).replace(ANSI_RE, ''); }
+  function sgr(code, text) { return ESC + '[' + code + 'm' + text + ESC + '[0m'; }
+  /* a small seeded generator (mulberry32): "random" numbers that are the same every visit */
+  function makeRng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* arithmetic for $(( )), expr and bc: + - * / % ** (also ^ when opts.caret), parentheses, comparisons, && || !, variables.
+     Integers divide like integers (zsh) unless opts.scale is set (bc) or a decimal point shows up. Throws Error('division by zero' | 'syntax error'). */
+  function calcEval(src, opts) {
+    opts = opts || {};
+    var s = String(src), i = 0;
+    function ws() { while (i < s.length && /\s/.test(s.charAt(i))) i++; }
+    function fail(m) { throw new Error(m || 'syntax error'); }
+    function num(x) { return x; }
+    function primary() {
+      ws();
+      var c = s.charAt(i);
+      if (c === '(') { i++; var v = lor(); ws(); if (s.charAt(i) !== ')') fail(); i++; return v; }
+      var mh = /^0[xX][0-9a-fA-F]+/.exec(s.slice(i));
+      if (mh) { i += mh[0].length; return parseInt(mh[0], 16); }
+      var m = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));
+      if (m) { i += m[0].length; return num(parseFloat(m[0])); }
+      var mv = /^[$]?([A-Za-z_][A-Za-z0-9_]*)/.exec(s.slice(i));
+      if (mv) {
+        i += mv[0].length;
+        if (opts.fns && hasOwn.call(opts.fns, mv[1]) && s.charAt(i) === '(') {          // a function call such as sqrt(2) (bc)
+          i++;
+          var fa = lor(); ws();
+          if (s.charAt(i) !== ')') fail();
+          i++;
+          return opts.fns[mv[1]](fa);
+        }
+        var raw = opts.get ? opts.get(mv[1]) : ''; var nv = parseFloat(raw); return isFinite(nv) ? nv : 0;
+      }
+      fail();
+    }
+    function unary() {
+      ws();
+      var c = s.charAt(i);
+      if (c === '-') { i++; return -unary(); }
+      if (c === '+') { i++; return unary(); }
+      if (c === '!') { i++; return unary() ? 0 : 1; }
+      return power();
+    }
+    function power() {
+      var b = primary();
+      ws();
+      if (s.substr(i, 2) === '**' || (opts.caret && s.charAt(i) === '^')) {
+        i += s.charAt(i) === '^' ? 1 : 2;
+        var e = unary();
+        return Math.pow(b, e);
+      }
+      return b;
+    }
+    function mul() {
+      var a = unary();
+      for (;;) {
+        ws();
+        var c = s.charAt(i);
+        if (c === '*' && s.charAt(i + 1) !== '*') { i++; a = a * unary(); }
+        else if (c === '/') {
+          i++; var d = unary();
+          if (d === 0) throw new Error('division by zero');
+          if (opts.scale !== undefined) { var f = Math.pow(10, opts.scale); a = Math.trunc(a / d * f) / f; }
+          else a = (Number.isInteger(a) && Number.isInteger(d) && !opts.float) ? Math.trunc(a / d) : a / d;
+        } else if (c === '%') { i++; var dm = unary(); if (dm === 0) throw new Error('division by zero'); a = a % dm; }
+        else return a;
+      }
+    }
+    function add() {
+      var a = mul();
+      for (;;) {
+        ws();
+        var c = s.charAt(i);
+        if (c === '+') { i++; a = a + mul(); }
+        else if (c === '-') { i++; a = a - mul(); }
+        else return a;
+      }
+    }
+    function cmp() {
+      var a = add();
+      for (;;) {
+        ws();
+        var t2 = s.substr(i, 2), c = s.charAt(i);
+        if (t2 === '<=') { i += 2; a = a <= add() ? 1 : 0; }
+        else if (t2 === '>=') { i += 2; a = a >= add() ? 1 : 0; }
+        else if (t2 === '==') { i += 2; a = a === add() ? 1 : 0; }
+        else if (t2 === '!=') { i += 2; a = a !== add() ? 1 : 0; }
+        else if (c === '<') { i++; a = a < add() ? 1 : 0; }
+        else if (c === '>') { i++; a = a > add() ? 1 : 0; }
+        else return a;
+      }
+    }
+    function land() { var a = cmp(); for (;;) { ws(); if (s.substr(i, 2) === '&&') { i += 2; var b = cmp(); a = (a && b) ? 1 : 0; } else return a; } }
+    function lor() { var a = land(); for (;;) { ws(); if (s.substr(i, 2) === '||') { i += 2; var b = land(); a = (a || b) ? 1 : 0; } else return a; } }
+    var v = lor();
+    ws();
+    if (i < s.length) fail();
+    return v;
+  }
+
   var SAFE_RE = /[A-Za-z0-9_.\/~+@:,%=-]/;
   /* shell-escape one path for typing into the command line (DESIGN §4.2.5): CJK stays as it is, like macOS */
   function shellEscape(str) {
@@ -38,28 +150,50 @@
     while (i < src.length && ' \t\r\n;&|<>'.indexOf(src.charAt(i)) < 0) i++;
     return i;
   }
-  /* the text of a `$(...)` starting at i, balanced; falls back to the rest of the word */
+  /* the text of a `$(...)` starting at i (src[i] === '$', src[i+1] === '('), balanced and quote-aware: {src, end} | null */
   function dollarParen(src, i) {
-    var depth = 0, j = i + 1;
+    var depth = 0, j = i + 1, q = null;
     for (; j < src.length; j++) {
       var c = src.charAt(j);
+      if (q) { if (c === q) q = null; else if (c === '\\' && q === '"') j++; continue; }
+      if (c === "'" || c === '"') { q = c; continue; }
+      if (c === '\\') { j++; continue; }
       if (c === '(') depth++;
-      else if (c === ')') { depth--; if (depth === 0) return src.slice(i, j + 1); }
+      else if (c === ')') { depth--; if (depth === 0) return { src: src.slice(i + 2, j), end: j + 1 }; }
     }
-    return src.slice(i, wordEnd(src, i));
+    return null;
   }
-  /* read a `$` expansion at src[i]: {k:'var',name,len} | {k:'lit'} | {k:'unsupported',token} */
+  /* read a `$` expansion at src[i]: {k:'var',name,len,mod?} | {k:'sub',src,len} | {k:'lit'} | {k:'unsupported',token} */
   function readDollar(src, i) {
     var nx = src.charAt(i + 1);
-    if (nx === '(') return { k: 'unsupported', token: dollarParen(src, i) };
+    if (nx === '(') {
+      if (src.charAt(i + 2) === '(') {                                  // $(( arithmetic ))
+        var ad = 0;
+        for (var aj = i + 3; aj < src.length; aj++) {
+          var ac = src.charAt(aj);
+          if (ac === '(') ad++;
+          else if (ac === ')') { if (ad === 0 && src.charAt(aj + 1) === ')') return { k: 'arith', src: src.slice(i + 3, aj), len: aj + 2 - i }; ad--; }
+        }
+        return { k: 'unsupported', token: src.slice(i, Math.min(src.length, wordEnd(src, i))) };
+      }
+      var dp = dollarParen(src, i);
+      if (!dp) return { k: 'unsupported', token: src.slice(i, wordEnd(src, i)) };
+      return { k: 'sub', src: dp.src, len: dp.end - i };
+    }
     if (nx === '{') {
       var close = src.indexOf('}', i + 2);
       if (close < 0) return { k: 'lit' };
       var nm = src.slice(i + 2, close);
       if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(nm)) return { k: 'var', name: nm, len: close + 1 - i };
+      var m1 = /^([A-Za-z_][A-Za-z0-9_]*):?-(.*)$/.exec(nm);
+      if (m1) return { k: 'var', name: m1[1], len: close + 1 - i, mod: { op: '-', arg: m1[2], colon: nm.indexOf(':-') > 0 } };
+      var m2 = /^#([A-Za-z_][A-Za-z0-9_]*)$/.exec(nm);
+      if (m2) return { k: 'var', name: m2[1], len: close + 1 - i, mod: { op: '#' } };
       return { k: 'unsupported', token: src.slice(i, close + 1) };
     }
     if (nx === '?') return { k: 'var', name: '?', len: 2 };
+    if (nx === '$') return { k: 'var', name: '$', len: 2 };
+    if (nx === '#') return { k: 'var', name: '#', len: 2 };
     if (/[A-Za-z_]/.test(nx)) {
       var j = i + 1;
       while (j < src.length && /[A-Za-z0-9_]/.test(src.charAt(j))) j++;
@@ -70,7 +204,8 @@
   }
 
   /* lex(src) -> {tokens, incomplete:ps2|null, unsupported:token|null, parseError:token|null}
-     tokens: {t:'word', parts:[{k:'lit',s,q,tilde?}|{k:'var',name,q}], raw} and {t:'op', op} (op: ; nl && || | > >>)
+     tokens: {t:'word', parts:[{k:'lit',s,q,tilde?}|{k:'var',name,q,mod?}|{k:'sub',src,q}], raw} and {t:'op', op, fd?, from?, to?}
+     op: ; nl && || | > >> < <<< &> &>> dup   (fd = the file descriptor the redirect belongs to: 0 stdin, 1 stdout, 2 stderr)
      q: 0 unquoted, 1 single quotes, 2 double quotes, 3 backslash escape */
   function lex(src) {
     var toks = [];
@@ -87,6 +222,20 @@
       var last = parts[parts.length - 1];
       if (last && last.k === 'lit' && last.q === q && !last.tilde) last.s += s;
       else parts.push({ k: 'lit', s: s, q: q });
+    }
+    /* a lone digit word right before a redirect operator is the file descriptor (`2>`, `1>>`, `0<`) */
+    function takeFd(def) {
+      if (parts && parts.length === 1 && parts[0].k === 'lit' && parts[0].q === 0 && /^[0-2]$/.test(parts[0].s) && wordStart === i - 1) {
+        var fd = parseInt(parts[0].s, 10);
+        parts = null;
+        return fd;
+      }
+      return def;
+    }
+    function pushSub(code, q, len) {
+      startWord();
+      parts.push({ k: 'sub', src: code, q: q });
+      i += len;
     }
 
     while (i < n) {
@@ -130,13 +279,16 @@
           }
           if (d === '`') {
             var k2 = src.indexOf('`', i + 1);
-            res.unsupported = k2 < 0 ? '`' : src.slice(i, k2 + 1);
-            return res;
+            if (k2 < 0) { res.incomplete = 'bquote> '; return res; }
+            flush(); parts.push({ k: 'sub', src: src.slice(i + 1, k2), q: 2 }); pushed = true; i = k2 + 1;
+            continue;
           }
           if (d === '$') {
             var dv = readDollar(src, i);
             if (dv.k === 'unsupported') { res.unsupported = dv.token; return res; }
-            if (dv.k === 'var') { flush(); parts.push({ k: 'var', name: dv.name, q: 2 }); pushed = true; i += dv.len; continue; }
+            if (dv.k === 'var') { flush(); parts.push({ k: 'var', name: dv.name, q: 2, mod: dv.mod }); pushed = true; i += dv.len; continue; }
+            if (dv.k === 'sub') { flush(); parts.push({ k: 'sub', src: dv.src, q: 2 }); pushed = true; i += dv.len; continue; }
+            if (dv.k === 'arith') { flush(); parts.push({ k: 'sub', arith: true, src: dv.src, q: 2 }); pushed = true; i += dv.len; continue; }
             buf += '$'; i++; continue;
           }
           var dcp = src.codePointAt(i), dl = dcp > 0xFFFF ? 2 : 1;
@@ -150,53 +302,66 @@
 
       if (c === '`') {
         var kb = src.indexOf('`', i + 1);
-        res.unsupported = kb < 0 ? '`' : src.slice(i, kb + 1);
-        return res;
+        if (kb < 0) { res.incomplete = 'bquote> '; return res; }
+        pushSub(src.slice(i + 1, kb), 0, kb + 1 - i);
+        continue;
       }
 
       if (c === '$') {
         var uv = readDollar(src, i);
         if (uv.k === 'unsupported') { res.unsupported = uv.token; return res; }
-        if (uv.k === 'var') { startWord(); parts.push({ k: 'var', name: uv.name, q: 0 }); i += uv.len; continue; }
+        if (uv.k === 'var') { startWord(); parts.push({ k: 'var', name: uv.name, q: 0, mod: uv.mod }); i += uv.len; continue; }
+        if (uv.k === 'sub') { pushSub(uv.src, 0, uv.len); continue; }
+        if (uv.k === 'arith') { startWord(); parts.push({ k: 'sub', arith: true, src: uv.src, q: 0 }); i += uv.len; continue; }
         addLit('$', 0); i++; continue;
       }
 
-      if (c === ';' || c === '&' || c === '|' || c === '<' || c === '>') {
-        if (c === '>' && parts && parts.length === 1 && parts[0].k === 'lit' && parts[0].s === '2' && parts[0].q === 0 && wordStart === i - 1) {
-          res.unsupported = '2>'; return res;
+      if (c === '<') {
+        var fd0 = takeFd(0);
+        endWord();
+        if (src.substr(i, 3) === '<<<') { toks.push({ t: 'op', op: '<<<', fd: 0 }); i += 3; continue; }
+        if (src.substr(i, 2) === '<<') { res.unsupported = '<<'; return res; }
+        if (src.charAt(i + 1) === '(') { res.unsupported = '<(' ; return res; }
+        toks.push({ t: 'op', op: '<', fd: fd0 });
+        i++;
+        continue;
+      }
+
+      if (c === '>') {
+        var fd1 = takeFd(1);
+        endWord();
+        if (src.charAt(i + 1) === '&') {
+          var tgt = src.charAt(i + 2);
+          if (/[0-2]/.test(tgt) && !/[A-Za-z0-9_.\/~-]/.test(src.charAt(i + 3))) { toks.push({ t: 'op', op: 'dup', from: fd1, to: parseInt(tgt, 10) }); i += 3; continue; }
+          if (tgt === '-') { toks.push({ t: 'op', op: 'dup', from: fd1, to: -1 }); i += 3; continue; }
+          // `>& file` means stdout and stderr into the file
+          toks.push({ t: 'op', op: '&>', fd: 1 }); i += 2; continue;
         }
+        if (src.charAt(i + 1) === '>') { toks.push({ t: 'op', op: '>>', fd: fd1 }); i += 2; continue; }
+        if (src.charAt(i + 1) === '(') { res.unsupported = '>('; return res; }
+        toks.push({ t: 'op', op: '>', fd: fd1 });
+        i++;
+        continue;
+      }
+
+      if (c === ';' || c === '&' || c === '|') {
         endWord();
         var two = src.substr(i, 2);
         if (two === '&&') { toks.push({ t: 'op', op: '&&' }); i += 2; continue; }
         if (two === '||') { toks.push({ t: 'op', op: '||' }); i += 2; continue; }
         if (two === ';;') { res.parseError = ';;'; return res; }
-        if (two === '>>') { toks.push({ t: 'op', op: '>>' }); i += 2; continue; }
-        if (two === '&>') { res.unsupported = '&>'; return res; }
+        if (two === '&>') {
+          if (src.substr(i, 3) === '&>>') { toks.push({ t: 'op', op: '&>>', fd: 1 }); i += 3; continue; }
+          toks.push({ t: 'op', op: '&>', fd: 1 }); i += 2; continue;
+        }
+        if (two === '|&') { toks.push({ t: 'op', op: '|' }); toks.push({ t: 'op', op: 'dup', from: 2, to: 1, pipeErr: true }); i += 2; continue; }
         if (c === '&') { res.unsupported = '&'; return res; }
-        if (c === '<') { res.unsupported = '<'; return res; }
         toks.push({ t: 'op', op: c });
         i++;
         continue;
       }
 
       if (c === '(' || c === ')') { res.parseError = c; return res; }
-
-      if (c === '{') {
-        var we = wordEnd(src, i);
-        var close = src.indexOf('}', i + 1);
-        if (close > 0 && close < we) {
-          var inner = src.slice(i + 1, close);
-          if (inner.indexOf(',') >= 0) { res.unsupported = src.slice(i, close + 1); return res; }
-        }
-      }
-
-      if (c === '!' && !parts) {
-        var after = src.charAt(i + 1);
-        if (after !== '' && after !== ' ' && after !== '\t' && after !== '\n' && after !== '=') {
-          res.unsupported = src.slice(i, wordEnd(src, i));
-          return res;
-        }
-      }
 
       if (c === '~' && !parts) {
         var tn = src.charAt(i + 1);
@@ -222,7 +387,8 @@
     if (t.t === 'word') return t.raw;
     return t.op === 'nl' ? '\\n' : t.op;
   }
-  /* parse(tokens) -> {items:[{conn, pipe:[{words, redirs}]}]} | {error:'<token>'} */
+  /* parse(tokens) -> {items:[{conn, pipe:[{words, redirs, dups}]}]} | {error:'<token>'}
+     redirs: [{op, fd, target}]   dups: [{from, to}] (`2>&1`) */
   function parse(toks) {
     var items = [];
     var i = 0, conn = null;
@@ -231,25 +397,28 @@
     while (i < toks.length) {
       var pipe = [];
       for (;;) {
-        var cmd = { words: [], redirs: [] };
+        var cmd = { words: [], redirs: [], dups: [] };
         while (i < toks.length) {
           var t = toks[i];
           if (t.t === 'word') { cmd.words.push(t); i++; continue; }
-          if (t.op === '>' || t.op === '>>') {
+          if (t.op === 'dup') { cmd.dups.push({ from: t.from, to: t.to }); i++; continue; }
+          if (t.op === '>' || t.op === '>>' || t.op === '<' || t.op === '<<<' || t.op === '&>' || t.op === '&>>') {
             var tg = toks[i + 1];
             if (!tg) return { error: '\\n' };
             if (tg.t === 'op') return { error: opText(tg) };
-            cmd.redirs.push({ op: t.op, target: tg });
+            cmd.redirs.push({ op: t.op, fd: t.fd, target: tg });
             i += 2;
             continue;
           }
           break;
         }
-        if (!cmd.words.length && !cmd.redirs.length) return { error: i < toks.length ? opText(toks[i]) : '\\n' };
+        if (!cmd.words.length && !cmd.redirs.length && !cmd.dups.length) return { error: i < toks.length ? opText(toks[i]) : '\\n' };
         pipe.push(cmd);
         if (i < toks.length && toks[i].t === 'op' && toks[i].op === '|') {
           i++; skipNl();
           if (i >= toks.length) return { error: '\\n' };
+          // `cmd |& next`: the lexer left a dup token right after the bar: it belongs to the command before it
+          if (toks[i].t === 'op' && toks[i].op === 'dup' && toks[i].pipeErr) { cmd.dups.push({ from: 2, to: 1 }); i++; }
           continue;
         }
         break;
@@ -265,7 +434,6 @@
     }
     return { items: items };
   }
-
   /* -------------------------------------------------------------- expansion */
   function globTokens(segs) {
     var toks = [];
@@ -316,7 +484,7 @@
     return new RegExp(re + '$');
   }
   function hasGlobChars(segs) {
-    for (var i = 0; i < segs.length; i++) if (segs[i].g && /[*?\[]/.test(segs[i].s)) return true;
+    for (var i = 0; i < segs.length; i++) if (segs[i].g && (/[*?]/.test(segs[i].s) || /\[[^\]]+\]/.test(segs[i].s))) return true;     // a lone [ is just a character ([ -d x ])
     return false;
   }
   function globExpand(segs, session) {
@@ -326,13 +494,22 @@
     toks.forEach(function (t) { if (t.c === 'sep') parts.push([]); else parts[parts.length - 1].push(t); });
     var abs = parts.length > 1 && parts[0].length === 0;
     var results = [];
+    var guard = 0;
     function rec(prefix, baseAbs, idx) {
-      if (idx >= parts.length) return;
+      if (idx >= parts.length || ++guard > 4000) return;
       var seg = parts[idx];
       var last = idx === parts.length - 1;
       if (seg.length === 0) {
         if (last) { if (vfs.isDir(baseAbs)) results.push(prefix); return; }
         rec(prefix, baseAbs, idx + 1);
+        return;
+      }
+      // zsh's `**/`: zero or more folders in between
+      if (seg.length === 2 && seg[0].c === 'any' && seg[1].c === 'any' && !last) {
+        rec(prefix, baseAbs, idx + 1);
+        var subs;
+        try { subs = vfs.list(baseAbs); } catch (e0) { return; }
+        subs.forEach(function (st) { if (st.type === 'dir' && st.name.charAt(0) !== '.') rec(prefix + st.name + '/', st.path, idx); });
         return;
       }
       var isLit = seg.every(function (t) { return t.c === 'lit'; });
@@ -357,49 +534,218 @@
       });
     }
     if (abs) rec('/', '/', 1); else rec('', vfs.normalize(session.cwd), 0);
+    var uniq = {};
+    results = results.filter(function (r) { if (uniq[r]) return false; uniq[r] = 1; return true; });
     results.sort(function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });
     return results;
   }
 
-  /* expandWord -> {words:[…]} | {error:'zsh: no matches found: …'} */
-  function expandWord(tok, session) {
-    var env = session.env;
-    var segs = [], anyQuoted = false, anyText = false;
-    tok.parts.forEach(function (p, idx) {
-      if (p.k === 'var') {
-        var v = p.name === '?' ? String(session.status) : (hasOwn.call(env, p.name) ? String(env[p.name]) : '');
-        segs.push({ s: v, g: false });
-        if (p.q) anyQuoted = true;
-        if (v !== '') anyText = true;
-      } else if (p.tilde && idx === 0) {
-        segs.push({ s: env.HOME + p.s.slice(1), g: false });
-        anyText = true;
-      } else if (p.q === 0) {
-        segs.push({ s: p.s, g: true });
-        if (p.s !== '') anyText = true;
-      } else {
-        segs.push({ s: p.s, g: false });
-        anyQuoted = true;
-        anyText = true;
+  /* brace expansion of ONE unquoted literal: a{1,2}b -> [a1b, a2b]; {1..3}, {a..c}, {01..10}, {1..10..2}; {x} stays as it is */
+  function braceExpandStr(s, depth) {
+    depth = depth || 0;
+    if (depth > 6) return [s];
+    var open = -1, i, level = 0, close = -1;
+    for (i = 0; i < s.length; i++) {
+      if (s.charAt(i) === '\\') { i++; continue; }
+      if (s.charAt(i) === '{') { if (level === 0) open = i; level++; }
+      else if (s.charAt(i) === '}' && level > 0) {
+        level--;
+        if (level === 0) {
+          close = i;
+          var inner = s.slice(open + 1, close);
+          var alts = braceAlts(inner);
+          if (alts) {
+            var pre = s.slice(0, open), post = s.slice(close + 1), out = [];
+            alts.forEach(function (a) { out = out.concat(braceExpandStr(pre + a + post, depth + 1)); });
+            return out;
+          }
+          // not a brace list: keep looking after this group
+          open = -1;
+        }
       }
-    });
-    var joined = segs.map(function (s) { return s.s; }).join('');
-    if (hasGlobChars(segs)) {
-      var found = globExpand(segs, session);
-      if (!found.length) return { error: 'zsh: no matches found: ' + tok.raw };
-      return { words: found };
     }
-    if (joined === '' && !anyQuoted) return { words: [] };
-    if (!anyText && !anyQuoted) return { words: [] };
-    return { words: [joined] };
+    return [s];
+  }
+  function braceAlts(inner) {
+    var m = /^(-?\d+)\.\.(-?\d+)(?:\.\.(-?\d+))?$/.exec(inner);
+    if (m) {
+      var a = parseInt(m[1], 10), b = parseInt(m[2], 10), st = m[3] ? Math.abs(parseInt(m[3], 10)) || 1 : 1;
+      var padW = (/^-?0\d/.test(m[1]) || /^-?0\d/.test(m[2])) ? Math.max(m[1].length, m[2].length) : 0;
+      var res = [];
+      if (Math.abs(b - a) / st > 500) return null;
+      if (a <= b) for (var x = a; x <= b; x += st) res.push(padW ? padNum(x, padW) : String(x));
+      else for (var y = a; y >= b; y -= st) res.push(padW ? padNum(y, padW) : String(y));
+      return res;
+    }
+    var mc = /^([A-Za-z])\.\.([A-Za-z])$/.exec(inner);
+    if (mc) {
+      var c1 = mc[1].charCodeAt(0), c2 = mc[2].charCodeAt(0), r2 = [];
+      if (c1 <= c2) for (var p = c1; p <= c2; p++) r2.push(String.fromCharCode(p));
+      else for (var q = c1; q >= c2; q--) r2.push(String.fromCharCode(q));
+      return r2;
+    }
+    // comma list at the top level
+    var lvl = 0, cur = '', list = [], has = false;
+    for (var k = 0; k < inner.length; k++) {
+      var ch = inner.charAt(k);
+      if (ch === '\\') { cur += ch + (inner.charAt(k + 1) || ''); k++; continue; }
+      if (ch === '{') lvl++;
+      if (ch === '}') lvl--;
+      if (ch === ',' && lvl === 0) { list.push(cur); cur = ''; has = true; continue; }
+      cur += ch;
+    }
+    list.push(cur);
+    return has ? list : null;
+  }
+  function padNum(x, w) {
+    var neg = x < 0, s = String(Math.abs(x));
+    while (s.length < (neg ? w - 1 : w)) s = '0' + s;
+    return (neg ? '-' : '') + s;
+  }
+  /* parts -> every variant after brace expansion (unquoted literal parts only) */
+  function braceVariants(parts) {
+    var has = parts.some(function (p) { return p.k === 'lit' && p.q === 0 && !p.tilde && p.s.indexOf('{') >= 0 && p.s.indexOf('}') > p.s.indexOf('{'); });
+    if (!has) return [parts];
+    var variants = [[]];
+    parts.forEach(function (p) {
+      if (p.k === 'lit' && p.q === 0 && !p.tilde && p.s.indexOf('{') >= 0) {
+        var alts = braceExpandStr(p.s);
+        var next = [];
+        variants.forEach(function (v) { alts.forEach(function (a) { next.push(v.concat([{ k: 'lit', s: a, q: 0 }])); }); });
+        variants = next;
+      } else variants = variants.map(function (v) { return v.concat([p]); });
+    });
+    return variants.length > 600 ? [parts] : variants;
+  }
+
+  function varValue(session, p) {
+    var env = session.env, name = p.name, v;
+    if (name === '?') v = String(session.status);
+    else if (name === '$') v = String(session.pid || 5001);
+    else if (name === '#') v = '0';
+    else if (name === '0') v = hasOwn.call(env, '0') ? String(env['0']) : '-zsh';
+    else if (name === 'RANDOM') v = String(Math.floor(session.rng() * 32768));
+    else if (name === 'SECONDS') v = String(Math.floor((LAB.clock.ms() - (session.startMs || LAB.clock.ms())) / 1000));
+    else if (name === 'LINENO') v = '1';
+    else v = hasOwn.call(env, name) ? String(env[name]) : '';
+    var m = p.mod;
+    if (m) {
+      if (m.op === '-') { if (v === '' && (m.colon || !hasOwn.call(env, name))) v = m.arg; }
+      else if (m.op === '#') v = String(Array.from(v).length);
+    }
+    return v;
+  }
+
+  /* expandWord(tok, session, job) -> {words:[…]} | {error:'zsh: no matches found: …'}   job collects the commands a `$(…)` ran */
+  function expandWord(tok, session, job) {
+    var out = [];
+    var variants = braceVariants(tok.parts);
+    for (var vi = 0; vi < variants.length; vi++) {
+      var parts = variants[vi];
+      var cur = [], started = false;
+      var finish = function () {
+        if (!started) { cur = []; return null; }
+        var segs = cur; cur = []; started = false;
+        var rawWord = segs.map(function (s) { return s.s; }).join('');
+        if (hasGlobChars(segs)) {
+          var found = globExpand(segs, session);
+          if (!found.length) return { error: 'zsh: no matches found: ' + (variants.length === 1 && out.length === 0 ? tok.raw : rawWord) };
+          found.forEach(function (f) { out.push(f); });
+          return null;
+        }
+        out.push(rawWord);
+        return null;
+      };
+      for (var pi = 0; pi < parts.length; pi++) {
+        var p = parts[pi];
+        if (p.k === 'var') {
+          var v = varValue(session, p);
+          if (v !== '' || p.q) { cur.push({ s: v, g: false }); started = true; }
+        } else if (p.k === 'sub') {
+          var sv = p.arith ? arithValue(p.src, session, job) : runSubstitution(p.src, session, job);
+          if (p.q) { cur.push({ s: sv, g: false }); started = true; }
+          else {
+            var pieces = sv.split(/\s+/).filter(function (x) { return x.length; });
+            if (sv.length && /^\s/.test(sv) && started) { var e0 = finish(); if (e0) return e0; }
+            for (var si = 0; si < pieces.length; si++) {
+              if (si > 0) { var e1 = finish(); if (e1) return e1; }
+              cur.push({ s: pieces[si], g: false }); started = true;
+            }
+            if (sv.length && /\s$/.test(sv) && started) { var e2 = finish(); if (e2) return e2; }
+          }
+        } else if (p.tilde && pi === 0) {
+          cur.push({ s: session.env.HOME + p.s.slice(1), g: false }); started = true;
+        } else if (p.q === 0) {
+          cur.push({ s: p.s, g: true });
+          if (p.s !== '') started = true;
+        } else {
+          cur.push({ s: p.s, g: false }); started = true;
+        }
+      }
+      var ef = finish();
+      if (ef) return ef;
+    }
+    return { words: out };
   }
 
   /* ------------------------------------------------------------ path helpers */
-  function resolvePath(session, p) {
+  /* The file tree has no permissions and no symbolic links, so `chmod` and `ln -s` keep them beside it: one small table per tree,
+     keyed by the canonical path. Moves, copies and removals made through the default tree keep the table in step (see fs:change below). */
+  function attrsOf(vfs) {
+    if (!vfs.__termAttrs) Object.defineProperty(vfs, '__termAttrs', { value: { modes: new Map(), links: new Map() }, enumerable: false });
+    return vfs.__termAttrs;
+  }
+  function modeOf(vfs, st) {
+    var a = attrsOf(vfs);
+    if (a.links.has(st.path)) return 493;                     // 0755: a link shows lrwxr-xr-x
+    if (a.modes.has(st.path)) return a.modes.get(st.path);
+    return st.type === 'dir' || st.kind === 'app' ? 493 : 420;   // 0755 / 0644
+  }
+  function modeString(mode, type) {
+    var s = type === 'dir' ? 'd' : type === 'link' ? 'l' : '-';
+    var r = ['r', 'w', 'x'];
+    for (var i = 0; i < 9; i++) s += (mode & (256 >> i)) ? r[i % 3] : '-';
+    return s;
+  }
+  function followLinks(vfs, abs, noFollow, links) {
+    for (var round = 0; round < 8; round++) {
+      var segs = abs.split('/').filter(function (x) { return x.length; }), cur = '', changed = false;
+      for (var i = 0; i < segs.length; i++) {
+        cur += '/' + segs[i];
+        var key = vfs.canon(cur);
+        if (links.has(key) && !(noFollow && i === segs.length - 1)) {
+          var tgt = links.get(key);
+          var resolved = tgt.charAt(0) === '/' ? tgt : vfs.dirname(key) + '/' + tgt;
+          abs = vfs.normalize(resolved + '/' + segs.slice(i + 1).join('/'));
+          changed = true;
+          break;
+        }
+      }
+      if (!changed) break;
+    }
+    return abs;
+  }
+  /* an operand as typed -> absolute path (symbolic links followed; noFollow keeps the last one, for rm, mv, ls -l, readlink) */
+  function resolvePath(session, p, noFollow) {
     p = String(p);
     if (p.charAt(0) === '~') p = './' + p;     // a literal ~ (quoted) is just a name
-    return session.vfs.normalize(p, session.cwd);
+    var abs = session.vfs.normalize(p, session.cwd);
+    var links = attrsOf(session.vfs).links;
+    return links.size ? followLinks(session.vfs, abs, noFollow, links) : abs;
   }
+  LAB.bus.on('fs:change', function (d) {
+    var a = LAB.vfs.__termAttrs;
+    if (!a || (!a.modes.size && !a.links.size)) return;
+    function under(k, p) { return k === p || k.indexOf(p + '/') === 0; }
+    [a.modes, a.links].forEach(function (map) {
+      var keys = Array.from(map.keys());
+      keys.forEach(function (k) {
+        if (d.op === 'remove' && under(k, d.path)) map.delete(k);
+        else if ((d.op === 'move' || d.op === 'rename') && d.from && under(k, d.from)) { var v = map.get(k); map.delete(k); map.set(d.path + k.slice(d.from.length), v); }
+        else if (d.op === 'copy' && d.from && under(k, d.from)) map.set(d.path + k.slice(d.from.length), map.get(k));
+      });
+    });
+  });
   function abbrevHome(session, p) {
     var home = session.env.HOME;
     if (p === home) return '~';
@@ -484,7 +830,8 @@
     var s = v < 10 ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v));
     return s + units[i];
   }
-  function columns(names, cols) {
+  /* names in columns, down then across (BSD ls). deco(i) may return an SGR code for name i; widths always use the plain names */
+  function columns(names, cols, deco) {
     if (!names.length) return '';
     var maxW = 0;
     names.forEach(function (nm) { var w = displayWidth(nm); if (w > maxW) maxW = w; });
@@ -500,7 +847,9 @@
         if (idx >= names.length) break;
         var nm = names[idx];
         var more = (c + 1) * numrows + r < names.length;
-        line += more ? pad(nm, colw) : nm;
+        var code = deco ? deco(idx) : '';
+        var shown = code ? sgr(code, nm) : nm;
+        line += more ? shown + new Array(Math.max(0, colw - displayWidth(nm)) + 1).join(' ') : shown;
       }
       out += line + '\n';
     }
@@ -517,7 +866,10 @@
     var long = !!F.l;
     var oneCol = !!F['1'] || !ctx.tty;
     var showAll = !!(F.a || F.A);
+    var color = !!F.G && ctx.tty;
+    var attrs = attrsOf(vfs);
 
+    function isLink(st) { return attrs.links.has(st.path); }
     function sortList(list) {
       var l = list.slice();
       l.sort(function (a, b) {
@@ -535,17 +887,31 @@
       try { vfs.list(path).forEach(function (x) { if (x.type === 'dir') n++; }); } catch (e) { n = 0; }
       return n;
     }
-    function label(e) { return e.name + (F.F && e.st.type === 'dir' ? '/' : ''); }
+    function kindOf(e) { return isLink(e.st) ? 'link' : e.st.type === 'dir' ? 'dir' : 'file'; }
+    function isExec(e) { return e.st.type !== 'dir' && !isLink(e.st) && (modeOf(vfs, e.st) & 73) !== 0; }
+    function label(e) {
+      var k = kindOf(e);
+      var suffix = F.F ? (k === 'dir' ? '/' : k === 'link' ? '@' : isExec(e) ? '*' : '') : (F.p && k === 'dir' ? '/' : '');
+      return e.name + suffix;
+    }
+    function colorOf(e) {
+      if (!color) return '';
+      var k = kindOf(e);
+      return k === 'dir' ? '34' : k === 'link' ? '35' : isExec(e) ? '31' : '';
+    }
     function format(entries, withTotal) {
       if (!entries.length) return '';
       if (long) {
         var rows = entries.map(function (e) {
-          var st = e.st, isDir = st.type === 'dir';
+          var st = e.st, isDir = st.type === 'dir', lk = isLink(st);
+          var rawSize = lk ? attrs.links.get(st.path).length : (isDir ? 64 + 32 * (st.count || 0) : st.size);
+          var nm = label(e), code = colorOf(e);
           return {
-            perm: (isDir ? 'd' : '-') + (isDir ? 'rwxr-xr-x' : 'rw-r--r--'),
+            perm: modeString(modeOf(vfs, st), lk ? 'link' : isDir ? 'dir' : 'file'),
             nlink: String(isDir ? 2 + subdirCount(st.path) : 1),
-            size: F.h ? humanSize(isDir ? 64 + 32 * (st.count || 0) : st.size) : String(isDir ? 64 + 32 * (st.count || 0) : st.size),
-            date: LAB.util.fmt.lsDate(st.mtime), name: label(e), blocks: isDir ? 0 : Math.ceil(st.size / 4096) * 8
+            size: F.h ? humanSize(rawSize) : String(rawSize),
+            date: LAB.util.fmt.lsDate(st.mtime), name: (code ? sgr(code, nm) : nm) + (lk ? ' -> ' + attrs.links.get(st.path) : ''),
+            blocks: isDir || lk ? 0 : Math.ceil(st.size / 4096) * 8
           };
         });
         var wl = 0, ws = 0, total = 0;
@@ -557,8 +923,8 @@
         return out;
       }
       var names = entries.map(label);
-      if (oneCol) return names.join('\n') + '\n';
-      return columns(names, s.cols || 80);
+      if (oneCol) return entries.map(function (e, i) { var c = colorOf(e); return c ? sgr(c, names[i]) : names[i]; }).join('\n') + '\n';
+      return columns(names, s.cols || 80, function (i) { return colorOf(entries[i]); });
     }
     function listDir(arg, path, header, first) {
       if (!first) ctx.out('\n');
@@ -574,7 +940,7 @@
       ctx.out(format(entries, true));
       if (F.R) {
         entries.forEach(function (e) {
-          if (e.st.type !== 'dir' || e.name === '.' || e.name === '..') return;
+          if (e.st.type !== 'dir' || e.name === '.' || e.name === '..' || isLink(e.st)) return;
           listDir((arg === '/' ? '' : arg) + (arg.slice(-1) === '/' ? '' : '/') + e.name, e.st.path, true, false);
         });
       }
@@ -582,9 +948,11 @@
 
     var files = [], dirs = [];
     ops.forEach(function (arg) {
-      var st = arg === '' ? null : vfs.stat(resolvePath(s, arg));
+      var abs = arg === '' ? null : resolvePath(s, arg, long || !!F.d);
+      var st = abs === null ? null : vfs.stat(abs);
       if (!st) { ctx.err('ls: ' + arg + ': No such file or directory\n'); status = 1; return; }
-      if (st.type === 'dir' && !F.d) dirs.push({ arg: arg, name: arg, st: st });
+      var lk = abs !== null && attrs.links.has(vfs.canon(abs));
+      if (st.type === 'dir' && !F.d && !lk) dirs.push({ arg: arg, name: arg, st: st });
       else files.push({ arg: arg, name: arg, st: st });
     });
     files = sortList(files);
@@ -634,6 +1002,8 @@
     s.oldpwd = s.cwd;
     s.cwd = target;
     s.env.PWD = target;
+    s.env.OLDPWD = s.oldpwd;
+    s.exported.add('OLDPWD');
     if (printNew) ctx.out(abbrevHome(s, target) + '\n');
     return 0;
   };
@@ -798,7 +1168,13 @@
   commands.clear = function (args, ctx) { ctx.effect({ type: 'clear' }); return 0; };
 
   /* ------------------------------------------------------------- cp, mv, rm */
-  commands.cp = function (args, ctx) {
+  /* a yes/no question on the terminal (cp -i, mv -i, rm -i): only a reply that starts with y or Y says yes */
+  function* askYes(text) {
+    var a = yield { prompt: text };
+    return a !== null && /^\s*[yY]/.test(String(a));
+  }
+
+  commands.cp = function* (args, ctx) {
     var s = ctx.session, vfs = s.vfs;
     var o = parseOpts('cp', args);
     if (o.error) { ctx.err(o.error); return 1; }
@@ -809,20 +1185,25 @@
     var dstIsDir = vfs.isDir(dst);
     if (srcs.length > 1 && !dstIsDir) { ctx.err('cp: ' + dstArg + ' is not a directory\n'); return 1; }
     var status = 0;
-    srcs.forEach(function (arg) {
+    for (var si = 0; si < srcs.length; si++) {
+      var arg = srcs[si];
       var abs = resolvePath(s, arg);
       var st = vfs.stat(abs);
-      if (!st) { ctx.err('cp: ' + arg + ': No such file or directory\n'); status = 1; return; }
+      if (!st) { ctx.err('cp: ' + arg + ': No such file or directory\n'); status = 1; continue; }
       var finalDst = dstIsDir ? vfs.join(dst, st.name) : dst;
+      var shown = dstIsDir ? dstArg.replace(/\/+$/, '') + '/' + st.name : dstArg;
       if (vfs.canon(abs) === vfs.canon(finalDst)) {
-        ctx.err('cp: ' + arg + ' and ' + (dstIsDir ? dstArg.replace(/\/+$/, '') + '/' + st.name : dstArg) + ' are identical (not copied).\n');
-        status = 1; return;
+        ctx.err('cp: ' + arg + ' and ' + shown + ' are identical (not copied).\n');
+        status = 1; continue;
       }
-      if (st.type === 'dir' && !recursive) { ctx.err('cp: ' + arg + ' is a directory (not copied).\n'); status = 1; return; }
+      if (st.type === 'dir' && !recursive) { ctx.err('cp: ' + arg + ' is a directory (not copied).\n'); status = 1; continue; }
+      if (vfs.exists(finalDst) && !(st.type === 'dir' && vfs.isDir(finalDst))) {
+        if (o.flags.n) continue;
+        if (o.flags.i && !(yield* askYes('overwrite ' + shown + '? (y/n [n]) '))) continue;
+      }
       try {
         var made = vfs.copy(abs, dst, { by: 'terminal', recursive: recursive });
         if (o.flags.v) {
-          var shown = dstIsDir ? dstArg.replace(/\/+$/, '') + '/' + st.name : dstArg;
           ctx.out(arg + ' -> ' + shown + '\n');
           if (st.type === 'dir') {
             vfs.walk(made, function (cs, depth) {
@@ -839,11 +1220,11 @@
         else ctx.err('cp: ' + dstArg + ': ' + vfs.errText(code) + '\n');
         status = 1;
       }
-    });
+    }
     return status;
   };
 
-  commands.mv = function (args, ctx) {
+  commands.mv = function* (args, ctx) {
     var s = ctx.session, vfs = s.vfs;
     var o = parseOpts('mv', args);
     if (o.error) { ctx.err(o.error); return 1; }
@@ -853,15 +1234,20 @@
     var dstIsDir = vfs.isDir(dst);
     if (srcs.length > 1 && !dstIsDir) { ctx.err('mv: ' + dstArg + ' is not a directory\n'); return 1; }
     var status = 0;
-    srcs.forEach(function (arg) {
-      var abs = resolvePath(s, arg);
+    for (var si = 0; si < srcs.length; si++) {
+      var arg = srcs[si];
+      var abs = resolvePath(s, arg, true);
       var st = vfs.stat(abs);
       var shownTo = dstIsDir ? dstArg.replace(/\/+$/, '') + '/' + (st ? st.name : vfs.basename(abs)) : dstArg;
-      if (!st) { ctx.err('mv: rename ' + arg + ' to ' + shownTo + ': No such file or directory\n'); status = 1; return; }
+      if (!st) { ctx.err('mv: rename ' + arg + ' to ' + shownTo + ': No such file or directory\n'); status = 1; continue; }
       var pk = protectedKind(s, abs);
-      if (pk) { ctx.err('mv: refusing to move "' + arg + '" (practice Mac protects this folder)\n'); status = 1; return; }
+      if (pk) { ctx.err('mv: refusing to move "' + arg + '" (practice Mac protects this folder)\n'); status = 1; continue; }
       var finalDst = dstIsDir ? vfs.join(dst, st.name) : dst;
-      if (vfs.normalize(finalDst) === st.path) { ctx.err('mv: ' + arg + ' and ' + shownTo + ' are identical\n'); status = 1; return; }
+      if (vfs.normalize(finalDst) === st.path) { ctx.err('mv: ' + arg + ' and ' + shownTo + ' are identical\n'); status = 1; continue; }
+      if (vfs.exists(finalDst) && vfs.canon(finalDst) !== st.path) {
+        if (o.flags.n) continue;
+        if (o.flags.i && !o.flags.f && !(yield* askYes('overwrite ' + shownTo + '? (y/n [n]) '))) continue;
+      }
       try {
         vfs.move(abs, dst, { by: 'terminal' });
         if (o.flags.v) ctx.out(arg + ' -> ' + shownTo + '\n');
@@ -869,34 +1255,61 @@
         ctx.err('mv: rename ' + arg + ' to ' + shownTo + ': ' + vfs.errText(e.code || 'EINVAL') + '\n');
         status = 1;
       }
-    });
+    }
     return status;
   };
 
-  commands.rm = function (args, ctx) {
+  commands.rm = function* (args, ctx) {
     var s = ctx.session, vfs = s.vfs;
     var o = parseOpts('rm', args);
     if (o.error) { ctx.err(o.error); return 1; }
     if (!o.rest.length) { if (o.flags.f) return 0; return usageResult(ctx, 'rm'); }
     var recursive = !!(o.flags.r || o.flags.R);
+    var ask = !!o.flags.i && !o.flags.f;
     var status = 0;
-    o.rest.forEach(function (arg) {
+    for (var ri = 0; ri < o.rest.length; ri++) {
+      var arg = o.rest[ri];
       var last = arg.replace(/\/+$/, '').split('/').pop();
-      if (last === '.' || last === '..') { ctx.err('rm: "." and ".." may not be removed\n'); status = 1; return; }
-      var abs = resolvePath(s, arg);
+      if (last === '.' || last === '..') { ctx.err('rm: "." and ".." may not be removed\n'); status = 1; continue; }
+      var abs = resolvePath(s, arg, true);
       var pk = protectedKind(s, abs);
-      if (pk === 'root') { ctx.err('rm: "/" may not be removed\n'); status = 1; return; }
-      if (pk) { ctx.err('rm: refusing to remove "' + arg + '" (practice Mac protects this folder)\n'); status = 1; return; }
+      if (pk === 'root') { ctx.err('rm: "/" may not be removed\n'); status = 1; continue; }
+      if (pk) { ctx.err('rm: refusing to remove "' + arg + '" (practice Mac protects this folder)\n'); status = 1; continue; }
       var st = vfs.stat(abs);
-      if (!st) { if (!o.flags.f) { ctx.err('rm: ' + arg + ': No such file or directory\n'); status = 1; } return; }
+      if (!st) { if (!o.flags.f) { ctx.err('rm: ' + arg + ': No such file or directory\n'); status = 1; } continue; }
       if (st.type === 'dir' && !recursive) {
         if (o.flags.d) {
+          if (ask && !(yield* askYes('remove ' + arg + '? '))) continue;
           try { vfs.remove(abs, { by: 'terminal' }); if (o.flags.v) ctx.out(arg + '\n'); }
           catch (e) { ctx.err('rm: ' + arg + ': ' + vfs.errText(e.code || 'ENOTEMPTY') + '\n'); status = 1; }
         } else { ctx.err('rm: ' + arg + ': is a directory\n'); status = 1; }
-        return;
+        continue;
       }
       try {
+        if (ask) {
+          // rm -i: every file is asked about; for a folder -ri asks about the folder, then each thing inside it, then the folder itself
+          var nodes = [];
+          if (st.type === 'dir') vfs.walk(abs, function (cs, depth) { nodes.push({ rel: cs.path.slice(st.path.length), path: cs.path, dir: cs.type === 'dir' }); });
+          else nodes.push({ rel: '', path: abs, dir: false });
+          if (st.type === 'dir' && !(yield* askYes('examine files in directory ' + arg + '? '))) continue;
+          var shownBase = arg.replace(/\/+$/, '');
+          var skipped = false;
+          nodes.reverse();
+          for (var ni = 0; ni < nodes.length; ni++) {
+            var nd = nodes[ni];
+            if (nd.rel === '' && st.type === 'dir') {
+              if (skipped) continue;
+              if (!(yield* askYes('remove ' + shownBase + '? '))) continue;
+              vfs.remove(nd.path, { by: 'terminal', recursive: true });
+              if (o.flags.v) ctx.out(shownBase + '\n');
+              continue;
+            }
+            if (!(yield* askYes('remove ' + shownBase + nd.rel + '? '))) { skipped = true; continue; }
+            if (vfs.exists(nd.path)) vfs.remove(nd.path, { by: 'terminal', recursive: true });
+            if (o.flags.v) ctx.out(shownBase + nd.rel + '\n');
+          }
+          continue;
+        }
         if (o.flags.v) {
           var list = [];
           if (st.type === 'dir') vfs.walk(abs, function (cs, depth) { list.push({ rel: cs.path.slice(st.path.length), depth: depth }); });
@@ -905,7 +1318,7 @@
         }
         vfs.remove(abs, { by: 'terminal', recursive: true });
       } catch (e2) { ctx.err('rm: ' + arg + ': ' + vfs.errText(e2.code || 'EINVAL') + '\n'); status = 1; }
-    });
+    }
     return status;
   };
 
@@ -916,7 +1329,7 @@
     if (!o.rest.length) return usageResult(ctx, 'rmdir');
     var status = 0;
     o.rest.forEach(function (arg) {
-      var abs = resolvePath(s, arg);
+      var abs = resolvePath(s, arg, true);
       var st = vfs.stat(abs);
       if (!st) { ctx.err('rmdir: ' + arg + ': No such file or directory\n'); status = 1; return; }
       if (st.type !== 'dir') { ctx.err('rmdir: ' + arg + ': Not a directory\n'); status = 1; return; }
@@ -975,7 +1388,7 @@
   function headTail(which) {
     return function* (args, ctx) {
       var s = ctx.session, vfs = s.vfs;
-      var n = 10, i = 0, usageLines = USAGE[which];
+      var n = 10, i = 0, usageLines = USAGE[which], follow = false;
       function bad(msg) { ctx.err(msg + '\n' + usageLines.join('\n') + '\n'); return 1; }
       for (; i < args.length; i++) {
         var a = args[i];
@@ -990,6 +1403,7 @@
         }
         var ch = a.charAt(1);
         if (LETTERS[which].indexOf(ch) < 0) return bad(which + ': illegal option -- ' + ch);
+        if (which === 'tail' && (a.indexOf('f') > 0 || a.indexOf('F') > 0)) follow = true;
       }
       var files = args.slice(i);
       function pick(text) {
@@ -1012,6 +1426,16 @@
         first = false;
         ctx.out(pick(t));
       });
+      // tail -f: keep watching the (single) file until Ctrl+C; whatever is appended meanwhile is printed
+      if (follow && files.length === 1 && status === 0) {
+        var fabs = resolvePath(s, files[0]);
+        var seen = vfs.stat(fabs) && vfs.stat(fabs).kind === 'text' ? vfs.readFile(fabs, { by: 'terminal' }) : '';
+        for (;;) {
+          yield { sleep: 1000 };
+          var now = vfs.stat(fabs) && vfs.stat(fabs).kind === 'text' ? vfs.readFile(fabs, { by: 'terminal' }) : seen;
+          if (now !== seen) { ctx.out(now.indexOf(seen) === 0 ? now.slice(seen.length) : now); seen = now; }
+        }
+      }
       return status;
     };
   }
@@ -1024,7 +1448,7 @@
   commands.date = function (a, ctx) { ctx.out(LAB.util.fmt.dateLine(LAB.clock.ms()) + '\n'); return 0; };
   commands.uname = function (args, ctx) {
     var flags = args.join('').replace(/-/g, '');
-    if (flags.indexOf('a') >= 0) ctx.out('Darwin MacBook-Air.local 25.0.0 Darwin Kernel Version 25.0.0: Tue Sep  2 20:04:23 PDT 2025; root:xnu-12377.1.9~3/RELEASE_ARM64_T8132 arm64\n');
+    if (flags.indexOf('a') >= 0) ctx.out('Darwin MacBook-Air.local 25.0.0 Darwin Kernel Version 25.0.0: Mon Aug 25 21:17:51 PDT 2025; root:xnu-12377.1.9~2/RELEASE_ARM64_T8122 arm64\n');
     else if (flags.indexOf('m') >= 0) ctx.out('arm64\n');
     else if (flags.indexOf('r') >= 0) ctx.out('25.0.0\n');
     else if (flags.indexOf('n') >= 0) ctx.out('MacBook-Air.local\n');
@@ -1051,71 +1475,75 @@
     var a = args[0];
     if (args.length < 1 || !/^(\d+\.?\d*|\.\d+)$/.test(a)) { ctx.err('usage: sleep seconds\n'); return 1; }
     var ms = Math.min(parseFloat(a), 10) * 1000;
-    ctx.effect({ type: 'sleep', ms: ms });
     yield { sleep: ms };
     return 0;
   };
-  /* ------------------------------------------------------------ man */
-  /* A short, true-to-life manual page for the commands the course teaches; the rest says what the real Mac would do. */
-  var MAN = {
-    ls: { name: 'ls \u2013 list directory contents', syn: ['ls [-ABCFGHILOPRSTUWabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]'],
-      desc: ['For each operand that names a file of a type other than directory, ls displays its name as well as any requested, associated information. For each operand that names a directory, ls displays the names of the files it contains.', 'If no operands are given, the contents of the current directory are displayed.'] },
-    cd: { name: 'cd \u2013 change the working directory (shell builtin)', syn: ['cd [dir]'], sec: 'BUILTIN', desc: ['Change the current directory to dir. With no argument, cd goes to your home directory (~). cd .. goes up one level, and cd - goes back to the previous directory.'] },
-    pwd: { name: 'pwd \u2013 return working directory name', syn: ['pwd [-L | -P]'], desc: ['The pwd utility writes the absolute pathname of the current working directory to the standard output.'] },
-    mv: { name: 'mv \u2013 move files', syn: ['mv [-f | -i | -n] [-hv] source target', 'mv [-f | -i | -n] [-v] source ... directory'], desc: ['In its first form, the mv utility renames the file named by the source operand to the destination path named by the target operand. In its second form, mv moves each file named by a source operand to a destination file in the existing directory named by the directory operand.'] },
-    cp: { name: 'cp \u2013 copy files', syn: ['cp [-R [-H | -L | -P]] [-fi | -n] [-aclpSsvXx] source_file target_file', 'cp [-R [-H | -L | -P]] [-fi | -n] [-aclpSsvXx] source_file ... target_directory'], desc: ['In the first synopsis form, the cp utility copies the contents of the source_file to the target_file. In the second synopsis form, the contents of each named source_file is copied to the destination target_directory.'] },
-    rm: { name: 'rm \u2013 remove directory entries', syn: ['rm [-dfiPRrvWx] file ...'], desc: ['The rm utility attempts to remove the non-directory type files specified on the command line. There is no trash can: a file removed with rm is gone.'] },
-    mkdir: { name: 'mkdir \u2013 make directories', syn: ['mkdir [-pv] [-m mode] directory_name ...'], desc: ['The mkdir command creates the directories named as operands, in the order specified.'] },
-    cat: { name: 'cat \u2013 concatenate and print files', syn: ['cat [-belnstuv] [file ...]'], desc: ['The cat utility reads files sequentially, writing them to the standard output.'] },
-    unzip: { name: 'unzip \u2013 list, test and extract compressed files in a ZIP archive', syn: ['unzip [-Z] [-opts[modifiers]] file[.zip] [list] [-x xlist] [-d exdir]'], desc: ['unzip will list, test, or extract files from a ZIP archive. The default behavior is to extract into the current directory.'] },
-    open: { name: 'open \u2013 open files and directories', syn: ['open [-e] [-t] [-f] [-W] [-R] [-n] [-g] [-h] [-s <partial SDK name>][-b <bundle identifier>] [-a <application>] [filenames] [--args arguments]'], desc: ['The open command opens a file (or a directory or URL), just as if you had double-clicked the file\'s icon.'] },
-    touch: { name: 'touch \u2013 change file access and modification times', syn: ['touch [-A [-][[hh]mm]SS] [-achm] [-r file] [-t [[CC]YY]MMDDhhmm[.SS]] file ...'], desc: ['The touch utility sets the modification and access times of files. If any file does not exist, it is created with default permissions.'] },
-    man: { name: 'man \u2013 format and display the on-line manual pages', syn: ['man [-adho] [-t | -w] [-M manpath] [-P pager] [-S mansect] [-m arch[:machine]] [-p [eprtv]] [mansect] page ...'], desc: ['The man utility finds and displays online manual documentation pages.'] }
-  };
-  var MAN_OTHER = ['grep', 'find', 'echo', 'head', 'tail', 'wc', 'chmod', 'curl', 'tar', 'zip', 'sort', 'sed', 'awk', 'less', 'ssh', 'diff', 'date', 'clear', 'kill', 'history', 'exit', 'which', 'whoami', 'uname', 'ps', 'df', 'du'];
-  function manCenter(left, mid, right) {
-    var w = 80, gap1 = Math.max(1, Math.floor((w - left.length - mid.length - right.length) / 2));
-    var gap2 = Math.max(1, w - left.length - mid.length - right.length - gap1);
-    return left + new Array(gap1 + 1).join(' ') + mid + new Array(gap2 + 1).join(' ') + right;
-  }
-  function manWrap(text, indent, width) {
-    var words = String(text).split(' '), lines = [], cur = '';
-    words.forEach(function (w) {
-      if ((cur + ' ' + w).length > width - indent && cur) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w;
-    });
-    if (cur) lines.push(cur);
-    var pad5 = new Array(indent + 1).join(' ');
-    return lines.map(function (l) { return pad5 + l; }).join('\n');
-  }
-  commands.man = function (args, ctx) {
-    var names = args.filter(function (a) { return a.charAt(0) !== '-' && !/^\d+$/.test(a); });
-    if (!names.length) { ctx.err('What manual page do you want?\nFor example, try \'man man\'.\n'); return 1; }
+  /* ------------------------------------------------------ builtins that change the shell */
+  function quoteAliasValue(v) { return /^[A-Za-z0-9_.\/-]+$/.test(v) ? v : "'" + v.replace(/'/g, "'\\''") + "'"; }
+  commands.alias = function (args, ctx) {
+    var al = ctx.session.aliases;
+    var list = args.filter(function (a) { return a !== '--'; });
+    if (!list.length) { Object.keys(al).sort().forEach(function (k) { ctx.out(k + '=' + quoteAliasValue(al[k]) + '\n'); }); return 0; }
     var status = 0;
-    names.forEach(function (n) {
-      var pg = MAN[n];
-      var known = pg || MAN_OTHER.indexOf(n) >= 0 || (typeof commands[n] === 'function' && n !== 'man');
-      if (!known) { ctx.err('No manual entry for ' + n + '\n'); status = 1; return; }
-      var up = n.toUpperCase();
-      var sec = pg && pg.sec ? pg.sec : '1';
-      var sect = pg && pg.sec === 'BUILTIN' ? 'BUILTIN(1)' : up + '(1)';
-      var head = manCenter(sect, sec === 'BUILTIN' ? 'General Commands Manual' : 'General Commands Manual', sect);
-      var out = [head, '', 'NAME'];
-      if (pg) {
-        out.push('     ' + pg.name, '', 'SYNOPSIS');
-        pg.syn.forEach(function (l) { out.push('     ' + l); });
-        out.push('', 'DESCRIPTION');
-        pg.desc.forEach(function (d, i) { if (i) out.push(''); out.push(manWrap(d, 5, 80)); });
-      } else {
-        out.push('     ' + n + ' \u2013 (\u9019\u500b\u6307\u4ee4\u5728\u771f\u7684 Mac \u4e0a\u6709\u5b8c\u6574\u7684\u8aaa\u660e\u9801)');
-      }
-      out.push('', '\uff08\u7df4\u7fd2\u7248\u53ea\u653e\u958b\u982d\u3002\u771f\u7684 Mac \u6703\u7528 q \u96e2\u958b\u8aaa\u660e\u9801\uff0c\u9019\u88e1\u4e0d\u9700\u8981\u3002\uff09', '');
-      ctx.out(out.join('\n') + '\n');
+    list.forEach(function (a) {
+      var eq = a.indexOf('=');
+      if (eq < 0) { if (hasOwn.call(al, a)) ctx.out(a + '=' + quoteAliasValue(al[a]) + '\n'); else status = 1; return; }
+      var nm = a.slice(0, eq);
+      if (!nm || /[\s=\/$`'"|&;<>()]/.test(nm)) { ctx.err('alias: invalid alias name: ' + nm + '\n'); status = 1; return; }
+      al[nm] = a.slice(eq + 1);
     });
     return status;
   };
-  commands.vi = function () { return 0; };
-  commands.nano = function () { return 0; };
-  commands.vim = function () { return 0; };
+  commands.unalias = function (args, ctx) {
+    var al = ctx.session.aliases, status = 0;
+    var list = args.filter(function (a) { return a !== '--'; });
+    if (!list.length) { ctx.err('unalias: not enough arguments\n'); return 1; }
+    list.forEach(function (a) {
+      if (a === '-a') { Object.keys(al).forEach(function (k) { delete al[k]; }); return; }
+      if (hasOwn.call(al, a)) delete al[a]; else { ctx.err('unalias: no such hash table element: ' + a + '\n'); status = 1; }
+    });
+    return status;
+  };
+  commands['export'] = function (args, ctx) {
+    var s = ctx.session;
+    var list = args.filter(function (a) { return a !== '--' && !/^-[pnf]+$/.test(a); });
+    if (!list.length) {
+      Object.keys(s.env).filter(function (k) { return s.exported.has(k); }).sort().forEach(function (k) { ctx.out(k + '=' + s.env[k] + '\n'); });
+      return 0;
+    }
+    var status = 0;
+    list.forEach(function (a) {
+      var eq = a.indexOf('='), nm = eq < 0 ? a : a.slice(0, eq);
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(nm)) { ctx.err('export: not valid in this context: ' + a + '\n'); status = 1; return; }
+      if (eq >= 0) s.env[nm] = a.slice(eq + 1); else if (!hasOwn.call(s.env, nm)) s.env[nm] = '';
+      s.exported.add(nm);
+    });
+    return status;
+  };
+  commands.unset = function (args, ctx) {
+    var s = ctx.session;
+    args.forEach(function (a) { if (a.charAt(0) === '-') return; delete s.env[a]; s.exported.delete(a); });
+    return 0;
+  };
+  commands.set = function (args, ctx) {
+    var s = ctx.session;
+    if (args.length) return 0;                                  // set -x, set -e … are accepted and ignored
+    Object.keys(s.env).sort().forEach(function (k) { ctx.out(k + '=' + s.env[k] + '\n'); });
+    return 0;
+  };
+  commands.source = function* (args, ctx) {
+    if (!args.length) { ctx.err('source: not enough arguments\n'); return 1; }
+    var s = ctx.session, abs = resolvePath(s, args[0]), st = s.vfs.stat(abs);
+    if (!st) { ctx.err('source: no such file or directory: ' + args[0] + '\n'); return 1; }
+    if (st.type === 'dir') { ctx.err('source: ' + args[0] + ': Is a directory\n'); return 1; }
+    if (st.kind !== 'text') { ctx.err('source: ' + args[0] + ': 這是二進位檔案，練習版不能執行\n'); return 1; }
+    return yield* ctx.runLine(s.vfs.readFile(abs, { by: 'terminal' }));
+  };
+  commands['.'] = commands.source;
+  commands.eval = function* (args, ctx) {
+    if (!args.length) return 0;
+    return yield* ctx.runLine(args.join(' '));
+  };
 
   /* ------------------------------------------------------------ which */
   var BUILTINS = ['cd', 'pwd', 'echo', 'history', 'exit', 'which', 'true', 'false', 'export', 'alias', 'unalias', 'kill', 'source', 'set', 'type', 'test', 'printf', 'jobs', 'fg', 'bg', 'wait', 'read', 'local', 'unset', 'eval', 'exec', 'trap', 'umask', 'ulimit', 'time'];
@@ -1136,7 +1564,10 @@
   };
 
   /* ------------------------------------------------------------- open */
-  var KNOWN_MAC_APPS = ['safari', 'preview', 'notes', 'mail', 'calendar', 'messages', 'photos', 'music', 'maps', 'system settings', 'system preferences', 'google chrome', 'chrome', 'firefox', 'microsoft word', 'word', 'excel', 'powerpoint', 'numbers', 'pages', 'keynote', 'facetime', 'reminders', 'contacts', 'calculator', 'textedit'];
+  var KNOWN_MAC_APPS = ['safari', 'preview', 'notes', 'mail', 'calendar', 'messages', 'photos', 'music', 'maps', 'system settings', 'system preferences', 'google chrome', 'chrome', 'firefox', 'microsoft word', 'word', 'excel', 'powerpoint', 'numbers', 'pages', 'keynote', 'facetime', 'reminders', 'contacts', 'calculator', 'textedit', 'activity monitor'];
+  /* names a student types for the apps the practice Mac got in round 5 (the apps register their own titles too) */
+  var APP_NAMES = { 'safari': 'safari', 'system settings': 'settings', 'system preferences': 'settings', '系統設定': 'settings', 'calculator': 'calculator', '計算機': 'calculator',
+    'activity monitor': 'activity', '活動監視器': 'activity', 'preview': 'preview', '預覽程式': 'preview', 'terminal': 'terminal', '終端機': 'terminal' };
   function findApp(name) {
     var want = String(name).toLowerCase().replace(/\.app$/, '').trim();
     var found = null;
@@ -1148,6 +1579,7 @@
         if (names[i] && String(names[i]).toLowerCase() === want) { found = def.id; return; }
       }
     });
+    if (!found && hasOwn.call(APP_NAMES, want) && LAB.apps.get(APP_NAMES[want])) found = APP_NAMES[want];
     return found;
   }
   var OPEN_USAGE = 'Usage: open [-e] [-t] [-f] [-W] [-R] [-n] [-g] [-h] [-s <partial SDK name>][-b <bundle identifier>] [-a <application>] [-u URL] [--args arguments] [filenames] [--args arguments]\n';
@@ -1160,7 +1592,8 @@
       if (a === '--args') break;
       if (a === '-a') { appName = args[++i]; if (appName === undefined) { ctx.err(OPEN_USAGE); return 1; } continue; }
       if (a === '-R') { reveal = true; continue; }
-      if (a === '-b' || a === '-u' || a === '-s') { i++; continue; }
+      if (a === '-u') { if (args[i + 1] !== undefined) targets.push(args[i + 1]); i++; continue; }
+      if (a === '-b' || a === '-s') { i++; continue; }
       if (a.charAt(0) === '-' && a.length > 1 && /^-[etfWngh]+$/.test(a)) continue;
       targets.push(a);
     }
@@ -1179,7 +1612,13 @@
     }
     var status = 0;
     targets.forEach(function (t) {
-      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) { ctx.err('（練習版沒有瀏覽器，不能打開網址）\n'); status = 1; return; }
+      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t) || /^mailto:/i.test(t)) {
+        // a web address goes to Safari (the practice browser: it has no network, SPEC §1)
+        var web = appId || 'safari';
+        if (LAB.apps && LAB.apps.get(web) && (web === 'safari' || appId)) ctx.effect({ type: 'launch', appId: web, args: { url: t } });
+        else { ctx.err('（練習版沒有瀏覽器，不能打開網址）\n'); status = 1; }
+        return;
+      }
       var abs = resolvePath(s, t);
       if (!vfs.exists(abs)) { ctx.err('The file ' + abs + ' does not exist.\n'); status = 1; return; }
       var canon = vfs.canon(abs);
@@ -1312,8 +1751,28 @@
   };
 
   /* ---------------------------------------------- commands that only talk */
-  var TIER2 = ['grep', 'egrep', 'find', 'chmod', 'chown', 'ln', 'diff', 'sort', 'uniq', 'cut', 'file', 'du', 'df', 'env', 'export', 'alias', 'unalias', 'ps', 'kill', 'killall', 'curl', 'ssh', 'scp', 'tar', 'zip', 'gzip', 'less', 'more', 'top', 'sed', 'awk', 'tee', 'xargs', 'say', 'ping', 'source', 'set', 'type', 'test', 'printf', 'cal', 'tr', 'rev', 'basename', 'dirname', 'readlink', 'realpath', 'stat', 'mktemp', 'nl', 'od', 'xxd', 'cmp', 'jobs', 'fg', 'bg', 'wait', 'read', 'local', 'unset', 'eval', 'exec', 'trap', 'umask', 'ulimit', 'time'];
-  var TIER3 = ['python3', 'python', 'node', 'npm', 'brew', 'codex', 'code', 'pip', 'tree', 'wget'];
+  /* real Mac commands the practice does not simulate: a short lab-only line, never "command not found" (the lab must not teach that they do not exist) */
+  /* (the first names are the ones terminal-cmds.js adds: until that file has arrived, or if it never does, they answer with the same lab line) */
+  var TIER2 = ['grep', 'egrep', 'fgrep', 'find', 'chmod', 'ln', 'readlink', 'diff', 'sort', 'uniq', 'cut', 'tr', 'file', 'stat', 'du', 'df', 'basename', 'dirname', 'realpath', 'tee', 'xargs', 'zip', 'tar',
+    'less', 'more', 'nano', 'man', 'pbcopy', 'pbpaste', 'say', 'code', 'codex', 'mdfind', 'sh', 'bash', 'zsh', 'test', '[', 'printf', 'seq', 'expr', 'bc', 'yes', 'whereis', 'type', 'whence', 'command', 'env', 'printenv', 'help',
+    'cal', 'uptime', 'id', 'sw_vers', 'sysctl', 'system_profiler', 'xcode-select', 'ps', 'top', 'kill', 'killall', 'ifconfig', 'ipconfig', 'networksetup', 'ping', 'curl', 'nslookup', 'traceroute', 'python3',
+    'chown', 'ssh', 'scp', 'gzip', 'gunzip', 'sed', 'awk', 'ping6', 'netstat', 'lsof', 'rev', 'mktemp', 'nl', 'od', 'xxd', 'cmp', 'jobs', 'fg', 'bg', 'wait', 'read', 'local', 'exec', 'trap', 'umask', 'ulimit',
+    'diskutil', 'defaults', 'osascript', 'screencapture', 'launchctl', 'pmset', 'caffeinate', 'softwareupdate', 'vim', 'vi', 'emacs', 'perl', 'ruby', 'make', 'clang', 'gcc', 'cc', 'swift', 'rsync', 'ftp', 'telnet', 'nc', 'dig', 'host', 'whois', 'last', 'who', 'w', 'groups', 'passwd', 'su', 'crontab', 'at', 'nohup', 'nice', 'renice', 'strings', 'hexdump', 'shasum', 'md5', 'openssl', 'base64', 'cksum', 'column', 'fold', 'paste', 'comm', 'join', 'split', 'expand', 'unexpand', 'tac', 'lipo', 'otool', 'ditto', 'plutil', 'sqlite3', 'ps2pdf', 'time'];
+  var TIER3 = ['node', 'npm', 'npx', 'brew', 'pip', 'pip3', 'tree', 'wget', 'python', 'conda', 'java', 'go', 'cargo', 'rustc', 'docker', 'code-insiders'];
+
+  /* what ./script.sh does: a file with the execute permission is run line by line (the #! line is only a comment) */
+  function scriptRunner(abs, typed) {
+    return function* (args, ctx) {
+      var s = ctx.session, vfs = s.vfs;
+      var text = vfs.readFile(abs, { by: 'terminal' });
+      var saved = {};
+      for (var k = 0; k < 9; k++) saved[k] = hasOwn.call(s.env, String(k)) ? s.env[String(k)] : undefined;
+      s.env['0'] = typed;
+      args.forEach(function (a, idx) { if (idx < 9) s.env[String(idx + 1)] = a; });
+      try { return yield* ctx.runLine(text.replace(/^#!.*\n?/, '')); }
+      finally { Object.keys(saved).forEach(function (k) { if (saved[k] === undefined) delete s.env[k]; else s.env[k] = saved[k]; }); }
+    };
+  }
 
   /* resolveCommand(name, session) -> {fn} | {msg, status} */
   function resolveCommand(name, session) {
@@ -1322,7 +1781,11 @@
       var m = /^\/(?:usr\/)?(?:s?bin)\/([^\/]+)$/.exec(name);
       if (m && hasOwn.call(commands, m[1])) return { fn: commands[m[1]] };
       var abs = resolvePath(session, name);
-      if (session.vfs.exists(abs)) return { msg: 'zsh: permission denied: ' + name, status: 126 };
+      var st = session.vfs.stat(abs);
+      if (st) {
+        if (st.type === 'file' && st.kind === 'text' && (modeOf(session.vfs, st) & 73) !== 0) return { fn: scriptRunner(abs, name) };
+        return { msg: 'zsh: permission denied: ' + name, status: 126 };
+      }
       return { msg: 'zsh: no such file or directory: ' + name, status: 127 };
     }
     if (name === 'sudo') return { msg: 'sudo: this practice Mac does not allow sudo', status: 1 };
@@ -1332,77 +1795,232 @@
   }
 
   /* ------------------------------------------------------------- executor */
+  var OUT_CAP = 120000;
   function newJob(src, session) {
     return {
-      src: src, cwd0: session.cwd, cmds: [], current: null, totalOut: '', stepOut: '', stream: [], effects: [],
+      src: src, cwd0: session.cwd, cmds: [], current: null, totalOut: '', stepOut: '', stream: [], effects: [], pendingSub: null,
+      /* text for the screen; the copy kept for events and tests has no colour codes */
       print: function (s) {
         if (!s) return;
-        this.totalOut += s; this.stepOut += s;
+        var plain = stripAnsi(s);
+        if (this.totalOut.length < OUT_CAP) this.totalOut += plain;
+        this.stepOut += plain;
+        var l = this.stream;
+        if (typeof l[l.length - 1] === 'string') l[l.length - 1] += s; else l.push(s);
+      },
+      /* screen only (an expanded `!!` is shown, but it is not output of the line) */
+      echo: function (s) {
         var l = this.stream;
         if (typeof l[l.length - 1] === 'string') l[l.length - 1] += s; else l.push(s);
       },
       pushEffect: function (e) { this.effects.push(e); this.stream.push(e); }
     };
   }
+  function addEntryOut(entry, s) { if (entry.out.length < OUT_CAP) entry.out += s; }
+
+  var COMPOUND = ['for', 'while', 'until', 'if', 'case', 'select', 'function', 'foreach', 'repeat', 'time', 'coproc', '{', '}', '[[', 'do', 'done', 'then', 'fi', 'esac', 'elif', 'else'];
+  function assignName(tok) {
+    var p0 = tok.parts[0];
+    if (!p0 || p0.k !== 'lit' || p0.q !== 0) return null;
+    var m = /^([A-Za-z_][A-Za-z0-9_]*)=/.exec(p0.s);
+    return m ? m[1] : null;
+  }
+  /* the value of `NAME=value`: no splitting, no globbing */
+  function assignValue(tok, nameLen, session, job) {
+    var out = '';
+    tok.parts.forEach(function (p, idx) {
+      if (p.k === 'var') out += varValue(session, p);
+      else if (p.k === 'sub') out += p.arith ? arithValue(p.src, session, job) : runSubstitution(p.src, session, job);
+      else if (idx === 0) { var rest = p.s.slice(nameLen + 1); out += (rest.charAt(0) === '~' && (rest.length === 1 || rest.charAt(1) === '/')) ? session.env.HOME + rest.slice(1) : rest; }
+      else out += p.s;
+    });
+    return out;
+  }
+
+  /* `$((1+2))`: the text may use $VAR and bare names; a mistake prints zsh's message and gives 0 */
+  function arithValue(src, session, job) {
+    try {
+      var v = calcEval(src.replace(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g, '$1'), { get: function (n) { return hasOwn.call(session.env, n) ? session.env[n] : '0'; } });
+      return String(Math.abs(v) < 1e15 ? Math.round(v * 1e10) / 1e10 : v);
+    } catch (e) {
+      job.print(e.message === 'division by zero' ? 'zsh: division by zero\n' : 'zsh: bad math expression: ' + src + '\n');
+      return '0';
+    }
+  }
+
+  /* `$(…)` and backticks: run the text as a line and hand back what it printed (trailing newlines cut). The commands it ran are
+     queued in job.pendingSub and join the line's cmds[] right after the command that used them. */
+  function runSubstitution(src, session, job) {
+    var lx = lex(src);
+    if (lx.incomplete || lx.unsupported || lx.parseError) { job.print('zsh: parse error in command substitution\n'); return ''; }
+    var ast = parse(lx.tokens);
+    if (ast.error !== undefined || !ast.items.length) return '';
+    var sub = newJob(src, session);
+    var cwd = session.cwd, old = session.oldpwd, pwd = session.env.PWD, st = session.status;
+    var cap = { capture: true, out: '' };
+    var gen = execAst(ast, session, sub, cap);
+    var r = gen.next(), guard = 0;
+    while (!r.done && guard++ < 3000) {
+      var v = r.value || {};
+      r = gen.next(v.prompt !== undefined ? null : undefined);       // nobody to ask: end of input
+    }
+    session.cwd = cwd; session.oldpwd = old; session.env.PWD = pwd; session.status = st;
+    sub.stream.forEach(function (it) { if (typeof it === 'string') job.print(it); else job.pushEffect(it); });
+    job.pendingSub = (job.pendingSub || []).concat(sub.cmds);
+    return cap.out.replace(/\n+$/, '');
+  }
+
+  function failEntry(job, session, cmd, text) {
+    var e = { name: cmd.words.length ? cmd.words[0].raw : '', args: [], cwd: session.cwd, cwdAfter: session.cwd, status: 1, out: text };
+    job.cmds.push(e);
+    job.print(text);
+    return 1;
+  }
 
   function* execSimple(cmd, session, job, opt) {
     var vfs = session.vfs;
-    var args = [], wi;
-    for (wi = 0; wi < cmd.words.length; wi++) {
-      var ex = expandWord(cmd.words[wi], session);
-      if (ex.error) {
-        var failEntry = { name: cmd.words[0].raw, args: [], cwd: session.cwd, cwdAfter: session.cwd, status: 1, out: ex.error + '\n' };
-        job.cmds.push(failEntry);
-        job.print(ex.error + '\n');
-        return 1;
-      }
+    var ai = 0, wi;
+    while (ai < cmd.words.length && assignName(cmd.words[ai])) ai++;
+    var pre = [];
+    for (wi = 0; wi < ai; wi++) {
+      var nm = assignName(cmd.words[wi]);
+      pre.push({ name: nm, value: assignValue(cmd.words[wi], nm.length, session, job) });
+    }
+    var args = [];
+    for (wi = ai; wi < cmd.words.length; wi++) {
+      var ex = expandWord(cmd.words[wi], session, job);
+      if (ex.error) return failEntry(job, session, cmd, ex.error + '\n');
       args = args.concat(ex.words);
     }
     // redirect targets
     var redirs = [];
     for (var ri = 0; ri < cmd.redirs.length; ri++) {
-      var rx = expandWord(cmd.redirs[ri].target, session);
+      var rd = cmd.redirs[ri];
+      if (rd.op === '<<<') {
+        var hs = expandWord(rd.target, session, job);
+        if (hs.error) { job.print(hs.error + '\n'); return 1; }
+        redirs.push({ op: rd.op, fd: 0, text: hs.words.join(' ') + '\n' });
+        continue;
+      }
+      var rx = expandWord(rd.target, session, job);
       if (rx.error) { job.print(rx.error + '\n'); return 1; }
       if (rx.words.length !== 1) { job.print('zsh: ambiguous redirect\n'); return 1; }
-      redirs.push({ op: cmd.redirs[ri].op, path: rx.words[0] });
+      redirs.push({ op: rd.op, fd: rd.fd, path: rx.words[0] });
     }
-    // plain NAME=value assignments
-    if (cmd.words.length && cmd.words.every(function (w) { return /^[A-Za-z_][A-Za-z0-9_]*=/.test(w.raw); })) {
-      args.forEach(function (a) { var eq = a.indexOf('='); session.env[a.slice(0, eq)] = a.slice(eq + 1); });
+    var mergeErr = cmd.dups.some(function (d) { return d.from === 2 && d.to === 1; });
+    var outToErr = cmd.dups.some(function (d) { return d.from === 1 && d.to === 2; });
+    var stdoutR = [], stderrR = [], stdinR = null;
+    redirs.forEach(function (r) {
+      if (r.op === '<' || r.op === '<<<') stdinR = r;
+      else if (r.op === '&>' || r.op === '&>>') { stdoutR.push(r); stderrR.push(r); }
+      else if (r.fd === 2) stderrR.push(r);
+      else stdoutR.push(r);
+    });
+
+    function writeTo(r, text) {
+      if (r.path === '/dev/null' || r.path === '/dev/stdout' || r.path === '/dev/stderr' || r.path === '/dev/tty') {
+        if (r.path !== '/dev/null') job.print(text);
+        return;
+      }
+      if (r.path === '') { job.print('zsh: no such file or directory: \n'); return; }
+      var abs = resolvePath(session, r.path);
+      try {
+        if (vfs.isDir(abs)) throw new vfs.VfsError('EISDIR', r.path);
+        vfs.writeFile(abs, text, { by: 'terminal', append: r.op === '>>' || r.op === '&>>' });
+      } catch (e) {
+        var code = e.code || 'EINVAL';
+        var msg = code === 'ENOENT' ? 'no such file or directory' : code === 'EISDIR' ? 'is a directory' : code === 'ENOTDIR' ? 'not a directory' : vfs.errText(code).toLowerCase();
+        job.print('zsh: ' + msg + ': ' + r.path + '\n');
+      }
+    }
+    function writeAll(list, text) {
+      list.forEach(function (r, idx) { writeTo(r, idx === list.length - 1 ? text : ''); });
+    }
+
+    if (!args.length) {
+      if (pre.length) pre.forEach(function (a) { session.env[a.name] = a.value; });
+      writeAll(stdoutR, '');
       return 0;
     }
-    var redirOut = redirs.length ? redirs[redirs.length - 1] : null;
-
-    function writeRedirects(text) {
-      redirs.forEach(function (r, idx) {
-        if (r.path === '') { job.print('zsh: no such file or directory: \n'); return; }
-        var abs = resolvePath(session, r.path);
-        try {
-          var isLast = idx === redirs.length - 1;
-          if (vfs.isDir(abs)) throw new vfs.VfsError('EISDIR', r.path);
-          vfs.writeFile(abs, isLast ? text : '', { by: 'terminal', append: r.op === '>>' });
-        } catch (e) {
-          var code = e.code || 'EINVAL';
-          var msg = code === 'ENOENT' ? 'no such file or directory' : code === 'EISDIR' ? 'is a directory' : code === 'ENOTDIR' ? 'not a directory' : vfs.errText(code).toLowerCase();
-          job.print('zsh: ' + msg + ': ' + r.path + '\n');
-        }
-      });
-    }
-
-    if (!args.length) { if (redirs.length) writeRedirects(''); return 0; }
 
     var name = args[0], cargs = args.slice(1);
+    if (cmd.words[ai] && cmd.words[ai].parts.length === 1 && cmd.words[ai].parts[0].q === 0 && COMPOUND.indexOf(name) >= 0) {
+      return failEntry(job, session, cmd, '（練習版還沒有做這種寫法：' + name + '）\n');
+    }
+    // stdin: `< file` or `<<< text`
+    var stdin = opt.stdin;
+    if (stdinR) {
+      if (stdinR.text !== undefined) stdin = stdinR.text;
+      else if (stdinR.path === '/dev/null') stdin = '';
+      else {
+        var sp = resolvePath(session, stdinR.path), sst = vfs.stat(sp);
+        if (!sst) { job.print('zsh: no such file or directory: ' + stdinR.path + '\n'); return 1; }
+        if (sst.type === 'dir') { job.print('zsh: is a directory: ' + stdinR.path + '\n'); return 1; }
+        stdin = sst.kind === 'text' ? vfs.readFile(sp, { by: 'terminal' }) : '';
+      }
+    }
+    // NAME=value command: the variables only live as long as the command
+    var saved = null;
+    if (pre.length) {
+      saved = {};
+      pre.forEach(function (a) {
+        saved[a.name] = hasOwn.call(session.env, a.name) ? { v: session.env[a.name], x: session.exported.has(a.name) } : null;
+        session.env[a.name] = a.value;
+        session.exported.add(a.name);                      // the command sees it in its environment
+      });
+    }
+    var res;
+    try {
+      res = yield* runCommand(name, cargs, session, job, {
+        stdin: stdin, tty: !!opt.tty && !stdoutR.length && !outToErr,
+        errMode: mergeErr ? 'stdout' : (stderrR.length ? 'file' : 'tty'), outToErr: outToErr, capture: opt.capture
+      });
+    } finally {
+      if (saved) Object.keys(saved).forEach(function (k) {
+        if (saved[k]) { session.env[k] = saved[k].v; if (!saved[k].x) session.exported.delete(k); }
+        else { delete session.env[k]; session.exported.delete(k); }
+      });
+    }
+    var stdout = res.stdout, errText = res.errText;
+    if (stdoutR.length) {
+      if (opt.capture) opt.capture.out = opt.capture.out.slice(0, opt.capture.out.length - res.stdout.length);
+      var both = stderrR.some(function (r) { return r.op === '&>' || r.op === '&>>'; });
+      writeAll(stdoutR, stdout + (both ? errText : ''));
+      stdout = '';
+    }
+    var fileErr = stderrR.filter(function (r) { return r.op !== '&>' && r.op !== '&>>'; });
+    if (fileErr.length) writeAll(fileErr, errText);
+    return { status: res.status, stdout: stdout };
+  }
+
+  /* one resolved command: name + arguments (also used by xargs, which builds its own argument lists) */
+  function* runCommand(name, cargs, session, job, io) {
+    var vfs = session.vfs;
     var entry = { name: name, args: cargs, cwd: session.cwd, cwdAfter: session.cwd, status: 0, out: '' };
     job.cmds.push(entry);
+    if (job.pendingSub) { job.cmds.push.apply(job.cmds, job.pendingSub); job.pendingSub = null; }
     job.current = entry;
-    var toTty = !!opt.tty && !redirOut;
-    var buf = '';
+    var toTty = !!io.tty;
+    var buf = '', errBuf = '';
     var ctx = {
-      session: session, vfs: vfs, name: name, args: cargs, stdin: opt.stdin, tty: toTty,
-      out: function (s) { if (!s) return; entry.out += s; if (toTty) job.print(s); else buf += s; },
-      err: function (s) { if (!s) return; entry.out += s; job.print(s); },
+      session: session, vfs: vfs, name: name, args: cargs, stdin: io.stdin === undefined ? null : io.stdin, tty: toTty, job: job,
+      out: function (s) {
+        if (!s) return;
+        if (io.outToErr) { ctx.err(s); return; }
+        if (toTty) { addEntryOut(entry, stripAnsi(s)); job.print(s); }
+        else { var p = stripAnsi(s); addEntryOut(entry, p); buf += p; }
+      },
+      err: function (s) {
+        if (!s) return;
+        addEntryOut(entry, stripAnsi(s));
+        if (io.errMode === 'stdout') { if (toTty) job.print(s); else buf += stripAnsi(s); }
+        else if (io.errMode === 'file') errBuf += stripAnsi(s);
+        else job.print(s);
+      },
       effect: function (e) { job.pushEffect(e); },
-      abs: function (p) { return resolvePath(session, p); }
+      abs: function (p) { return resolvePath(session, p); },
+      /* run another line in this shell (source, sh -c, scripts, eval); its commands join the line's cmds[] */
+      runLine: function (src) { return execSource(src, session, job, ctx); }
     };
     var status = 0;
     try {
@@ -1420,21 +2038,33 @@
       } else {
         ctx.err(rc.msg + '\n');
         status = rc.status;
+        if (rc.effect) job.pushEffect(rc.effect);
       }
     } finally {
       entry.cwdAfter = session.cwd;
-      if (redirs.length) writeRedirects(buf);
     }
     entry.status = status;
     session.status = status;
-    return { status: status, stdout: buf };
+    if (io.capture) io.capture.out += buf;
+    return { status: status, stdout: buf, errText: errBuf };
   }
 
-  function* execPipeline(pipe, session, job) {
+  /* run source text (a script, `source`, `sh -c`) with the same job */
+  function* execSource(src, session, job, ctx) {
+    var lx = lex(src);
+    if (lx.incomplete) { ctx.err('zsh: parse error: unmatched quote\n'); return 1; }
+    if (lx.unsupported || lx.parseError) { ctx.err(lx.unsupported ? '（練習版還沒有做這種寫法：' + lx.unsupported + '）\n' : "zsh: parse error near `" + lx.parseError + "'\n"); return 1; }
+    var ast = parse(lx.tokens);
+    if (ast.error !== undefined) { ctx.err("zsh: parse error near `" + ast.error + "'\n"); return 1; }
+    return yield* execAst(ast, session, job, null);
+  }
+
+  function* execPipeline(pipe, session, job, opt) {
     var input = null, status = 0;
     for (var i = 0; i < pipe.length; i++) {
       var isLast = i === pipe.length - 1;
-      var r = yield* execSimple(pipe[i], session, job, { stdin: input, tty: isLast });
+      var cap = isLast && opt && opt.capture ? opt : null;
+      var r = yield* execSimple(pipe[i], session, job, { stdin: input, tty: isLast && !cap, capture: cap });
       if (typeof r === 'number') { status = r; input = ''; }
       else { status = r.status; input = r.stdout; }
       session.status = status;
@@ -1442,29 +2072,114 @@
     return status;
   }
 
-  function* execAst(ast, session, job) {
+  function* execAst(ast, session, job, opt) {
     var last = session.status;
     for (var i = 0; i < ast.items.length; i++) {
       var it = ast.items[i];
       if (it.conn === '&&' && last !== 0) continue;
       if (it.conn === '||' && last === 0) continue;
-      last = yield* execPipeline(it.pipe, session, job);
+      last = yield* execPipeline(it.pipe, session, job, opt);
       session.status = last;
     }
     return last;
   }
 
+  /* ------------------------------------------------------ aliases, history */
+  function expandAliases(toks, session) {
+    var al = session.aliases;
+    if (!al) return toks;
+    var any = false;
+    for (var k in al) { any = true; break; }
+    if (!any) return toks;
+    function plainName(tok) {
+      return tok.t === 'word' && tok.parts.length === 1 && tok.parts[0].k === 'lit' && tok.parts[0].q === 0 && !tok.parts[0].tilde ? tok.parts[0].s : null;
+    }
+    function expandWordTok(tok, used, depth) {
+      var nm = plainName(tok);
+      if (nm === null || !hasOwn.call(al, nm) || used.indexOf(nm) >= 0 || depth > 6) return [tok];
+      var sub = lex(al[nm]);
+      if (sub.incomplete || sub.unsupported || sub.parseError || !sub.tokens.length) return [tok];
+      var res = sub.tokens.slice();
+      // the first word of the replacement may itself be an alias (but never the same one again)
+      if (res[0].t === 'word') res = expandWordTok(res[0], used.concat([nm]), depth + 1).concat(res.slice(1));
+      return res;
+    }
+    var out = [], cmdPos = true, skipTarget = false;
+    toks.forEach(function (t) {
+      if (t.t === 'op') {
+        out.push(t);
+        if (t.op === ';' || t.op === 'nl' || t.op === '&&' || t.op === '||' || t.op === '|') cmdPos = true;
+        else if (t.op === '>' || t.op === '>>' || t.op === '<' || t.op === '<<<' || t.op === '&>' || t.op === '&>>') skipTarget = true;
+        return;
+      }
+      if (skipTarget) { skipTarget = false; out.push(t); return; }
+      if (cmdPos) {
+        if (assignName(t)) { out.push(t); return; }
+        var ex = expandWordTok(t, [], 0);
+        ex.forEach(function (x) { out.push(x); });
+        cmdPos = false;
+        return;
+      }
+      out.push(t);
+    });
+    return out;
+  }
+
+  /* !! !$ !^ !* !n !-n !str (zsh expands these before it reads the line, and shows the result) -> {line, changed} | {error} */
+  function expandHistory(src, session) {
+    if (src.indexOf('!') < 0) return { line: src, changed: false };
+    var hist = session.history, out = '', i = 0, changed = false, inSingle = false;
+    function lastWords() { var h = hist.length ? hist[hist.length - 1] : ''; var lx = lex(h); return lx.tokens.filter(function (t) { return t.t === 'word'; }).map(function (t) { return t.raw; }); }
+    while (i < src.length) {
+      var c = src.charAt(i);
+      if (c === '\\' && i + 1 < src.length) { out += c + src.charAt(i + 1); i += 2; continue; }
+      if (c === "'") { inSingle = !inSingle; out += c; i++; continue; }
+      if (c !== '!' || inSingle) { out += c; i++; continue; }
+      var rest = src.slice(i + 1), m;
+      var rep = null, used = 1;
+      if (rest.charAt(0) === '!') { if (!hist.length) return { error: 'zsh: event not found: !' }; rep = hist[hist.length - 1]; used = 2; }
+      else if (rest.charAt(0) === '$') { var w = lastWords(); if (!hist.length) return { error: 'zsh: event not found: !$' }; rep = w.length ? w[w.length - 1] : ''; used = 2; }
+      else if (rest.charAt(0) === '^') { var w2 = lastWords(); rep = w2.length > 1 ? w2[1] : ''; used = 2; }
+      else if (rest.charAt(0) === '*') { var w3 = lastWords(); rep = w3.slice(1).join(' '); used = 2; }
+      else if ((m = /^-(\d+)/.exec(rest))) { var k = hist.length - parseInt(m[1], 10); if (k < 0 || k >= hist.length) return { error: 'zsh: event not found: -' + m[1] }; rep = hist[k]; used = 1 + m[0].length; }
+      else if ((m = /^(\d+)/.exec(rest))) { var n = parseInt(m[1], 10) - 1; if (n < 0 || n >= hist.length) return { error: 'zsh: event not found: ' + m[1] }; rep = hist[n]; used = 1 + m[0].length; }
+      else if ((m = /^([A-Za-z_.\/][^\s;&|<>()"']*)/.exec(rest))) {
+        var found = null;
+        for (var h2 = hist.length - 1; h2 >= 0; h2--) if (hist[h2].indexOf(m[1]) === 0) { found = hist[h2]; break; }
+        if (found === null) return { error: 'zsh: event not found: ' + m[1] };
+        rep = found; used = 1 + m[0].length;
+      }
+      if (rep === null) { out += c; i++; continue; }
+      out += rep; i += used; changed = true;
+    }
+    return { line: out, changed: changed };
+  }
+
   /* ------------------------------------------------------ session and run */
   var sessionCounter = 0;
+  var DEFAULT_PATH = '/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin';
   function newSession(o) {
     o = o || {};
     var cwd = o.cwd || HOME;
-    return {
+    var tty = o.tty === undefined ? 0 : o.tty;
+    var al = Object.create(null);
+    al['run-help'] = 'man';
+    al['which-command'] = 'whence';
+    var s = {
       id: 's' + (++sessionCounter), cwd: cwd, oldpwd: null,
-      env: { HOME: HOME, USER: 'an', SHELL: '/bin/zsh', PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin', PWD: cwd, HOSTNAME: 'MacBook-Air.local', HOST: 'MacBook-Air.local', LOGNAME: 'an' },
-      status: 0, history: [], cols: o.cols || 80, tty: o.tty === undefined ? 0 : o.tty, vfs: o.vfs || LAB.vfs,
-      prompt: null, pending: null, ps2: null, alive: true, gen: null, job: null, sleeping: null
+      env: {
+        HOME: HOME, USER: 'an', SHELL: '/bin/zsh', PATH: DEFAULT_PATH, PWD: cwd, HOSTNAME: 'MacBook-Air.local', HOST: 'MacBook-Air.local', LOGNAME: 'an',
+        TERM: 'xterm-256color', TERM_PROGRAM: 'Apple_Terminal', TERM_PROGRAM_VERSION: '455', TERM_SESSION_ID: 'A1B2C3D4-5E6F-4A7B-8C9D-0E1F2A3B4C5D',
+        LANG: 'zh_TW.UTF-8', TMPDIR: '/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T/', XPC_FLAGS: '0x0', XPC_SERVICE_NAME: '0',
+        SSH_AUTH_SOCK: '/private/tmp/com.apple.launchd.9xKq3vB2tm/Listeners', __CF_USER_TEXT_ENCODING: '0x1F5:0x0:0x0', LC_CTYPE: 'zh_TW.UTF-8'
+      },
+      exported: null,
+      status: 0, history: [], cols: o.cols || 80, tty: tty, vfs: o.vfs || LAB.vfs,
+      prompt: null, pending: null, ps2: null, alive: true, gen: null, job: null, sleeping: null, appActive: null,
+      aliases: al, rng: makeRng(20261002 + sessionCounter * 7), pid: 5001 + tty * 10, startMs: LAB.clock.ms()
     };
+    s.exported = new Set(['HOME', 'USER', 'SHELL', 'PATH', 'PWD', 'LOGNAME', 'TERM', 'TERM_PROGRAM', 'TERM_PROGRAM_VERSION', 'TERM_SESSION_ID', 'LANG', 'TMPDIR', 'XPC_FLAGS', 'XPC_SERVICE_NAME', 'SSH_AUTH_SOCK', '__CF_USER_TEXT_ENCODING', 'LC_CTYPE']);
+    return s;
   }
 
   function stepResult(session, job, done) {
@@ -1490,9 +2205,9 @@
     return r;
   }
 
-  function advance(session, input) {
+  function advance(session, input, first) {
     var job = session.job;
-    job.stepOut = ''; job.effects = []; job.stream = [];
+    if (!first) { job.stepOut = ''; job.effects = []; job.stream = []; }
     session.prompt = null;
     var r;
     try { r = session.gen.next(input); }
@@ -1513,19 +2228,33 @@
         job.pushEffect({ type: 'prompt', text: v.prompt });
       } else if (v.sleep !== undefined) {
         session.sleeping = { ms: v.sleep };
+        job.pushEffect({ type: 'sleep', ms: v.sleep });
+      } else if (v.app) {
+        session.appActive = v.app;
+        job.pushEffect({ type: 'app', app: v.app });
       }
       return stepResult(session, job, false);
     }
-    session.gen = null; session.job = null; session.sleeping = null; session.prompt = null;
+    session.gen = null; session.job = null; session.sleeping = null; session.prompt = null; session.appActive = null;
     return stepResult(session, job, true);
   }
 
   function run(line, session) {
     if (!session.alive) return emptyResult(session);
     if (session.prompt) return session.prompt.onLine(line);
-    if (session.sleeping) return emptyResult(session);
-    var src = String(line);
+    if (session.sleeping || session.appActive) return emptyResult(session);
+    var src = String(line), echo = false;
     if (session.pending !== null) src = session.pending + '\n' + src;
+    else if (src.indexOf('!') >= 0) {
+      var he = expandHistory(src, session);
+      if (he.error) {
+        var jh = newJob(src, session);
+        jh.print(he.error + '\n');
+        session.status = 1;
+        return stepResult(session, jh, true);
+      }
+      if (he.changed) { src = he.line; echo = true; }
+    }
     var lx = lex(src);
     if (lx.incomplete) {
       session.pending = src;
@@ -1540,12 +2269,13 @@
     if (src.replace(/\s+/g, '') === '') return emptyResult(session);
     session.history.push(src);
     var job = newJob(src, session);
+    if (echo) job.echo(src + '\n');
     var msg = null;
     if (lx.unsupported) msg = '（練習版還沒有做這種寫法：' + lx.unsupported + '）';
     else if (lx.parseError) msg = "zsh: parse error near `" + lx.parseError + "'";
     var ast = null;
     if (!msg) {
-      ast = parse(lx.tokens);
+      ast = parse(expandAliases(lx.tokens, session));
       if (ast.error !== undefined) msg = "zsh: parse error near `" + ast.error + "'";
     }
     if (msg) {
@@ -1555,15 +2285,15 @@
     }
     if (!ast.items.length) return emptyResult(session);
     session.job = job;
-    session.gen = execAst(ast, session, job);
-    return advance(session, undefined);
+    session.gen = execAst(ast, session, job, null);
+    return advance(session, undefined, true);
   }
 
-  /* the renderer's sleep timer ended */
-  function resume(session) {
+  /* the renderer's sleep timer ended, or a full-screen program finished (value = what it returned) */
+  function resume(session, value) {
     if (!session.gen) return null;
-    session.sleeping = null;
-    return advance(session, undefined);
+    session.sleeping = null; session.appActive = null;
+    return advance(session, value);
   }
   /* Ctrl+C while something is running (sleep, a question, stdin mode) or an unfinished line */
   function cancel(session) {
@@ -1573,7 +2303,7 @@
       session.status = 130;
       job.stepOut = ''; job.effects = []; job.stream = [];
       try { session.gen.return(); } catch (e) { /* ignore */ }
-      session.gen = null; session.job = null; session.sleeping = null; session.prompt = null;
+      session.gen = null; session.job = null; session.sleeping = null; session.prompt = null; session.appActive = null;
       return stepResult(session, job, true);
     }
     if (session.pending !== null) { session.pending = null; session.ps2 = null; }
@@ -1635,7 +2365,12 @@
     var typedDir = '', suffixSpace = ' ';
     if (sc.cmd && sc.plain.indexOf('/') < 0) {
       if (sc.plain === '') return none;
-      Object.keys(commands).sort().forEach(function (n) { if (n.indexOf(sc.plain) === 0) found.push({ name: n, dir: false }); });
+      var seenName = {};
+      Object.keys(commands).concat(Object.keys(session.aliases || {})).sort().forEach(function (n) {
+        if (n.indexOf(sc.plain) !== 0 || seenName[n] || !/^[A-Za-z]/.test(n)) return;
+        seenName[n] = true;
+        found.push({ name: n, dir: false });
+      });
     } else {
       var plain = sc.plain, slash = plain.lastIndexOf('/');
       typedDir = slash >= 0 ? plain.slice(0, slash + 1) : '';
@@ -1646,7 +2381,7 @@
       else lookup = vfs.normalize(typedDir, session.cwd);
       var list = [];
       try { list = vfs.list(lookup); } catch (e) { list = []; }
-      var dirsOnly = sc.cmdName === 'cd';
+      var dirsOnly = sc.cmdName === 'cd' || sc.cmdName === 'rmdir';
       list.forEach(function (st) {
         if (st.name.indexOf(base) !== 0) return;
         if (st.dot && base.charAt(0) !== '.') return;
@@ -1670,11 +2405,173 @@
     return res;
   }
 
+  /* ------------------------------------------------------------------ processes
+     ps, top, kill and killall read the same fake process table (SPEC §1): the apps that are really open, plus system processes.
+     PIDs never change; CPU % wobbles a little on every query, from a seeded generator, so it is the same sequence every visit.
+     LAB.procs is also meant for the Activity Monitor (SYS-MAC): list() and kill(pid) are its whole interface. */
+  var SYS_PROCS = [
+    // pid, ppid, user, name, path, cpu%, memMB, threads
+    [1, 0, 'root', 'launchd', '/sbin/launchd', 0.5, 17, 4],
+    [87, 1, 'root', 'logd', '/usr/libexec/logd', 0.4, 14, 3],
+    [91, 1, 'root', 'fseventsd', '/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd', 0.2, 12, 6],
+    [96, 1, 'root', 'configd', '/usr/libexec/configd', 0.3, 21, 8],
+    [98, 1, 'root', 'powerd', '/usr/libexec/powerd', 0.1, 9, 3],
+    [112, 1, 'root', 'mds', '/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds', 1.3, 120, 8],
+    [140, 1, '_windowserver', 'WindowServer', '/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer', 6.2, 310, 14],
+    [142, 1, 'an', 'loginwindow', '/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow', 0.1, 66, 5],
+    [301, 1, 'an', 'cfprefsd', '/usr/sbin/cfprefsd', 0.1, 11, 4],
+    [305, 1, 'an', 'distnoted', '/usr/sbin/distnoted', 0.0, 8, 2],
+    [352, 1, 'an', 'Dock', '/System/Library/CoreServices/Dock.app/Contents/MacOS/Dock', 0.6, 104, 6],
+    [354, 1, 'an', 'SystemUIServer', '/System/Library/CoreServices/SystemUIServer.app/Contents/MacOS/SystemUIServer', 0.2, 72, 5],
+    [358, 1, 'an', 'ControlCenter', '/System/Library/CoreServices/ControlCenter.app/Contents/MacOS/ControlCenter', 0.2, 88, 6],
+    [362, 1, 'an', 'Spotlight', '/System/Library/CoreServices/Spotlight.app/Contents/MacOS/Spotlight', 0.2, 96, 7],
+    [366, 1, 'an', 'NotificationCenter', '/System/Library/CoreServices/NotificationCenter.app/Contents/MacOS/NotificationCenter', 0.1, 58, 4],
+    [371, 1, 'an', 'usernoted', '/usr/sbin/usernoted', 0.0, 13, 3],
+    [412, 1, 'root', 'airportd', '/usr/libexec/airportd', 0.1, 17, 5],
+    [418, 1, 'root', 'bluetoothd', '/usr/sbin/bluetoothd', 0.1, 14, 4],
+    [425, 1, 'root', 'coreaudiod', '/usr/sbin/coreaudiod', 0.2, 16, 5],
+    [433, 1, 'root', 'mds_stores', '/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores', 0.2, 55, 5]
+  ];
+  var APP_PROCS = {
+    finder: [411, 'Finder', '/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder', 0.6, 168, 12],
+    terminal: [1120, 'Terminal', '/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal', 0.9, 112, 9],
+    codex: [1180, 'Codex', '/Applications/Codex.app/Contents/MacOS/Codex', 2.4, 340, 28],
+    code: [1240, 'Code', '/Applications/Code.app/Contents/MacOS/Electron', 3.1, 520, 36],
+    textedit: [1301, 'TextEdit', '/System/Applications/TextEdit.app/Contents/MacOS/TextEdit', 0.1, 74, 5],
+    safari: [1360, 'Safari', '/Applications/Safari.app/Contents/MacOS/Safari', 1.8, 310, 22],
+    settings: [1412, 'System Settings', '/System/Applications/System Settings.app/Contents/MacOS/System Settings', 0.2, 96, 7],
+    calculator: [1466, 'Calculator', '/System/Applications/Calculator.app/Contents/MacOS/Calculator', 0.0, 48, 4],
+    activity: [1520, 'Activity Monitor', '/System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor', 1.1, 88, 6],
+    preview: [1578, 'Preview', '/System/Applications/Preview.app/Contents/MacOS/Preview', 0.2, 82, 6]
+  };
+  var procRng = makeRng(20261002);
+  function procRow(a, appId, tty) {
+    var base = a[5];
+    return {
+      pid: a[0], ppid: a[1], user: a[2], name: a[3], command: a[4], appId: appId || null, tty: tty || '??',
+      cpu: base === 0 ? 0 : Math.round(base * (0.7 + 0.6 * procRng()) * 10) / 10,
+      memMB: a[6], rssKB: a[6] * 1024, vszKB: 4200000 + a[6] * 3100, threads: a[7],
+      state: 'S'
+    };
+  }
+  function terminalTtys() {
+    var out = [];
+    try {
+      if (LAB.terminal && LAB.terminal.instances) LAB.terminal.instances.forEach(function (inst) { out.push({ tty: inst.session.tty, win: inst.win }); });
+    } catch (e) { /* the Terminal is not ready */ }
+    out.sort(function (a, b) { return a.tty - b.tty; });
+    return out;
+  }
+  var procs = {
+    /* every process, sorted by PID: system ones, the apps that are open, and a `login` + `-zsh` pair for every Terminal window */
+    list: function () {
+      var rows = [];
+      SYS_PROCS.forEach(function (a) { rows.push(procRow(a, null)); });
+      var running = (LAB.apps && LAB.apps.running) ? LAB.apps.running() : ['finder'];
+      Object.keys(APP_PROCS).forEach(function (id) {
+        if (id !== 'finder' && running.indexOf(id) < 0) return;
+        var a = APP_PROCS[id];
+        rows.push(procRow([a[0], 1, 'an', a[1], a[2], a[3], a[4], a[5]], id));
+      });
+      terminalTtys().forEach(function (t) {
+        var tt = 'ttys' + (t.tty < 10 ? '00' : t.tty < 100 ? '0' : '') + t.tty;
+        var lp = 5000 + t.tty * 10;
+        rows.push(procRow([lp, 1120, 'root', 'login', '/usr/bin/login', 0.0, 7, 2], null, tt));
+        rows.push(procRow([lp + 1, lp, 'an', '-zsh', '-zsh', 0.1, 11, 2], null, tt));
+      });
+      rows.sort(function (x, y) { return x.pid - y.pid; });
+      return rows;
+    },
+    find: function (pid) {
+      var l = procs.list();
+      for (var i = 0; i < l.length; i++) if (l[i].pid === pid) return l[i];
+      return null;
+    },
+    /* end a process: an app's PID quits that app, a shell's PID closes its window; system processes refuse */
+    kill: function (pid) {
+      var row = procs.find(pid);
+      if (!row) return { ok: false, error: 'no such process' };
+      if (row.appId) {
+        if (row.appId === 'finder') {
+          var paths = [];
+          try { if (LAB.finder && LAB.finder.windows) paths = LAB.finder.windows().map(function (w) { return w.path; }); } catch (e0) { /* ignore */ }
+          LAB.wm.byApp('finder').slice().forEach(function (w) { w.close(true); });
+          // Finder starts again by itself, with the windows it had
+          setTimeout(function () { paths.forEach(function (p) { try { LAB.finder.open({ path: p, via: 'open' }); } catch (e1) { /* ignore */ } }); }, 900);
+          return { ok: true };
+        }
+        LAB.apps.quit(row.appId, { force: true });
+        return { ok: true };
+      }
+      if (row.name === '-zsh') {
+        var t = terminalTtys().filter(function (x) { return 5001 + x.tty * 10 === pid; })[0];
+        if (t) { setTimeout(function () { try { t.win.close(true); } catch (e2) { /* ignore */ } }, 50); return { ok: true, self: true }; }
+      }
+      if (row.name === 'Dock' || row.name === 'SystemUIServer' || row.name === 'ControlCenter' || row.name === 'Spotlight') return { ok: true };   // they restart at once
+      return { ok: false, error: 'operation not permitted' };
+    },
+    /* every process whose name matches (case-insensitive, also the zh-TW name of the app) */
+    byName: function (name) {
+      var want = String(name).toLowerCase();
+      return procs.list().filter(function (r) {
+        if (String(r.name).toLowerCase() === want) return true;
+        var def = r.appId && LAB.apps && LAB.apps.get(r.appId);
+        return !!def && [def.title, def.en].some(function (n) { return n && String(n).toLowerCase() === want; });
+      });
+    }
+  };
+  LAB.procs = LAB.procs || procs;
+  /* ------------------------------------------------ the command library (js/terminal-cmds.js)
+     Everything the missions need lives in this file. The long list of other commands (grep, git, man, top …) is a second file that
+     is fetched when the first Terminal window opens, so the desktop stays light. A line typed before it has arrived waits for it (at most
+     6 s); if it never arrives the commands above still work and the rest answer with the usual lab line. */
+  var lib = { state: 'idle', cbs: [], src: 'js/terminal-cmds.js' };
+  try {
+    var curScript = document.currentScript;
+    if (curScript && curScript.src) lib.src = curScript.src.replace(/terminal\.js(\?[^#]*)?(#.*)?$/, 'terminal-cmds.js$1');
+  } catch (eSrc) { /* keep the relative address */ }
+  function loadLibrary(cb) {
+    if (LAB.shell && LAB.shell.library && lib.state !== 'ready') lib.state = 'ready';
+    if (lib.state === 'ready' || lib.state === 'failed') { if (cb) cb(lib.state === 'ready'); return; }
+    if (cb) lib.cbs.push(cb);
+    if (lib.state === 'loading') return;
+    lib.state = 'loading';
+    var timer = 0;
+    function done(ok) {
+      if (lib.state !== 'loading') return;
+      lib.state = ok ? 'ready' : 'failed';
+      clearTimeout(timer);
+      var list = lib.cbs.slice();
+      lib.cbs.length = 0;
+      list.forEach(function (f) { try { f(ok); } catch (e) { console.error('[terminal] library callback', e); } });
+    }
+    timer = setTimeout(function () { done(false); }, 6000);
+    var el = document.createElement('script');
+    el.src = lib.src;
+    el.async = true;
+    el.onload = function () { done(!!(LAB.shell && LAB.shell.library)); };
+    el.onerror = function () { done(false); };
+    (document.head || document.documentElement).appendChild(el);
+  }
+
+  /* what the library file needs from this one, and the state that every Terminal window shares (the real Mac is one computer) */
+  var sysState = { devTools: false, installing: false, gitConfig: Object.create(null), gitRepos: new Map(), clip: '' };
+
   LAB.shell = {
     newSession: newSession, run: run, resume: resume, cancel: cancel, complete: complete,
-    commands: commands, escape: shellEscape, columns: columns, lex: lex, parse: parse, findApp: findApp
+    commands: commands, escape: shellEscape, columns: columns, lex: lex, parse: parse, findApp: findApp,
+    load: function () { return new Promise(function (res) { loadLibrary(res); }); },
+    libraryState: function () { return lib.state; },
+    library: false, sys: sysState, procs: procs,
+    api: {
+      h: h, pad: pad, p2: p2, sgr: sgr, ESC: ESC, stripAnsi: stripAnsi, makeRng: makeRng, calcEval: calcEval, columns: columns, humanSize: humanSize,
+      parseOpts: parseOpts, usageResult: usageResult, USAGE: USAGE, LETTERS: LETTERS, WITHARG: WITHARG,
+      resolvePath: resolvePath, abbrevHome: abbrevHome, errLine: errLine, protectedKind: protectedKind, attrsOf: attrsOf, modeOf: modeOf, modeString: modeString,
+      readStdinLines: readStdinLines, catText: catText, countText: countText, utf8len: utf8len, askYes: askYes, shellEscape: shellEscape,
+      resolveCommand: resolveCommand, runCommand: runCommand, execSource: execSource, lex: lex, parse: parse,
+      BUILTINS: BUILTINS, TIER2: TIER2, TIER3: TIER3, APP_NAMES: APP_NAMES, KNOWN_MAC_APPS: KNOWN_MAC_APPS, DEFAULT_PATH: DEFAULT_PATH, PROTECTED_STD: PROTECTED_STD
+    }
   };
-
   /* =====================================================================
      PART B — persisted state and the Terminal window
      ===================================================================== */
@@ -1710,17 +2607,38 @@
 
   function stageScale() { return (LAB.stage && LAB.stage.scale) || 1; }
 
-  /* a logical line of text -> rows of {text} wrapped at `cols` columns (CJK counts 2, marks 0) */
-  function wrapText(text, cols, markLast) {
-    var rows = [], row = '', col = 0, lastCp = 0;
-    for (var ch of text) {
-      var w = charWidth(ch.codePointAt(0));
-      if (w === 0) { row += ch; continue; }
-      if (col + w > cols && col > 0) { rows.push(row); row = ''; col = 0; }
-      row += ch; col += w;
+  /* ---- text on the screen: a logical line is plain text plus colour spans {s, e, c} (code-point indexes, c = CSS classes) ---- */
+  function newLine() { return { text: '', n: 0, spans: [] }; }
+  function newStyle() { return { b: 0, u: 0, r: 0, fg: -1, bg: -1 }; }
+  function styleClass(st) {
+    var c = '';
+    if (st.b) c += ' tm-b';
+    if (st.u) c += ' tm-u';
+    if (st.r) c += ' tm-r';
+    if (st.fg >= 0) c += ' tm-f' + st.fg;
+    if (st.bg >= 0) c += ' tm-g' + st.bg;
+    return c.slice(1);
+  }
+  /* SGR codes: reset, bold, underline, reverse, 30-37 / 90-97 text colours, 40-47 / 100-107 backgrounds (256 and RGB colours are skipped) */
+  function applySgr(st, params) {
+    var ps = params === '' ? [0] : params.split(';').map(function (x) { return x === '' ? 0 : parseInt(x, 10); });
+    for (var i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      if (p === 0) { st.b = 0; st.u = 0; st.r = 0; st.fg = -1; st.bg = -1; }
+      else if (p === 1) st.b = 1;
+      else if (p === 4) st.u = 1;
+      else if (p === 7) st.r = 1;
+      else if (p === 22) st.b = 0;
+      else if (p === 24) st.u = 0;
+      else if (p === 27) st.r = 0;
+      else if (p >= 30 && p <= 37) st.fg = p - 30;
+      else if (p === 39) st.fg = -1;
+      else if (p >= 40 && p <= 47) st.bg = p - 40;
+      else if (p === 49) st.bg = -1;
+      else if (p >= 90 && p <= 97) st.fg = p - 90 + 8;
+      else if (p >= 100 && p <= 107) st.bg = p - 100 + 8;
+      else if (p === 38 || p === 48) { if (ps[i + 1] === 5) i += 2; else if (ps[i + 1] === 2) i += 4; }
     }
-    rows.push(row);
-    return rows;
   }
 
   function expandTabs(existing, add) {
@@ -1734,23 +2652,67 @@
     return out;
   }
 
-  /* build the DOM of one row string: narrow runs are plain text, wide characters get a 2ch cell */
-  function fillRow(el, str, markLastEol) {
+  /* add a piece of text (no newline, colour codes allowed) to a logical line; `st` is the colour state, which carries over */
+  function feedLine(line, str, st) {
+    var re = /\x1b\[([0-9;?]*)([A-Za-z])/g, last = 0, m;
+    function addPlain(t) {
+      if (!t) return;
+      t = expandTabs(line.text, t);
+      if (!t) return;
+      var cnt = Array.from(t).length, cls = styleClass(st);
+      if (cls) {
+        var ls = line.spans[line.spans.length - 1];
+        if (ls && ls.e === line.n && ls.c === cls) ls.e += cnt; else line.spans.push({ s: line.n, e: line.n + cnt, c: cls });
+      }
+      line.text += t; line.n += cnt;
+    }
+    while ((m = re.exec(str))) {
+      addPlain(str.slice(last, m.index));
+      last = re.lastIndex;
+      if (m[2] === 'm') applySgr(st, m[1]);
+    }
+    addPlain(str.slice(last));
+  }
+
+  /* code points -> row ranges [from, to) wrapped at `cols` columns (CJK counts 2, marks 0) */
+  function wrapRanges(cps, cols) {
+    var rows = [], a = 0, col = 0;
+    for (var i = 0; i < cps.length; i++) {
+      var w = charWidth(cps[i].codePointAt(0));
+      if (w === 0) continue;
+      if (col + w > cols && col > 0) { rows.push([a, i]); a = i; col = 0; }
+      col += w;
+    }
+    rows.push([a, cps.length]);
+    return rows;
+  }
+
+  /* build the DOM of one row: narrow runs are plain text (or a colour span), wide characters get a 2ch cell;
+     markLast = the last character is zsh's reverse-video %, curIdx = the cell that holds the cursor */
+  function fillRow(el, cps, a, b, spans, markLast, curIdx) {
     var frag = document.createDocumentFragment();
-    var run = '';
-    function flush() { if (run) { frag.appendChild(document.createTextNode(run)); run = ''; } }
-    var chars = Array.from(str);
-    for (var i = 0; i < chars.length; i++) {
-      var ch = chars[i], cp = ch.codePointAt(0), w = charWidth(cp);
-      var isMark = markLastEol && i === chars.length - 1;
-      if (isMark) { flush(); frag.appendChild(h('span', { class: 'tm-eol' }, ch)); continue; }
-      if (w === 2) {
-        flush();
-        var span = h('span', { class: 'tm-w' }, ch);
-        // attach following zero-width marks to this cell
-        while (i + 1 < chars.length && charWidth(chars[i + 1].codePointAt(0)) === 0) { span.appendChild(document.createTextNode(chars[i + 1])); i++; }
+    var run = '', runCls = '', si = 0;
+    function flush() {
+      if (!run) return;
+      if (runCls) frag.appendChild(h('span', { class: runCls }, run)); else frag.appendChild(document.createTextNode(run));
+      run = '';
+    }
+    function clsAt(i) {
+      while (si < spans.length && spans[si].e <= i) si++;
+      return si < spans.length && spans[si].s <= i ? spans[si].c : '';
+    }
+    for (var i = a; i < b; i++) {
+      var ch = cps[i], w = charWidth(ch.codePointAt(0)), cls = clsAt(i);
+      if (markLast && i === b - 1) { flush(); runCls = ''; frag.appendChild(h('span', { class: 'tm-eol' }, ch)); continue; }
+      if (w === 2 || i === curIdx) {
+        flush(); runCls = '';
+        var span = h('span', { class: ((i === curIdx ? 'tm-cursor ' : '') + (w === 2 ? 'tm-w ' : '') + cls).trim() }, ch);
+        while (w === 2 && i + 1 < b && charWidth(cps[i + 1].codePointAt(0)) === 0) { span.appendChild(document.createTextNode(cps[i + 1])); i++; }
         frag.appendChild(span);
-      } else run += ch;
+        continue;
+      }
+      if (cls !== runCls) { flush(); runCls = cls; }
+      run += ch;
     }
     flush();
     el.appendChild(frag);
@@ -1774,11 +2736,15 @@
     // ---- state
     var fs = FS_DEFAULT, cw = FS_DEFAULT * 0.6, lh = Math.round(FS_DEFAULT * LH * 4) / 4;
     var cols = 80, rows = 24;
-    var hist = [];                    // {text, mark, el}
-    var partial = '';                 // unfinished output line
+    var hist = [];                    // {text, spans, mark, el}
+    var partial = newLine();          // unfinished output line
+    var ansi = newStyle();            // colour state of the output, kept between prints
     var buf = [], cur = 0, comp = '';
     var histPos = -1, stash = null;
     var tabState = null;
+    var rs = null;                    // Ctrl+R: {query, idx, saved, failed}
+    var app = null;                   // a full-screen program (less, man, nano, top): {def, api, timer, cache}
+    var waitingLib = false;
     var busy = false, dead = false, composing = false, userSized = false, selfSizing = false;
     var sleepTimer = 0, clearAnchor = null, closed = false;
     var lastCwd = session.cwd;
@@ -1788,6 +2754,7 @@
     var histEl = h('div', { class: 'tm-hist' });
     var liveEl = h('div', { class: 'tm-live' });
     var spacerEl = h('div', { class: 'tm-spacer' });
+    var altEl = h('div', { class: 'tm-alt', dataset: { lab: 'term-alt' } });
     var ta = h('textarea', {
       class: 'tm-input', rows: '1', spellcheck: 'false', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off',
       'aria-label': '終端機輸入', dataset: { lab: 'term-input' }
@@ -1840,6 +2807,7 @@
     }
     function fit() {
       if (closed || !win) return;
+      var wasCols = cols, wasRows = rows;
       var cwid = screen.clientWidth, chei = root.clientHeight;
       if (cwid < 20 || chei < 20) return;
       var nc = Math.max(10, Math.floor((cwid - 2 * PAD) / cw + 0.001));
@@ -1853,17 +2821,22 @@
       session.cols = cols;
       if (colsChanged) rewrap();
       if (changed) { updateTitle(); renderLive(); }
+      if (app && (nc !== wasCols || nr !== wasRows)) {
+        if (app.def.resize) { try { app.def.resize(app.api); } catch (eR) { console.error('[terminal] app resize', eR); } }
+        buildAltRows();
+        renderApp();
+      }
     }
 
     // ---- history lines
     function buildLine(item) {
       var el = item.el || h('div', { class: 'tm-line' });
       el.textContent = '';
-      var text = item.text + (item.mark ? '%' : '');
-      var rs = wrapText(text, cols);
-      for (var i = 0; i < rs.length; i++) {
+      var cps = Array.from(item.text + (item.mark ? '%' : ''));
+      var ranges = wrapRanges(cps, cols);
+      for (var i = 0; i < ranges.length; i++) {
         var r = h('div', { class: 'tm-row' });
-        fillRow(r, rs[i], !!item.mark && i === rs.length - 1);
+        fillRow(r, cps, ranges[i][0], ranges[i][1], item.spans || [], !!item.mark && i === ranges.length - 1, -1);
         el.appendChild(r);
       }
       item.el = el;
@@ -1873,8 +2846,9 @@
       histEl.textContent = '';
       hist.forEach(function (it) { histEl.appendChild(buildLine(it)); });
     }
-    function commitLine(text, mark) {
-      var it = { text: text, mark: !!mark, el: null };
+    /* a finished line of the screen: a plain string, or a {text, spans} line */
+    function commitLine(line, mark) {
+      var it = typeof line === 'string' ? { text: line, spans: [], mark: !!mark, el: null } : { text: line.text, spans: line.spans, mark: !!mark, el: null };
       hist.push(it);
       histEl.appendChild(buildLine(it));
       while (hist.length > 2000) {
@@ -1888,17 +2862,18 @@
       s = String(s).replace(/\r\n/g, '\n').replace(/\r/g, '');
       var chunks = s.split('\n');
       for (var i = 0; i < chunks.length; i++) {
-        partial += expandTabs(partial, chunks[i]);
-        if (i < chunks.length - 1) { commitLine(partial, false); partial = ''; }
+        feedLine(partial, chunks[i], ansi);
+        if (i < chunks.length - 1) { commitLine(partial, false); partial = newLine(); }
       }
     }
     function flushPartial() {
-      if (partial !== '') { commitLine(partial, true); partial = ''; }
+      if (partial.n > 0) { commitLine(partial, true); partial = newLine(); }
+      ansi = newStyle();
     }
     function clearAll() {
       hist = [];
       histEl.textContent = '';
-      partial = '';
+      partial = newLine();
       clearAnchor = null;
       renderLive();
     }
@@ -1922,7 +2897,7 @@
     }
     function renderLive() {
       liveEl.textContent = '';
-      if (closed) return;
+      if (closed || app) return;
       if (dead) { ta.style.display = 'none'; afterRender(); return; }
       ta.style.display = '';
       var units = [];
@@ -1970,6 +2945,12 @@
         if (curIdx >= 0 && rIdx === cr && cc >= 0 && curIdx >= units.length) rowEl.appendChild(h('span', { class: 'tm-cursor' }, ' '));
         liveEl.appendChild(rowEl);
       });
+      if (rs) {                                   // Ctrl+R: zsh shows the search line under the command line
+        var rsRow = h('div', { class: 'tm-row' });
+        var rcps = Array.from((rs.failed ? 'failed ' : '') + 'bck-i-search: ' + rs.query + '_');
+        fillRow(rsRow, rcps, 0, rcps.length, [], false, -1);
+        liveEl.appendChild(rsRow);
+      }
       liveEl.dataset.curRow = String(cr);
       afterRender();
       ta.style.left = (PAD + cc * cw) + 'px';
@@ -2003,7 +2984,13 @@
       renderLive();
     }
     function insertText(str) {
-      if (busy || dead) return;
+      if (app) {                                     // IME text and paste reach a full-screen program as text
+        try { if (app.def.text) app.def.text(String(str), app.api); } catch (eT) { console.error('[terminal] app text', eT); }
+        renderApp();
+        return;
+      }
+      if (busy || dead || waitingLib) return;
+      if (rs) rs = null;
       var chars = [];
       for (var ch of String(str)) {
         var cp = ch.codePointAt(0);
@@ -2035,13 +3022,64 @@
     function openEffect(e) {
       try {
         if (e.type === 'open') LAB.apps.openPath(e.path, { appId: e.appId, via: 'terminal' });
-        else if (e.type === 'launch') LAB.apps.launch(e.appId, null, { bounce: false });
+        else if (e.type === 'launch') LAB.apps.launch(e.appId, e.args || null, { bounce: false });
         else if (e.type === 'reveal') {
           if (LAB.finder && LAB.finder.reveal) LAB.finder.reveal(e.path);
           else LAB.apps.openFolder(vfs.dirname(e.path), 'open');
         }
       } catch (err) { console.error('[terminal] effect failed', err); }
     }
+
+    /* the first `git` or `python3` on a fresh Mac: a system dialog asks to install the command line developer tools (SPEC §1).
+       Install → a progress panel for about 3 s → "installed". Nothing is really downloaded. */
+    function showClt(name) {
+      if (sysState.installing || sysState.devTools) return;
+      LAB.bus.emit('term:clt', { winId: win.id, state: 'ask', name: name });
+      LAB.ui.alert(null, {
+        title: '「' + name + '」指令需要命令列開發人員工具。',
+        text: '要現在安裝這些工具嗎？',
+        buttons: [{ label: '取消', value: 'cancel', cancel: true }, { label: '安裝', value: 'install', 'default': true }]
+      }).then(function (v) {
+        if (v !== 'install') { LAB.bus.emit('term:clt', { winId: win.id, state: 'cancel', name: name }); return; }
+        fakeInstall(name);
+      });
+    }
+    function fakeInstall(name) {
+      var host = document.getElementById('lab-overlays');
+      var total = sysState.cltMs || 3000;
+      sysState.installing = true;
+      LAB.bus.emit('term:clt', { winId: win.id, state: 'installing', name: name });
+      var fill = h('div', { class: 'tm-clt-fill' });
+      var left = h('div', { class: 'lab-sheet-text tm-clt-left' }, '剩餘時間：約 ' + Math.ceil(total / 1000) + ' 秒');
+      var panel = h('div', { class: 'lab-sheet is-centered tm-clt', role: 'dialog', 'aria-modal': 'true', 'aria-label': '正在安裝命令列開發人員工具', dataset: { lab: 'clt-progress' } },
+        h('div', { class: 'lab-sheet-title' }, '正在下載軟體…'), left, h('div', { class: 'tm-clt-bar' }, fill));
+      var scrim = h('div', { class: 'lab-sheet-scrim is-stage' }, panel);
+      var t0 = Date.now(), tick = 0;
+      if (host) {
+        host.appendChild(scrim);
+        requestAnimationFrame(function () {
+          scrim.classList.add('is-in');
+          fill.style.transitionDuration = total + 'ms';
+          fill.style.transform = 'scaleX(1)';
+        });
+        tick = setInterval(function () {
+          var secs = Math.max(1, Math.ceil((total - (Date.now() - t0)) / 1000));
+          left.textContent = '剩餘時間：約 ' + secs + ' 秒';
+        }, 500);
+      }
+      setTimeout(function () {
+        clearInterval(tick);
+        if (scrim.parentNode) scrim.parentNode.removeChild(scrim);
+        sysState.installing = false;
+        sysState.devTools = true;
+        LAB.bus.emit('term:clt', { winId: win.id, state: 'done', name: name });
+        LAB.ui.alert(null, {
+          title: '軟體已安裝。', text: '命令列開發人員工具已經安裝好了，現在可以使用 git 和 python3。',
+          buttons: [{ label: '完成', value: true, 'default': true }]
+        });
+      }, total);
+    }
+
     function startSleep(ms) {
       busy = true;
       renderLive();
@@ -2053,7 +3091,7 @@
     }
     function handleResult(res) {
       if (!res || closed) return;
-      var sleepMs = null;
+      var sleepMs = null, appDef = null;
       var stream = res.stream || [];
       for (var i = 0; i < stream.length; i++) {
         var it = stream[i];
@@ -2061,6 +3099,8 @@
         if (it.type === 'clear') clearAll();
         else if (it.type === 'exit') { dead = true; }
         else if (it.type === 'sleep') sleepMs = it.ms;
+        else if (it.type === 'app') appDef = it.app;
+        else if (it.type === 'clt') showClt(it.name);
         else if (it.type === 'open' || it.type === 'launch' || it.type === 'reveal') openEffect(it);
       }
       while (termState.history.length > MAX_HISTORY) termState.history.shift();
@@ -2084,18 +3124,58 @@
         // like Terminal's default: the window closes after a clean exit (a moment later, so the goodbye text can be read)
         setTimeout(function () { if (!closed) { try { win.close(); } catch (e) { /* ignore */ } } }, 700);
       }
+      if (!res.done && appDef) { flushPartial(); enterApp(appDef); return; }
       if (!res.done && sleepMs !== null) { startSleep(sleepMs); return; }
       showPrompt();
     }
+
+    /* does this line use a command that only the second file (the command library) has? */
+    function needsLibrary(line) {
+      if (session.prompt) return false;
+      var src = session.pending !== null ? session.pending + '\n' + line : line;
+      if (src.indexOf('!') >= 0 || src.indexOf('$(') >= 0 || src.indexOf('`') >= 0) return true;
+      var lx = LAB.shell.lex(src);
+      if (lx.incomplete || lx.unsupported || lx.parseError) return false;
+      var cmdPos = true, skip = false;
+      for (var i = 0; i < lx.tokens.length; i++) {
+        var t = lx.tokens[i];
+        if (t.t === 'op') {
+          if (t.op === ';' || t.op === 'nl' || t.op === '&&' || t.op === '||' || t.op === '|') cmdPos = true;
+          else if (t.op !== 'dup') skip = true;
+          continue;
+        }
+        if (skip) { skip = false; continue; }
+        if (!cmdPos) continue;
+        if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(t.raw)) continue;
+        cmdPos = false;
+        var p = t.parts.length === 1 && t.parts[0].k === 'lit' && t.parts[0].q === 0 ? t.parts[0].s : null;
+        if (p === null) return true;
+        if (p.indexOf('/') >= 0 || p === '') continue;
+        if (session.aliases && session.aliases[p] !== undefined && p !== 'run-help' && p !== 'which-command') return true;
+        if (!Object.prototype.hasOwnProperty.call(commands, p)) return true;
+      }
+      return false;
+    }
+    function runNow(line) { handleResult(LAB.shell.run(line, session)); }
     function submit() {
-      if (busy || dead) return;
+      if (busy || dead || app || waitingLib) return;
       var line = buf.join('');
       commitLine(promptStr() + line, false);
-      buf = []; cur = 0; comp = ''; histPos = -1; stash = null; tabState = null;
-      handleResult(LAB.shell.run(line, session));
+      buf = []; cur = 0; comp = ''; histPos = -1; stash = null; tabState = null; rs = null;
+      if (lib.state === 'ready' || lib.state === 'failed' || !needsLibrary(line)) { runNow(line); return; }
+      // the command library is still on its way: wait for it (Ctrl+C gives up)
+      waitingLib = true;
+      renderLive();
+      loadLibrary(function () {
+        if (!waitingLib || closed) return;
+        waitingLib = false;
+        runNow(line);
+      });
     }
     function interrupt() {
       if (dead) return;
+      rs = null;
+      if (waitingLib) { waitingLib = false; commitLine('^C', false); showPrompt(); return; }
       if (busy) {
         clearTimeout(sleepTimer); sleepTimer = 0; busy = false;
         commitLine('^C', false);
@@ -2115,6 +3195,143 @@
       if (session.pending !== null) { commitLine(promptStr(), false); LAB.shell.cancel(session); showPrompt(); return; }
       commitLine(promptStr() + 'exit', false);
       handleResult(LAB.shell.run('exit', session));
+    }
+
+    // ---- full-screen programs (less, man, nano, top): the screen is replaced, and comes back when the program ends
+    function buildAltRows() {
+      altEl.textContent = '';
+      for (var r = 0; r < rows; r++) altEl.appendChild(h('div', { class: 'tm-row' }));
+      if (app) app.cache = [];
+    }
+    function renderApp() {
+      if (!app || closed) return;
+      var out;
+      try { out = app.def.render(app.api) || { rows: [] }; }
+      catch (e) { console.error('[terminal] app render', e); out = { rows: ['（練習版的全螢幕程式出錯了，按 q 或 Ctrl+C 離開）'] }; }
+      var cr = out.cursor || null;
+      var kids = altEl.children;
+      for (var r = 0; r < rows && r < kids.length; r++) {
+        var str = r < out.rows.length ? String(out.rows[r]) : '';
+        var curCol = cr && cr.r === r ? cr.c : -1;
+        var key = str + '\u0001' + curCol;
+        if (app.cache[r] === key) continue;
+        app.cache[r] = key;
+        var el = kids[r];
+        el.textContent = '';
+        var ln = newLine();
+        feedLine(ln, str, newStyle());
+        var cps = Array.from(ln.text), end = cps.length, col = 0, curIdx = -1, i;
+        for (i = 0; i < cps.length; i++) {
+          var w = charWidth(cps[i].codePointAt(0));
+          if (w === 0) continue;
+          if (col + w > cols) { end = i; break; }
+          if (col === curCol && curIdx < 0) curIdx = i;
+          col += w;
+        }
+        if (curCol >= 0 && curIdx < 0) {
+          // the cursor sits after the text: pad with spaces up to it
+          while (col < curCol && col < cols - 1) { cps.splice(end, 0, ' '); end++; col++; }
+          cps.splice(end, 0, ' ');
+          curIdx = end; end++;
+        }
+        fillRow(el, cps, 0, Math.min(end, cps.length), ln.spans, false, curIdx);
+      }
+      if (cr) { ta.style.left = (PAD + cr.c * cw) + 'px'; ta.style.top = (altEl.offsetTop + cr.r * lh) + 'px'; }
+    }
+    function setAppTick(ms) {
+      if (!app) return;
+      if (app.timer) { clearInterval(app.timer); app.timer = 0; }
+      if (ms > 0) {
+        app.timer = setInterval(function () {
+          if (!app || closed || document.hidden || win.isMinimized()) return;     // nothing moves while nobody can see it
+          try { if (app.def.tick) app.def.tick(app.api); } catch (e) { console.error('[terminal] app tick', e); }
+          renderApp();
+        }, ms);
+      }
+    }
+    function enterApp(def) {
+      if (app) return;
+      var api = {
+        cols: function () { return cols; }, rows: function () { return rows; }, session: session, win: win,
+        redraw: function () { renderApp(); }, exit: function (status) { exitApp(status); }, setTick: setAppTick,
+        copy: function (t) { LAB.clipboard.setText(t); }
+      };
+      app = { def: def, api: api, timer: 0, cache: [] };
+      busy = false; rs = null;
+      screen.classList.add('tm-alt-on');
+      screen.insertBefore(altEl, ta);
+      buildAltRows();
+      screen.scrollTop = 0;
+      try { if (def.start) def.start(api); } catch (e) { console.error('[terminal] app start', e); }
+      renderApp();
+      focusInput();
+      LAB.bus.emit('term:app', { winId: win.id, name: def.name || '', state: 'enter' });
+    }
+    function exitApp(status) {
+      if (!app) return;
+      var a = app;
+      if (a.timer) clearInterval(a.timer);
+      try { if (a.def.stop) a.def.stop(a.api); } catch (e) { console.error('[terminal] app stop', e); }
+      app = null;
+      screen.classList.remove('tm-alt-on');
+      if (altEl.parentNode) altEl.parentNode.removeChild(altEl);
+      LAB.bus.emit('term:app', { winId: win.id, name: a.def.name || '', state: 'exit' });
+      renderLive();
+      handleResult(LAB.shell.resume(session, status));
+    }
+
+    // ---- Ctrl+R: search the history backwards (a small version of zsh's incremental search)
+    function rsFind(from) {
+      var hs = termState.history;
+      if (rs.query === '') return -1;
+      for (var i = Math.min(from, hs.length - 1); i >= 0; i--) if (hs[i].indexOf(rs.query) >= 0) return i;
+      return -1;
+    }
+    function rsShow(i) {
+      if (i >= 0) {
+        rs.idx = i; rs.failed = false;
+        buf = Array.from(termState.history[i].replace(/[\r\n]+/g, ' '));
+        cur = buf.length;
+      } else rs.failed = rs.query !== '';
+      renderLive();
+    }
+    function rsStart() {
+      if (session.prompt || session.pending !== null || !editable()) return;
+      rs = { query: '', idx: termState.history.length, saved: buf.join(''), failed: false };
+      renderLive();
+    }
+    function rsCancel() {
+      buf = Array.from(rs.saved); cur = buf.length;
+      rs = null;
+      renderLive();
+    }
+    function rsAccept(runIt) {
+      rs = null;
+      renderLive();
+      if (runIt) submit();
+    }
+    /* a key while the search is open: true when it was used up */
+    function rsKey(e, key, k, ctrl, meta, alt) {
+      if (meta) return false;
+      if (ctrl && k === 'r') { rsShow(rsFind(rs.idx - 1)); e.preventDefault(); return true; }
+      if ((ctrl && (k === 'g' || k === 'c')) || key === 'Escape') { rsCancel(); e.preventDefault(); return true; }
+      if (key === 'Enter') { if (LAB.ui.isImeEnter(e)) return true; e.preventDefault(); rsAccept(true); return true; }
+      if (key === 'Backspace') {
+        e.preventDefault();
+        rs.query = rs.query.slice(0, -1);
+        if (rs.query === '') { rs.failed = false; buf = Array.from(rs.saved); cur = buf.length; renderLive(); }
+        else rsShow(rsFind(termState.history.length - 1));
+        return true;
+      }
+      if (key.length === 1 && !ctrl && !alt) {
+        e.preventDefault();
+        rs.query += key;
+        rsShow(rsFind(Math.min(rs.idx, termState.history.length - 1)));
+        return true;
+      }
+      if (key === 'Shift' || key === 'Process' || key === 'Dead') return true;
+      rsAccept(false);                                           // any other key: keep the line that was found and carry on editing
+      return false;
     }
 
     // ---- Tab
@@ -2215,10 +3432,11 @@
 
       if (copyCombo) {
         if (selectionText()) { copySelection(); e.preventDefault(); return; }
-        if (ctrl) { interrupt(); e.preventDefault(); }
-        return;
+        if (!app) { if (ctrl) { interrupt(); e.preventDefault(); } return; }
       }
       if (pasteCombo) return;                                      // the paste event does the work
+      if (waitingLib) { e.preventDefault(); return; }
+      if (rs && !app) { if (rsKey(e, key, k, ctrl, meta, alt)) return; }
       if (meta) {
         if (k === 'k') { clearAll(); e.preventDefault(); return; }
         if (k === 'a') { selectAll(); e.preventDefault(); return; }
@@ -2227,6 +3445,12 @@
         return;
       }
       if (dead) { if (key === 'PageUp' || key === 'PageDown') return; e.preventDefault(); return; }
+      if (app) {
+        e.preventDefault();
+        try { app.def.key({ key: key, k: k, ctrl: ctrl, alt: alt, shift: e.shiftKey }, app.api); } catch (eK) { console.error('[terminal] app key', eK); }
+        renderApp();
+        return;
+      }
       if (busy) {
         if (ctrl && k === 'c') { interrupt(); e.preventDefault(); return; }
         if (key.length === 1 || key === 'Enter' || key === 'Backspace' || key === 'Tab') e.preventDefault();
@@ -2249,6 +3473,7 @@
             if (cur >= buf.length) { buf = []; cur = 0; } else { buf.splice(0, cur); cur = 0; }
             tabState = null; renderLive(); break;
           case 'w': deleteWord(); break;
+          case 'r': rsStart(); break;
           case 'l': clearScreen(); break;
           case 'c': interrupt(); break;
           case 'd': eof(); break;
@@ -2364,6 +3589,13 @@
       screen._scT = setTimeout(function () { screen.classList.remove('lab-scrolling'); }, 900);
     });
 
+    screen.addEventListener('wheel', function (e) {
+      if (!app || !app.def.wheel) return;
+      e.preventDefault();
+      try { app.def.wheel(e.deltaY, app.api); } catch (eW) { console.error('[terminal] app wheel', eW); }
+      renderApp();
+    }, { passive: false });
+
     // ---- window
     win = LAB.wm.open({
       appId: 'terminal', title: 'an — -zsh — 80×24', width: 660, height: 440, bar: 'plain', theme: 'light',
@@ -2379,6 +3611,7 @@
       copy: copySelection, paste: pasteFromMenu, selectAll: selectAll, clearAll: clearAll,
       zoom: function (d) { setFontSize(fs + d); }, insert: insertText, focus: focusInput,
       typed: function () { return buf.join(''); }, isBusy: function () { return busy; }, isDead: function () { return dead; },
+      appName: function () { return app ? (app.def.name || 'app') : ''; }, searching: function () { return rs ? rs.query : null; },
       fontSize: function () { return fs; }
     };
     instances.set(win.id, inst);
@@ -2425,6 +3658,7 @@
     win.own(function () {
       closed = true;
       if (sleepTimer) { clearTimeout(sleepTimer); sleepTimer = 0; }
+      if (app && app.timer) { clearInterval(app.timer); app.timer = 0; }
       clearTimeout(screen._scT);
       if (session.gen) { try { session.gen.return(); } catch (e) { /* ignore */ } }
     });
@@ -2442,6 +3676,7 @@
       }
     }));
 
+    loadLibrary();                         // the long list of commands comes in the background (a line typed meanwhile waits for it)
     focusInput();
     setTimeout(focusInput, 30);
     return inst;

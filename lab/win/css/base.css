@@ -1,0 +1,177 @@
+/* base.css — tokens, reset, page layout, stage (DESIGN W3, M§2.1, M§2.4). Windows 11 (zh-TW), Windows mode DARK, app mode LIGHT (W0.3).
+   The mission card floats over the stage at the top-RIGHT (mission.css, W8). */
+:root {
+  /* page chrome (editorial, like the course site; NOT the PC). The mission card and the sheets override these with their own tokens */
+  --lab-bg: #ebe9e4; --lab-ink: #111; --lab-ink-2: #4a4843; --lab-ink-3: #5f5c55;
+  --lab-line: rgba(17, 17, 17, .14); --lab-accent: #005fb8; --lab-ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* ---- Windows 11 tokens (use these in new code) ---- */
+  --win-font: "Segoe UI Variable Text", "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+  --win-font-mono: "Cascadia Mono", "Cascadia Code", Consolas, "Noto Sans Mono", "Noto Sans TC", monospace;
+  --win-accent: #005fb8; --win-accent-hover: #0067c0; --win-accent-press: #1975c5; --win-accent-dark: #4cc2ff;   /* dark-surface accent: taskbar indicator, Start */
+  --win-text: #1a1a1a; --win-text-2: #424242; --win-text-3: #5c5c5c; --win-text-dis: #8a8a8a;
+  --win-bg: #fff;                 /* app surface (light) */
+  --win-layer: #f9f9f9;           /* cards / panes on top of the surface */
+  --win-bar: #f3f3f3;             /* Mica-like title bar and footer band (light) */
+  --win-hair: #e5e5e5;            /* 1 px dividers, menu borders (light) */
+  --win-hair-strong: #d1d1d1;     /* control borders (light) */
+  --win-hover: rgba(0, 0, 0, .06); --win-press: rgba(0, 0, 0, .04);
+  --win-sel: rgba(0, 95, 184, .13); --win-sel-border: rgba(0, 95, 184, .35);
+  --win-ok: #0f7b0f; --win-err: #c42b1c; --win-warn: #9d5d00;
+  --win-r-win: 8px; --win-r-ctl: 4px;
+  --win-bar-h: 32px;
+  --win-shadow-on: 0 8px 32px rgba(0, 0, 0, .28), 0 0 0 1px rgba(0, 0, 0, .12);
+  --win-shadow-off: 0 4px 16px rgba(0, 0, 0, .16), 0 0 0 1px rgba(0, 0, 0, .10);
+  /* dark surfaces (taskbar, Start, Search, tray flyouts, dark windows) */
+  --win-d-bg: rgba(28, 28, 28, .86); --win-d-solid: #1c1c1c; --win-d-flyout: rgba(32, 32, 32, .94);
+  --win-d-text: #fff; --win-d-text-2: rgba(255, 255, 255, .72); --win-d-text-3: rgba(255, 255, 255, .55);
+  --win-d-hair: rgba(255, 255, 255, .08); --win-d-hover: rgba(255, 255, 255, .06); --win-d-press: rgba(255, 255, 255, .04);
+  --win-taskbar-h: 48px;
+
+  /* ---- old names (the Mac copy's CSS still uses them): same variables, Windows values ---- */
+  --mac-win-bg: #fff; --mac-bar: #f3f3f3; --mac-bar-line: #e5e5e5; --mac-text: #1a1a1a; --mac-text-2: #5c5c5c;
+  --mac-sidebar: #f9f9f9; --mac-hair: rgba(0, 0, 0, .12); --mac-accent: #005fb8;
+  --mac-sel: rgba(0, 95, 184, .13); --mac-sel-strong: #005fb8; --mac-sel-inactive: rgba(0, 0, 0, .08);
+  --mac-red: #c42b1c; --mac-yellow: #9d5d00; --mac-green: #0f7b0f; --mac-light-off: #d4d4d4;
+  --mac-radius: 8px; --mac-tl: 46px; --mac-tl-gap: 0px; --mac-bar-h: 32px; --mac-shadow-on: var(--win-shadow-on);
+  --mac-shadow-off: var(--win-shadow-off);
+  /* z scale (stage). #lab-windows is one stacking context at --z-windows; the window counter inside it is a plain integer */
+  --z-desktop: 1; --z-windows: 2; --z-dock: 900; --z-menubar: 1000; --z-menu: 1100;
+  --z-spotlight: 1200; --z-toast: 1300; --z-dnd: 2000;
+  --lab-font-ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+  /* the fake PC prefers the visitor's own system font by name (nothing is shipped); non-Windows visitors fall through to Noto Sans TC */
+  --mac-font: var(--win-font);
+  --lab-font-mono: "Cascadia Mono", "Cascadia Code", Consolas, "Noto Sans Mono", "JetBrains Mono", "Noto Sans TC", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { /* page chrome only: the fake PC and the mission card keep their own looks */
+    --lab-bg: #070707; --lab-ink: #f1efe9; --lab-ink-2: #b9b6ae; --lab-ink-3: #85827b;
+    --lab-line: rgba(241, 239, 233, .16); --lab-accent: #4cc2ff;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: var(--lab-bg);
+  color: var(--lab-ink);
+  font-family: var(--lab-font-ui);
+  font-size: 14px;
+  line-height: 1.7;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; }
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- layout */
+#lab-root {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+}
+#lab-screen {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  background: #c9d6f0;
+}
+
+/* ----------------------------------------------------------------- stage */
+#lab-stage {
+  --lab-font-ui: var(--win-font);
+  font-family: var(--win-font);
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--win-text);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  cursor: default;
+}
+html.lab-small #lab-stage { touch-action: none; }
+/* The wallpaper (img/wallpaper.jpg, 1920x1200, the code-drawn flower of Week 3 補充 2), cover-fitted with the flower on the right.
+   The colour behind it is the picture's own pale blue, so a missing file never leaves a black screen. */
+#lab-wall {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  background-color: #d6e0f5;
+  background-image: url("../img/wallpaper.jpg"), linear-gradient(135deg, #eaf0fb 0%, #d3def4 55%, #aebfe9 100%);
+  background-size: cover, cover;
+  background-position: 72% 50%, center;
+  background-repeat: no-repeat, no-repeat;
+}
+#lab-desktop { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-desktop); pointer-events: auto; }
+#lab-windows { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-windows); isolation: isolate; pointer-events: none; }
+/* Windows has no menu bar: the element stays (code that measures it gets 0) but is empty and 0 px tall */
+#lab-menubar { position: absolute; left: 0; right: 0; top: 0; height: 0; overflow: hidden; z-index: var(--z-menubar); pointer-events: none; }
+#lab-dock { position: absolute; left: 0; right: 0; bottom: 0; height: var(--win-taskbar-h); z-index: var(--z-dock); pointer-events: none; }
+#lab-overlays { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-menu); pointer-events: none; }
+#lab-dnd { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-dnd); pointer-events: none; }
+#lab-overlays > * { pointer-events: auto; }
+#lab-modal-root { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 3000; pointer-events: none; }
+#lab-modal-root > * { pointer-events: auto; }
+
+body.lab-dragging, body.lab-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
+body.lab-dragging-win * { cursor: default !important; }
+body.lab-resizing { -webkit-user-select: none; user-select: none; }
+
+/* ---------------------------------------- thin overlay scrollbars inside the fake PC (Windows 11 style: thin, rounded, grows on hover) */
+#lab-stage * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+#lab-stage *:hover, #lab-stage .lab-scrolling { scrollbar-color: rgba(0, 0, 0, .4) transparent; }
+#lab-stage .theme-dark *:hover, #lab-stage .theme-dark .lab-scrolling { scrollbar-color: rgba(255, 255, 255, .4) transparent; }
+#lab-stage ::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+#lab-stage ::-webkit-scrollbar-corner { background: transparent; }
+#lab-stage ::-webkit-scrollbar-thumb { background: transparent; border-radius: 5px; border: 3px solid transparent; background-clip: padding-box; transition: background-color .15s; }
+#lab-stage *:hover::-webkit-scrollbar-thumb, #lab-stage .lab-scrolling::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, .4); }
+#lab-stage ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, .55); border-width: 2px; }
+#lab-stage .theme-dark *:hover::-webkit-scrollbar-thumb, #lab-stage .theme-dark .lab-scrolling::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, .4); }
+
+/* ---------------------------------------------------------------- helpers */
+.lab-sr {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.lab-ico { display: inline-flex; }
+.lab-mono { font-family: var(--lab-font-mono); font-size: .92em; }
+
+/* text-style buttons and links used by our own chrome (card, notices) */
+.lab-linkbtn {
+  background: none; border: 0; padding: 0; margin: 0; font: inherit; color: var(--lab-ink-2);
+  text-decoration: underline; text-decoration-color: var(--lab-line); text-underline-offset: 3px; cursor: pointer;
+  transition: color .15s, text-decoration-color .15s;
+}
+.lab-linkbtn:hover { color: var(--lab-ink); text-decoration-color: var(--lab-ink-2); }
+.lab-linkbtn.is-ready { text-decoration-color: var(--lab-accent); color: var(--lab-ink); }
+.lab-textbtn {
+  background: none; border: 1px solid var(--lab-line); border-radius: 0; padding: 7px 16px; margin: 0;
+  font: inherit; color: var(--lab-ink); cursor: pointer; transition: border-color .15s;
+}
+.lab-textbtn:hover { border-color: var(--lab-ink-2); }
+.lab-textbtn.is-primary { text-decoration: underline; text-decoration-color: var(--lab-accent); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.lab-linkbtn:focus-visible, .lab-textbtn:focus-visible, .lab-rail-strip:focus-visible,
+.lab-mrow:focus-visible, .lab-disc:focus-visible, .lab-nextbtn:focus-visible, .lab-rail-link:focus-visible {
+  outline: 2px solid var(--lab-accent); outline-offset: 2px;
+}
+/* Windows focus visual: a 2 px dark outline with a 1 px white inner ring (light surfaces) / white (dark surfaces) */
+.lab-dock-item:focus-visible, .lab-tb-btn:focus-visible, .lab-tb-search:focus-visible, .lab-fsbtn:focus-visible, .lab-tray-btn:focus-visible {
+  outline: 2px solid var(--win-d-text); outline-offset: -2px;
+}
+.lab-sheet-btn:focus-visible, .lab-cap-btn:focus-visible, .lab-tl-btn:focus-visible {
+  outline: 2px solid #1a1a1a; outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant" data-os="windows">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<script>
+  // 進入前的「連線到遠端電腦」畫面（js/connect.js）：?connect=0 或測試時跳過；在任何東西畫出來之前就決定，畫面才不會先閃一下
+  (function () {
+    var q = location.search, skip = /[?&](connect|welcome)=0(&|$)/.test(q);
+    document.documentElement.className += skip ? " lab-noconnect" : " lab-connecting";
+  })();
+</script>
+<noscript><style>#lab-connect { display: none !important; }</style></noscript>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>練習用的電腦（Windows）｜學習分析工具</title>
+<meta name="description" content="在瀏覽器裡練習 Week 3：一台練習用的 Windows 11 電腦，可以操作 PowerShell 終端機、檔案總管，並把資料夾拖進 Codex。這是教學模擬，不是真的 Windows。">
+<meta name="robots" content="noindex">
+<meta name="author" content="JUNHAO CHEN">
+<meta name="copyright" content="© 2026 JUNHAO CHEN">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f6efdc'/%3E%3Cpath d='M9.5 24v-5M16 24v-9M22.5 24V8' stroke='%238a5400' stroke-width='4.2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- 字型不擋畫面：樣式表先以 media=print 載入，載完才套用；字型網站連不上時（例如學校防火牆）練習照樣開得起來，只是先用系統字型 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap"></noscript>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/window.css">
+<link rel="stylesheet" href="css/mission.css">
+<link rel="stylesheet" href="css/finder.css">
+<link rel="stylesheet" href="css/terminal.css">
+<link rel="stylesheet" href="css/codex.css">
+<link rel="stylesheet" href="css/editors.css">
+<link rel="stylesheet" href="css/sysapps.css">
+<!-- 多語系要比其他程式先載入（不要 defer）；練習版只有繁體中文，boot.js 會把 <html lang> 鎖回 zh-Hant -->
+<script src="../../assets/i18n-strings.js"></script>
+<script src="../../assets/i18n.js"></script>
+</head>
+<body>
+<!-- 連線畫面（Windows 遠端桌面連線的樣子）：約 2.5 秒後由 js/connect.js 移除 -->
+<div id="lab-connect" role="status" aria-live="polite">
+  <div class="lab-cn-box">
+    <svg class="lab-cn-mark" viewBox="0 0 64 48" width="64" height="48" aria-hidden="true" focusable="false"><rect x="6" y="4" width="52" height="34" rx="4" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M32 38v6M23 44.5h18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M19 21h24M36 14l7 7-7 7" fill="none" stroke="#4cc2ff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="lab-cn-title">正在連線到 AN-LAPTOP</div>
+    <div class="lab-cn-host">an 的筆電</div>
+    <div class="lab-cn-bar"><i></i></div>
+    <div class="lab-cn-step">正在起始遠端連線…</div>
+  </div>
+</div>
+<div id="lab-root">
+  <main id="lab-screen">
+    <div id="lab-stage" role="application" aria-label="練習用的 Windows 桌面">
+      <div id="lab-wall" aria-hidden="true"></div>
+      <div id="lab-desktop"></div>
+      <div id="lab-windows"></div>
+      <!-- Windows 沒有選單列：#lab-menubar 留著但是空的、高度 0（量它的程式會得到 0） -->
+      <div id="lab-menubar"></div>
+      <!-- 工作列（Windows 11）：舊名 #lab-dock 不改，hook 也不改 -->
+      <div id="lab-dock"></div>
+      <div id="lab-overlays"></div>
+      <div id="lab-dnd"></div>
+    </div>
+    <!-- 任務卡是浮在桌面右上角的卡片（不屬於假的電腦，不跟著畫面縮放）；放在 #lab-screen 裡，全螢幕時也看得到。Windows 的桌面圖示在左上，所以卡片放右上 -->
+    <aside id="lab-rail" aria-label="任務卡">
+      <div class="lab-page-foot">Copyright © 2026 JUNHAO CHEN</div>
+    </aside>
+  </main>
+</div>
+<div id="lab-modal-root"></div>
+<noscript><p style="padding:24px;font:16px/1.7 system-ui,sans-serif">這個練習需要 JavaScript，請在瀏覽器裡開啟 JavaScript 後重新整理。</p></noscript>
+
+<script src="js/lab.js"></script>
+<script src="js/connect.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/store.js"></script>
+<script src="js/vfs.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/win.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/wm.js"></script>
+<script src="js/apps.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/dnd.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/finder.js"></script>
+<script src="js/terminal.js"></script>
+<script src="js/codex.js"></script>
+<script src="js/textedit.js"></script>
+<script src="js/code.js"></script>
+<script src="js/about.js"></script>
+<script src="js/sysapps.js"></script>
+<script src="js/remote.js"></script>
+<script src="js/missions-week3.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>

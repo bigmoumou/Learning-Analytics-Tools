@@ -38,6 +38,13 @@
   }
   function fold(name) { return String(name).normalize('NFC').toLowerCase(); }
   function isVirtual(p) { return /^[a-z][a-z0-9]*:$/i.test(String(p)); }
+  /* a zip entry as stored on a node: {name, type, content, mtime}; a binary file inside an archive (a docx, a pdf) also
+     carries `bin` = its size in bytes (content is then '') so a zip of a folder round-trips them (round 5) */
+  function zcopy(z) {
+    var e = { name: z.name, type: z.type, content: z.type === 'file' ? (z.content || '') : '', mtime: z.mtime };
+    if (z.type === 'file' && isFinite(z.bin) && z.bin >= 0) e.bin = z.bin;
+    return e;
+  }
 
   function normalize(path, cwd) {
     path = String(path);
@@ -236,7 +243,7 @@
     inst.zipEntries = function (p) {
       var l = need(p);
       if (l.node.type === 'dir' || !l.node.zip) return null;
-      return l.node.zip.map(function (z) { return { name: z.name, type: z.type, content: z.content, mtime: z.mtime }; });
+      return l.node.zip.map(zcopy);
     };
     inst.walk = function (p, fn) {
       var l = need(p);
@@ -267,6 +274,20 @@
       checkName(name);
       var ex = pl.node.kids.get(fold(name));
       var node = mkFile(mtime, content);
+      if (ex) {
+        if (ex.node.type === 'dir') throw new VfsError('EISDIR', p);
+        node.ctime = ex.node.ctime;
+        pl.node.kids.set(fold(name), { name: ex.name, node: node });
+      } else pl.node.kids.set(fold(name), { name: name, node: node });
+      return { created: !ex, path: join(pl.path, ex ? ex.name : name) };
+    }
+    /* a binary file (no text content, only a size), used when a zip entry carries `bin` */
+    function putBinarySilent(p, size, mtime) {
+      var pl = needDir(dirname(p));
+      var name = basename(p);
+      checkName(name);
+      var ex = pl.node.kids.get(fold(name));
+      var node = { type: 'file', mtime: mtime, ctime: mtime, size: size, content: null, binary: true };
       if (ex) {
         if (ex.node.type === 'dir') throw new VfsError('EISDIR', p);
         node.ctime = ex.node.ctime;
@@ -502,7 +523,7 @@
       var f = { type: 'file', mtime: now, ctime: now, size: n.size, content: n.content };
       if (n.binary) f.binary = true;
       if (n.kind) f.kind = n.kind;
-      if (n.zip) f.zip = n.zip.map(function (z) { return { name: z.name, type: z.type, content: z.content, mtime: z.mtime }; });
+      if (n.zip) f.zip = n.zip.map(zcopy);
       return f;
     }
     function textSize(n) {
@@ -552,7 +573,7 @@
           res.push({ path: inst.canon(full), type: 'dir', mtime: en.mtime, rel: rel });
         } else {
           mkdirpSilent(dirname(full), en.mtime);
-          var pf = putFileSilent(full, en.content || '', en.mtime);
+          var pf = en.bin !== undefined ? putBinarySilent(full, en.bin, en.mtime) : putFileSilent(full, en.content || '', en.mtime);
           res.push({ path: pf.path, type: 'file', mtime: en.mtime, rel: rel, created: pf.created });
         }
       });
@@ -608,6 +629,88 @@
       return dest;
     };
 
+    /* ----- zip API for Finder and the Terminal (round 5, SPEC §2) -----
+       zipCreate(srcPaths[], destZipPath, {by, names?}) -> {ok, path, entries}   (on failure {ok:false, error:<code>, path})
+         The archive node has the same shape as the seed's week3.zip (kind 'zip', zip:[{name,type,content,mtime}]), so `unzip`, `tar` and
+         Archive Utility all read it. Every source goes in at the top level under its own name (`names[i]` overrides the top name:
+         the Terminal passes the path as typed); folders are walked in name order, a binary file keeps its size (entry.bin).
+       zipList(zipPath) -> [{name, type, size}] | null (null: not an archive)
+       zipExtract(zipPath, destDir, {by}) -> {ok, created:[Path]}   (Terminal `unzip` semantics: entries land inside destDir) */
+    var ZIP_MAX_ENTRIES = 500, ZIP_MAX_BYTES = 400 * 1024;
+    inst.zipCreate = function (srcPaths, destZip, o) {
+      o = o || {};
+      var by = o.by || 'system';
+      var srcs = Array.isArray(srcPaths) ? srcPaths : [srcPaths];
+      var dn;
+      try { dn = normalize(destZip); } catch (e0) { return { ok: false, error: 'EINVAL', path: destZip }; }
+      if (!srcs.length || dn === '/') return { ok: false, error: 'EINVAL', path: destZip };
+      var entries = [], total = 0, bad = null;
+      var destL = lookup(dn);
+      function addTree(node, name, nodePath) {
+        if (bad) return;
+        if (entries.length >= ZIP_MAX_ENTRIES) { bad = { error: 'ENOSPC', path: nodePath }; return; }
+        if (destL && destL.node === node) return;                       // never pack the archive into itself
+        if (node.type === 'dir') {
+          entries.push({ name: name + '/', type: 'dir', content: '', mtime: node.mtime });
+          if (o.shallow) return;                                          // `zip` without -r: just the folder itself
+          var kids = [];
+          node.kids.forEach(function (e) { kids.push(e); });
+          kids.sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
+          kids.forEach(function (e) { addTree(e.node, name + '/' + e.name, join(nodePath, e.name)); });
+          return;
+        }
+        var ent = { name: name, type: 'file', content: node.binary || node.content === null || node.content === undefined ? '' : node.content, mtime: node.mtime };
+        if (node.binary || node.kind === 'zip' || node.kind === 'app') ent.bin = node.size || 0;
+        else total += utf8len(ent.content);
+        if (total > ZIP_MAX_BYTES) { bad = { error: 'ENOSPC', path: nodePath }; return; }
+        entries.push(ent);
+      }
+      for (var i = 0; i < srcs.length; i++) {
+        var sl = lookup(srcs[i]);
+        if (!sl) return { ok: false, error: 'ENOENT', path: srcs[i] };
+        var top = (o.names && o.names[i]) ? String(o.names[i]).replace(/\/+$/, '') : (sl.path === '/' ? 'Macintosh HD' : sl.name);
+        addTree(sl.node, top, sl.path);
+        if (bad) return { ok: false, error: bad.error, path: bad.path };
+      }
+      if (!entries.length) return { ok: false, error: 'EINVAL', path: destZip };
+      var pl;
+      try { pl = needDir(dirname(dn)); } catch (e1) { return { ok: false, error: e1.code || 'ENOENT', path: destZip }; }
+      var name = basename(dn);
+      try { checkName(name); } catch (e2) { return { ok: false, error: e2.code || 'EINVAL', path: destZip }; }
+      var ex = pl.node.kids.get(fold(name));
+      if (ex && ex.node.type === 'dir') return { ok: false, error: 'EISDIR', path: destZip };
+      if (!ex) { try { guardCreate(dn, by); } catch (e3) { return { ok: false, error: e3.code || 'EACCES', path: destZip }; } }
+      var raw = 0;
+      entries.forEach(function (en) { if (en.type === 'file') { raw += en.bin !== undefined ? en.bin : utf8len(en.content); } });
+      var size = Math.max(22, Math.round(raw * 0.62) + 98 * entries.length + 22);
+      var now = nowMs();
+      var node = { type: 'file', mtime: now, ctime: ex ? ex.node.ctime : now, size: size, content: null, binary: true, kind: 'zip', zip: entries };
+      if (ex) { pl.node.kids.set(fold(name), { name: ex.name, node: node }); pl.node.mtime = now; }
+      else addKid(pl.node, name, node);
+      var finalPath = join(pl.path, ex ? ex.name : name);
+      emit('fs:change', { op: ex ? 'write' : 'create', path: finalPath, kind: 'file', by: by });
+      return {
+        ok: true, path: finalPath,
+        entries: entries.map(function (en) { return { name: en.name, type: en.type, size: en.type === 'dir' ? 0 : (en.bin !== undefined ? en.bin : utf8len(en.content)) }; })
+      };
+    };
+    inst.zipList = function (zipPath) {
+      var l = isVirtual(zipPath) ? null : lookup(zipPath);
+      if (!l || l.node.type === 'dir' || !l.node.zip) return null;
+      return l.node.zip.map(function (en) {
+        return { name: en.name, type: en.type, size: en.type === 'dir' ? 0 : (en.bin !== undefined ? en.bin : utf8len(en.content || '')) };
+      });
+    };
+    inst.zipExtract = function (zipPath, destDir, o) {
+      o = o || {};
+      try {
+        var res = inst.extractZip(zipPath, destDir, { by: o.by || 'system', filter: o.filter });
+        return { ok: true, created: res.map(function (r) { return r.path; }) };
+      } catch (e) {
+        return { ok: false, error: (e && e.code) || 'EINVAL', created: [] };
+      }
+    };
+
     /* ----- persistence ----- */
     function toJson(node) {
       if (node.type === 'dir') {
@@ -623,7 +726,7 @@
       if (node.binary) j.b = 1;
       if (node.binary || node.kind) j.s = node.size;
       if (node.kind) j.k = node.kind;
-      if (node.zip) j.z = node.zip.map(function (z) { return { name: z.name, type: z.type, content: z.content, mtime: z.mtime }; });
+      if (node.zip) j.z = node.zip.map(zcopy);
       return j;
     }
     inst.toJSON = function () { return toJson(R()); };
@@ -677,7 +780,7 @@
         else if (j.k !== undefined) return null;
         if (j.z !== undefined) {
           if (!validZip(j.z)) return null;
-          f.zip = j.z.map(function (z) { return { name: z.name, type: z.type, content: z.type === 'file' ? z.content : '', mtime: z.mtime }; });
+          f.zip = j.z.map(zcopy);
         }
         if (typeof j.o === 'string') f.trashFrom = j.o;
         return f;

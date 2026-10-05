@@ -58,6 +58,71 @@
     'unknown': [A, PAGE + '<path d="M26 30a6 6 0 1 1 8 5.6c-1.4.7-2 1.6-2 3" fill="none" stroke="#9aa0ab" stroke-width="2.6" stroke-linecap="round"/><circle cx="32" cy="45" r="1.8" fill="#9aa0ab"/>']
   };
 
+  /* ---- round 5: the system apps (own drawings on the same 1024 grid, squircle at 64..960) ---- */
+  function squircle(x0, y0, s, n) {            // a superellipse, so the corners are continuous like the real tiles
+    var c = x0 + s / 2, a = s / 2, pts = [], N = 96;
+    for (var i = 0; i < N; i++) {
+      var t = (i / N) * 2 * Math.PI, ct = Math.cos(t), st = Math.sin(t);
+      var x = c + a * (ct < 0 ? -1 : 1) * Math.pow(Math.abs(ct), 2 / n);
+      var y = c + a * (st < 0 ? -1 : 1) * Math.pow(Math.abs(st), 2 / n);
+      pts.push(x.toFixed(1) + ' ' + y.toFixed(1));
+    }
+    return 'M' + pts.join('L') + 'Z';
+  }
+  var SQ = squircle(64, 64, 896, 5);
+  function sqTile(id, c0, c1) {
+    return '<linearGradient id="lab-i-' + id + '-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c0 + '"/><stop offset="1" stop-color="' + c1 + '"/></linearGradient>';
+  }
+  function sqBase(id) {
+    return '<path d="' + SQ + '" fill="url(#lab-i-' + id + '-b)"/><path d="' + SQ + '" fill="none" stroke="#000" stroke-opacity=".12" stroke-width="3"/>';
+  }
+  function gearPath(cx, cy, ro, rr, teeth, hole) {
+    var step = (Math.PI * 2) / teeth, d = '';
+    for (var i = 0; i < teeth; i++) {
+      var a = i * step - Math.PI / 2;
+      var p = [[rr, a - step * 0.30], [ro, a - step * 0.16], [ro, a + step * 0.16], [rr, a + step * 0.30]];
+      for (var k = 0; k < 4; k++) d += (i === 0 && k === 0 ? 'M' : 'L') + (cx + p[k][0] * Math.cos(p[k][1])).toFixed(1) + ' ' + (cy + p[k][0] * Math.sin(p[k][1])).toFixed(1);
+    }
+    return d + 'Z M' + (cx + hole) + ' ' + cy + 'a' + hole + ' ' + hole + ' 0 1 0 ' + (-2 * hole) + ' 0a' + hole + ' ' + hole + ' 0 1 0 ' + (2 * hole) + ' 0Z';
+  }
+  var calcKeys = '';
+  (function () {
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
+      var fill = c === 3 ? '#ff9f0a' : (r === 0 ? '#a6a6aa' : '#6b6b70');
+      calcKeys += '<rect x="' + (160 + c * 182) + '" y="' + (372 + r * 128) + '" width="158" height="108" rx="30" fill="' + fill + '"/>';
+    }
+  })();
+  var lpKeys = '';
+  (function () {
+    var cols = ['#ff5f57', '#febc2e', '#28c840', '#0a84ff', '#bf5af2', '#ff9f0a', '#64d2ff', '#30d158', '#ff375f'];
+    for (var i = 0; i < 9; i++) lpKeys += '<rect x="' + (217 + (i % 3) * 210) + '" y="' + (217 + Math.floor(i / 3) * 210) + '" width="170" height="170" rx="44" fill="' + cols[i] + '"/>';
+  })();
+  var ticks = '';
+  (function () {
+    for (var i = 0; i < 24; i++) {
+      var a = (i / 24) * 2 * Math.PI, big = i % 6 === 0, r0 = big ? 262 : 280, r1 = 312;
+      ticks += '<path d="M' + (512 + r0 * Math.cos(a)).toFixed(1) + ' ' + (512 + r0 * Math.sin(a)).toFixed(1) + 'L' + (512 + r1 * Math.cos(a)).toFixed(1) + ' ' + (512 + r1 * Math.sin(a)).toFixed(1) + '" stroke="#fff" stroke-opacity="' + (big ? '.95' : '.7') + '" stroke-width="' + (big ? 14 : 8) + '" stroke-linecap="round"/>';
+    }
+  })();
+  var K = '0 0 1024 1024';
+  defs['app-settings'] = [K, '<defs>' + sqTile('set', '#e4e6ea', '#a7adb7') + '<linearGradient id="lab-i-set-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e949f"/><stop offset="1" stop-color="#585d67"/></linearGradient></defs>' + sqBase('set') +
+    '<path d="' + gearPath(512, 512, 330, 262, 12, 112) + '" fill="url(#lab-i-set-g)" fill-rule="evenodd"/>'];
+  defs['app-calculator'] = [K, '<defs>' + sqTile('calc', '#4b4b50', '#1c1c1e') + '</defs>' + sqBase('calc') +
+    '<rect x="160" y="150" width="704" height="190" rx="40" fill="#101011"/><ellipse cx="780" cy="245" rx="38" ry="56" fill="none" stroke="#fff" stroke-width="24"/>' + calcKeys];
+  defs['app-activity'] = [K, '<defs>' + sqTile('act', '#3a3b40', '#0f0f11') + '</defs>' + sqBase('act') +
+    '<rect x="146" y="168" width="732" height="688" rx="52" fill="#08080a"/>' +
+    '<path d="M146 400H878M146 512H878M146 624H878M146 736H878M330 168V856M512 168V856M694 168V856" stroke="#fff" stroke-opacity=".07" stroke-width="4"/>' +
+    '<path d="M170 740H290L350 600L420 760L500 430L580 700L640 600H720L854 520" fill="none" stroke="#ff453a" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".92"/>' +
+    '<path d="M170 560H280L340 440L410 650L490 320L570 600L650 470H740L854 380" fill="none" stroke="#30d158" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>'];
+  defs['app-safari'] = [K, '<defs>' + sqTile('saf', '#ffffff', '#dde6f2') + '<linearGradient id="lab-i-saf-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset="1" stop-color="#0a6cff"/></linearGradient></defs>' + sqBase('saf') +
+    '<circle cx="512" cy="512" r="352" fill="url(#lab-i-saf-c)"/><circle cx="512" cy="512" r="352" fill="none" stroke="#000" stroke-opacity=".12" stroke-width="4"/>' + ticks +
+    '<g transform="rotate(45 512 512)"><path d="M512 262L566 512H458Z" fill="#ff453a"/><path d="M512 762L566 512H458Z" fill="#fff" fill-opacity=".96"/></g><circle cx="512" cy="512" r="20" fill="#fff"/>'];
+  defs['app-preview'] = [K, '<defs>' + sqTile('pv', '#9bd6ff', '#3d8fe6') + '<clipPath id="lab-i-pv-c"><rect x="196" y="200" width="460" height="560" rx="34"/></clipPath></defs>' + sqBase('pv') +
+    '<g transform="rotate(-7 426 480)"><rect x="196" y="200" width="460" height="560" rx="34" fill="#fff"/><g clip-path="url(#lab-i-pv-c)"><rect x="226" y="230" width="400" height="330" rx="14" fill="#bfe4ff"/><path d="M226 560V470L340 380L430 470L500 410L626 520V560Z" fill="#5fae7e"/><circle cx="540" cy="318" r="40" fill="#ffd25a"/><rect x="226" y="600" width="260" height="22" rx="11" fill="#cfd4dc"/><rect x="226" y="646" width="190" height="22" rx="11" fill="#dfe3e9"/></g></g>' +
+    '<circle cx="640" cy="640" r="156" fill="#fff" fill-opacity=".38" stroke="#32363d" stroke-width="42"/><path d="M752 752L856 856" stroke="#32363d" stroke-width="58" stroke-linecap="round"/>'];
+  defs['app-launchpad'] = [K, '<defs>' + sqTile('lp', '#eef0f3', '#b9bec7') + '</defs>' + sqBase('lp') + lpKeys];
+  defs['app-forcequit'] = [K, '<defs>' + sqTile('fq', '#ff7a6e', '#d4312b') + '</defs>' + sqBase('fq') + '<path d="M330 330L694 694M694 330L330 694" stroke="#fff" stroke-width="84" stroke-linecap="round"/>'];
+
   /* ---- UI glyphs (24 box, 1.6 stroke, currentColor) ---- */
   var G = '0 0 24 24';
   function g(inner) { return [G, '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + inner + '</g>']; }
@@ -114,6 +179,12 @@
       (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true" focusable="false">' + entry.inner + '</svg>';
   }
 
+  /* the stub .app files in /Applications show the icon of the app they open (Finder list, desktop, Spotlight) */
+  var APP_ICON = {
+    'codex.app': 'app-codex', 'code.app': 'app-code', '文字編輯.app': 'app-textedit', '終端機.app': 'app-terminal',
+    'safari.app': 'app-safari', '系統設定.app': 'app-settings', '計算機.app': 'app-calculator', '活動監視器.app': 'app-activity', '預覽程式.app': 'app-preview'
+  };
+
   var icons = {
     get: function (name, opts) {
       opts = opts || {};
@@ -140,7 +211,7 @@
     forNode: function (st) {
       if (!st) return 'unknown';
       if (st.type === 'dir' || st.kind === 'folder') return 'folder';
-      if (st.kind === 'app') return 'app';
+      if (st.kind === 'app') return APP_ICON[String(st.name || '').toLowerCase()] || 'app';
       var m = /\.([^./]+)$/.exec(st.name || '');
       var ext = m ? m[1].toLowerCase() : '';
       if (ext === 'md') return 'md';

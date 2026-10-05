@@ -363,3 +363,64 @@
   tidyParens(reel);
   trimLineStart();
 })();
+
+/* --------------------------------------------------------------------------
+   課堂練習的左右兩台筆電（.lab-duo，Mac｜Windows）：讓學生自己選。
+   - 滑鼠在左半邊，Mac 亮起來；右半邊，Windows 亮起來（.lab-side 加 is-on，另一台 is-off）。
+     中間那一帶（44%–56%）看滑鼠往哪邊移動：往左 Mac、往右 Windows，所以「往左移就是 Mac」。
+   - 亮起來的那一刻，螢幕掃過一道光（is-flash，一次）。滑鼠離開後回到兩台都一樣。
+   - 鍵盤：Tab 到哪一台就亮哪一台，← → 在兩台之間移動，Enter 進入。觸控沒有滑過的狀態，直接點。
+   - 只改 class，動畫都在 CSS（transform、opacity、filter），沒有一直在跑的迴圈。
+   -------------------------------------------------------------------------- */
+(function () {
+  "use strict";
+  document.querySelectorAll(".lab-duo").forEach((duo) => {
+    const sides = Array.from(duo.querySelectorAll(".lab-side"));
+    if (sides.length !== 2) return;
+    let active = "";
+    let lastX = null;
+    let leaveTimer = 0;
+    const set = (os) => {
+      if (os === active) return;
+      active = os;
+      duo.classList.toggle("is-choosing", !!os);
+      sides.forEach((s) => {
+        const on = !!os && s.dataset.os === os;
+        s.classList.toggle("is-on", on);
+        s.classList.toggle("is-off", !!os && !on);
+        if (on) {
+          s.classList.remove("is-flash");
+          void s.offsetWidth; // 重新觸發掃光動畫
+          s.classList.add("is-flash");
+        }
+      });
+    };
+    sides.forEach((s) => {
+      const g = s.querySelector(".lp-glint");
+      if (g) g.addEventListener("animationend", () => s.classList.remove("is-flash"));
+      s.addEventListener("focus", () => set(s.dataset.os));
+      s.addEventListener("blur", () => setTimeout(() => { if (!duo.contains(document.activeElement)) set(""); }, 0));
+      s.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        sides[e.key === "ArrowLeft" ? 0 : 1].focus();
+      });
+    });
+    duo.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "touch") return;
+      clearTimeout(leaveTimer);
+      const r = duo.getBoundingClientRect();
+      const f = (e.clientX - r.left) / r.width;
+      const dx = lastX == null ? 0 : e.clientX - lastX;
+      lastX = e.clientX;
+      if (f < 0.44) set("mac");
+      else if (f > 0.56) set("win");
+      else if (dx <= -2) set("mac");
+      else if (dx >= 2) set("win");
+    });
+    duo.addEventListener("pointerleave", () => {
+      lastX = null;
+      leaveTimer = setTimeout(() => { if (!duo.contains(document.activeElement)) set(""); }, 280);
+    });
+  });
+})();

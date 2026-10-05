@@ -289,22 +289,29 @@
   function onPopDown(e) {
     if (popEl && !popEl.contains(e.target) && !(popBtn && popBtn.contains(e.target))) closePopover();
   }
-  function openPopover(btn, node, widthPx) {
+  /* opts (round 5): cls = extra class, right = distance from the right edge of the stage, label = aria-label */
+  function openPopover(btn, node, widthPx, opts) {
+    opts = opts || {};
     if (popBtn === btn) { closePopover(); return; }
     closePopover();
     if (LAB.menu) LAB.menu.closeAll();
     popBtn = btn;
     btn.setAttribute('aria-expanded', 'true'); btn.classList.add('is-open');
-    popEl = h('div', { class: 'lab-popover', role: 'dialog' }, node);
+    popEl = h('div', { class: 'lab-popover' + (opts.cls ? ' ' + opts.cls : ''), role: 'dialog', 'aria-label': opts.label || null }, node);
     overlaysEl.appendChild(popEl);
     var r = stage.rectOf(btn);
     var w = widthPx || 260;
     popEl.style.width = w + 'px';
-    popEl.style.left = Math.max(6, Math.min(r.x + r.w - w + 6, stage.w - w - 6)) + 'px';
+    if (typeof opts.right === 'number') popEl.style.left = Math.max(6, stage.w - w - opts.right) + 'px';
+    else popEl.style.left = Math.max(6, Math.min(r.x + r.w - w + 6, stage.w - w - 6)) + 'px';
     popEl.style.top = (stage.menubarH + 4) + 'px';
     popOff = LAB.keys.modal(function (e) { if (e.key === 'Escape') { closePopover(); return true; } return false; });
     window.addEventListener('pointerdown', onPopDown, true);
   }
+
+  LAB.desktop = LAB.desktop || {};
+  LAB.desktop.openPopover = function (btn, node, w, o) { return openPopover(btn, node, w, o); };
+  LAB.desktop.closePopover = function () { closePopover(); };
 
   /* ================================================ menu bar right side (§2.2) */
   var clockEl = null, imeBtn = null, imeAbc = false;
@@ -333,14 +340,22 @@
     var wifi = glyph('mb-wifi', 'Wi-Fi', 18);
     wifi.classList.add('lab-mb-wifi');
     wifi.setAttribute('data-lab', 'wifi');
+    wifi.setAttribute('aria-haspopup', 'dialog'); wifi.setAttribute('aria-expanded', 'false'); wifi.removeAttribute('tabindex');
+    wifi.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (LAB.sys && LAB.sys.openWifiPanel) LAB.sys.openWifiPanel(wifi);
+      else openPopover(wifi, h('div', { class: 'lab-cc' }, h('div', { class: 'lab-cc-note' }, 'Wi-Fi：NTNU-Classroom')), 220);
+    });
     wifiBtn = wifi;
     var spot = h('button', { type: 'button', class: 'lab-mb-btn', 'aria-label': 'Spotlight 搜尋', dataset: { lab: 'spotlight-button' } });
     spot.innerHTML = LAB.icons.get('mb-search', { size: 16 });
     spot.addEventListener('click', function (e) { e.stopPropagation(); LAB.desktop.toggleSpotlight(); });
     var cc = h('button', { type: 'button', class: 'lab-mb-btn', 'aria-label': '控制中心', 'aria-haspopup': 'dialog', 'aria-expanded': 'false' });
     cc.innerHTML = LAB.icons.get('mb-cc', { size: 18 });
+    cc.setAttribute('data-lab', 'control-center-button');
     cc.addEventListener('click', function (e) {
       e.stopPropagation();
+      if (LAB.sys && LAB.sys.openControlCenter) { LAB.sys.openControlCenter(cc); return; }
       var body = h('div', { class: 'lab-cc' },
         h('div', { class: 'lab-cc-row' }, h('label', null, '顯示器'), h('input', { type: 'range', min: '0', max: '100', value: '70', 'aria-label': '顯示器亮度' })),
         h('div', { class: 'lab-cc-row' }, h('label', null, '音量'), h('input', { type: 'range', min: '0', max: '100', value: '40', 'aria-label': '音量' })),
@@ -350,6 +365,7 @@
     clockEl = h('button', { type: 'button', class: 'lab-mb-btn lab-mb-clock', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', dataset: { lab: 'clock' } });
     clockEl.addEventListener('click', function (e) {
       e.stopPropagation();
+      if (LAB.sys && LAB.sys.openNotificationCenter) { LAB.sys.openNotificationCenter(clockEl); return; }
       openPopover(clockEl, h('div', { class: 'lab-cc' }, h('div', { class: 'lab-cc-note' }, '沒有通知')), 220);
     });
     [imeBtn, wifi, spot, cc, clockEl].forEach(function (b) { right.appendChild(b); });
@@ -467,9 +483,29 @@
     if (!desktopEl) return;
     desktopEl.classList.toggle('is-key', !LAB.wm.focused());
   }
+  /* 排序方式 on the desktop (round 5): name (the default), kind, date modified, size */
+  var desktopSort = 'name';
+  function sortDesktop(list) {
+    if (desktopSort === 'name') return list;
+    var arr = list.slice();
+    arr.sort(function (a, b) {
+      if (desktopSort === 'kind') {
+        var ka = a.type === 'dir' ? 0 : 1, kb = b.type === 'dir' ? 0 : 1;
+        if (ka !== kb) return ka - kb;
+        var ea = LAB.vfs.extname(a.name), eb = LAB.vfs.extname(b.name);
+        if (ea !== eb) return ea < eb ? -1 : 1;
+      } else if (desktopSort === 'modified') {
+        if (a.mtime !== b.mtime) return b.mtime - a.mtime;
+      } else if (desktopSort === 'size') {
+        if ((a.size || 0) !== (b.size || 0)) return (b.size || 0) - (a.size || 0);
+      }
+      return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+    });
+    return arr;
+  }
   function renderIcons() {
     var list = [];
-    try { list = LAB.vfs.visible(LAB.vfs.list(DESKTOP)); } catch (e) { list = []; }
+    try { list = sortDesktop(LAB.vfs.visible(LAB.vfs.list(DESKTOP))); } catch (e) { list = []; }
     var seen = new Set();
     list.forEach(function (st) {
       seen.add(st.path);
@@ -644,9 +680,9 @@
       { label: '打開方式', enabled: ow.length > 0, submenu: ow.map(function (o) { return { label: o.label, action: function () { LAB.apps.openPath(path, { appId: o.appId, via: 'desktop' }); } }; }) },
       { separator: true },
       { label: '移到垃圾桶', shortcut: '⌘⌫', action: function () { trashSelection(multi ? Array.from(selected) : [path]); } },
-      { label: '取得資訊', enabled: false },
+      { label: '取得資訊', shortcut: '⌘I', enabled: !!(LAB.finder && LAB.finder.info), action: function () { LAB.finder.info(multi ? Array.from(selected) : [path]); } },
       { label: '重新命名', action: function () { startRename(path); } },
-      { label: '壓縮「' + name + '」', enabled: false },
+      { label: multi ? '壓縮 ' + selected.size + ' 個項目' : '壓縮「' + name + '」', enabled: typeof LAB.vfs.zipCreate === 'function', action: function () { zipDesktop(multi ? Array.from(selected) : [path]); } },
       { label: '複製', action: function () {
         (multi ? Array.from(selected) : [path]).forEach(function (p) {
           var s2 = LAB.vfs.stat(p); if (!s2) return;
@@ -661,13 +697,27 @@
     ];
     LAB.menu.contextMenu(x, y, items);
   }
+  /* 壓縮 on the desktop: one item is called 「name.zip」, several are 「封存.zip」, like the Finder (LAB.vfs.zipCreate comes from vfs.js) */
+  function zipDesktop(paths) {
+    if (typeof LAB.vfs.zipCreate !== 'function') { LAB.ui.toast('這個功能還沒安裝（練習版）'); return; }
+    var base = paths.length === 1 ? LAB.vfs.basename(paths[0]) : '封存';
+    var dest = LAB.vfs.join(DESKTOP, LAB.vfs.uniqueName(DESKTOP, base, '.zip'));
+    try { LAB.vfs.zipCreate(paths, dest, { by: 'desktop' }); } catch (e) { LAB.ui.toast('壓縮沒有成功'); }
+  }
+  function sortMenu() {
+    return [['name', '名稱'], ['kind', '種類'], ['modified', '修改日期'], ['size', '大小']].map(function (s) {
+      return { label: s[1], checked: desktopSort === s[0], action: function () { desktopSort = s[0]; renderIcons(); } };
+    });
+  }
   function emptyMenu(x, y) {
     LAB.menu.contextMenu(x, y, [
       { label: '新增檔案夾', action: newFolderOnDesktop },
       { separator: true },
-      { label: '取得資訊', enabled: false },
-      { label: '更改桌面背景⋯', enabled: false },
-      { label: '排序方式', enabled: false, submenu: [{ label: '名稱' }] }
+      { label: '取得資訊', enabled: !!(LAB.finder && LAB.finder.info), action: function () { LAB.finder.info([DESKTOP]); } },
+      { label: '更改桌布⋯', action: function () { if (LAB.sys && LAB.sys.openSettings) LAB.sys.openSettings('wallpaper'); else LAB.ui.toast('這個功能還沒安裝（練習版）'); } },
+      { separator: true },
+      { label: '使用堆疊', enabled: false },
+      { label: '排序方式', submenu: sortMenu() }
     ]);
   }
   function trashSelection(paths) {
@@ -777,7 +827,14 @@
   }
 
   /* ============================================================ Dock (§2.7) */
-  var DOCK_ORDER = ['finder', 'terminal', 'codex', 'code', 'textedit'];
+  /* macOS 26 default order (Finder, the Apps grid, Safari, ...), then our apps, then 系統設定; Downloads and the Trash follow the divider.
+     The five apps the missions use (Finder, 終端機, Codex, Code, 文字編輯) can never be taken out of the Dock. */
+  var DOCK_ORDER = ['finder', 'launchpad', 'safari', 'terminal', 'codex', 'code', 'textedit', 'preview', 'calculator', 'activity', 'settings'];
+  var DOCK_LOCKED = { finder: 1, terminal: 1, codex: 1, code: 1, textedit: 1, launchpad: 1 };
+  var dockOff = new Set();          // apps taken out of the Dock with 選項 › 保留在 Dock 中 (they stay while running)
+  var loginItems = new Set();       // 選項 › 登入時打開 (a mark only)
+  var APP_FILE = { codex: 'Codex.app', code: 'Code.app', textedit: '文字編輯.app', terminal: '終端機.app', safari: 'Safari.app', settings: '系統設定.app', calculator: '計算機.app', activity: '活動監視器.app', preview: '預覽程式.app' };
+  var dockPrefs = { size: 1, magnify: true, mag: 1.35, dots: true };
   var dockApps, dockMini, dockTrash, dockDownloads, dockBar;
   var appItems = new Map();      // appId -> {btn, iconBox, off[]}
   var trashBtn, trashIconBox, downloadsBtn;
@@ -795,7 +852,7 @@
 
   function buildAppItems() {
     var ids = [];
-    var all = LAB.apps.all().filter(function (d) { return d.dock; }).map(function (d) { return d.id; });
+    var all = LAB.apps.all().filter(function (d) { return d.dock && (!dockOff.has(d.id) || LAB.apps.isRunning(d.id)); }).map(function (d) { return d.id; });
     DOCK_ORDER.forEach(function (id) { if (all.indexOf(id) >= 0) ids.push(id); });
     all.forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); });
     // drop items for apps that no longer exist
@@ -820,26 +877,62 @@
     });
   }
 
+  /* 在 Finder 中顯示: the .app file in /Applications when there is one, else the Applications folder */
+  function revealApp(id) {
+    var f = APP_FILE[id], path = f ? '/Applications/' + f : null;
+    if (path && LAB.vfs.exists(path) && LAB.finder && LAB.finder.reveal) { LAB.finder.reveal(path); return; }
+    LAB.apps.openFolder('/Applications', 'dock');
+  }
+  /* The Dock shrinks (like the real one) when its icons would not fit the screen, and follows the size in 系統設定 */
+  function fitDock() {
+    if (!dockEl || !dockBar) return;
+    dockEl.style.setProperty('--dk', '1');
+    var nat = dockBar.offsetWidth, avail = stage.w - 28;
+    var k = dockPrefs.size;
+    if (nat > 40) { var kk = (avail - 32) / (nat - 32); if (kk < k) k = kk; }
+    k = Math.max(0.4, Math.min(1.4, k));
+    dockEl.style.setProperty('--dk', k.toFixed(3));
+    LAB.bus.emit('dock:fit', { k: k });
+    updateCardRoom();
+  }
+  LAB.desktop = LAB.desktop || {};
+  LAB.desktop.dock = {
+    prefs: dockPrefs,
+    set: function (o) {
+      Object.keys(o || {}).forEach(function (k) { if (k in dockPrefs) dockPrefs[k] = o[k]; });
+      document.documentElement.setAttribute('data-dock-dots', dockPrefs.dots ? 'on' : 'off');
+      fitDock();
+    },
+    fit: function () { fitDock(); },
+    keep: function (id) { return !dockOff.has(id); }
+  };
+
   function wireAppItem(id, rec) {
-    rec.btn.addEventListener('click', function () { LAB.apps.launch(id, undefined, { bounce: true }); });
+    rec.btn.addEventListener('click', function () { var d = LAB.apps.get(id); LAB.apps.launch(id, undefined, { bounce: !(d && d.noBounce) }); });
     rec.btn.addEventListener('contextmenu', function (e) {
       e.preventDefault();
       var def = LAB.apps.get(id);
       var p = LAB.stage.toStage(e.clientX, e.clientY);
       var ws = LAB.wm.byApp(id);
+      var running = LAB.apps.isRunning(id) && id !== 'launchpad';
       var items = [{ label: def.title, enabled: false }];
       if (ws.length) { items.push({ separator: true }); ws.slice().reverse().forEach(function (w) { items.push({ label: w.getTitle() || '（未命名）', action: function () { w.focus(); } }); }); }
       items.push({ separator: true });
-      items.push({ label: '選項', enabled: false, submenu: [{ label: '（練習版）' }] });
-      items.push({ label: '在 Finder 中顯示', enabled: false });
-      if (LAB.apps.isRunning(id)) {
+      items.push({ label: '選項', submenu: [
+        { label: '保留在 Dock 中', checked: !dockOff.has(id), enabled: !DOCK_LOCKED[id], action: function () { if (dockOff.has(id)) dockOff.delete(id); else dockOff.add(id); buildAppItems(); fitDock(); } },
+        { label: '登入時打開', checked: loginItems.has(id), enabled: id !== 'launchpad' && id !== 'finder', action: function () { if (loginItems.has(id)) loginItems.delete(id); else loginItems.add(id); } },
+        { separator: true },
+        { label: '在 Finder 中顯示', enabled: id !== 'launchpad', action: function () { revealApp(id); } }
+      ] });
+      if (id !== 'launchpad' && !running) items.push({ label: '打開', action: function () { LAB.apps.launch(id, undefined, { bounce: true }); } });
+      if (running) {
         items.push({ separator: true });
         items.push({ label: '隱藏', action: function () { LAB.wm.hideApp(id); } });
         if (id !== 'finder') items.push({ label: '結束', action: function () { LAB.apps.quit(id); } });
       }
-      if ((id === 'finder' || id === 'terminal') && def.open) {
+      if ((id === 'finder' || id === 'terminal' || id === 'safari') && def.open) {
         items.push({ separator: true });
-        items.push({ label: '新增視窗', action: function () { def.open({}); } });
+        items.push({ label: '新增視窗', action: function () { if (def.newWindow) def.newWindow(); else def.open({}); } });
       }
       LAB.menu.contextMenu(p.x, p.y - 8, items);
     });
@@ -976,32 +1069,40 @@
     dockEl.appendChild(dockBar);
     buildAppItems();
     updateTrashIcon();
+    fitDock();
 
-    LAB.bus.on('apps:changed', buildAppItems);
-    LAB.bus.on('app:launch', function (d) { var r = appItems.get(d.appId); if (r) { r.btn.classList.add('is-running'); r.btn.classList.remove('is-bounce'); } });
+    LAB.bus.on('apps:changed', function () { buildAppItems(); fitDock(); });
+    LAB.bus.on('stage:resize', function () { fitDock(); });
+    LAB.bus.on('app:launch', function (d) {
+      if (dockOff.has(d.appId) && !appItems.get(d.appId)) { buildAppItems(); fitDock(); }
+      var r = appItems.get(d.appId); if (r) { r.btn.classList.add('is-running'); r.btn.classList.remove('is-bounce'); }
+    });
     LAB.bus.on('app:launching', function (d) {
       var r = appItems.get(d.appId);
       if (!r || reduced()) return;
       r.btn.classList.add('is-bounce');
       setTimeout(function () { r.btn.classList.remove('is-bounce'); }, 760);
     });
-    LAB.bus.on('app:quit', function (d) { var r = appItems.get(d.appId); if (r) r.btn.classList.remove('is-running'); });
-    LAB.bus.on('win:minimize', function (d) { addThumb(d.id); });
-    LAB.bus.on('win:restore', function (d) { removeThumb(d.id); });
-    LAB.bus.on('win:close', function (d) { removeThumb(d.id); });
+    LAB.bus.on('app:quit', function (d) {
+      var r = appItems.get(d.appId); if (r) r.btn.classList.remove('is-running');
+      if (dockOff.has(d.appId)) { buildAppItems(); fitDock(); }
+    });
+    LAB.bus.on('win:minimize', function (d) { addThumb(d.id); fitDock(); });
+    LAB.bus.on('win:restore', function (d) { removeThumb(d.id); fitDock(); });
+    LAB.bus.on('win:close', function (d) { removeThumb(d.id); fitDock(); });
     LAB.bus.on('win:title', function (d) { var b = miniThumbs.get(d.id); if (b) b.querySelector('.lab-dock-label').textContent = d.title; });
     LAB.bus.on('fs:change', function (d) { if (d.trashed || (d.path && d.path.indexOf(HOME + '/.Trash') === 0) || (d.from && d.from.indexOf(HOME + '/.Trash') === 0)) updateTrashIcon(); });
     LAB.bus.on('store:reset', updateTrashIcon);
 
     // hover magnification: transform only, never layout
     dockBar.addEventListener('pointermove', function (e) {
-      if (reduced() || perf.low || e.pointerType === 'touch') return;
-      var s = LAB.stage.scale;
+      if (reduced() || perf.low || e.pointerType === 'touch' || !dockPrefs.magnify) return;
+      var s = LAB.stage.scale, amp = dockPrefs.mag - 1;
       var items = dockBar.querySelectorAll('.lab-dock-item');
       for (var i = 0; i < items.length; i++) {
         var r = items[i].getBoundingClientRect();
         var d = Math.abs(e.clientX - (r.left + r.width / 2)) / s;
-        var k = 1 + 0.35 * Math.exp(-(d * d) / (2 * 42 * 42));
+        var k = 1 + amp * Math.exp(-(d * d) / (2 * 42 * 42));
         items[i].firstElementChild.nextElementSibling.style.transform = 'scale(' + k.toFixed(3) + ')';
         items[i].style.zIndex = k > 1.05 ? '2' : '';
       }
@@ -1018,10 +1119,19 @@
   function searchApps(q) {
     var out = [];
     LAB.apps.all().forEach(function (def) {
-      if (def.id === 'quicklook' || def.id === 'archive') return;
+      if (def.id === 'quicklook' || def.id === 'archive' || def.nospot) return;
       var keys = [def.id, def.en || '', def.title || ''].concat(def.aliases || []);
       var ok = keys.some(function (k) { return k && String(k).toLowerCase().indexOf(q) >= 0; });
       if (ok) out.push({ kind: 'app', id: def.id, label: def.title, sub: def.en && def.en !== def.title ? def.en : '', icon: def.icon });
+    });
+    return out;
+  }
+  /* 系統設定 panes (round 5): typing 桌布, dark, wifi, ... offers the pane itself */
+  function searchPanes(q) {
+    var out = [];
+    if (q.length < 2 || !LAB.sys || !LAB.sys.settingsPanes) return out;
+    LAB.sys.settingsPanes().forEach(function (pn) {
+      if ((pn.label + ' ' + pn.kw).toLowerCase().indexOf(q) >= 0) out.push({ kind: 'pane', pane: pn.id, label: pn.label, sub: '系統設定', icon: 'app-settings' });
     });
     return out;
   }
@@ -1056,8 +1166,19 @@
     if (!q) { spot.input.setAttribute('aria-expanded', 'false'); spot.el.classList.remove('has-results'); return; }
     var apps = searchApps(q);
     var f = searchFiles(q);
+    var raw = spot.input.value.trim(), calc = [];
+    var mathVal = LAB.sys && LAB.sys.evalMath ? LAB.sys.evalMath(raw) : null;
+    if (mathVal !== null) {
+      var shown = LAB.sys.fmtResult(mathVal);
+      calc.push({ kind: 'calc', label: raw + ' = ' + shown, sub: '', copy: shown, icon: 'app-calculator' });
+    } else {
+      var uc = LAB.sys && LAB.sys.convertUnits ? LAB.sys.convertUnits(raw) : null;
+      if (uc) calc.push({ kind: 'calc', label: uc.text, sub: '', copy: uc.result, icon: 'app-calculator' });
+    }
     var groups = [
+      { title: '計算', items: calc },
       { title: '應用程式', items: apps.map(function (a) { return a; }) },
+      { title: '系統設定', items: searchPanes(q) },
       { title: '檔案夾', items: f.dirs.map(function (s) { return { kind: 'path', path: s.path, label: s.name, sub: LAB.vfs.dirname(s.path).replace(HOME, '~'), icon: 'folder' }; }) },
       { title: '文件', items: f.files.map(function (s) { return { kind: 'path', path: s.path, label: s.name, sub: LAB.vfs.dirname(s.path).replace(HOME, '~'), icon: LAB.icons.forNode(s) }; }) }
     ];
@@ -1100,6 +1221,8 @@
     var it = r.item;
     closeSpotlight();
     if (it.kind === 'app') LAB.apps.launch(it.id, it.id === 'about' ? { tab: 'about' } : undefined, { bounce: true });
+    else if (it.kind === 'calc') { LAB.clipboard.setText(it.copy); LAB.ui.toast('已拷貝結果：' + it.copy); }
+    else if (it.kind === 'pane') { if (LAB.sys && LAB.sys.openSettings) LAB.sys.openSettings(it.pane); }
     else LAB.apps.openPath(it.path, { via: 'spotlight' });
   }
 

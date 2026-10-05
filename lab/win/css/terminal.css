@@ -1,0 +1,274 @@
+/* terminal.css — 終端機: Windows Terminal (Campbell) running Windows PowerShell 5.1. DESIGN W5, win-facts §2.
+   Two parts: the tab strip that is the title bar (.tm-strip, drawn into win.tbc by wm.js `titlebar:'custom'`) and the screen (.tm-root).
+   Every Terminal colour is declared here (the only place). Campbell: #0C0C0C / #CCCCCC; the error red is ConsoleColor.Red = brightRed #E74856. */
+
+/* ------------------------------------------------------------ title bar = tab strip (focused #2E2E2E, unfocused #333333, 40 px) */
+.lab-win.theme-dark[data-app="terminal"] .lab-win-bar { background: #2e2e2e; }
+.lab-win.theme-dark.is-inactive[data-app="terminal"] .lab-win-bar { background: #333333; }
+.lab-win[data-app="terminal"] .lab-win-body { background: #0c0c0c; }
+
+.tm-strip {
+  flex: 1;                       /* fills win.tbc, so the tab can really be 240 px wide (and the empty part still drags the window) */
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  min-width: 0;
+  padding-left: 8px;
+  font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  color: #fff;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* the one tab: the colour of the terminal below, rounded on top, with the two small concave wings at its feet */
+.tm-tab {
+  position: relative;
+  flex: 0 1 240px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 32px;
+  min-width: 72px;
+  padding: 0 6px 0 12px;
+  border-radius: 8px 8px 0 0;
+  background: #0c0c0c;
+  color: #fff;
+  cursor: default;
+}
+.tm-tab::before, .tm-tab::after { content: ""; position: absolute; bottom: 0; width: 8px; height: 8px; pointer-events: none; }
+.tm-tab::before { left: -8px; background: radial-gradient(circle at 0 0, transparent 7.5px, #0c0c0c 8px); }
+.tm-tab::after { right: -8px; background: radial-gradient(circle at 100% 0, transparent 7.5px, #0c0c0c 8px); }
+.lab-win.is-inactive .tm-tab { color: rgba(255, 255, 255, .6); }
+.tm-tab-ico { flex: none; display: block; width: 16px; height: 16px; }
+.tm-tab-ico svg { display: block; width: 16px; height: 16px; }
+.tm-tab-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tm-tab-close {
+  flex: none; width: 24px; height: 24px; padding: 0; margin: 0; border: 0; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: inherit; cursor: default;
+}
+.tm-tab-close svg { display: block; width: 10px; height: 10px; }
+.tm-tab-close:hover { background: rgba(255, 255, 255, .1); }
+.tm-tab-close:active { background: rgba(255, 255, 255, .06); }
+
+.tm-tabbtn {
+  flex: none; width: 32px; height: 32px; margin: 0 0 0 8px; padding: 0; border: 0; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: rgba(255, 255, 255, .92); cursor: default;
+}
+.tm-tabbtn svg { display: block; width: 12px; height: 12px; }
+.tm-tabbtn:hover { background: rgba(255, 255, 255, .08); }
+.tm-tabbtn:active { background: rgba(255, 255, 255, .05); }
+.lab-win.is-inactive .tm-tabbtn { color: rgba(255, 255, 255, .55); }
+.tm-drop { margin-left: 0; width: 30px; }
+.tm-sep { flex: none; width: 1px; height: 16px; margin: 0 4px 8px 4px; background: rgba(255, 255, 255, .28); }
+.tm-strip button:focus-visible { outline: 2px solid #4cc2ff; outline-offset: -2px; }
+
+/* ------------------------------------------------------------ the screen */
+.tm-root {
+  --tm-bg: #0c0c0c;
+  --tm-fg: #cccccc;
+  --tm-sel: #cccccc;
+  --tm-sel-fg: #0c0c0c;
+  --tm-cursor: #f3f3f3;
+  --tm-red: #e74856;
+  --tm-yellow: #f9f1a5;
+  --tm-grey: #767676;
+  --tm-cyan: #3a96dd;
+  --tm-green: #13a10e;
+  --tm-fs: 16px;
+  --tm-font: "Cascadia Mono", "Cascadia Code", Consolas, "Noto Sans Mono", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", ui-monospace, monospace;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  background: var(--tm-bg);
+  color: var(--tm-fg);
+  font-family: var(--tm-font);
+  font-size: var(--tm-fs);
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.tm-screen {
+  --tm-lh: 19px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8px;
+  bottom: 8px;                        /* fit() replaces this with an exact whole number of rows */
+  padding: 0 8px;
+  overflow-x: hidden;
+  overflow-y: scroll;                  /* the thin scrollbar's room is always reserved, so the column count never flips when it appears */
+  background: var(--tm-bg);
+  color: var(--tm-fg);
+  font-family: var(--tm-font);
+  font-size: var(--tm-fs);
+  line-height: var(--tm-lh);
+  font-variant-ligatures: none;
+  cursor: text;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.tm-screen *::selection, .tm-screen::selection { background: var(--tm-sel); color: var(--tm-sel-fg); }
+.tm-screen ::-moz-selection { background: var(--tm-sel); color: var(--tm-sel-fg); }
+
+.tm-hist, .tm-live { position: relative; }
+.tm-spacer { height: 0; }
+
+/* The 工作管理員 (sysapps.css) also has a .tm-row (a 36 px table row): scoping this one under .tm-screen keeps the two apart whatever loads last. */
+.tm-screen .tm-row {
+  height: var(--tm-lh);
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+  line-height: var(--tm-lh);
+  white-space: pre;
+  overflow: visible;
+}
+
+/* every two-column character (CJK) sits in a cell exactly two columns wide */
+.tm-w {
+  display: inline-block;
+  width: 2ch;
+  text-align: center;
+  overflow: visible;
+  white-space: pre;
+}
+
+/* PSReadLine 2.0 colours of the typed line, and the red of the error stream */
+.tm-c-err { color: var(--tm-red); }
+.tm-c-cmd { color: var(--tm-yellow); }
+.tm-c-par { color: var(--tm-grey); }
+.tm-c-str { color: var(--tm-cyan); }
+.tm-c-var { color: var(--tm-green); }
+/* Write-Warning (yellow, like the console's warning stream) and Write-Host -ForegroundColor: the 16 console colours as Campbell shows them */
+.tm-c-warn { color: #f9f1a5; }
+.tm-c-fg-black { color: #767676; }
+.tm-c-fg-darkblue { color: #0037da; }
+.tm-c-fg-darkgreen { color: #13a10e; }
+.tm-c-fg-darkcyan { color: #3a96dd; }
+.tm-c-fg-darkred { color: #c50f1f; }
+.tm-c-fg-darkmagenta { color: #881798; }
+.tm-c-fg-darkyellow { color: #c19c00; }
+.tm-c-fg-gray { color: #cccccc; }
+.tm-c-fg-darkgray { color: #767676; }
+.tm-c-fg-blue { color: #3b78ff; }
+.tm-c-fg-green { color: #16c60c; }
+.tm-c-fg-cyan { color: #61d6d6; }
+.tm-c-fg-red { color: #e74856; }
+.tm-c-fg-magenta { color: #b4009e; }
+.tm-c-fg-yellow { color: #f9f1a5; }
+.tm-c-fg-white { color: #f2f2f2; }
+
+/* box-drawing characters (tree): drawn as 1 px lines that start at the cell centre (--tm-cx / --tm-cy: whole pixels set by measure()) and run to the cell edges, so a column of │ is one
+   crisp unbroken line like in Windows Terminal. The character stays in the text (copy, selection). */
+.tm-bx {
+  display: inline-block; width: 1ch; height: var(--tm-lh); vertical-align: top; overflow: hidden;
+  color: transparent; background-repeat: no-repeat;
+  --ln: linear-gradient(var(--tm-fg), var(--tm-fg));
+  --x: var(--tm-cx, 4px); --y: var(--tm-cy, 9px);
+}
+.tm-bx-2500 { background-image: var(--ln); background-position: 0 var(--y); background-size: 100% 1px; }                                                                                     /* ─ */
+.tm-bx-2502 { background-image: var(--ln); background-position: var(--x) 0; background-size: 1px 100%; }                                                                                     /* │ */
+.tm-bx-251c { background-image: var(--ln), var(--ln); background-position: var(--x) 0, 100% var(--y); background-size: 1px 100%, calc(100% - var(--x)) 1px; }                               /* ├ */
+.tm-bx-2524 { background-image: var(--ln), var(--ln); background-position: var(--x) 0, 0 var(--y); background-size: 1px 100%, calc(var(--x) + 1px) 1px; }                                    /* ┤ */
+.tm-bx-2514 { background-image: var(--ln), var(--ln); background-position: var(--x) 0, 100% var(--y); background-size: 1px calc(var(--y) + 1px), calc(100% - var(--x)) 1px; }               /* └ */
+.tm-bx-2518 { background-image: var(--ln), var(--ln); background-position: var(--x) 0, 0 var(--y); background-size: 1px calc(var(--y) + 1px), calc(var(--x) + 1px) 1px; }                    /* ┘ */
+.tm-bx-250c { background-image: var(--ln), var(--ln); background-position: var(--x) 100%, 100% var(--y); background-size: 1px calc(100% - var(--y)), calc(100% - var(--x)) 1px; }            /* ┌ */
+.tm-bx-2510 { background-image: var(--ln), var(--ln); background-position: var(--x) 100%, 0 var(--y); background-size: 1px calc(100% - var(--y)), calc(var(--x) + 1px) 1px; }                 /* ┐ */
+.tm-bx-252c { background-image: var(--ln), var(--ln); background-position: 0 var(--y), var(--x) 100%; background-size: 100% 1px, 1px calc(100% - var(--y)); }                                /* ┬ */
+.tm-bx-2534 { background-image: var(--ln), var(--ln); background-position: 0 var(--y), var(--x) 0; background-size: 100% 1px, 1px calc(var(--y) + 1px); }                                     /* ┴ */
+.tm-bx-253c { background-image: var(--ln), var(--ln); background-position: 0 var(--y), var(--x) 0; background-size: 100% 1px, 1px 100%; }                                                    /* ┼ */
+
+/* IME composition shown inline, underlined */
+.tm-c-comp { text-decoration: underline; text-underline-offset: 3px; }
+
+/* the bar cursor: a thin vertical line at the left edge of the cell, blinking about every 530 ms; a hollow box when the window is not the active one */
+.tm-cur { position: relative; }
+.tm-cur::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--tm-cursor);
+  box-shadow: 0 0 0 .25px var(--tm-cursor);
+  animation: tm-blink 1.06s steps(1, end) infinite;
+}
+@keyframes tm-blink { 0%, 49.99% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.lab-win.is-inactive .tm-cur::before {
+  animation: none;
+  opacity: .9;
+  right: 0;
+  width: auto;
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid var(--tm-cursor);
+}
+
+/* the real input: 1 px wide, invisible, but sitting at the cursor cell so the IME candidate window appears there */
+.tm-input {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 1px;
+  height: 19px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-family: var(--tm-font);
+  font-size: var(--tm-fs);
+  -webkit-user-select: text;
+  user-select: text;
+  z-index: 1;
+}
+.tm-input::selection { background: transparent; }
+
+/* measuring probe: 100 zeros in the terminal font, never visible */
+.tm-probe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
+  font-family: var(--tm-font);
+  font-size: var(--tm-fs);
+  font-variant-ligatures: none;
+}
+
+/* Windows Terminal's scrollbar: a thin grey bar hugging the right edge (no arrow buttons), always visible while there is history to scroll.
+   base.css sets `scrollbar-color: transparent` on every element of the stage (shown on hover only) and, in current browsers, a standard
+   scrollbar-width / scrollbar-color switches the ::-webkit-scrollbar rules off: so both are put back to `auto` here, and the selectors are
+   stronger than base.css's hover / .lab-scrolling rules (they would otherwise paint the thumb with the light-theme colour). */
+#lab-stage .lab-win .tm-screen { scrollbar-width: auto; scrollbar-color: auto; }
+#lab-stage .lab-win .tm-screen::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; }
+#lab-stage .lab-win .tm-screen::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+#lab-stage .lab-win .tm-screen::-webkit-scrollbar-corner { background: transparent; }
+#lab-stage .lab-win .tm-screen::-webkit-scrollbar-track { background: transparent; }
+#lab-stage .lab-win .tm-screen::-webkit-scrollbar-thumb,
+#lab-stage .lab-win .tm-screen:hover::-webkit-scrollbar-thumb,
+#lab-stage .lab-win .tm-screen.lab-scrolling::-webkit-scrollbar-thumb {
+  background-color: #909090; border: 0; border-left: 2px solid transparent; border-radius: 0; background-clip: padding-box;
+}
+#lab-stage .lab-win .tm-screen::-webkit-scrollbar-thumb:hover { background-color: #b0b0b0; border-left: 2px solid transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-screen { scroll-behavior: auto; }
+  .tm-cur::before { animation: none; }
+}

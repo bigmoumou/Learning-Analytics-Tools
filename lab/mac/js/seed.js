@@ -32,6 +32,21 @@
 
   var AGENTS = '# 專案規則\n- 報告用繁體中文\n- 輸出的檔案放在 output/\n';
 
+  /* round 5: three fake photos drawn by 製作/lab-round5/tools/mkphotos.py (img/photos/, each under 100 KB), a Music library folder
+     and two class-note text files. None of it is in a place the missions look at. */
+  var PHOTOS = [
+    ['IMG_4021.jpg', '2026-09-27 17:42', 53274],
+    ['IMG_4022.jpg', '2026-09-27 17:58', 58134],
+    ['IMG_4025.jpg', '2026-09-28 06:12', 36723]
+  ];
+  var NOTES1 = 'Week 1 課堂筆記\n\n- 學習分析：用資料了解大家是怎麼學的\n- 資料來源：作業分數、出缺席、線上平台的使用紀錄\n- 小提醒：資料要先整理乾淨，再來分析\n';
+  var NOTES2 = 'Week 2 課堂筆記\n\n- 檔案要放在固定的資料夾，之後才找得到\n- CSV 是最常見的資料格式，欄位之間用逗號分開\n- 練習：算出 A.csv 的平均分數\n';
+  function photoNodes() {
+    var c = {};
+    PHOTOS.forEach(function (ph) { c[ph[0]] = BIN(ph[1], ph[2]); });
+    return c;
+  }
+
   function zipEntries() {
     var m = T('2026-10-02 09:00');
     return [
@@ -50,7 +65,12 @@
         'Codex.app': appStub('2026-09-01 08:00'),
         'Code.app': appStub('2026-09-01 08:00'),
         '文字編輯.app': appStub('2026-09-01 08:00'),
-        '終端機.app': appStub('2026-09-01 08:00')
+        '終端機.app': appStub('2026-09-01 08:00'),
+        'Safari.app': appStub('2026-09-01 08:00'),
+        '系統設定.app': appStub('2026-09-01 08:00'),
+        '計算機.app': appStub('2026-09-01 08:00'),
+        '活動監視器.app': appStub('2026-09-01 08:00'),
+        '預覽程式.app': appStub('2026-09-01 08:00')
       }),
       'Users': D('2026-09-01 08:00', {
         'an': D('2026-10-02 09:41', {
@@ -67,7 +87,11 @@
           }),
           'Documents': D('2026-09-21 16:05', {
             'midterm-report.docx': BIN('2026-09-21 16:05', 24576),
-            'resume.pdf': BIN('2026-09-12 11:30', 120834)
+            'resume.pdf': BIN('2026-09-12 11:30', 120834),
+            '課堂筆記': D('2026-09-18 11:20', {
+              'week1-notes.txt': F('2026-09-14 10:05', NOTES1),
+              'week2-notes.txt': F('2026-09-18 11:20', NOTES2)
+            })
           }),
           'Downloads': D('2026-10-02 09:30', {
             'syllabus.pdf': BIN('2026-09-15 08:30', 204311),
@@ -75,8 +99,8 @@
           }),
           'Library': D('2026-09-01 08:00', {}),
           'Movies': D('2026-09-01 08:00', {}),
-          'Music': D('2026-09-01 08:00', {}),
-          'Pictures': D('2026-09-01 08:00', {}),
+          'Music': D('2026-09-01 08:00', { 'Music': D('2026-09-01 08:00', {}) }),
+          'Pictures': D('2026-09-28 06:12', photoNodes()),
           'Public': D('2026-09-01 08:00', {}),
           '.Trash': D('2026-09-01 08:00', {}),
           '.zsh_sessions': D('2026-09-01 08:00', {}),
@@ -108,7 +132,19 @@
     return cur;
   }
 
+  /* the picture behind one of the seed photos (Preview, Finder thumbnails, Quick Look): found by file name, so a copy or a move still shows it.
+     Returns a URL relative to the page, or null when the file is not one of the three. */
+  function imageUrl(path) {
+    var base = String(path || '').split('/').pop().toLowerCase();
+    for (var i = 0; i < PHOTOS.length; i++) {
+      if (PHOTOS[i][0].toLowerCase() === base) return 'img/photos/' + PHOTOS[i][0];
+    }
+    return null;
+  }
+
   LAB.seed = {
+    imageUrl: imageUrl,
+    photos: function () { return PHOTOS.map(function (ph) { return { name: ph[0], url: 'img/photos/' + ph[0], size: ph[2] }; }); },
     tree: function () { return build(); },
     nodeAt: function (path) {
       return walkJson(build(), LAB.vfs ? LAB.vfs.normalize(path) : path);

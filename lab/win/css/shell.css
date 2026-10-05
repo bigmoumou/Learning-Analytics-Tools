@@ -1,0 +1,407 @@
+/* shell.css — Windows 11: taskbar, tray, Start menu, Search panel, flyouts, desktop icons, context menus, notifications, dialogs, drag ghost (DESIGN W3).
+   Windows mode is DARK (taskbar, Start, Search, flyouts, taskbar tooltips); app mode is LIGHT (context menus, dialogs). */
+
+/* ------------------------------------------------------------ taskbar */
+#lab-dock { display: block; }
+.lab-tb {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  pointer-events: auto;
+  background: rgba(28, 28, 28, .86);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  backdrop-filter: blur(30px) saturate(1.3);
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  color: #fff;
+  font-size: 12px; line-height: 1.3;
+}
+.lab-tb-center { position: absolute; left: 50%; top: 0; height: 100%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; }
+.lab-tb-apps { display: flex; align-items: center; gap: 4px; }
+.lab-tb-btn, .lab-tray-btn {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  height: 40px; margin: 0; padding: 0; border: 0; border-radius: 4px;
+  background: transparent; color: #fff; font: inherit; cursor: default;
+  transition: background-color .1s;
+}
+.lab-tb-btn { width: 40px; }
+.lab-tb-btn:hover, .lab-tray-btn:hover, .lab-tb-search:hover { background-color: rgba(255, 255, 255, .06); }
+.lab-tb-btn:active, .lab-tray-btn:active { background-color: rgba(255, 255, 255, .04); }
+.lab-tb-btn.is-open { background-color: rgba(255, 255, 255, .06); }
+.lab-tb-btn svg, .lab-dock-icon svg { display: block; transition: transform .1s; }
+.lab-tb-btn:active svg, .lab-tb-btn:active .lab-dock-icon svg { transform: scale(.86); }
+.lab-tb-ico { display: block; width: 24px; height: 24px; }
+.lab-tb-ico svg { width: 24px; height: 24px; }
+.lab-dock-icon { display: block; width: 24px; height: 24px; }
+.lab-dock-icon svg { width: 24px; height: 24px; }
+/* running = a short grey pill under the icon; focused = a longer accent pill (the width animates 160 ms) */
+.lab-dock-dot {
+  position: absolute; bottom: 1px; left: 50%; width: 6px; height: 3px; margin-left: -3px; border-radius: 2px;
+  background: #9d9d9d; opacity: 0; pointer-events: none;
+  transition: width .16s var(--lab-ease), margin-left .16s var(--lab-ease), background-color .16s, opacity .16s;
+}
+.lab-dock-item.is-running .lab-dock-dot { opacity: 1; }
+.lab-dock-item.is-focused .lab-dock-dot { width: 16px; margin-left: -8px; background: #4cc2ff; opacity: 1; }
+.lab-dock-item.is-drop { background-color: rgba(76, 194, 255, .22); box-shadow: inset 0 0 0 1px rgba(76, 194, 255, .7); }
+/* "needs attention" (the cue engine adds lab-dock-attn): the tile flashes in the accent colour and the pill pulses */
+.lab-dock-item::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 4px; background: rgba(76, 194, 255, .3); opacity: 0; pointer-events: none; }
+.lab-dock-item.lab-dock-attn::before { animation: lab-tb-flash 1.5s ease-in-out infinite; }
+.lab-dock-item.lab-dock-attn .lab-dock-dot { opacity: 1; width: 16px; margin-left: -8px; background: #4cc2ff; animation: lab-tb-pill 1.5s ease-in-out infinite; }
+#lab-dock .lab-dock-item.lab-dock-attn .lab-dock-icon { animation: none; }       /* the Mac bounce in mission.css is not a Windows effect */
+@keyframes lab-tb-flash { 0%, 100% { opacity: 0; } 45%, 60% { opacity: 1; } }
+@keyframes lab-tb-pill { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.55); } }
+@media (prefers-reduced-motion: reduce) {
+  #lab-dock .lab-dock-item.lab-dock-attn::before { animation: none !important; opacity: 1 !important; }
+  #lab-dock .lab-dock-item.lab-dock-attn .lab-dock-dot { animation: none !important; }
+}
+
+/* the search box */
+.lab-tb-search {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  width: 170px; height: 36px; margin: 0 2px; padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, .08); border-radius: 20px;
+  background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .86);
+  font: inherit; font-size: 13px; text-align: left; cursor: default;
+  transition: background-color .1s;
+}
+.lab-tb-search .lab-tb-sglass { display: flex; flex: none; }
+.lab-tb-search .lab-tb-sglass svg { width: 16px; height: 16px; }
+.lab-tb-search .lab-tb-stext { flex: 1; min-width: 0; white-space: nowrap; }
+.lab-tb-search.is-open { background-color: rgba(255, 255, 255, .1); }
+.lab-tb-search .lab-tb-sart { display: flex; flex: none; opacity: .92; }
+.lab-tb-search .lab-tb-sart svg { width: 18px; height: 18px; display: block; }
+
+/* an app button sits in a slot together with its tooltip and its window-preview cards (siblings, so nothing interactive is nested in a button) */
+.lab-tb-slot { position: relative; display: flex; flex: none; }
+.lab-tb-slot > .lab-tb-btn { width: 40px; }
+
+/* tooltips of the taskbar (dark, above the button). App buttons use a sibling .lab-tb-tip (inside a .lab-tb-slot); the other buttons carry
+   data-tip and draw it with ::after, so the button's own text (e.g. the IME's 中) stays clean */
+.lab-tb-tip, .lab-tb-btn[data-tip]::after, .lab-tray-btn[data-tip]::after {
+  position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translate(-50%, 4px);
+  padding: 5px 10px; border-radius: 6px;
+  background: rgba(44, 44, 44, .97); border: 1px solid rgba(255, 255, 255, .1); color: #fff;
+  font-size: 12px; font-weight: 400; line-height: 1.35; white-space: nowrap; text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .4);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .12s, transform .12s, visibility 0s .12s;
+  z-index: 3;
+}
+.lab-tb-btn[data-tip]::after, .lab-tray-btn[data-tip]::after { content: attr(data-tip); }
+.lab-tb-slot:hover > .lab-tb-tip, .lab-tb-btn[data-tip]:hover::after, .lab-tray-btn[data-tip]:hover::after {
+  opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .12s .45s, transform .12s .45s, visibility 0s .45s;
+}
+.lab-tray-btn[data-tip]::after { left: auto; right: 0; transform: translate(0, 4px); }
+.lab-tray-btn[data-tip]:hover::after { transform: none; }
+.lab-tb-btn.is-open::after, .lab-tray-btn.is-open::after { display: none; }
+
+/* several windows of one app: hover shows small cards (title and a close button) above the button */
+.lab-tb-prev {
+  position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translate(-50%, 4px);
+  display: flex; gap: 8px; padding: 8px;
+  background: rgba(32, 32, 32, .96); border: 1px solid rgba(255, 255, 255, .1); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+  opacity: 0; visibility: hidden; transition: opacity .12s, transform .12s, visibility 0s .12s;
+  z-index: 4; cursor: default;
+}
+/* an invisible bridge over the 12 px gap, so moving the pointer from the button up to a card does not drop the hover */
+.lab-tb-prev::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 14px; }
+.lab-tb-slot.has-prev:hover > .lab-tb-prev, .lab-tb-slot.has-prev:focus-within > .lab-tb-prev {
+  opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .12s .35s, transform .12s .35s, visibility 0s .35s;
+}
+.lab-tb-slot.has-prev:hover > .lab-tb-tip { display: none; }
+.lab-tb-pcard { position: relative; display: flex; flex-direction: column; width: 176px; height: 112px; padding: 0; border: 1px solid rgba(255, 255, 255, .08); border-radius: 6px; background: rgba(255, 255, 255, .05); overflow: hidden; text-align: left; }
+.lab-tb-pcard:hover { background: rgba(255, 255, 255, .1); }
+.lab-tb-pcard.is-front { box-shadow: inset 0 -2px 0 #4cc2ff; }
+.lab-tb-phead { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 8px; font-size: 12px; color: #fff; }
+.lab-tb-phead svg { width: 14px; height: 14px; flex: none; }
+.lab-tb-ptitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-tb-pclose { flex: none; width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: #fff; display: flex; align-items: center; justify-content: center; opacity: 0; }
+.lab-tb-pcard:hover .lab-tb-pclose { opacity: 1; }
+.lab-tb-pclose:hover { background: #c42b1c; }
+.lab-tb-pclose svg { width: 10px; height: 10px; }
+.lab-tb-pbody { flex: 1; margin: 0 8px 8px; border-radius: 3px; background: #f3f3f3; position: relative; overflow: hidden; }
+.lab-tb-pbody.is-dark { background: #1e1e1e; }
+.lab-tb-pbody::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 7px; background: rgba(0, 0, 0, .08); }
+.lab-tb-pbody.is-dark::before { background: rgba(255, 255, 255, .1); }
+
+/* tray (right) */
+.lab-tb-tray { position: absolute; right: 0; top: 0; height: 100%; display: flex; align-items: center; padding-left: 8px; }
+.lab-tray-btn { min-width: 32px; padding: 0 8px; }
+.lab-tray-btn svg { width: 16px; height: 16px; }
+.lab-tray-ime { font-size: 14px; font-weight: 400; min-width: 34px; }
+.lab-tray-sys { gap: 14px; padding: 0 10px; }
+.lab-tray-sys .lab-tray-g { display: flex; }
+.lab-tray-clock { flex-direction: column; align-items: flex-end; justify-content: center; padding: 0 8px; font-size: 12px; line-height: 16px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lab-tb-show { width: 4px; height: 100%; margin-left: 4px; padding: 0; border: 0; border-left: 1px solid rgba(255, 255, 255, .2); background: transparent; }
+.lab-tb-show:hover { background: rgba(255, 255, 255, .14); }
+/* the network glyph while "joining" (kept from the Mac for the same test hook): the arcs light up one after another */
+.lab-tray-g.is-joining path { animation: lab-wifi-join 1.4s ease-in-out infinite; opacity: .35; }
+.lab-tray-g.is-joining path:nth-child(2) { animation-delay: .2s; }
+.lab-tray-g.is-joining path:nth-child(3) { animation-delay: .4s; }
+@keyframes lab-wifi-join { 0%, 55%, 100% { opacity: .35; } 20%, 40% { opacity: 1; } }
+
+/* ------------------------------------------------------ flyouts (tray, calendar) */
+.lab-flyout {
+  position: absolute; z-index: var(--z-spotlight); bottom: calc(var(--win-taskbar-h) + 12px); right: 12px;
+  padding: 16px; border-radius: 8px;
+  background: rgba(32, 32, 32, .95);
+  -webkit-backdrop-filter: blur(40px) saturate(1.3); backdrop-filter: blur(40px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+  color: #fff; font-size: 13px; line-height: 1.4;
+  animation: lab-fly-in .18s var(--lab-ease);
+}
+@keyframes lab-fly-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.lab-fly-note { color: rgba(255, 255, 255, .6); font-size: 12px; }
+.lab-cal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.lab-cal-time { font-size: 28px; font-weight: 300; letter-spacing: .01em; }
+.lab-cal-date { color: rgba(255, 255, 255, .72); font-size: 12px; }
+.lab-cal-month { font-size: 13px; font-weight: 600; margin: 4px 0 6px; }
+.lab-cal-grid { display: grid; grid-template-columns: repeat(7, 36px); gap: 2px; text-align: center; }
+.lab-cal-dow { height: 24px; line-height: 24px; font-size: 11px; color: rgba(255, 255, 255, .6); }
+.lab-cal-day { height: 36px; line-height: 36px; border-radius: 18px; font-size: 12px; }
+.lab-cal-day.is-dim { color: rgba(255, 255, 255, .38); }
+.lab-cal-day.is-today { background: #4cc2ff; color: #000; font-weight: 600; }
+.lab-qs-tiles { display: grid; grid-template-columns: repeat(3, 96px); gap: 8px; margin-bottom: 14px; }
+.lab-qs-tile { display: flex; flex-direction: column; justify-content: center; gap: 2px; height: 56px; padding: 0 12px; border-radius: 6px; background: rgba(255, 255, 255, .07); font-size: 12px; text-align: left; border: 0; color: #fff; }
+.lab-qs-tile.is-on { background: #4cc2ff; color: #000; }
+.lab-qs-tile small { font-size: 11px; opacity: .75; }
+.lab-qs-row { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
+.lab-qs-row svg { width: 18px; height: 18px; flex: none; }
+.lab-qs-row input[type=range] { flex: 1; accent-color: #4cc2ff; }
+.lab-ime-osd {
+  position: absolute; left: 50%; bottom: 128px; transform: translateX(-50%);
+  width: 60px; height: 60px; border-radius: 10px; z-index: var(--z-toast);
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(32, 32, 32, .94); border: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+  color: #fff; font-size: 30px; line-height: 1; pointer-events: none !important;
+  opacity: 0; transition: opacity .15s;
+}
+.lab-ime-osd.is-in { opacity: 1; }
+
+/* ---------------------------------------------------------- Start menu */
+.lab-start, .lab-search {
+  position: absolute; z-index: var(--z-spotlight); left: 50%; bottom: calc(var(--win-taskbar-h) + 12px);
+  transform: translateX(-50%);
+  background: rgba(32, 32, 32, .94);
+  -webkit-backdrop-filter: blur(40px) saturate(1.3); backdrop-filter: blur(40px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, .1); border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .42);
+  color: #fff; font-size: 13px; line-height: 1.35;
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: lab-start-in .2s var(--lab-ease);
+}
+@keyframes lab-start-in { from { opacity: 0; transform: translate(-50%, 22px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.lab-start { width: 600px; max-width: calc(100% - 24px); height: 650px; }
+.lab-start-top { padding: 24px 32px 0; flex: none; }
+.lab-start-field, .lab-search-field {
+  display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px;
+  border-radius: 20px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .08);
+  border-bottom-color: rgba(255, 255, 255, .45);
+}
+.lab-start-field:focus-within, .lab-search-field:focus-within { background: rgba(255, 255, 255, .1); border-bottom: 2px solid #4cc2ff; padding-bottom: 0; }
+.lab-start-field .lab-sf-glass, .lab-search-field .lab-sf-glass { display: flex; flex: none; color: rgba(255, 255, 255, .8); }
+.lab-sf-input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: none; background: transparent;
+  color: #fff; font: inherit; font-size: 14px; -webkit-user-select: text; user-select: text;
+}
+.lab-sf-input::placeholder { color: rgba(255, 255, 255, .62); }
+.lab-start-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 32px 8px; }
+.lab-start-h { display: flex; align-items: center; justify-content: space-between; height: 28px; margin: 26px 0 8px; font-size: 14px; font-weight: 600; }
+.lab-start-allbtn { display: flex; align-items: center; gap: 4px; height: 26px; padding: 0 8px 0 10px; border: 0; border-radius: 4px; background: rgba(255, 255, 255, .07); color: #fff; font: inherit; font-size: 12px; }
+.lab-start-allbtn:hover { background: rgba(255, 255, 255, .11); }
+.lab-start-allbtn svg { width: 12px; height: 12px; }
+.lab-start-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px 0; }
+.lab-start-app {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px;
+  height: 84px; padding: 10px 2px 0; border: 0; border-radius: 4px; background: transparent; color: #fff;
+  font: inherit; font-size: 12px; line-height: 1.25; text-align: center; cursor: default;
+}
+.lab-start-app:hover, .lab-start-rec:hover { background: rgba(255, 255, 255, .07); }
+.lab-start-app:active, .lab-start-rec:active { background: rgba(255, 255, 255, .04); }
+.lab-start-app .lab-ico-box { display: block; width: 32px; height: 32px; flex: none; }
+.lab-start-app .lab-ico-box svg { width: 32px; height: 32px; display: block; }
+.lab-start-app span.lab-sa-name { display: block; max-width: 84px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.lab-start-recgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; }
+.lab-start-rec { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: #fff; font: inherit; text-align: left; cursor: default; }
+.lab-start-rec .lab-ico-box { display: block; width: 28px; height: 28px; flex: none; }
+.lab-start-rec .lab-ico-box svg { width: 28px; height: 28px; display: block; }
+.lab-sr-text { display: flex; flex-direction: column; min-width: 0; }
+.lab-sr-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-sr-sub { font-size: 11px; color: rgba(255, 255, 255, .6); }
+.lab-start-foot { flex: none; display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 28px; background: rgba(0, 0, 0, .2); border-top: 1px solid rgba(255, 255, 255, .08); }
+.lab-start-user { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px 0 6px; border: 0; border-radius: 4px; background: transparent; color: #fff; font: inherit; font-size: 13px; cursor: default; }
+.lab-start-user:hover, .lab-start-power:hover { background: rgba(255, 255, 255, .07); }
+.lab-start-avatar { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, .18); }
+.lab-start-avatar svg { width: 18px; height: 18px; }
+.lab-start-power { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: 4px; background: transparent; color: #fff; }
+.lab-start-power svg { width: 18px; height: 18px; }
+
+/* ------------------------------------------------------------- Search */
+.lab-search { width: 640px; max-width: calc(100% - 24px); height: 560px; max-height: calc(100% - var(--win-taskbar-h) - 24px); }
+.lab-search-field { margin: 20px 24px 8px; flex: none; }
+.lab-search-body { flex: 1; min-height: 0; display: flex; }
+.lab-search-left { flex: 0 0 56%; min-width: 0; overflow-y: auto; padding: 4px 8px 16px 24px; }
+.lab-search-right { flex: 1; min-width: 0; margin: 8px 24px 16px 8px; padding: 24px 16px; border-radius: 8px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .06); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.lab-search-right:empty { visibility: hidden; }
+.lab-search-grp { padding: 12px 8px 6px; font-size: 13px; font-weight: 600; }
+.lab-search-row {
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 0 10px; min-height: 44px; border-radius: 4px; cursor: default; color: #fff;
+}
+.lab-search-row.is-best { min-height: 60px; background: rgba(255, 255, 255, .07); }
+.lab-search-row:hover { background: rgba(255, 255, 255, .06); }
+.lab-search-row.is-hl { background: rgba(255, 255, 255, .1); }
+.lab-search-row.is-hl::before { content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 16px; margin-top: -8px; border-radius: 2px; background: #4cc2ff; }
+.lab-search-ico { display: block; width: 24px; height: 24px; flex: none; }
+.lab-search-ico svg { width: 24px; height: 24px; display: block; }
+.lab-search-row.is-best .lab-search-ico, .lab-search-row.is-best .lab-search-ico svg { width: 32px; height: 32px; }
+.lab-search-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.lab-search-label { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-search-sub { font-size: 12px; color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-search-none { padding: 24px 12px; color: rgba(255, 255, 255, .62); font-size: 13px; }
+.lab-search-big { display: block; width: 64px; height: 64px; margin: 8px 0 12px; }
+.lab-search-big svg { width: 64px; height: 64px; display: block; }
+.lab-search-dname { font-size: 20px; font-weight: 600; line-height: 1.25; word-break: break-all; }
+.lab-search-dkind { margin-top: 2px; font-size: 12px; color: rgba(255, 255, 255, .62); }
+.lab-search-acts { width: 100%; margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .08); text-align: left; }
+.lab-search-act { display: flex; align-items: center; gap: 12px; width: 100%; height: 36px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #fff; font: inherit; font-size: 13px; text-align: left; cursor: default; }
+.lab-search-act:hover { background: rgba(255, 255, 255, .07); }
+.lab-search-act svg { width: 16px; height: 16px; flex: none; }
+.lab-search-act.is-dim { color: rgba(255, 255, 255, .5); }
+
+/* -------------------------------------------------------- desktop icons */
+.lab-dicon {
+  position: absolute; width: 76px; height: 84px; padding: 4px 2px 0;
+  display: flex; flex-direction: column; align-items: center;
+  border: 1px solid transparent; border-radius: 3px;
+  cursor: default; outline: none;
+}
+.lab-dicon:hover { background: rgba(255, 255, 255, .26); border-color: rgba(255, 255, 255, .32); }
+.lab-dicon.is-sel { background: rgba(110, 178, 255, .42); border-color: rgba(160, 208, 255, .95); }
+#lab-desktop:not(.is-key) .lab-dicon.is-sel { background: rgba(200, 204, 214, .45); border-color: rgba(230, 232, 238, .8); }
+.lab-dicon.is-drop { background: rgba(110, 178, 255, .5); border-color: rgba(160, 208, 255, 1); }
+.lab-dicon-img { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+.lab-dicon-img svg { width: 48px; height: 48px; display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .28)); }
+.lab-dicon-label {
+  margin-top: 3px; max-width: 72px; padding: 0 1px;
+  font-size: 12px; font-weight: 400; line-height: 1.25; text-align: center; color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 4px rgba(0, 0, 0, .7), 0 0 8px rgba(0, 0, 0, .35);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all;
+}
+.lab-dicon.is-renaming .lab-dicon-label { padding: 0; overflow: visible; display: block; -webkit-line-clamp: unset; }
+.lab-dicon-edit {
+  display: block; width: 72px; height: 20px; padding: 0 2px; margin: 0 auto; border: 1px solid #005fb8; border-radius: 0;
+  background: #fff; color: #000; font: 12px/18px var(--win-font); text-align: center; text-shadow: none;
+  outline: none; -webkit-user-select: text; user-select: text;
+}
+.lab-dicon-edit::selection { background: #0078d4; color: #fff; }
+.lab-rubber { position: absolute; border: 1px solid rgba(0, 95, 184, .9); background: rgba(0, 120, 215, .22); pointer-events: none; }
+
+/* --------------------------------------------------- context menus (Windows 11) */
+.lab-menu {
+  position: absolute; z-index: var(--z-menu);
+  min-width: 232px; max-width: 360px; padding: 4px;
+  background: rgba(252, 252, 252, .97);
+  -webkit-backdrop-filter: blur(30px) saturate(1.25); backdrop-filter: blur(30px) saturate(1.25);
+  border: 1px solid #e5e5e5; border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .2), 0 0 2px rgba(0, 0, 0, .12);
+  color: #1a1a1a; font-size: 13px; line-height: 1.3;
+  outline: none;
+  animation: lab-fade-in .12s ease-out;
+}
+@keyframes lab-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.lab-mi { display: flex; align-items: center; min-height: 32px; margin: 2px 0; padding: 0 12px 0 0; border-radius: 4px; white-space: nowrap; cursor: default; }
+.lab-mi-lead { flex: none; width: 36px; display: flex; align-items: center; justify-content: center; }
+.lab-mi-glyph { display: inline-flex; }
+.lab-mi-glyph svg { display: block; }
+.lab-mi-label { flex: 1; padding-right: 12px; }
+.lab-mi-sc { margin-left: 24px; color: #5c5c5c; font-size: 12px; }
+.lab-mi-arrow { color: #5c5c5c; margin-left: 12px; }
+.lab-mi:hover, .lab-mi.is-hl, .lab-mi-rb:hover, .lab-mi-rb.is-hl { background: rgba(0, 0, 0, .06); }
+.lab-mi.is-disabled, .lab-mi-rb.is-disabled { color: #a0a0a0; }
+.lab-mi.is-disabled:hover, .lab-mi.is-disabled.is-hl, .lab-mi-rb.is-disabled:hover { background: transparent; }
+.lab-mi.is-disabled .lab-mi-sc { color: #b8b8b8; }
+.lab-mi.is-danger { color: #c42b1c; }
+.lab-mi-sep { height: 1px; margin: 4px 0; background: #e5e5e5; }
+.lab-mi-iconrow { display: flex; gap: 2px; padding: 2px 2px 4px; border-bottom: 1px solid #e5e5e5; margin: 0 0 4px; }
+.lab-mi-rb { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 40px; height: 36px; border-radius: 4px; cursor: default; position: relative; }
+.lab-mi-rb[data-tip]::after {
+  content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  padding: 4px 9px; border-radius: 4px; background: rgba(44, 44, 44, .97); color: #fff; font-size: 12px; white-space: nowrap; pointer-events: none;
+  opacity: 0; visibility: hidden; transition: opacity .1s, visibility 0s .1s; z-index: 2;
+}
+.lab-mi-rb[data-tip]:hover::after { opacity: 1; visibility: visible; transition: opacity .1s .5s, visibility 0s .5s; }
+.lab-menu.is-dark {
+  background: rgba(44, 44, 44, .97); border-color: rgba(255, 255, 255, .1); color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 2px rgba(0, 0, 0, .3);
+}
+.is-dark .lab-mi:hover, .is-dark .lab-mi.is-hl, .is-dark .lab-mi-rb:hover, .is-dark .lab-mi-rb.is-hl { background: rgba(255, 255, 255, .08); }
+.is-dark .lab-mi-sc, .is-dark .lab-mi-arrow { color: rgba(255, 255, 255, .6); }
+.is-dark .lab-mi-sep, .is-dark .lab-mi-iconrow { border-color: rgba(255, 255, 255, .1); background-color: transparent; }
+.is-dark .lab-mi-sep { background: rgba(255, 255, 255, .1); }
+.is-dark .lab-mi.is-disabled { color: rgba(255, 255, 255, .35); }
+
+/* ---------------------------------------------- notifications (toasts) */
+.lab-toasts { position: absolute; right: 12px; bottom: calc(var(--win-taskbar-h) + 12px); z-index: var(--z-toast); display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none !important; }
+.lab-toast {
+  width: 340px; max-width: calc(100vw - 24px); padding: 10px 16px 14px; border-radius: 8px;
+  background: rgba(44, 44, 44, .97); border: 1px solid rgba(255, 255, 255, .1); color: #fff;
+  font-size: 13px; line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+  opacity: 0; transform: translateX(24px); transition: opacity .2s, transform .2s var(--lab-ease);
+  pointer-events: auto;
+}
+.lab-toast::before { content: "練習用的電腦"; display: block; margin-bottom: 4px; color: rgba(255, 255, 255, .55); font-size: 11px; line-height: 1.4; }
+.lab-toast.is-in { opacity: 1; transform: none; }
+
+/* ------------------------------------------------ dialogs (Fluent ContentDialog) */
+.lab-sheet-scrim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 60; pointer-events: auto; background: rgba(0, 0, 0, 0); transition: background .16s; border-radius: inherit; }
+.lab-sheet-scrim.is-in { background: rgba(0, 0, 0, .28); }
+.lab-sheet-scrim.is-stage { z-index: var(--z-spotlight); }
+.lab-sheet-scrim.is-stage.is-in { background: rgba(0, 0, 0, .32); }
+.lab-sheet {
+  position: absolute; left: 50%; top: 50%; width: 440px; max-width: calc(100% - 24px); max-height: calc(100% - 24px); overflow: hidden;
+  padding: 0; border-radius: 8px;
+  background: #fff; border: 1px solid rgba(0, 0, 0, .1);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, .28), 0 2px 8px rgba(0, 0, 0, .12);
+  color: #1a1a1a; font-size: 14px; line-height: 1.5;
+  -webkit-user-select: text; user-select: text;
+}
+.lab-sheet.is-attached, .lab-sheet.is-centered { transform: translate(-50%, -50%) scale(.96); opacity: 0; transition: transform .17s var(--lab-ease), opacity .17s; }
+.lab-sheet-scrim.is-in .lab-sheet.is-attached, .lab-sheet-scrim.is-in .lab-sheet.is-centered { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.lab-sheet-title { padding: 24px 24px 0; font-size: 20px; font-weight: 600; line-height: 1.3; color: #1a1a1a; }
+.lab-sheet-text { padding: 8px 24px 0; color: #424242; font-size: 14px; line-height: 1.5; }
+.lab-sheet-input {
+  display: block; width: calc(100% - 48px); height: 32px; margin: 16px 24px 0; padding: 0 10px;
+  border: 1px solid #e0e0e0; border-bottom-color: #868686; border-radius: 4px; background: #fbfbfb; color: #1a1a1a;
+  font: 14px var(--win-font); outline: none;
+}
+.lab-sheet-input:focus { background: #fff; border-bottom: 2px solid #005fb8; padding-bottom: 0; }
+.lab-sheet-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; padding: 20px 24px; background: #f3f3f3; border-top: 1px solid #e5e5e5; }
+.lab-sheet-btn {
+  min-width: 96px; height: 32px; padding: 0 16px; margin: 0; border: 1px solid #d1d1d1; border-radius: 4px;
+  background: #fff; color: #1a1a1a; font: 14px var(--win-font); cursor: default;
+}
+.lab-sheet-btn:hover { background: #f6f6f6; }
+.lab-sheet-btn:active { background: #f0f0f0; color: #5c5c5c; }
+.lab-sheet-btn.is-default { background: #005fb8; border-color: #005fb8; color: #fff; }
+.lab-sheet-btn.is-default:hover { background: #0067c0; border-color: #0067c0; }
+.lab-sheet-btn.is-default:active { background: #1975c5; border-color: #1975c5; color: rgba(255, 255, 255, .8); }
+.lab-sheet-btn.is-danger:not(.is-default) { color: #c42b1c; }
+.lab-sheet-btn.is-danger.is-default { background: #c42b1c; border-color: #c42b1c; }
+
+/* -------------------------------------------------------- drag and drop */
+.lab-ghost { position: absolute; left: 0; top: 0; width: 84px; display: flex; flex-direction: column; align-items: center; opacity: .78; pointer-events: none; z-index: var(--z-dnd); }
+.lab-ghost-icons { position: relative; width: 48px; height: 48px; }
+.lab-ghost-label { margin-top: 2px; max-width: 110px; padding: 1px 6px; border-radius: 3px; background: rgba(0, 0, 0, .6); color: #fff; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lab-ghost-count { position: absolute; top: -6px; right: 12px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #c42b1c; color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 700; }
+.lab-ghost-badge { position: absolute; top: -4px; left: 14px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; box-sizing: content-box; margin: -2px; font: 700 13px/16px sans-serif; color: #fff; text-align: center; display: none; }
+.lab-ghost-badge.is-copy { display: block; background: #0f7b0f; }
+.lab-ghost-badge.is-link { display: block; background: #6b6b6b; font-size: 11px; }
+
+/* --------------------------------------------- performance mode (M§2.10) */
+html[data-perf="low"] .lab-tb { background: #1c1c1c; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-perf="low"] .lab-start, html[data-perf="low"] .lab-search, html[data-perf="low"] .lab-flyout { background: #202020; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-perf="low"] .lab-menu { background: #fcfcfc; -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: .1s; }
+html[data-perf="low"] .lab-menu.is-dark { background: #2c2c2c; }
+html[data-perf="low"] .lab-start, html[data-perf="low"] .lab-search, html[data-perf="low"] .lab-flyout { animation-duration: .1s; }
+html[data-perf="low"] .lab-toast, html[data-perf="low"] .lab-sheet-scrim, html[data-perf="low"] .lab-sheet { transition-duration: .1s; }

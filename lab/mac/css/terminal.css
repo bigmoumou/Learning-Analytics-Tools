@@ -118,3 +118,32 @@
 @media (prefers-reduced-motion: reduce) {
   .tm-screen { scroll-behavior: auto; }
 }
+
+/* ---------------------------------------------------------------- colour (ANSI SGR) ---------------------------------------------------------------- */
+/* Commands print colour codes only when the output goes to the screen (ls -G, grep, cal, git, man headings). The palette is tuned for the navy body. */
+.tm-b { font-weight: 700; }
+.tm-u { text-decoration: underline; text-underline-offset: 2px; }
+.tm-r { background: var(--tm-fg); color: var(--tm-bg); }
+.tm-f0 { color: #6b7587; } .tm-f1 { color: #ff7b72; } .tm-f2 { color: #7ee787; } .tm-f3 { color: #e3b341; }
+.tm-f4 { color: #79b8ff; } .tm-f5 { color: #d2a8ff; } .tm-f6 { color: #56d4dd; } .tm-f7 { color: #e6edf3; }
+.tm-f8 { color: #8b95a7; } .tm-f9 { color: #ffa198; } .tm-f10 { color: #a5f3b0; } .tm-f11 { color: #f2cc60; }
+.tm-f12 { color: #a5d6ff; } .tm-f13 { color: #e2c5ff; } .tm-f14 { color: #8ee9ef; } .tm-f15 { color: #ffffff; }
+.tm-g0 { background: #3a4252; } .tm-g1 { background: #8e2f2f; } .tm-g2 { background: #2f7a3d; } .tm-g3 { background: #8a6d1f; }
+.tm-g4 { background: #2f5da8; } .tm-g5 { background: #7a4aa8; } .tm-g6 { background: #1f7a82; } .tm-g7 { background: #cfd6df; color: #232c3a; }
+.tm-g8 { background: #566077; } .tm-g9 { background: #c04848; } .tm-g10 { background: #3f9a50; } .tm-g11 { background: #b08b2a; }
+.tm-g12 { background: #4a7bd0; } .tm-g13 { background: #9a66c8; } .tm-g14 { background: #2f9aa4; } .tm-g15 { background: #f2f4f7; color: #232c3a; }
+.tm-r.tm-f1, .tm-r.tm-f2, .tm-r.tm-f3, .tm-r.tm-f4, .tm-r.tm-f5, .tm-r.tm-f6 { color: var(--tm-bg); }
+
+/* ------------------------------------------------- full-screen programs (less, man, nano, top) ------------------------------------------------- */
+/* the program's rows replace the scrollback while it runs; the scrollback comes back (untouched) when it ends */
+.tm-screen.tm-alt-on .tm-hist, .tm-screen.tm-alt-on .tm-live, .tm-screen.tm-alt-on .tm-spacer { display: none; }
+.tm-alt { position: relative; }
+
+/* --------------------------------------- 「命令列開發人員工具」 installing (the first git / python3, SPEC §1) --------------------------------------- */
+.lab-sheet.tm-clt { width: 380px; }
+.tm-clt-bar { margin-top: 12px; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, .12); overflow: hidden; }
+.tm-clt-fill { height: 100%; background: var(--mac-accent, #0a6cff); transform: scaleX(0); transform-origin: left center; transition: transform 3s linear; }
+.tm-clt-left { margin-top: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .tm-clt-fill { transition-duration: .01s !important; }
+}
