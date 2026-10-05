@@ -706,7 +706,7 @@ Interaction:
 Registered as `terminal` (title 終端機, aliases `terminal`, `shell`, `zsh`), dock. `canHandle(path)` is always true. `handleOpen(path)` (Dock drop, `open -a 終端機 <dir>`) opens a NEW window whose `cwd` is that folder (for a file: its parent folder), same as Finder's 服務 ▸ 新增位於檔案夾位置的終端機視窗. Every window-scoped subscription and drop target goes through `win.own` (§3.6).
 
 #### 4.2.1 Window
-`bar:'plain'`, theme light (Terminal's own palette), default 80×24 characters, min 40×8. Title `<folder> — -zsh — <cols>×<rows>` where folder = last path component of cwd as typed (`~`/home → `an`, `/` → `/`); title updates on every `cd` and on resize. Content area: white `#fff`, text `#000`, padding 6 px, mono `--lab-font-mono`, font-size 13 px, line-height 1.25, selection `#b3d7ff`, block cursor grey `#7f7f7f` solid (hollow when the window is inactive). `data-lab="term-screen"`.
+`bar:'plain'`, theme light (Terminal's own palette), default 80×24 characters, min 40×8. Title `<folder> — -zsh — <cols>×<rows>` where folder = last path component of cwd as typed (`~`/home → `an`, `/` → `/`); title updates on every `cd` and on resize. Content area: white `#fff`, text `#000`, padding 6 px, mono `--lab-font-mono`, font-size 13 px, line-height 1.4 (1.25 until 2026-10-05; the owner found it cramped), selection `#b3d7ff`, block cursor grey `#7f7f7f` solid (hollow when the window is inactive). `data-lab="term-screen"`.
 
 First line(s) on open: `Last login: <date> on ttysNNN` (§0.3) then the prompt. Tab/ttys: first window `ttys000`; every further window increments (persisted counter). The `Last login` date of window N>1 = open time of window N-1 (persisted in `term.lastLogin`).
 

@@ -1705,6 +1705,7 @@
 
   var PAD = 8;
   var FS_DEFAULT = 12, FS_MIN = 11, FS_MAX = 20;
+  var LH = 1.4;                    // line height as a multiple of the font size (owner, 2026-10-05: 1.25 felt cramped)
   var instances = new Map();       // winId -> terminal instance
 
   function stageScale() { return (LAB.stage && LAB.stage.scale) || 1; }
@@ -1771,7 +1772,7 @@
     session.history = termState.history;
 
     // ---- state
-    var fs = FS_DEFAULT, cw = FS_DEFAULT * 0.6, lh = Math.round(FS_DEFAULT * 1.25 * 4) / 4;
+    var fs = FS_DEFAULT, cw = FS_DEFAULT * 0.6, lh = Math.round(FS_DEFAULT * LH * 4) / 4;
     var cols = 80, rows = 24;
     var hist = [];                    // {text, mark, el}
     var partial = '';                 // unfinished output line
@@ -1801,7 +1802,7 @@
       probe.style.fontSize = fs + 'px';
       var w = probe.getBoundingClientRect().width / stageScale() / 100;
       if (w > 0.5) cw = w;
-      lh = Math.round(fs * 1.25 * 4) / 4;
+      lh = Math.round(fs * LH * 4) / 4;
       screen.style.setProperty('--tm-lh', lh + 'px');
       screen.style.fontSize = fs + 'px';
       ta.style.fontSize = fs + 'px';
