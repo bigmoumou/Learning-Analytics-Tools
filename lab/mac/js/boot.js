@@ -13,6 +13,8 @@
   // ?welcome=0 — no sheets at all; ?intro=0 — no mission sheets and no completion sheets (the first sheet still shows)
   if (flag('welcome') === '0') LAB.missions.skipWelcome = true;
   if (flag('intro') === '0') LAB.missions.skipIntro = true;
+  // ?sound=0 — no sounds (tests; the card's 「聲音」 link does the same for one visit)
+  if (flag('sound') === '0') LAB.sfx.enabled = false;
   // ?mission=<id> (one shot)
   var missionFlag = flag('mission');
   if (missionFlag) LAB.missions.pendingStart = missionFlag;

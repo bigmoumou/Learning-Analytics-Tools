@@ -37,7 +37,7 @@ Teacher: JUNHAO CHEN (NTNU, 學習分析工具). Audience: non-CS students. Purp
 
 | Topic | Decision |
 |---|---|
-| Missions | Guided missions + free play. Steps auto-check from events/state; hints on request; progress lives in memory for the visit only (§18). |
+| Missions | Guided missions only (no free play since round 4, §19.1); the student picks any mission from the picker (§19.2). Steps auto-check from events/state; hints on request; progress lives in memory for the visit only (§18). |
 | Terminal look | LIGHT, the real default "Basic" profile (as the fact-checked supplement video), host `MacBook-Air`, title `an — -zsh — 80×24`, non-blinking block cursor. (Video 01's dark `an@Mac Project %` terminal is NOT used.) |
 | Prompt | `an@MacBook-Air ~ % ` (zsh `%n@%m %1~ %# `). |
 | First line | The very first Terminal window ever opened on a fresh state prints `Last login: Fri Oct  2 09:41:07 on ttys000` (two spaces before the 2). Later windows print the real previous-window open time and the next tty number (`ttys001`, …). |
@@ -517,7 +517,7 @@ LAB.ui.isImeEnter(e) → boolean    // true when this keydown must NOT be treate
 LAB.keys.mod(e) → boolean         // true when (e.metaKey || e.ctrlKey) — Ctrl stands in for Cmd on Windows keyboards, subject to the Terminal rule below
 LAB.keys.on(spec, fn, {scope}) → offFn   // spec like 'mod+shift+g', 'mod+space', 'escape'; scope 'global' or an appId (fires only when that app is frontmost)
 ```
-EVERY handler that treats Enter or Esc as "commit"/"cancel" in a text field MUST start with `if (LAB.ui.isImeEnter(e)) return;`. This covers Finder rename and search, Go-to-folder, desktop rename, Spotlight, the TextEdit save prompt, the Codex composer and the Terminal input (the missions make students type 練習 with a Chinese input method).
+EVERY handler that treats Enter or Esc as "commit"/"cancel" in a text field MUST start with `if (LAB.ui.isImeEnter(e)) return;`. This covers Finder rename and search, Go-to-folder, desktop rename, Spotlight, the TextEdit save prompt, the Codex composer and the Terminal input (students often type with a Chinese input method on, even when a mission asks for an English name such as Practice).
 
 A single capture-phase `keydown` listener on `window` routes: (1) open menu/spotlight/sheet gets Esc/Return/arrows first; (2) if the event target is a real `<input>/<textarea>/[contenteditable]` of a fake app, let it receive the event natively and only intercept registered app shortcuts that do not conflict with editing; (3) else dispatch to the frontmost app's `LAB.keys.on` scopes; (4) global shortcuts (§6.4). Ignore keys while `LAB.ui.isImeEnter(e)`. Never `preventDefault` F5/F11/F12/Ctrl+R/Ctrl+Shift+I.
 
@@ -603,7 +603,7 @@ LAB.missions.list() → mission[];  get(id)
 LAB.missions.start(id) / reset(id) / complete(id)?(internal) / current() → mission|null
 LAB.missions.progress(id) → {started, done, steps:{stepId:ms}, doneAt}
 LAB.missions.setFreePlay(bool);  isFreePlay()
-LAB.missions.freePlayTips = []            // strings set by missions-week3.js
+LAB.missions.groups(), LAB.missions.pick()  // round 4 (§19.2); freePlayTips is gone (§19.1)
 LAB.missions.render()                     // rail UI refresh (engine calls it itself)
 LAB.missions.progressCode() → string      // §5.4
 LAB.missions.importProgressCode(str) → {ok, message, summary}   // §5.4
@@ -639,10 +639,10 @@ Mtimes are fixed local dates of the fiction; "today" files created at runtime us
       │       ├─ data/      (2026-09-28 09:58)
       │       │   ├─ A.csv, B.csv, C.csv   (2026-09-28 09:58)  real class files (below)
       │       ├─ AGENTS.md  (2026-09-28 10:12)
-      │       └─ 筆記.docx  (2026-09-25 15:40) binary, 18432 bytes
+      │       └─ notes.docx  (2026-09-25 15:40) binary, 18432 bytes
       ├─ Documents/         (2026-09-21 16:05)
-      │   ├─ 期中報告.docx  (2026-09-21 16:05) binary, 24576 bytes
-      │   └─ 履歷.pdf       (2026-09-12 11:30) binary, 120834 bytes
+      │   ├─ midterm-report.docx  (2026-09-21 16:05) binary, 24576 bytes
+      │   └─ resume.pdf  (2026-09-12 11:30) binary, 120834 bytes
       ├─ Downloads/         (2026-10-02 09:30)
       │   ├─ syllabus.pdf   (2026-09-15 08:30) binary, 204311 bytes
       │   └─ week3.zip      (2026-10-02 09:30) kind:'zip', size 1301, zip entries below
@@ -827,7 +827,7 @@ an@MacBook-Air Project % cd ..
 an@MacBook-Air Desktop % ls
 Project         week3.zip
 ```
-NOTE: this transcript assumes the supplement's EMPTY Project folder. In the lab, Project is not empty at start (§4.0), so `ls` in Project shows `AGENTS.md  data  筆記.docx` (UTF-16 order: `AGENTS.md`, `data`, `筆記.docx`, laid out with the rules above). The terminal builder verifies the transcript with a unit test that builds a scratch VFS with `LAB.vfs.create(json)` (seed with `Project` emptied) and runs it through `LAB.shell.newSession({vfs})`, so the singleton `LAB.vfs` is never touched.
+NOTE: this transcript assumes the supplement's EMPTY Project folder. In the lab, Project is not empty at start (§4.0), so `ls` in Project shows `AGENTS.md  data  notes.docx` (UTF-16 order: `AGENTS.md`, `data`, `notes.docx`, laid out with the rules above). The terminal builder verifies the transcript with a unit test that builds a scratch VFS with `LAB.vfs.create(json)` (seed with `Project` emptied) and runs it through `LAB.shell.newSession({vfs})`, so the singleton `LAB.vfs` is never touched.
 
 #### 4.2.5 Drag and drop into Terminal
 `LAB.dnd.target` id `terminal:<winId>` over the whole window. Accept any payload → `'copy'`. Drop: for each path insert at the cursor the shell-escaped absolute path, separated by single spaces, followed by one trailing space; the text is typed (not run). Escape = backslash before every character that is not in `[A-Za-z0-9_./~+@:,%=-]` and not a CJK character (CJK is NOT escaped, like macOS). Example: `/Users/an/Desktop/Project ` . Emit `term:drop {winId, paths, text}`. The window gets focus. Also `⌘V` of a path copied with 「拷貝為路徑名稱」 types it the same way (via `LAB.clipboard.forPaste`).
@@ -914,8 +914,9 @@ LAB.missions.register({
   week: 3, order: 1,
   title: '認識桌面與 Finder',
   minutes: 6,                      // shown as 「約 6 分鐘」
-  tag: '補充教材',                  // optional rail label (M2, M3 only: 「Week 3 補充 1」)
-  map: '…',                        // optional one calm line, shown as a collapsible 「地圖」 in the rail (M2, M3)
+  group: '桌面與 Finder',          // REQUIRED (round 4): missions with the same string are listed together under that heading in the picker (§19); the string is the heading ('桌面與 Finder', '終端機（Week 3 補充 1）' or 'Codex')
+  tag: 'Week 3 補充 1',            // optional rail label (the five Terminal missions)
+  map: '…',                        // optional one calm line, shown as a collapsible 「地圖」 in the rail (the five Terminal missions)
   resetsFiles: true,               // the rail then says 「開始這個任務會把相關檔案恢復到起始狀態。」
   intro: '一句到三句，Traditional Chinese',
   prepare(api) { /* idempotent; runs on the FIRST start and on explicit reset (not when merely switching back) */ },
@@ -929,13 +930,14 @@ LAB.missions.register({
       optional: false,             // true = skippable (§ engine rule 4)
       replay: 'mission',           // optional: this step's api.seen/termSeen default to history since mission start and it is also tried with ev=null when it becomes current
       where: '/Users/an/Desktop',  // optional: the folder the student is expected to be in, used only by the "stuck" nudge
+      target: '[data-lab=dock-item][data-app=finder]',   // optional (round 4): the thing to click, for the cue of §19. A CSS selector, an array of selectors (the first one that is visible wins) or function(api) → Element|null. It only reads the page, uses the §10 hooks, and is left out where nothing definite is to be clicked (right-click on the empty desktop, a long command)
       trap(ev, api) { return null; } }       // optional: returns one quiet line for a known beginner mistake, or null
   ],
   outro: '完成後顯示的一兩句話'
 });
 ```
 
-**Three-layer wording rule.** For every step: `text` = the goal in words; `hint` = the pattern and its meaning; `answer` = the full command or exact clicks. The full command appears in `text` ONLY the first time that command is used anywhere in the missions (the first `cd`, `ls`, `pwd`, `mkdir`, `open .`, `mv`, `unzip`); later steps are phrased as goals so the student has to BUILD the command or the address (`mv 東西 地方`, `~/Desktop/Project`, `..`), which is the real skill. A level-1 hint must never equal the answer.
+**Three-layer wording rule (per mission, round 4).** For every step: `text` = the goal in words; `hint` = the pattern and its meaning; `answer` = the full command or exact clicks. The full command appears in `text` only the FIRST time that command is needed **within the same mission** (the first `cd`, `ls`, `pwd`, `mkdir`, `open .`, `mv`, `unzip` of that mission); later steps of the same mission are phrased as goals so the student has to BUILD the command or the address (`mv 東西 地方`, `~/Desktop/Project`, `..`), which is the real skill. Every mission can be the first one a student opens, so what an earlier mission already taught does not count (mission 4 writes `cd Downloads` in full although mission 3 teaches `cd`). A level-1 hint must never equal the answer.
 
 **Inline marks** in every mission string (intro, text, hint, answer, outro, trap lines), parsed by the rail into DOM nodes, never innerHTML: `` `code` `` = mono text, selectable; `[[sentence]]` = a sentence the student must type into Codex: shown in mono, selectable, followed by a small text link 「複製」 (`data-lab="rail-copy"`, `LAB.clipboard.setText`), because typing long Chinese through an IME is a barrier. Hints that carry a `[[…]]` sentence say 「可以複製上面這句，貼到輸入框」.
 
@@ -962,103 +964,155 @@ api.HOME = '/Users/an', api.DESKTOP = '/Users/an/Desktop', api.DOWNLOADS = '/Use
 3. *Loose checks.* Checks accept every natural way of doing the thing (via `api.termCmd` the compound lines, any directory when the folder does not matter, `sidebar`/`pathbar`/`back`/`up` navigation, a state fallback when the event could have been missed). A step must never be failable by doing something reasonable in the wrong order.
 4. *Optional steps.* If the first undone step is `optional`, the steps after it up to and including the first non-optional one are ALSO tried against each event; if a later step passes, the optional steps before it are marked done with `skipped:true` (`mission:step {skipped:true}`). The rail shows a text link 「略過這一步」 (`data-lab="rail-skip"`) under an optional current step; skipped steps count as done in the progress line.
 5. *Prepare runs once.* `prepare(api)` runs on the FIRST `start` of a mission (no `startedAt` yet) and on `reset(id)` (「重來這個任務」). Switching to a mission that is already started or finished NEVER re-runs `prepare` (it would delete the student's files and Codex state). `prepare` runs with `preparing = true`, all VFS mutations use `by:'system'`, and the engine takes each step's start `seq` AFTER it finishes. Prepares restore seeded content through `api.ensureSeed`, so a missing `Project`, `data/`, `AGENTS.md` or `week3.zip` is put back instead of leaving the mission impossible.
-6. *Completion.* When every non-optional step is done (an optional step still open at that moment, such as M5 step 8, stays listed as 「選做」 and does not block): mark the mission done, emit `mission:complete`, show the outro in the rail. `reset(id)` clears step timestamps, hints and `state`, then runs `prepare`.
+6. *Completion.* When every non-optional step is done (an optional step still open at that moment, such as step 8 of mission 8, stays listed as 「選做」 and does not block): mark the mission done, emit `mission:complete`, show the outro in the rail. `reset(id)` clears step timestamps, hints and `state`, then runs `prepare`.
 7. *Errors.* A throwing `check`/`trap` is caught and treated as false/null.
 8. *Nudges (one quiet line under the current step, replaced as events arrive, removed when the step is done).* Priority: (a) `step.trap(ev, api)`; (b) built-in, immediate, from the newest `term:run` since the step started: if some cmd has status 127 and its `name` contains a non-ASCII character or U+3000 → 「看起來輸入法是中文，或是空格是全形。切到英文（ABC）再打一次。」; if the status is non-zero and `out` matches /no such file or directory/i → 「印出 no such file or directory，多半是拼錯字，或你人不在預期的資料夾。看提示字元，再用 ls 看看。」; (c) after 60 s on the same step with a non-matching `term:run` since the step started → 「這一步需要在 {資料夾} 裡輸入，先看提示字元最後一個字。」 where {資料夾} = the basename of `step.where` (`~` when it is HOME), or, without `where`, 「先看提示字元最後一個字，確認你人在哪個資料夾。」. The 「提示」 link also gets its amber underline after 60 s (§6.1).
 9. *Accessibility.* The rail has an `aria-live="polite"` region that announces 「第 N 步完成」 and the nudge text (§6.5).
 
-Persisted (domain `missions`): `{ current, freePlay, missions:{id:{startedAt, doneAt, startSeq, stepStart:{stepId:seq}, steps:{stepId:ms}, skipped:{stepId:1}, hints:{stepId:0|1|2}, state:{…}}} }`.
+Persisted (domain `missions`): `{ current, missions:{id:{startedAt, doneAt, startSeq, stepStart:{stepId:seq}, steps:{stepId:ms}, skipped:{stepId:1}, hints:{stepId:0|1|2}, state:{…}}} }`.
 
 ### 5.2 Event payload quick reference used by checks
 `finder:navigate {winId,path,via}`; `finder:select {winId,paths}`; `term:run {name,args,cwd,cwdAfter,status,out,cmds:[{name,args,cwd,cwdAfter,status,out}]}` (use `api.termCmd`); `fs:change {op,path,from,kind,by}`; `editor:open {path,appId}`; `win:focus {id,appId}`; `dnd:drop {payload,targetId,accepted,mode}`; `codex:trust-prompt {path}`; `codex:trust {path}`; `codex:select-project {path}`; `codex:new-chat {chatId,projectPath}`; `codex:reply {chatId,projectPath,intent,files,text}`; `win:open {appId}`; `code:folder {path}`. `canon` is applied to every path before comparison. `PROJECT = /Users/an/Desktop/Project`.
 
-### 5.3 The seven Week 3 missions (exact Traditional Chinese)
+### 5.3 The ten Week 3 missions (exact Traditional Chinese)
 
-Common: Mission titles appear as 「第 N 個任務」 + title in the rail. Wording conventions for ALL mission text: the Mac key is 「Return」 (the parenthetical 「（Windows 鍵盤是 Enter）」 is added at its first mention in M1 and M2 and in the welcome panel); mouse words are 「點一下」 and 「點兩下」 (never 雙擊 or 連點兩下); 「命名為」 (never 取名為); `Command` is written 「Command」 (Windows keyboards: Ctrl, explained in the welcome panel). The map vocabulary of the supplement video is used consistently: **~ = 社區** (`/Users/an`, formal name 家目錄), **Downloads = 管理室**, **Desktop = 中庭**, **Desktop/Project = 家**, **`..` = 往外一層**. 「家」 ALWAYS means the Project folder; ~ is never called 家. Apps are named by their Dock label, never by colour: 「終端機」, 「Codex」 (not Code), 「Code（就是影片裡的 VS Code）」, 「文字編輯」.
+Round 4 (2026-10-05) split the old seven missions into ten, in three groups, each of which can be started on its own from the picker (§19). The old `w3-02-terminal` and `w3-03-unzip` are gone; their steps live on in missions 2 to 6. The four Codex missions keep their ids and content; only `order` (7 to 10) and the file names changed.
 
-**M1 `w3-01-desktop` 認識桌面與 Finder（約 6 分鐘）**
-intro: 「這是一台練習用的 Mac。先認識最常用的兩個地方：桌面，和用來看檔案的 Finder。」 resetsFiles: true.
-prepare: `api.remove(DESKTOP+'/練習')`.
-1. text 「點 Dock 最左邊的 Finder，打開一個視窗。」 hint 「螢幕最下面那一排叫 Dock，第一個圖示就是 Finder。」 answer 「點一下 Dock 上的 Finder。」 check: `ev.name==='win:open' && ev.data.appId==='finder'` OR `api.win('finder').length>0`.
-2. text 「在 Finder 左邊的側邊欄點「桌面」。」 hint 「側邊欄在視窗左邊，找到寫著「桌面」的那一列。」 answer 「點側邊欄的「桌面」。」 check: `api.seen('finder:navigate', d=>api.same(d.path,DESKTOP))` OR `api.finderAt(DESKTOP)`.
-3. text 「在桌面上點兩下 Project 資料夾，打開它。」 hint 「要連續點兩下，點一下只是選取。桌面的 Project 圖示在螢幕右上角，也可以在 Finder 視窗裡點兩下。」 answer 「點兩下 Project。」 check: `ev` is `finder:navigate` with `same(d.path, PROJECT)`, or `api.finderAt(PROJECT)`.
-4. text 「看視窗最下面的路徑列，再點其中的「桌面」，回到上一層。」 hint 「路徑列從左到右，就是這個資料夾的完整位置：Macintosh HD › 使用者 › an › 桌面 › Project，也就是 /Users/an/Desktop/Project。」 answer 「點路徑列的「桌面」（或側邊欄的「桌面」，或左上角的返回鍵）。」 check: `ev.name==='finder:navigate' && same(d.path,DESKTOP) && ['pathbar','back','up','sidebar'].includes(d.via)`, or (state, `ev === null`) `api.finderAt(DESKTOP)`.
-5. text 「在桌面空白處按右鍵，選「新增檔案夾」（macOS 選單裡資料夾叫「檔案夾」），命名為「練習」，按 Return（Windows 鍵盤是 Enter）。」 hint 「如果找不到空白處，先把 Finder 視窗拖開或最小化。筆電觸控板：用兩指點一下就是右鍵。新增後名字會變成可以直接輸入的狀態；要先把輸入法切到中文，才打得出「練習」。」 answer 「右鍵 → 新增檔案夾 → 輸入 練習 → Return。」 check: `api.exists(DESKTOP+'/練習')` (state).
-6. text 「在 Finder 的桌面裡找到「練習」，點它一下：它和桌面上的圖示是同一個東西。」 hint 「Finder 視窗要停在「桌面」；如果不在，點側邊欄的「桌面」。」 answer 「Finder → 側邊欄「桌面」→ 點「練習」。」 check: `api.seen('finder:select', d=>d.paths.some(p=>api.same(p, DESKTOP+'/練習')))`.
+| order | id | group | title | min | steps |
+|---|---|---|---|---|---|
+| 1 | `w3-01-desktop` | `桌面與 Finder` | 認識桌面與 Finder | 6 | 6 |
+| 2 | `w3-t1-ls` | `終端機（Week 3 補充 1）` | ls 看一圈 | 4 | 5 |
+| 3 | `w3-t2-cd` | 同上 | cd 走路 | 6 | 7 |
+| 4 | `w3-t3-mv` | 同上 | mv 搬東西 | 5 | 5 |
+| 5 | `w3-t4-unzip` | 同上 | unzip 拆包裹 | 5 | 5 |
+| 6 | `w3-t5-mkdir` | 同上 | mkdir 和 open | 3 | 3 |
+| 7 | `w3-04-project` | `Codex` | 把資料夾交給 Codex | 5 | 4 |
+| 8 | `w3-05-in-project` | `Codex` | 在專案裡請 Codex 做事 | 10 | 8 (2 optional) |
+| 9 | `w3-06-orphan` | `Codex` | New chat 的陷阱 | 8 | 6 |
+| 10 | `w3-07-agents` | `Codex` | AGENTS.md：給專案的長期記憶 | 8 | 5 |
+
+Common wording rules for ALL mission text. The Mac key is 「Return」; the parenthetical 「（Windows 鍵盤是 Enter）」 is written at the first typed command of each Terminal mission, in mission 1 step 5 and on the first sheet. Mouse words are 「點一下」 and 「點兩下」 (never 雙擊 or 連點兩下); 「命名為」 (never 取名為); `Command` is written 「Command」 (Windows keyboards: Ctrl). The map vocabulary of the supplement video is used consistently: **~ = 社區** (`/Users/an`, formal name 家目錄), **Downloads = 管理室**, **Desktop = 中庭**, **Desktop/Project = 家**, **`..` = 往外一層**. 「家」 ALWAYS means the Project folder; ~ is never called 家. Apps are named by their Dock label, never by colour: 「終端機」, 「Codex」 (not Code), 「Code（就是影片裡的 VS Code）」, 「文字編輯」.
+
+**English names (round 4).** Files and folders the student makes or meets are English: the folder is `Practice` (the check ignores case, like macOS), the seed has `Project/notes.docx`, `Documents/midterm-report.docx`, `Documents/resume.pdf` (§4.0), and the TextEdit 「儲存為」 default is `untitled.txt`. The system's own zh-TW names stay: 桌面, 文件, 下載項目, the app names 終端機 and 文字編輯, the menus. Steps that ask for typing a name say 「輸入法先切到英文（ABC）再打 Practice」.
+
+**Independence.** Every mission can be the first one a student opens. `prepare` therefore puts back everything the mission needs and is idempotent (`ensureBase` = `Desktop`, `Project`, `Project/data`, `AGENTS.md`, each only when missing). The Terminal missions (2 to 6) all start with the same step 1 (open the Terminal), and **step 1 ticks itself** when a Terminal window already exists (engine rule 2: a step satisfied by state completes without an event). Later steps that can be true from where the Terminal already stands do the same (mission 5 step 2). Order is recommended, not enforced; the Codex missions do not need the Terminal missions and the hints of mission 8 step 1, mission 9 step 1 and mission 10 step 2 say what to do when Codex is not open yet.
+
+**Step 1 of the five Terminal missions (shared).** text 「點 Dock 上的「終端機」（滑鼠移過去會顯示名字）。也可以點右上角選單列的放大鏡，輸入 `terminal`，再按 Return。」 hint 「終端機的圖示是黑底，左下角有 `>_`。打指令前，輸入法先切到英文（ABC）。Command＋空白鍵可能被真正的電腦拿去用，Windows 鍵盤的 Ctrl＋空白鍵也常是切換輸入法，所以請用點的。」 answer 「點一下 Dock 上的「終端機」。」 check: `api.seen('win:open', d=>d.appId==='terminal') || api.win('terminal').length>0`. target: the Dock icon.
+
+The `map` of missions 2 to 6 is 「~ 社區（/Users/an）· Downloads 管理室 · Desktop 中庭 · Desktop/Project 家 · .. 往外一層」 and their `tag` is 「Week 3 補充 1」.
+
+**Three-layer wording, per mission.** In the mission the command is FIRST needed, `text` shows the full command; later steps of the same mission only state the goal, so the student has to build the command or the address. Each mission is counted on its own (it may be the first thing the student opens), which is why mission 4 writes `cd Downloads` and `ls` in full although mission 3 taught `cd`.
+
+**M1 `w3-01-desktop` 認識桌面與 Finder（約 6 分鐘）** group 桌面與 Finder
+intro: 「這是一台練習用的 Mac。先認識最常用的兩個地方：桌面，和用來看檔案的 Finder。」 resetsFiles: true. needs: Project.
+prepare: `ensureBase`; `api.remove(DESKTOP+'/Practice')` (the file system ignores case, so a `practice` goes too).
+1. text 「點 Dock 最左邊的 Finder，打開一個視窗。」 hint 「螢幕最下面那一排叫 Dock，第一個圖示就是 Finder。」 answer 「點一下 Dock 上的 Finder。」 check: `win:open` with `appId==='finder'` OR `api.win('finder').length>0`. target: Dock Finder.
+2. text 「在 Finder 左邊的側邊欄點「桌面」。」 hint 「側邊欄在視窗左邊，找到寫著「桌面」的那一列。」 answer 「點側邊欄的「桌面」。」 check: `api.seen('finder:navigate', d=>api.same(d.path,DESKTOP))` OR `api.finderAt(DESKTOP)`. target: the sidebar item 桌面 (Dock Finder when no Finder window).
+3. text 「在桌面上點兩下 Project 資料夾，打開它。」 hint 「要連續點兩下，點一下只是選取。桌面的 Project 圖示在螢幕右上角，也可以在 Finder 視窗裡點兩下。」 answer 「點兩下 Project。」 check: `finder:navigate` with `same(d.path, PROJECT)`, or `api.finderAt(PROJECT)`. target: the desktop icon Project, else the Finder item, else the sidebar 桌面, else Dock Finder.
+4. text 「看視窗最下面的路徑列，再點其中的「桌面」，回到上一層。」 hint 「路徑列從左到右，就是這個資料夾的完整位置：Macintosh HD › 使用者 › an › 桌面 › Project，也就是 /Users/an/Desktop/Project。」 answer 「點路徑列的「桌面」（或側邊欄的「桌面」，或左上角的返回鍵）。」 check: `finder:navigate` with `same(d.path,DESKTOP)` (any `via`), or (state) `api.finderAt(DESKTOP) && !api.finderAt(PROJECT)`. target: the path-bar segment 桌面, else the sidebar item.
+5. text 「在桌面空白處按右鍵，選「新增檔案夾」（macOS 選單裡資料夾叫「檔案夾」），命名為「Practice」，按 Return（Windows 鍵盤是 Enter）。」 hint 「如果找不到空白處，先把 Finder 視窗拖開或最小化。筆電觸控板：用兩指點一下就是右鍵。新增後名字會變成可以直接輸入的狀態；輸入法先切到英文（ABC）再打 Practice。」 answer 「右鍵 → 新增檔案夾 → 輸入 Practice → Return。」 check (state): `api.exists(DESKTOP+'/Practice') && api.vfs.isDir(...)`, case-insensitive. trap: another folder name on the Desktop (not `Project`, not a 「未命名檔案夾」 still being named) → 「桌面上多了一個叫「{name}」的資料夾，名字要剛好是 Practice（英文，沒有空格，大小寫都可以）。點它一下，按 Return 改名；輸入法要先切到英文（ABC）。」 target: none (right-click on the empty desktop).
+6. text 「在 Finder 的桌面裡找到「Practice」，點它一下：它和桌面上的圖示是同一個東西。」 hint 「Finder 視窗要停在「桌面」；如果不在，點側邊欄的「桌面」。」 answer 「Finder → 側邊欄「桌面」→ 點「Practice」。」 check: `finder:select` whose `paths` contains `DESKTOP+'/Practice'`. target: the Finder item Practice (matched without regard to case), else the sidebar 桌面, else Dock Finder.
 outro: 「做得好。桌面上的東西，其實都是 /Users/an/Desktop 這個資料夾裡的檔案。」
 
-**M2 `w3-02-terminal` 用終端機走路（約 12 分鐘）** tag 「補充教材」
-map: 「~ 社區（/Users/an）· Downloads 管理室 · Desktop 中庭 · Desktop/Project 家 · .. 往外一層」
-intro: 「終端機是用打字叫電腦做事的視窗。這一關練習五個指令：pwd、ls、cd、mkdir、open。」 resetsFiles: true.
-prepare: `api.remove(PROJECT+'/figures')`.
-1. text 「點 Dock 上的「終端機」（滑鼠移過去會顯示名字）。也可以點右上角選單列的放大鏡，輸入 `terminal`，按 Return（Windows 鍵盤是 Enter）。」 hint 「終端機的圖示是黑底，左下角有 `>_`。打指令前，輸入法先切到英文（ABC）。Command＋空白鍵可能被真正的電腦拿去用，Windows 鍵盤的 Ctrl＋空白鍵也常是切換輸入法，所以請用點的。」 answer 「點一下 Dock 上的「終端機」。」 check: `win:open` with `appId==='terminal'` OR `api.win('terminal').length>0`.
-2. text 「輸入 `ls`，按 Return：看看這裡有什麼。」 hint 「ls 是「看一圈」。打完要按 Return 才會執行。」 answer 「輸入：`ls`」 replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='ls' && c.status===0)` (any folder: the check does not depend on where the window is).
-3. text 「輸入 `cd Desktop`，再輸入 `pwd`。注意提示字元最後面的字變成什麼？」 hint 「cd 是走路，後面接要去的資料夾名字；pwd 會印出你現在的完整位置。你在哪裡，提示字元的最後一個字會告訴你。」 answer 「`cd Desktop`，Return；`pwd`，Return。提示字元從 ~ 變成 Desktop，pwd 印出 /Users/an/Desktop。」 where: HOME. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='pwd' && c.status===0 && api.same(c.cwd, DESKTOP))`.
-4. text 「走進 Project，用 ls 看看裡面有什麼。」 hint 「cd 後面接資料夾名字，ls 看一圈。Project 裡會看到 AGENTS.md、data 和 筆記.docx。」 answer 「`cd Project`，Return；`ls`，Return。」 where: DESKTOP. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='ls' && c.status===0 && api.same(api.lsDir(c), PROJECT))`.
-5. text 「用 `cd ..` 回到上一層，看看提示字元變成什麼。」 hint 「兩個點 .. 代表「往外一層」。從 Project 往外一層，就回到 Desktop。」 answer 「輸入：`cd ..`」 where: PROJECT. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='cd' && c.args[0]==='..' && api.same(c.cwdAfter, DESKTOP))`.
-6. text 「用 `cd ~` 一步回到「社區」，不管你現在在哪裡都可以。」 hint 「~ 代表你的「社區」，也就是 /Users/an（正式名稱是家目錄）。回到社區後，提示字元會變成 ~。」 answer 「輸入：`cd ~`」 replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='cd' && api.same(c.cwdAfter, HOME))`.
-7. text 「走到 Project，輸入 `mkdir figures`，新增一個叫 figures 的資料夾。」 hint 「mkdir 後面接新資料夾的名字，而且要在 Project 裡輸入：先用 cd 加上地址走到 Project（~ 是社區，Desktop 是中庭，Project 是家），打完用 ls 確認它出現了。」 answer 「`cd ~/Desktop/Project`，Return；`mkdir figures`，Return；`ls`，Return。」 where: PROJECT. replay: 'mission'. check: `api.exists(PROJECT+'/figures') && api.termSeen(c=>c.name==='mkdir' && c.status===0)` (state + history, since mission).
-8. text 「輸入 `open .`（open 空白 點），用 Finder 打開這個資料夾，確認 figures 在裡面。」 hint 「那個點代表「這裡」；open 後面接地址，就會用 Finder 打開它。」 answer 「在 Project 裡輸入：`open .`」 where: PROJECT. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='open' && c.status===0 && c.args[0] && api.same(api.resolve(c.cwd, c.args[0]), PROJECT))`.
-outro: 「終端機和 Finder 看的是同一個資料夾：你在終端機新增的東西，Finder 馬上就看得到。（mkdir 和 open 是影片 01「四個窗口看同一個資料夾」那一幕會用到的指令，所以也放在這一關。）」
+**M2 `w3-t1-ls` ls 看一圈（約 4 分鐘）** group 終端機（Week 3 補充 1）
+intro: 「終端機是用打字叫電腦做事的視窗。ls 是「看一圈」：看看一個地方裡有什麼。影片把電腦比喻成社區：~ 是社區，Downloads 是管理室，Desktop 是中庭，Project 是家。不確定時，展開卡片裡的「地圖」。」 resetsFiles: false.
+prepare: `ensureBase`.
+1. the shared step 1.
+2. text 「輸入 `ls`，按 Return（Windows 鍵盤是 Enter）：看看社區（~）裡有什麼。」 hint 「ls 是「看一圈」。打完要按 Return 才會執行。提示字元最後一個字是 ~，就表示你站在社區。」 answer 「輸入：`ls`（提示字元最後是 ~ 時）。人在別的資料夾的話，輸入 `ls ~`。」 where: HOME. replay: 'mission'. check: `api.termSeen(c=>c.name==='ls' && c.status===0 && same(api.lsDir(c), HOME))`. trap: a plain `ls` (no operand) that ran outside ~ → 「你列出的是「{資料夾}」，不是社區：ls 看的是你現在站的地方，提示字元最後一個字不是 ~。想看社區，輸入 `ls ~`。」 target: the Terminal (see below).
+3. text 「不用走過去也能看：輸入 `ls Downloads`，看看管理室裡有什麼。」 hint 「ls 後面接地址，就看那個地方，不用走過去。Downloads（下載項目）是管理室。提示字元最後一個字不是 ~ 的話，找不到 Downloads，改用 `ls ~/Downloads`。」 answer 「輸入：`ls Downloads`（在社區），或 `ls ~/Downloads`（在哪裡都可以）。」 where: HOME. replay. check: an `ls` with status 0 and `lsDir == DOWNLOADS`.
+4. text 「看看中庭（Desktop）裡有什麼，找到「家」Project。」 hint 「想看哪個地方，就在 ls 後面接它的地址。中庭是 Desktop，就在社區裡面。」 answer 「輸入：`ls Desktop`（在社區），或 `ls ~/Desktop`。」 where: HOME. replay. check: `ls` ok and `lsDir == DESKTOP`.
+5. text 「看看家（Project）裡有什麼。」 hint 「地址用 / 隔開：先中庭 Desktop，再家 Project。把這一串接在 ls 後面。」 answer 「輸入：`ls Desktop/Project`（在社區），或 `ls ~/Desktop/Project`。會看到 AGENTS.md、data 和 notes.docx。」 where: HOME. replay. check: `ls` ok and `lsDir == PROJECT`.
+outro: 「ls 後面不接東西，看的是你現在站的地方；接地址，就看那個地方。下一個任務用 cd 真的走過去。」
 
-**M3 `w3-03-unzip` 拆包裹：week3.zip（約 12 分鐘）** tag 「補充教材」
-map: 同 M2。
-intro: 「老師給你一個壓縮檔 week3.zip，它在「下載項目」（終端機裡叫 Downloads，社區裡的管理室）。把它搬進 Project（你的家），拆開來，再把包裝紙收到中庭。地圖：~ 社區（/Users/an）· Downloads 管理室 · Desktop 中庭 · Desktop/Project 家 · .. 往外一層。」 resetsFiles: true.
-prepare (first start / reset only): `api.ensureSeed(DESKTOP+'/Project')`, `api.ensureSeed(DOWNLOADS+'/week3.zip', {overwrite:true})`; `api.remove` `PROJECT+'/week3'`, `PROJECT+'/week3.zip'`, `DESKTOP+'/week3.zip'`; and remove any zip-kind node of the seed size (1301 bytes) sitting directly in Desktop or Project under another name (a renamed copy left by the "typo trap").
-1. text 「先回到社區：`cd ~`（不管你現在在哪裡都可以）。」 hint 「提示字元最後一個字會變成 ~。如果你剛才停在 Project，提示字元會寫 Project；打指令前先看一下提示字元。」 answer 「輸入：`cd ~`」 where: HOME. check: `api.termCmd(ev, c=>c.name==='cd' && api.same(c.cwdAfter, HOME))`.
-2. text 「走進 Downloads，看看裡面有什麼。」 hint 「cd 後面接資料夾名字，ls 看一圈。下載項目在終端機裡叫 Downloads。」 answer 「`cd Downloads`，Return；`ls`，Return。」 where: HOME. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='ls' && c.status===0 && api.same(api.lsDir(c), DOWNLOADS))`.
-3. text 「把 week3.zip 搬進 Project：`mv week3.zip ~/Desktop/Project`」 hint 「mv 東西 地方。week3.zip 是要搬的東西；地方是一串地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。沒有印出任何字，就是成功了。」 answer 「輸入：`mv week3.zip ~/Desktop/Project`」 where: DOWNLOADS. check: `api.exists(PROJECT+'/week3.zip') && !api.exists(DOWNLOADS+'/week3.zip')`. trap: when the current step is this one, `week3.zip` is missing from both Downloads and Project, and a zip-kind node under another name sits directly in Desktop or Project → 「week3.zip 被改名成「{name}」了：mv 的目的地不存在時，會直接把東西改名。用 `mv {name} week3.zip` 改回來，再試一次。」
-4. text 「再 ls 一次看 Downloads：week3.zip 還在嗎？」 hint 「mv 是搬走，不是複製。」 answer 「在 Downloads 輸入：`ls`（或在別處輸入 `ls ~/Downloads`）。syllabus.pdf 還在，week3.zip 不見了。」 where: DOWNLOADS. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='ls' && c.status===0 && api.same(api.lsDir(c), DOWNLOADS) && !/week3\.zip/.test(c.out))`.
-5. text 「用一整串地址走到 Project，再 ls 確認包裹到了。」 hint 「cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。ls 會看到 week3.zip（還有 Project 原本的東西）。」 answer 「`cd ~/Desktop/Project`，Return；`ls`，Return。」 where: DOWNLOADS. replay: 'mission'. check: `api.termCmd(ev, c=>c.name==='ls' && c.status===0 && api.same(api.lsDir(c), PROJECT) && /week3\.zip/.test(c.out))`.
-6. text 「拆包裹：輸入 `unzip week3.zip`，再 `ls` 看看多了什麼。」 hint 「unzip 後面接要拆的檔案。它會把東西拆在現在這個資料夾，多出一個叫 week3 的資料夾。」 answer 「`unzip week3.zip`，Return；`ls`，Return。」 where: PROJECT. replay: 'mission'. check: `api.exists(PROJECT+'/week3/README.md') && api.termSeen(c=>c.name==='ls' && c.status===0 && api.same(api.lsDir(c), PROJECT) && /(^|\s)week3(\s|$)/.test(c.out))` (ls pads names with spaces, so the standalone word `week3` can only appear after the unzip; `week3.zip` alone does not match).
-7. text 「把包裝紙 week3.zip 放到家門外。」 hint 「mv 東西 地方；家門外是往外一層，怎麼寫？」 answer 「輸入：`mv week3.zip ..`（.. 就是往外一層，也就是 Desktop）」 where: PROJECT. check: `api.exists(DESKTOP+'/week3.zip') && !api.exists(PROJECT+'/week3.zip') && api.exists(PROJECT+'/week3/A.csv')`.
-8. text 「用 Finder 打開 Project 裡的 week3，點兩下 README.md，看看裡面寫什麼。」 hint 「README.md 會用「文字編輯」打開。（真正的 Mac 預設會把 .zip 藏起來，只顯示 week3；練習版把副檔名都顯示出來，所以你看得到 week3.zip。）」 answer 「Finder → 桌面 → Project → week3 → 點兩下 README.md。」 check: `editor:open` with `same(path, PROJECT+'/week3/README.md')`.
-outro: 「cd 是走路、ls 是看一圈、mv 是搬東西、unzip 是拆包裹。記得：mv 是搬走，不是複製。這就是用終端機整理檔案的基本功。」
+**M3 `w3-t2-cd` cd 走路（約 6 分鐘）** group 終端機（Week 3 補充 1）
+intro: 「cd 是走路。走到哪裡，提示字元最後一個字就跟著變。影片的比喻：~ 是社區，Desktop 是中庭，Project 是家。不確定時，展開卡片裡的「地圖」。」 resetsFiles: false. prepare: `ensureBase`.
+1. the shared step 1.
+2. text 「輸入 `cd Desktop`，按 Return（Windows 鍵盤是 Enter），走進中庭。提示字元最後的字會變成 Desktop。」 hint 「cd 是走路，後面接要去的資料夾名字。你在哪裡，提示字元的最後一個字會告訴你；要從社區（提示字元是 ~）出發，才找得到 Desktop。」 answer 「輸入：`cd Desktop`。提示字元從 ~ 變成 Desktop。」 where: HOME. replay. check: a `cd` with status 0 and `cwdAfter == DESKTOP`. trap: a failed `cd` that ran outside ~ → 「你現在不在社區：提示字元最後一個字不是 ~。先輸入 `cd ~` 回到社區，再輸入 `cd Desktop`。」
+3. text 「走進家（Project），再用 `ls` 看一圈。」 hint 「cd 後面接資料夾名字：家（Project）就在中庭（Desktop）裡面。ls 看一圈，會看到 AGENTS.md、data 和 notes.docx。」 answer 「輸入：`cd Project`，Return；`ls`，Return。」 where: DESKTOP. replay. check: `ls` ok and `c.cwd == PROJECT`.
+4. text 「輸入 `pwd`，看看你現在的完整地址。」 hint 「pwd 會印出你現在所在的完整位置，像在社區裡看門牌。在哪個資料夾都可以。」 answer 「輸入：`pwd`。在家（Project）會印出 /Users/an/Desktop/Project。」 replay. check: `pwd` ok (any folder).
+5. text 「用 `cd ..` 往外一層，回到中庭。」 hint 「兩個點 .. 代表「往外一層」。從 Project 往外一層，就回到 Desktop。提示字元最後一個字會變回 Desktop。」 answer 「輸入：`cd ..`」 where: PROJECT. replay. check: `cd` ok, `args[0]` is `..` or `../`, `cwdAfter == DESKTOP`.
+6. text 「用 `cd ~` 一步回到社區，不管你現在在哪裡都可以。」 hint 「~ 代表你的「社區」，也就是 /Users/an（正式名稱是家目錄）。回到社區後，提示字元會變成 ~。」 answer 「輸入：`cd ~`」 replay. check: `cd` ok and `cwdAfter == HOME`.
+7. text 「用一整串地址，一步走回家。」 hint 「cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。」 answer 「輸入：`cd ~/Desktop/Project`」 replay. check: a `cd` with status 0 whose `args[0]` contains `/` (post-parse: `~` is already `/Users/an`, so `cd Desktop/Project` counts too) and `cwdAfter == PROJECT`.
+outro: 「`cd 資料夾名字` 走進去，`cd ..` 往外一層，`cd ~` 回社區，`cd` 加一整串地址，一步到位。」
+Every step 2 to 7 targets the Terminal.
 
-**M4 `w3-04-project` 把資料夾交給 Codex（約 5 分鐘）**
+**M4 `w3-t3-mv` mv 搬東西（約 5 分鐘）** group 終端機（Week 3 補充 1）
+intro: 「老師給的壓縮檔 week3.zip 在管理室（Downloads）。把這個包裹搬回家（Project）。mv 是搬走，不是複製。」 resetsFiles: true.
+prepare: `ensureBase`; remove `DOWNLOADS/week3`, `PROJECT/week3`, `PROJECT/week3.zip`, `DESKTOP/week3.zip`; remove every zip-kind node of the seed size (1301 bytes) under another name in Desktop, Project, Downloads or ~ (a renamed copy left by the typo trap); `api.ensureSeed(DOWNLOADS+'/week3.zip', {overwrite:true})`.
+1. the shared step 1.
+2. text 「走到管理室：輸入 `cd Downloads`，按 Return（Windows 鍵盤是 Enter），再輸入 `ls`，看到 week3.zip。」 hint 「cd 後面接資料夾名字，ls 看一圈。下載項目在終端機裡叫 Downloads（管理室）。提示字元最後一個字不是 ~ 的話，找不到 Downloads，改用 `cd ~/Downloads`。」 answer 「`cd Downloads`，Return；`ls`，Return。會看到 syllabus.pdf 和 week3.zip。」 where: HOME. replay. check: `ls` ok and `lsDir == DOWNLOADS`.
+3. text 「把 week3.zip 搬進家：`mv week3.zip ~/Desktop/Project`」 hint 「mv 東西 地方。week3.zip 是要搬的東西；地方是一串地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。沒有印出任何字，就是成功了。」 answer 「輸入：`mv week3.zip ~/Desktop/Project`」 where: DOWNLOADS. check (state): `(exists(PROJECT/week3.zip) || exists(PROJECT/week3)) && !exists(DOWNLOADS/week3.zip)` (a student who ran ahead is not stuck). trap: when `week3.zip` is in neither Downloads nor Project and a zip-kind node of another name sits in Desktop, Project, Downloads or ~ → 「week3.zip 被改名成「{name}」了：mv 的目的地不存在時，會直接把東西改名。看看{位置}，多了一個叫「{name}」的壓縮檔。在 {資料夾} 輸入 `mv {name} week3.zip` 改回名字，再輸入 `mv week3.zip ~/Desktop/Project`，把它搬進 Project。」; when no zip exists anywhere (and no `week3` folder) → 「找不到 week3.zip 了（可能被 rm 刪掉，或丟進垃圾桶）。按下面的「重來這個任務」，它會放回 Downloads。」
+4. text 「再 ls 一次看管理室：week3.zip 還在嗎？」 hint 「mv 是搬走，不是複製。」 answer 「在 Downloads 輸入：`ls`（或在別處輸入 `ls ~/Downloads`）。syllabus.pdf 還在，week3.zip 不見了。」 where: DOWNLOADS. replay. check: `ls` ok, `lsDir == DOWNLOADS`, `out` has no `week3.zip`.
+5. text 「用一整串地址走回家（Project），再 ls 確認包裹到了。」 hint 「cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。ls 會看到 week3.zip（還有 Project 原本的東西）。」 answer 「`cd ~/Desktop/Project`，Return；`ls`，Return。」 where: DOWNLOADS. replay. check: `ls` ok, `lsDir == PROJECT`, `out` matches /week3/.
+outro: 「mv 東西 地方。管理室裡的 week3.zip 不見了，因為它已經搬進家裡。」
+Every step 2 to 5 targets the Terminal.
+
+**M5 `w3-t4-unzip` unzip 拆包裹（約 5 分鐘）** group 終端機（Week 3 補充 1）
+intro: 「包裹 week3.zip 已經在家（Project）裡。把它拆開，再把包裝紙放到家門外（中庭）。」 resetsFiles: true.
+prepare: `ensureBase`; remove `DOWNLOADS/week3`, `PROJECT/week3`, `DESKTOP/week3.zip`, the renamed copies, `DOWNLOADS/week3.zip` and `PROJECT/week3.zip`; then put the seeded zip into Project (`ensureSeed(DOWNLOADS/week3.zip)` then `vfs.move` to `PROJECT/week3.zip`, `by:'system'`). The story: the package was already carried home in mission 4, so Downloads no longer has it.
+1. the shared step 1.
+2. text 「走回家（Project）：輸入 `cd ~/Desktop/Project`，按 Return（Windows 鍵盤是 Enter）。」 hint 「cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。回到家以後，提示字元最後一個字會是 Project。」 answer 「輸入：`cd ~/Desktop/Project`」 check: any `cmds` entry with `cwdAfter == PROJECT`, OR (state, so it also works with `ev == null`) the folder of the frontmost Terminal (`LAB.terminal.current().session.cwd`) already is Project. A Terminal left in Project by mission 3 or 4 therefore ticks this step the moment the mission starts.
+3. text 「拆包裹：輸入 `unzip week3.zip`，再輸入 `ls` 看看多了什麼。」 hint 「unzip 後面接要拆的檔案。它會把東西拆在現在這個資料夾，多出一個叫 week3 的資料夾。」 answer 「`unzip week3.zip`，Return；`ls`，Return。」 where: PROJECT. replay. check: `exists(PROJECT/week3/README.md)` AND an `ls` (ok, `lsDir == PROJECT`) whose `out` has the standalone word `week3` (ls pads names with spaces, so `week3.zip` alone does not match). trap: the overwrite prompt (`term:prompt` text with `[y]es`) → 「它在問要不要覆蓋已經存在的檔案：輸入 `A` 再按 Return（全部覆蓋），或按 Ctrl+C 取消。回答完就可以繼續，不用再拆一次。」; an `unzip` that succeeded outside Project → 「unzip 會把東西拆在你現在所在的資料夾。這一步要在 Project 裡拆：提示字元最後一個字要是 Project。」
+4. text 「把包裝紙 week3.zip 放到家門外：輸入 `mv week3.zip ..`」 hint 「mv 東西 地方。東西是 week3.zip；地方是往外一層，用兩個點 .. 表示，也就是中庭（Desktop）。」 answer 「輸入：`mv week3.zip ..`（.. 就是往外一層，也就是 Desktop）」 where: PROJECT. check (state): `exists(DESKTOP/week3.zip) && !exists(PROJECT/week3.zip) && exists(PROJECT/week3/A.csv)`. trap: the overwrite prompt; `week3.zip` ended in ~ → 「week3.zip 被搬到 ~（社區）了，比 Desktop 再外面一層。`..` 只往外一層。輸入 `mv ~/week3.zip ~/Desktop` 把它放到 Desktop。」; ended in Downloads → 「week3.zip 被搬回 Downloads 了。輸入 `mv ~/Downloads/week3.zip ~/Desktop` 把它放到 Desktop。」
+5. text 「用 Finder 打開 Project 裡的 week3，點兩下 README.md，看看裡面寫什麼。」 hint 「README.md 會用「文字編輯」打開。（真正的 Mac 預設會把 .zip 藏起來，只顯示 week3；練習版把副檔名都顯示出來，所以你看得到 week3.zip。）」 answer 「Finder → 桌面 → Project → week3 → 點兩下 README.md。」 replay. check: `editor:open` with `same(path, PROJECT+'/week3/README.md')`. trap: the overwrite prompt. target: the deepest on screen of README.md, week3, Project in Finder; else the sidebar 桌面; else Dock Finder.
+outro: 「unzip 拆出來的東西，會放在你現在站的地方。cd 走路、ls 看一圈、mv 搬東西、unzip 拆包裹：這就是用終端機整理檔案的基本功。在 Finder 對 zip 點兩下也能解壓縮；這個任務為了練習終端機，才用指令。」
+Steps 2 to 4 target the Terminal.
+
+**M6 `w3-t5-mkdir` mkdir 和 open（約 3 分鐘）** group 終端機（Week 3 補充 1）
+intro: 「影片 01「四個窗口看同一個資料夾」那一幕用到兩個指令：mkdir 新增資料夾，open 用 Finder 打開。」 resetsFiles: true.
+prepare: `ensureBase`; remove `PROJECT/figures` and `HOME/figures` (a figures folder made in the wrong place on an earlier try).
+1. the shared step 1.
+2. text 「輸入 `cd ~/Desktop/Project` 走到家（Project），按 Return（Windows 鍵盤是 Enter），再輸入 `mkdir figures`，新增一個叫 figures 的資料夾。」 hint 「cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。mkdir 後面接新資料夾的名字，而且要在家裡輸入。打完可以用 ls 確認它出現了。」 answer 「`cd ~/Desktop/Project`，Return；`mkdir figures`，Return；`ls`，Return。」 where: PROJECT. replay. check: `exists(PROJECT+'/figures')` AND some `mkdir` with status 0 since the mission started. trap: a successful `mkdir figures` outside Project while `Project/figures` does not exist → 「figures 被建在「{資料夾}」裡了，不是在 Project。先輸入 `rmdir figures` 刪掉它，再用 `cd ~/Desktop/Project` 走到 Project，重新 `mkdir figures`。」
+3. text 「輸入 `open .`（open 空白 點），用 Finder 打開這個資料夾，確認 figures 在裡面。」 hint 「那個點代表「這裡」；open 後面接地址，就會用 Finder 打開它。」 answer 「在 Project 裡輸入：`open .`」 where: PROJECT. replay. check: `open` ok without `-a`/`-R`, whose first operand resolved against `c.cwd` is Project.
+outro: 「終端機和 Finder 看的是同一個資料夾：在終端機新增的東西，Finder 馬上看得到。」
+Steps 2 and 3 target the Terminal.
+
+**M7 `w3-04-project` 把資料夾交給 Codex（約 5 分鐘）** group Codex
 intro: 「Codex 以「一個資料夾」為工作單位。先把桌面上的 Project 資料夾交給它。」 resetsFiles: true (開始時會把 Codex 裡 Project 的專案與對話清掉，重新來過).
-prepare (first start / reset only): `api.codex.removeProject(PROJECT, {chats:'remove'})` so the trust prompt appears and no stale project chats survive; the rail note for this mission reads 「開始這個任務會把 Codex 裡 Project 的專案和對話恢復到起始狀態。」
-1. text 「點 Dock 上的「Codex」（滑鼠移過去會顯示名字；是 Codex，不是 Code）。」 hint 「Codex 的圖示是深色底，中間只有一個線條畫的輪廓；黑底、左下角有 `>_` 的是終端機。」 answer 「點一下 Dock 上的「Codex」。」 check: `win:open` with `appId==='codex'` OR `api.win('codex').length>0`.
-2. text 「把桌面上的 Project 資料夾，拖進 Codex 左邊的側邊欄。」 hint 「按住 Project 圖示不放，拖到 Codex 左邊那一欄，看到側邊欄亮起藍框再放開。放開後桌面上的 Project 還在，這是正常的：只是告訴 Codex 它在哪裡。如果 Codex 蓋住了桌面圖示，先把視窗往左拖開一點，或從 Finder 視窗裡拖。」 answer 「Project 圖示 → 按住拖 → 放進 Codex 側邊欄。（也可以：Finder 對 Project 按右鍵 → 打開方式 → Codex。）」 check: `codex:trust-prompt` with `same(path, PROJECT)`, OR a `dnd:drop` with `accepted` whose `targetId` starts with `codex:` and whose `payload.paths` contains PROJECT, OR (state) `api.codex.state().projects` contains PROJECT.
-3. text 「看到「Trust this folder?」：這是在問你信不信任這個資料夾。按 Trust folder。」 hint 「Trust folder 是讓 Codex 可以在這個資料夾裡讀檔、改檔、執行指令。只信任你自己的資料夾。」 answer 「點白色的 Trust folder。」 check: `codex:trust` with `same(path,PROJECT)`, OR (state) `api.codex.state().projects` contains PROJECT.
-4. text 「到 Finder 看看它在電腦裡的真實位置：打開桌面的 Project，看視窗最下面的路徑列。」 hint 「Macintosh HD › 使用者 › an › 桌面 › Project 就是它真實的位置，也就是 /Users/an/Desktop/Project。」 answer 「點兩下桌面上的 Project 資料夾。」 check: `finder:navigate` with `same(path,PROJECT)` (event, since this step started).
+prepare: `ensureBase`; `api.codex.removeProject(PROJECT, {chats:'remove'})` so the trust prompt appears and no stale project chats survive.
+1. text 「點 Dock 上的「Codex」（滑鼠移過去會顯示名字；是 Codex，不是 Code）。」 hint 「Codex 的圖示是深色底，中間只有一個線條畫的輪廓；黑底、左下角有 `>_` 的是終端機。」 answer 「點一下 Dock 上的「Codex」。」 check: `win:open` with `appId==='codex'` OR `api.win('codex').length>0`. target: Dock Codex.
+2. text 「把桌面上的 Project 資料夾，拖進 Codex 左邊的側邊欄。」 hint 「按住 Project 圖示不放，拖到 Codex 左邊那一欄，看到側邊欄亮起藍框再放開。放開後桌面上的 Project 還在，這是正常的：只是告訴 Codex 它在哪裡。如果 Codex 蓋住了桌面圖示，先把視窗往左拖開一點，或從 Finder 視窗裡拖。」 answer 「Project 圖示 → 按住拖 → 放進 Codex 側邊欄。（也可以：Finder 對 Project 按右鍵 → 打開方式 → Codex。）」 check: `codex:trust-prompt` with `same(path, PROJECT)`, OR a `dnd:drop` with `accepted` whose `targetId` starts with `codex:` and whose `payload.paths` contains PROJECT, OR (state) `api.codex.state().projects` contains PROJECT. target: the desktop icon Project, else the Finder item.
+3. text 「看到「Trust this folder?」：這是在問你信不信任這個資料夾。按 Trust folder。」 hint 「Trust folder 是讓 Codex 可以在這個資料夾裡讀檔、改檔、執行指令。只信任你自己的資料夾。」 answer 「點白色的 Trust folder。」 check: `codex:trust` with `same(path,PROJECT)`, OR (state) the project exists. trap: the prompt went away without an answer → 「「Trust this folder?」的提示不見了。把桌面的 Project 再拖進 Codex 左邊的側邊欄一次，它就會再問。」 target: `[data-lab=cx-modal-trust]`.
+4. text 「到 Finder 看看它在電腦裡的真實位置：打開桌面的 Project，看視窗最下面的路徑列。」 hint 「Macintosh HD › 使用者 › an › 桌面 › Project 就是它真實的位置，也就是 /Users/an/Desktop/Project。」 answer 「點兩下桌面上的 Project 資料夾。」 check: `finder:navigate` with `same(path,PROJECT)` (event, since this step started). target: the desktop icon Project, else the Finder item, sidebar 桌面, Dock Finder.
 outro: 「記住：Codex 說的「專案」，就是電腦裡真的存在的那個資料夾。拖進去不是搬走，Project 還在桌面上。」
 
-**M5 `w3-05-in-project` 在專案裡請 Codex 做事（約 10 分鐘）**
+**M8 `w3-05-in-project` 在專案裡請 Codex 做事（約 10 分鐘）** group Codex
 intro: 「在專案底下開對話，Codex 做出來的東西會放進這個資料夾。我們來驗證：它做的檔案，在其他視窗也看得到。」 resetsFiles: true.
-prepare (first start / reset only): `api.ensureSeed(PROJECT)`, `api.ensureSeed(PROJECT+'/data')`, `LAB.codex.addProject(PROJECT, {trust:true, select:false})` if missing; `api.remove(PROJECT+'/output')`, `api.remove(PROJECT+'/charts')`.
-1. text 「在 Codex 側邊欄點一下 Project，確認輸入框上方有「Project」這個標籤。」 hint 「點 Project 這一列（不是最上面的 New chat）。」 answer 「點側邊欄的 Project。」 check: `codex:select-project` with `same(path,PROJECT)` (event; every row click emits it).
-2. text 「請 Codex 寫報告：[[幫我寫一份報告到 output/report.md]]，按 Return。」 hint 「可以複製上面這句，貼到輸入框。等它出現 Created output/report.md 就是做完了。」 answer 「把「幫我寫一份報告到 output/report.md」貼到輸入框，按 Return。」 check: `codex:reply` with `intent==='write_report'` and `same(projectPath,PROJECT)`.
-3. text 「真實位置 = 專案資料夾 + output/report.md。到 Finder 找到它，看路徑列是不是這樣。」 hint 「先打開 Project，再往下找 output。路徑列會寫 Macintosh HD › 使用者 › an › 桌面 › Project › output。」 answer 「Finder → 桌面 → Project → output。」 check: `finder:navigate` with `same(path, PROJECT+'/output')`.
-4. text 「點兩下 report.md，用文字編輯讀它。」 hint 「裡面有各班的平均分數，是 Codex 讀了 data 裡的 CSV 算出來的。」 answer 「在 output 資料夾裡點兩下 report.md。」 check: `editor:open` with `same(path, PROJECT+'/output/report.md')`.
-5. (optional) text 「（選做）在終端機走到 Project，看看 output 裡有什麼。」 hint 「先用地址走到 Project，再用 ls 看 output。想看檔案內容，可以試 `cat output/report.md`。」 answer 「`cd ~/Desktop/Project`，Return；`ls output`，Return。」 where: HOME. check: `api.termCmd(ev, c=>c.name==='ls' && c.status===0 && api.same(api.lsDir(c), PROJECT+'/output') && /report\.md/.test(c.out))`.
-6. text 「用 Code（就是影片裡的 VS Code）打開 Project 資料夾。」 hint 「資料夾可以拖到 Code 的視窗或 Dock 圖示上，也可以在 Finder 用右鍵的「打開方式」選 Code（不是 Codex）。」 answer 「Finder 對 Project 按右鍵 → 打開方式 → Code。」 replay: 'mission'. check: `code:folder` with `same(path,PROJECT)`.
-7. text 「在 Code 左邊的檔案列表點開 output，再點 report.md。」 hint 「左邊那一欄叫 EXPLORER，像 Finder 的側邊欄。」 answer 「EXPLORER → output → report.md。」 check: `editor:open` with `appId==='code'` and `same(path, PROJECT+'/output/report.md')`.
-8. (optional) text 「（選做）在終端機的 Project 裡新增一個叫 charts 的資料夾，同時看 Code 左邊和 Finder：它會自己出現。」 hint 「mkdir 後面接資料夾名字。Finder 和 Code 都不用重新整理。」 answer 「在 Project 裡輸入：`mkdir charts`」 where: PROJECT. replay: 'mission'. check: `api.exists(PROJECT+'/charts') && api.termSeen(c=>c.name==='mkdir' && c.status===0)`.
+prepare: `ensureBase`; ensure Project is a Codex project (`addProject(PROJECT, {trust:true, select:false})` when missing); remove `PROJECT/output` and `PROJECT/charts`.
+1. text 「在 Codex 側邊欄點一下 Project，確認輸入框上方有「Project」這個標籤。」 hint 「點 Project 這一列（不是最上面的 New chat）。Codex 還沒打開的話，先點 Dock 上的「Codex」。」 answer 「點側邊欄的 Project。」 check: `codex:select-project` with `same(path,PROJECT)` (every row click emits it). trap: a `write_report` reply from a chat outside Project → the line about 「Project」 label. target: the Project row, else Dock Codex.
+2. text 「請 Codex 寫報告：點「複製」，貼進輸入框，再按 Return。[[幫我寫一份報告到 output/report.md]]」 hint 「點「複製」，再點 Codex 的輸入框，按 Ctrl+V（Mac 用 Command+V）貼上。等它出現 Created output/report.md 就是做完了。」 answer 「把「幫我寫一份報告到 output/report.md」貼到輸入框，按 Return。」 check: `codex:reply` with `intent==='write_report'` and `same(projectPath,PROJECT)`. trap as step 1. target: the composer, else the Project row, else Dock Codex.
+3. text 「真實位置 = 專案資料夾 + output/report.md。到 Finder 找到它，看路徑列是不是這樣。」 hint 「先打開 Project，再往下找 output。路徑列會寫 Macintosh HD › 使用者 › an › 桌面 › Project › output。」 answer 「Finder → 桌面 → Project → output。」 check: `finder:navigate` with `same(path, PROJECT+'/output')`. target: Finder walk (output item, Project item, sidebar 桌面, Dock Finder).
+4. text 「點兩下 report.md，用文字編輯讀它。」 hint 「裡面有各班的平均分數，是 Codex 讀了 data 裡的 CSV 算出來的。」 answer 「在 output 資料夾裡點兩下 report.md。」 check: `editor:open` with `same(path, PROJECT+'/output/report.md')`. target: Finder walk (report.md, output, Project, …).
+5. (optional) text 「在終端機走到 Project，看看 output 裡有什麼。」 hint 「先用地址走到 Project，再用 ls 看 output。想看檔案內容，可以試 `cat output/report.md`。」 answer 「`cd ~/Desktop/Project`，Return；`ls output`，Return。」 where: HOME. check: `ls` ok, `lsDir == PROJECT/output`, `out` has `report.md`. target: the Terminal.
+6. text 「用 Code（就是影片裡的 VS Code）打開 Project 資料夾。」 hint 「資料夾可以拖到 Code 的視窗或 Dock 圖示上，也可以在 Finder 用右鍵的「打開方式」選 Code（不是 Codex）。」 answer 「Finder 對 Project 按右鍵 → 打開方式 → Code。」 replay. check: `code:folder` with `same(path,PROJECT)`. target: the Finder item Project, else the desktop icon, sidebar 桌面, Dock Finder.
+7. text 「在 Code 左邊的檔案列表點開 output，再點 report.md。」 hint 「左邊那一欄叫 EXPLORER，像 Finder 的側邊欄。」 answer 「EXPLORER → output → report.md。」 check: `editor:open` with `appId==='code'` and `same(path, PROJECT+'/output/report.md')`. target: the explorer row report.md, else output, else Dock Code.
+8. (optional) text 「在終端機的 Project 裡新增一個叫 charts 的資料夾，同時看 Code 左邊和 Finder：它會自己出現。」 hint 「mkdir 後面接資料夾名字。Finder 和 Code 都不用重新整理。」 answer 「在 Project 裡輸入：`mkdir charts`」 where: PROJECT. replay. check: `exists(PROJECT+'/charts')` AND a `mkdir` with status 0. target: the Terminal.
 outro: 「Codex、Finder、終端機、Code，四個視窗看的是同一個資料夾；檔案不在聊天室裡，而是真的存在硬碟上。「output/report.md」是相對路徑，從對話所在的資料夾算起。」
 
-**M6 `w3-06-orphan` New chat 的陷阱（約 8 分鐘）**
+**M9 `w3-06-orphan` New chat 的陷阱（約 8 分鐘）** group Codex
 intro: 「按最上面的 New chat 開出來的對話，不屬於任何專案。同一句話，檔案會放到哪裡？」 resetsFiles: true.
-prepare (first start / reset only): `api.ensureSeed(PROJECT)`, `api.ensureSeed(PROJECT+'/data')`, ensure Project is a Codex project; `api.remove(DOCUMENTS+'/output')` AND `api.remove(PROJECT+'/output')` (so M5's file cannot blur the contrast in step 5).
-1. text 「按 Codex 最上面的 New chat。注意：輸入框上方沒有 Project 標籤。」 hint 「主畫面只問 What should we work on?，沒有專案名稱。」 answer 「點側邊欄最上面的 New chat。」 check: `codex:new-chat` with `projectPath===null`.
-2. text 「輸入同一句話：[[幫我寫一份報告到 output/report.md]]」 hint 「整句照打（或複製貼上），和上一個任務一模一樣。等它做完，側邊欄的 Recents 會出現這個對話：它不在 Project 底下。」 answer 「輸入「幫我寫一份報告到 output/report.md」，按 Return。」 check: `codex:reply` with `intent==='write_report'` and `projectPath===null`.
-3. text 「它說「已建立 output/report.md」，可是在哪？請問它：[[列出你新增的檔案完整路徑]]」 hint 「在同一個對話裡接著問。可以複製上面這句。」 answer 「輸入「列出你新增的檔案完整路徑」，按 Return。」 check: `codex:reply` with `intent==='list_paths'` and `projectPath===null`.
-4. text 「照它給的路徑，在 Finder 找到這個檔案。」 hint 「路徑裡的 Documents，在 Finder 叫「文件」；一層一層往下找 output。」 answer 「路徑是 /Users/an/Documents/output/report.md：Finder → 側邊欄「文件」→ output。」 check: `finder:navigate` with `same(path, DOCUMENTS+'/output')`.
-5. text 「改在專案底下重做：點側邊欄的 Project，再輸入一次同一句話。」 hint 「這次輸入框上方會有 Project 標籤，檔案會寫進 Project 底下的 output。」 answer 「點 Project → 輸入「幫我寫一份報告到 output/report.md」→ Return。」 check: `codex:reply` with `intent==='write_report'` and `same(projectPath,PROJECT)` (event, after step 4).
-6. text 「到 Finder 打開 Project 裡的 output，看到 report.md：這次它在專案裡。」 hint 「Finder → 桌面 → Project → output。」 answer 「點兩下桌面的 Project，再點兩下 output。」 check: `finder:navigate` with `same(path, PROJECT+'/output')` (event, after step 5).
-outro: 「開始任務之前，先確保是在正確的專案內輸入，也要記得真實的專案資料夾在電腦的哪裡。這次剛好放在「文件」，換一個對話它可能放到別處，所以一定要知道它在哪。」
+prepare: `ensureBase`; ensure Project is a Codex project; remove `DOCUMENTS/output` AND `PROJECT/output` (so mission 8's file cannot blur the contrast in step 5).
+1. text 「按 Codex 最上面的 New chat。注意：輸入框上方沒有 Project 標籤。」 hint 「主畫面只問 What should we work on?，沒有專案名稱。Codex 還沒打開的話，先點 Dock 上的「Codex」。」 answer 「點側邊欄最上面的 New chat。」 check: `codex:new-chat` with `projectPath===null`. target: New chat, else Dock Codex.
+2. text 「輸入同一句話：點「複製」，貼進輸入框，再按 Return。[[幫我寫一份報告到 output/report.md]]」 hint 「整句照打（或複製貼上），和上一個任務一模一樣。等它做完，側邊欄的 Recents 會出現這個對話：它不在 Project 底下。」 answer 「輸入「幫我寫一份報告到 output/report.md」，按 Return。」 check: `codex:reply` with `intent==='write_report'` and `projectPath===null`. target: the composer.
+3. text 「它說「已建立 output/report.md」，可是在哪？點「複製」，貼進輸入框，問它：[[列出你新增的檔案完整路徑]]」 hint 「在同一個對話裡接著問。可以複製上面這句。」 answer 「輸入「列出你新增的檔案完整路徑」，按 Return。」 check: `codex:reply` with `intent==='list_paths'` and `projectPath===null`. target: the composer.
+4. text 「照它給的路徑，在 Finder 找到這個檔案。」 hint 「路徑裡的 Documents，在 Finder 叫「文件」；一層一層往下找 output。」 answer 「路徑是 /Users/an/Documents/output/report.md：Finder → 側邊欄「文件」→ output。」 check: `finder:navigate` with `same(path, DOCUMENTS+'/output')`. target: the Finder item output (in 文件), else the sidebar item 文件, else Dock Finder.
+5. text 「改在專案底下重做：點側邊欄的 Project，再把同一句話貼進輸入框（複製過的話，直接貼）。」 hint 「這次輸入框上方會有 Project 標籤，檔案會寫進 Project 底下的 output。」 answer 「點 Project → 輸入「幫我寫一份報告到 output/report.md」→ Return。」 check: `codex:reply` with `intent==='write_report'` and `same(projectPath,PROJECT)`. target: the composer when the open chat is Project's, else the Project row, else Dock Codex.
+6. text 「到 Finder 打開 Project 裡的 output，看到 report.md：這次它在專案裡。」 hint 「Finder → 桌面 → Project → output。」 answer 「點兩下桌面的 Project，再點兩下 output。」 check: `finder:navigate` with `same(path, PROJECT+'/output')` (event, after step 5). target: Finder walk.
+outro: 「New chat 開出來的對話不屬於任何專案，它做出來的檔案會放在你沒指定的地方（這次是「文件」，下次可能是別處）。要做正事，先點專案，再開始對話；也一定要知道檔案放在哪裡。」
 
-**M7 `w3-07-agents` AGENTS.md：給專案的長期記憶（約 8 分鐘）**
+**M10 `w3-07-agents` AGENTS.md：給專案的長期記憶（約 8 分鐘）** group Codex
 intro: 「每個專案資料夾都該有一份 AGENTS.md，Codex 每次對話都會先讀它。我們來改它，看看新對話是不是真的記得。」 resetsFiles: true.
-prepare (first start / reset only): `api.ensureSeed(PROJECT)`; ensure Project is a Codex project; `api.ensureSeed(PROJECT+'/AGENTS.md', {overwrite:true})` when the file is missing or already contains `figures/` (so the seed text of §4.0 is back).
-1. text 「用文字編輯或 Code 打開 Project 裡的 AGENTS.md，看它現在有哪些規則。」 hint 「在 Finder 的 Project 裡，點兩下 AGENTS.md。」 answer 「Finder → 桌面 → Project → 點兩下 AGENTS.md。」 check: `editor:open` with `same(path, PROJECT+'/AGENTS.md')`.
-2. text 「在 Codex 點 Project 那一列，開新對話，輸入：[[把「圖表存到 figures/」加進 AGENTS.md]]」 hint 「要用專案底下的對話（輸入框上方有 Project 標籤），不是 New chat。可以複製上面這句。」 answer 「點 Project 那一列，輸入整句，按 Return。」 check: `codex:reply` with `intent==='write_agents'`, `same(projectPath,PROJECT)` and `api.read(PROJECT+'/AGENTS.md')` contains `figures/`. onDone: `api.state.agentsChat = ev.data.chatId`.
-3. text 「回到 AGENTS.md 的視窗，看它是不是多了一行；沒看到的話，再打開一次。」 hint 「已經打開的視窗點一下就能看；找不到視窗的話，在 Finder 再點兩下 AGENTS.md。」 answer 「點一下 AGENTS.md 的視窗（或在 Finder 再點兩下它），最後一行是「- 圖表存到 figures/」。」 check (events after step 2 only): `editor:open` with `same(path, PROJECT+'/AGENTS.md')`, OR a `win:focus` whose window (`api.win('textedit').concat(api.win('code'))` matched by `id`) has `state.path` equal to `PROJECT+'/AGENTS.md'`.
-4. text 「在 Project 底下再開一個全新的對話，問：[[你目前遵守哪些規則？]]」 hint 「把滑鼠移到 Project 那一列，右邊會出現「+」；一定要開新對話，不要接著剛剛那個。新對話的短期記憶是空的，但 AGENTS.md 每次都會帶入。」 answer 「點 Project 那一列右邊的 +，輸入「你目前遵守哪些規則？」，Return。」 check: `codex:reply` with `intent==='ask_rules'`, `same(projectPath,PROJECT)` and `d.chatId !== api.state.agentsChat`. Reply must list `圖表存到 figures/`. trap: when a `codex:reply` with `intent==='ask_rules'` and `chatId === api.state.agentsChat` arrives since this step started → 「這是同一個對話。請開一個新的。」
-5. text 「對照看看：按 New chat（沒有專案），問同一句話。」 hint 「這個對話看不到專案裡的 AGENTS.md。」 answer 「點最上面的 New chat，輸入「你目前遵守哪些規則？」，Return。」 check: `codex:reply` with `intent==='ask_rules'` and `projectPath===null`.
-outro: 「重要的事寫進 AGENTS.md，每個專案裡的新對話都會記得；不在專案裡的對話，什麼也看不到。完整的 AGENTS.md 通常有三個段落：這個專案在做什麼、希望 AI 怎麼幫忙、有哪些事情不要做（影片 02 示範過）；練習版的只有一段，你可以自己把它補完整。」
+prepare: `ensureSeed` Desktop, Project, Project/data; ensure Project is a Codex project; `api.ensureSeed(AGENTS, {overwrite:true})` when the file is missing or already contains `figures/` (so the seed text of §4.0 is back).
+1. text 「用文字編輯或 Code 打開 Project 裡的 AGENTS.md，看它現在有哪些規則。」 hint 「在 Finder 的 Project 裡，點兩下 AGENTS.md。」 answer 「Finder → 桌面 → Project → 點兩下 AGENTS.md。」 check: `editor:open` with `same(path, AGENTS)`. target: Finder walk (AGENTS.md, Project, sidebar 桌面, Dock Finder).
+2. text 「在 Codex 點 Project 那一列，開新對話，點「複製」，貼進輸入框，再按 Return。[[把「圖表存到 figures/」加進 AGENTS.md]]」 hint 「要用專案底下的對話（輸入框上方有 Project 標籤），不是 New chat。Codex 還沒打開的話，先點 Dock 上的「Codex」。」 answer 「點 Project 那一列，輸入整句，按 Return。」 replay. check: `codex:reply` with `intent==='write_agents'`, `same(projectPath,PROJECT)` and `api.read(AGENTS)` contains `figures/`. onDone: `api.state.agentsChat = chatId`. trap: a `write_agents` reply from outside Project. target: the composer when the open chat is Project's, else the Project row, else Dock Codex.
+3. text 「回到 AGENTS.md 的視窗，看它是不是多了一行「- 圖表存到 figures/」。」 hint 「視窗被 Codex 蓋住了：點 Dock 的「文字編輯」，或把 Codex 視窗拖開。文字編輯會自己更新，不用重開。」 answer 「點 Dock 的「文字編輯」（或在 Finder 再點兩下 AGENTS.md），最後一行是「- 圖表存到 figures/」。」 check (events after step 2 only): `editor:open` with `same(path, AGENTS)`, OR a `win:focus` whose window (`textedit` or `code`, matched by `id`) has `state.path` equal to AGENTS. target: Dock 文字編輯.
+4. text 「在 Project 底下再開一個全新的對話，點「複製」，貼進輸入框，問：[[你目前遵守哪些規則？]]」 hint 「把滑鼠移到 Project 那一列，右邊會出現「+」；一定要開新對話，不要接著剛剛那個。新對話的短期記憶是空的，但 AGENTS.md 每次都會帶入。」 answer 「點 Project 那一列右邊的 +，輸入「你目前遵守哪些規則？」，Return。」 replay. check: `codex:reply` with `intent==='ask_rules'`, `same(projectPath,PROJECT)` and `d.chatId !== api.state.agentsChat`. Reply must list `圖表存到 figures/`. trap: the same chat as step 2 → 「這是同一個對話。請開一個新的。」; asked from New chat → 「這個對話不在 Project 底下。這一步先在 Project 底下開新對話（Project 那一列右邊的 +）；New chat 的對照在下一步。」 target: the + button of the Project row (shown while the pointer is on the row), else the Project row, else Dock Codex.
+5. text 「對照看看：按 New chat（沒有專案），問同一句話。」 hint 「這個對話看不到專案裡的 AGENTS.md。」 answer 「點最上面的 New chat，輸入「你目前遵守哪些規則？」，Return。」 check: `codex:reply` with `intent==='ask_rules'` and `projectPath===null`. target: New chat, else Dock Codex.
+outro: 「重要的事寫進 AGENTS.md，專案裡的每個新對話都會讀到；不在專案裡的對話看不到專案的檔案，也看不到 AGENTS.md。完整的 AGENTS.md 通常有三個段落：這個專案在做什麼、希望 AI 怎麼幫忙、有哪些事情不要做（影片 02 示範過）；練習版的只有一段，你可以自己把它補完整。」
 
-`LAB.missions.freePlayTips` (strings): 「在桌面新增檔案夾，再把它拖進 Finder 視窗裡。」「在終端機試試 cp、rm、cat，看看會發生什麼事。」「在 Finder 對檔案按空白鍵，快速查看內容。」「請 Codex 列出目前資料夾裡有哪些檔案。」「打錯指令看看，終端機會怎麼回你。」 Mission order is recommended, not enforced; the list lets the student start any mission. M2 and M3 are supplementary (補充教材): M4–M7 can be started without them (the rail says so, §6.1); the only terminal steps inside M4–M7 are optional (M5 steps 5 and 8).
+**Cue targets.** `target` (§5.1) names the thing the student has to click, for the cue of §19. All targets are built in `missions-week3.js` from the data-lab hooks of §10 and only read the page. A target may resolve to several candidates; `chain(a, b, c)` returns the first one that is really visible (the centre of its rectangle passes `document.elementFromPoint`, so an icon hidden behind a window is skipped), else the first that exists. The Dock icon of the app is the last candidate wherever a window may not exist yet or may be buried (Finder, Codex, Code, Terminal), so the cue then says 「open it from the Dock」. Finder items are looked up case-insensitively (`Practice` or `practice`) in the topmost Finder window that shows them. For the typing steps of the Terminal missions the target is the Terminal: while its window is focused the function returns the hidden input `[data-lab=term-input]` (1 × 16 px, which the cue leaves alone because the student is already typing); otherwise it returns `[data-lab=term-screen]` (the whole screen is the thing to click), and without a Terminal window the Dock icon. Steps with no target: mission 1 step 5 (right-click on the empty desktop).
+
+Mission order is recommended, not enforced; the picker lets the student start any mission. Missions 2 to 6 are supplementary (補充教材): missions 7 to 10 can be started without them; the only Terminal steps inside mission 8 are optional (steps 5 and 8).
 
 ### 5.4 Progress code (teacher evidence for this visit)
 
@@ -1069,6 +1123,7 @@ outro: 「重要的事寫進 AGENTS.md，每個專案裡的新對話都會記得
 ## 6. Mission rail, first run, small screens, keys
 
 ### 6.1 Rail (`#lab-rail`, css/mission.css, js/missions.js)
+**Round 4 (2026-10-05) changed this card: superseded by §19 where it differs: the inline mission list is a 「換任務」 button that opens the picker (§19.2), there is no free play (§19.1), tints and ink are darker (§19.3), the cues and the success feedback are in §19.4 and §19.5.**
 Left column. In `pinned` mode it sits in the flow; in `drawer` mode (default below 1366 px) a 44 px strip stays in the flow and the full rail opens as an overlay that does not resize the stage (§2.1). Page theme tokens (§2.4, contrast-checked). Typography: Noto Sans TC, body 14 px/1.7, small caps label 11 px letter-spacing .06em, step numerals in JetBrains Mono. No boxes, no cards with shadows, no chips; sections separated by 1 px hairlines. Rail text is `user-select:text` (prompts and commands can be copied).
 
 Top→bottom:
@@ -1331,6 +1386,7 @@ Owner: 「進到 mac 後，任務不要存 cache 每次都要重來」. Decision
 - **Tests.** `lab_e2e.py` (extras): no `lab-mac:*` key in `localStorage` after a full run; old leftovers are removed on the next load; after a reload files, AGENTS.md, Codex, mission progress and the progress code are back to the seed. `features_e2e.py`: a dropped card is back home after a reload, the welcome shows again, no `lab-mac:v1` after boot.
 
 ### 18.2 Mission sheets (owner: 「要明顯跳出任務」)
+**Round 4: superseded by §19.2 where it differs: the `first` and `start` sheets are now the picker sheet (`pick`), the completion sheet has no 「先留在這裡」 and gets 「選其他任務」, there is no 「自由練習」, the tint is .74.**
 
 Owner's second request of the round: a mission must pop up clearly. A large glass sheet in the middle of the Mac announces each mission, and another one marks each finished mission. It replaces the old plain welcome panel (§6.2 is superseded). All of it lives in `js/missions.js` (the section "mission sheet"), `css/mission.css` ("mission sheets") and the `data-lab` hooks below.
 
@@ -1345,3 +1401,59 @@ Owner's second request of the round: a mission must pop up clearly. A large glas
 - **Switches.** `?welcome=0` suppresses every sheet (and skips the connecting screen, as before). New `?intro=0` suppresses the `start` and `done` sheets but not the `first` one. `boot.js` sets `LAB.missions.skipWelcome` and `LAB.missions.skipIntro`. The end-to-end main flow loads `?reset=1&debug=1&connect=0&intro=0`: it clicks 「開始任務」 on the first sheet and then drives the missions through the card with no later sheet in the way.
 - **Hooks.** `msheet` (the panel, with `data-kind`), `welcome-start`, `welcome-free`, `msheet-start`, `msheet-next`, `msheet-stay`, `msheet-close`, `msheet-step`, `msheet-check`, `msheet-outro`; the copy links inside a sheet use `sheet-copy` instead of `rail-copy`. Classes: `.lab-msheet-scrim`, `.lab-msheet`, `.lab-ms-*`.
 - **Tests.** `lab_e2e.py` main flow uses `&intro=0` (186 checks). `features_e2e.py` (79 checks) covers: no sheet during the connecting screen and the first sheet right after `connect:done` with mission 1's title, eyebrow, first step, note and buttons; focus, Tab and swallowed shortcuts; the mid-flight transform and the bump; no sheet from `LAB.missions.start()`; the start sheet from the list and from 「下一個任務 →」 (Esc and Enter); the completion sheet after the pause with the green check, next and stay; the last-mission sheet; Esc and Enter on the first sheet; `?welcome=0` and `?intro=0`; reduced motion; the narrow-screen drawer. `sheet_shots.py` writes screenshots to `製作/lab-mac/screenshots/sheets/` (1440×900 and 1024×640: first sheet, fly-in frames at 140, 280 and 400 ms with the animations paused, start sheet, completion sheet). `製作/lab-mac/poster/make_poster.py` waits until the sheet is gone before it shoots the laptop picture.
+
+## 19. Round 4 (2026-10-05): no free play, a mission picker, readable text, lively cues, success feedback
+
+The owner's six points after looking at the card: (1) always inside a mission, no free play; (2) the text on the left is not contrasty enough; (3) each mission needs livelier cues, bouncing and the like; (4) more feedback on success, seen and heard; (5) names in English (`Practice`; the CONTENT half, §5); (6) missions can be chosen, e.g. go straight to practising `cd`. This section is the UI half (points 1, 2, 3, 4 and 6); it supersedes the free-play parts of §6.1, §6.2 and §18.2, and the tint numbers of §16 and §17. Everything below is in `js/missions.js` (engine, card, sheets, cues), `css/mission.css`, `js/lab.js` (`LAB.sfx`) and one line in `js/boot.js` (`?sound=0`).
+
+### 19.1 No free play (B1)
+
+- Gone: `data.freePlay`, `missions.isFreePlay()`, `missions.setFreePlay()`, `missions.freePlayTips`, the tips list, the card's `rail-free` link, the first sheet's `welcome-free` button and its 「Esc = 自由練習」. The `missions` store slice is now `{current, missions}`; `restore` ignores a `freePlay` field from an older slice. The progress code never had one.
+- The student is always in some mission, except for the moments before the first one is chosen (`?welcome=0` without `?mission=`, or while the first picker is up). The pill then reads 「選一個任務」 and a click on it opens the picker (§19.2). The About window and `README.md` no longer say 「自由練習」 or 「隨便玩」; About points to 「換任務」.
+- Esc cannot skip the first choice: while no mission is current the picker ignores Esc. The completion sheet still closes with Esc (the card keeps its 「下一個任務 →」).
+
+### 19.2 The mission picker (B2)
+
+One sheet kind, `pick` (`data-lab="msheet" data-kind="pick"`), made by the same `openSheet()` as before, the same Liquid Glass (`lab-glass lab-glass-calm`), 560 px wide, at most 80vh tall (`.lab-msheet.is-pick`). From 960 px of window width the list view is 860 px wide and its groups sit in two columns (`column-count: 2`, groups never split: 桌面與 Finder + 終端機 on the left, Codex on the right), so all ten missions show without scrolling on 1366×768 and 1280×720 laptops; the start view stays 560 px and `swapView` animates the width between them. It has two **views** that replace each other inside the same panel (`data-view="list"` and `data-view="start"`):
+
+- **List view.** Head: 「選一個任務」 (26 px) and the muted line 「可以從任何一個開始；第一次來，建議照順序。」 Then a list that scrolls (soft fade at its bottom edge), grouped by the mission's `group` string: the group name in small type (12 px, letter-spacing .08em) over a 1 px hairline, then one `<button data-lab="pick-row" data-mission="<id>">` per mission: mono amber number `01`, the title (16 px / 600), and at the right the muted meta: 「約 6 分鐘」 (not started), 「第 2 / 6 步」 (started), 「完成」 (done; the number is replaced by the green check), prefixed by 「目前 · 」 for the current mission. No boxes and no fill; only hover / keyboard focus draw a pale rounded patch (and a thin blue focus ring). Foot: the dark capsule `pick-start` 「開始：第 N 個任務 · 標題」 (N = the first mission not finished; with every mission finished it becomes 「關閉」, `pick-close`); a text button 「關閉」 (`pick-close`) when a mission is current; on the first sheet also the old reminder (do not refresh, 「提示」, Windows keys). On the first sheet (`data-first="true"`, class `lab-welcome` kept) the capsule is `pick-start` and its label sits in a span with `data-lab="welcome-start"`, so both hooks click the same button.
+- **Start view.** A row turns the same sheet into that mission's start page: a text link 「← 選別的任務」 (`msheet-back`) top left, then the old start-sheet content (eyebrow 「第 N 個任務 · 約 M 分鐘 · …」, title, intro, 「第一步」 or 「目前這一步」 and its text) and the capsule 「開始任務」 (`msheet-start`, with the inner `welcome-start` span on the first sheet; the reminder stays there too). Nothing is prepared until 「開始任務」: it calls `missions.start(id)` (so `prepare` runs the first time only, §5.1 rule 5) and then closes the sheet with the existing fly-into-the-card animation (§18.2).
+- **Switching views** is a cross-fade, never a slide: the old view fades out (80 ms), the new one fades in (100 ms) while the panel changes to its new size (a width / height animation of one element for 100 ms). `prefers-reduced-motion` and `data-perf="low"` swap at once.
+- **Keys.** Focus starts on the current mission's row (if it is not finished), else the first unfinished mission's row. Rows are one tab stop (roving `tabindex`); ↑ ↓ (also Home / End) move between rows, Enter or Space picks the row; Tab cycles inside the sheet (rows, capsule, 「關閉」); Esc on the start view goes back to the list (focus on the row left), Esc on the list closes the picker only when a mission is current. Enter on the capsule starts. Every other key is swallowed as before (§18.2), the browser's own keys pass.
+- **Opened from** (a) `connect:done` or 「仍要繼續」 (the old `first` sheet; with `?mission=<id>` it opens straight on that mission's start page); (b) the card's `rail-pick` button, which replaced the inline list and reads 「任務 3 / 10 · 換任務」 (「還沒選任務 · 選一個任務」 before a choice); (c) the completion sheet's 「選其他任務」 (`msheet-pick`; the same panel turns into the picker, focus on the next unfinished row); (d) a click on the pill while no mission is chosen. The card's 「下一個任務 →」 opens the next mission's start page in this sheet (not started until 「開始任務」). `LAB.missions.pick()` opens the list from code.
+- **Completion sheet.** Primary 「開始下一個任務」 (`msheet-next`, the next mission after this one that is not finished) and a text button 「選其他任務」 (`msheet-pick`); no 「先留在這裡」 (Esc closes it). Nothing left after this one but others unfinished: 「關閉」 + 「選其他任務」, and the note points to 「選其他任務」. Everything done: 「Week 3 的任務全部完成」, the 「進度代碼」 note, 「關閉」 + 「再選一個任務」. The first 600 ms still ignore Enter and Space.
+- **Flags.** `?welcome=0`: no sheet opens by itself (no first picker, no completion sheet), but the card's 「換任務」 and the pill still open the picker, and a row then **starts its mission at once** (there is no start view). `?intro=0`: the first picker still opens; no start view and no completion sheet (a row starts at once; 「下一個任務 →」 just starts the next mission; the finished mission still plays its sound). `LAB.missions.start()` from code never opens a sheet. `?mission=<id>` as before.
+- **API.** `LAB.missions.groups()` → `[{name, ids:[…]}]` in order of first appearance (a mission without `group` is listed under `''`, shown without a heading); `LAB.missions.list()` returns the registered objects, which carry `group`; `LAB.missions.pick()`; `LAB.missions.sheetOpen()` is now `'pick'`, `'done'` or `null`.
+
+### 19.3 Contrast (B3)
+
+- Tints: the card `.74` (was .4), the pill and the notes under it `.62` (was .3), the sheets `.74` (was .66). Edge highlights, shadow and the Chromium refraction filter are unchanged.
+- Ink for the card and the sheets (one set): ink `#111113`, ink-2 `#26262b`, ink-3 `#3a3a40` (muted text, the 「已完成 N / M 步」 line, the page footer), amber `#6b3f00`; links are ink-2 or darker. The pill and the notes sit on the lighter .62 glass, so they use only ink and ink-2 (the note's eyebrow 「提醒」 / 「做好了」 is ink-2, no longer amber / green; the green check carries the colour).
+- The worst case is a dark Terminal window right behind the card: .74 white over black is `#bdbdbd`. `features_e2e.py` ("contrast") opens the Terminal, makes it fill the whole screen and pure black, then measures every text node in the card (in progress with hint, answer, nudge and map open; and finished with the outro and the next button), the pill with its nudge note and its 「做好了」 note, the picker list, a start view and the completion sheet: it hides the text, takes a screenshot, and compares each text colour with the darkest 5 % of the pixels behind it. Measured: amber 4.78:1, ink-3 5.33:1, ink-2 5.55:1, ink 6.95:1, the capsule's white 16.8:1; every text is at least 4.5:1.
+
+### 19.4 Cues (B4)
+
+Motion is clear but gentle: translations of a few pixels, no rotation, no flashing; only `transform` and `opacity` are animated (one-off exceptions: the picker's size change for 100 ms and the pill dot's colour). `prefers-reduced-motion: reduce` turns every one of them off and leaves colour only. Cues wait while a sheet is open (also while it flies away), while the card is dragged and while the page is hidden.
+
+- **A new step appears** (the step that becomes current, also the first one of a mission): its row bounces in (`translateY(10px) scale(.98)` → `-4px, 1.02` → `0, 1`, 520 ms, a springy cubic-bezier), the amber rule on its left is drawn from top to bottom (240 ms), the number hops twice (−5 px). For a new mission the row waits (`is-waiting`, invisible) until the sheet that started it has landed. A re-render continues the animation instead of replaying it (`--lab-age`, as for the green check). When only the pill shows and a step is ticked, the pill hops twice (−6 px) and its dot flashes green, while the 「做好了」 note appears under it.
+- **A step that stands still**: after 15 s the number hops twice, then every 8 s; at 60 s the 「提示」 link gets its amber underline (as before) and wiggles once (±3 px). A 1 s timer does this; the clock restarts when a sheet closes.
+- **`target`** (a field of a step, §5.1): a CSS selector, an array of selectors, or `function(api)` → Element|null; the first one that is on screen is used. It is read every time the card renders, on every bus event, on window resize / scroll / pointer release, and every 400 ms while a target exists (one `getBoundingClientRect` and one `elementFromPoint`; no `requestAnimationFrame` loop).
+  - A **Dock icon** (the element is or sits in a `.lab-dock-item`): the icon gets the class `lab-dock-attn` and does the "needs attention" bounce, up 16 px twice (ease-out up, ease-in down), every 3 s, until the step is done or changes.
+  - **Anything else**: an overlay `div[data-lab="cue-ring"]` (child of `#lab-screen`, `pointer-events:none`, z-index 45, under the card) with a 2 px `#d98a1c` line with rounded corners, 4 px outside the element, plus a second ring that spreads and fades every 2.4 s (scale 1 → 1.18, opacity .5 → 0; a big target such as a window spreads by about 28 px instead). Its `data-target` is the selector (or the element's `data-lab` for a function target). It is moved with `transform: translate(…)` only when the element's rectangle changed, and hidden when the element is off screen or covered (`elementFromPoint` at the middle of its visible part is not the element), and when the target is a `term-input` of the Terminal window that already has the focus (the student is typing).
+  - With reduced motion a Dock icon gets the still ring instead of the bounce.
+
+### 19.5 Success feedback (B5)
+
+- **Sounds** (`LAB.sfx(name)`, `js/lab.js`): made on the spot with Web Audio, no audio files. Only two names exist. `step`: two glass chimes, E6 1318.5 Hz then B6 1975.5 Hz 75 ms later; each is a sine plus a faint sine one octave up (gain .12), 6 ms linear attack to a peak of .10, exponential decay over 0.45 s, through a 6 kHz low-pass. `mission`: C6 E6 G6 C7 (1046.5, 1318.5, 1568, 2093 Hz) at 0, .09, .18 and .30 s, peak .09, the last ringing 0.9 s. There is no noise source, no pitch sweep, no swish, no riser and no reverb (the test reads the oscillators and rejects a buffer source or a frequency ramp). The `AudioContext` is created or resumed by the visitor's first `pointerdown` / `keydown`. A `step` asked for within 160 ms of another is dropped, so several steps ticked in one go make one chime. `LAB.sfx.enabled` (true; `?sound=0` and the card's 「聲音：開／關」 link switch it, for this visit only), `LAB.sfx.last` = `{name, at, played}` (`played` is false when the browser had not unlocked audio yet).
+- **When**: `mission:step` (not when skipped) plays `step`; a finished mission plays `mission` when its completion sheet appears (0.9 s after the last step, so the two never coincide); with `?intro=0` / `?welcome=0` the sound alone plays at the same moment.
+- **Footer link** `rail-sound`: 「聲音：開」 / 「聲音：關」, `aria-pressed`; turning it on plays one `step` chime.
+- **A step is ticked** (the card): the green check pops as before and the row glows green once; new: eight 4 px dots (green `#2fb34f` and amber `#d98a1c` alternating) fly 14–22 px out of the check in 550 ms (fast, then slowing, solid for the first half and fading in the second); the progress line grows from its old length to the new one (the fill is a full-width bar scaled from the left, 550 ms) while a pale light sweeps along it once (700 ms); the number in 「已完成 N / M 步」 pops (scale 1.35). In the pill, see §19.4.
+- **A mission is finished** (the completion sheet): the big green check as before, an 8×13 px paper confetti burst (about 60 pieces, 1.5 px corners, amber `#d98a1c`, green `#2fb34f`, blue `#0a84ff`, cream `#f3e3c3`, coral `#e8735a`) fanning up out of the check, hanging in the air, drifting down while they sway and turn over slowly, fading out by 1.9 s. It is a `canvas.lab-confetti` in the sheet's scrim (`pointer-events:none`) drawn by a `requestAnimationFrame` loop that exists only for those 1.9 s, then the canvas is removed (also when the sheet closes or turns into the picker). 24 pieces on slow computers (`data-perf="low"`). No confetti under reduced motion.
+
+### 19.6 Hooks added or changed
+
+`msheet` (`data-kind` is `pick` or `done`; `data-view` `list` or `start`; `data-first`), `pick-row` (`data-mission`), `pick-start`, `pick-close`, `welcome-start` (on the first sheet, a span inside `pick-start` or `msheet-start`), `msheet-start`, `msheet-back`, `msheet-next`, `msheet-pick`, `msheet-close`, `msheet-check`, `msheet-outro`, `msheet-step`, `rail-pick`, `rail-sound`, `cue-ring` (`data-target`); classes `lab-dock-attn` (Dock icon), `is-enter` / `is-waiting` (step row), `is-stepped` (pill), `is-grow` (progress fill), `lab-burst-dot`, `lab-prog-sweep`, `lab-prog-n.is-pop`, `canvas.lab-confetti`. Removed: `rail-free`, `welcome-free`, `msheet-stay`, `rail-list-toggle`, `rail-mission`. The tests that start a mission through the UI use `rail-pick` → `pick-row` (→ `msheet-start`, unless the page was loaded with `?intro=0` or `?welcome=0`, where the row starts it).
+
+### 19.7 Tests
+
+`製作/lab-mac/tests/features_e2e.py` finds the mission ids through `LAB.missions` (it does not depend on mission content beyond mission 1's steps, played by `labhelp.finish_m1`); `FEAT_ONLY=picker,cues,…` runs some sections. It covers the connecting screen, the dragging card and pill, green checks, the picker (structure, groups, rows, meta, keys, views, the fade, the way back, the start, the card button, the pill, progress and done rows), no free play, `?welcome=0` / `?intro=0` / `?mission=`, the completion sheet and confetti (also for the last and the middle mission), fullscreen, the burst / bounce / progress sweep / pill hop, the sounds (an audio spy checks frequencies, timings, peaks, the low-pass and the absence of noise and sweeps; `LAB.sfx.last`; the toggle; `?sound=0`), the cues (Dock bounce, ring geometry and follow, hidden when covered, paused for a sheet and for a card drag, the focused Terminal, reduced motion), idle hops (Date.now is skewed), reduced motion, the narrow screen and the contrast measurement above. `sheet_shots.py` writes the screenshots to `製作/lab-mac/screenshots/round4/` (1440×900 and 1024×640: the first picker, the start view, the fly-in frames, the picker from the card, the keyboard focus, the completion sheet with its confetti, the sheet turning into the picker; at 2×: four frames of a step being ticked; the Dock bounce peaks and the cue ring).

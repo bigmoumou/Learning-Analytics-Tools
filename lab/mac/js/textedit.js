@@ -107,7 +107,7 @@
       return true;
     }
     function saveAs() {
-      return LAB.ui.prompt(win, { title: '儲存為', text: '儲存位置：桌面', value: '未命名.txt', ok: '儲存', cancel: '取消' }).then(function (name) {
+      return LAB.ui.prompt(win, { title: '儲存為', text: '儲存位置：桌面', value: 'untitled.txt', ok: '儲存', cancel: '取消' }).then(function (name) {
         if (name === null || name === undefined) return false;
         name = String(name).trim();
         if (!name) return false;

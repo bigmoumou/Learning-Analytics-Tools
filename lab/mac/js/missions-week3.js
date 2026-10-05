@@ -1,6 +1,7 @@
-/* missions-week3.js — Week 3 mission data and free-play tips (DESIGN §5.3). MISSIONS-WEEK3 owner.
-   Data only: it calls LAB.missions.register and uses the public mission api (§5.1) and the event
-   catalogue (§3.3). Every string the student reads is Traditional Chinese (Taiwan usage). */
+/* missions-week3.js — Week 3 mission data (DESIGN §5.3): ten missions in three groups, each startable on its own.
+   MISSIONS-WEEK3 owner. Data only: it calls LAB.missions.register and uses the public mission api (§5.1) and the event
+   catalogue (§3.3). Every string the student reads is Traditional Chinese (Taiwan usage); file and folder names the student
+   meets or makes are English (Practice, notes.docx, midterm-report.docx, resume.pdf). */
 (function (LAB) {
   'use strict';
 
@@ -10,8 +11,13 @@
   var DOCUMENTS = '/Users/an/Documents';
   var PROJECT = '/Users/an/Desktop/Project';
   var AGENTS = PROJECT + '/AGENTS.md';
-  var REPORT = PROJECT + '/output/report.md';
+  var OUTPUT = PROJECT + '/output';
+  var REPORT = OUTPUT + '/report.md';
 
+  var G_DESKTOP = '桌面與 Finder';
+  var G_TERMINAL = '終端機（Week 3 補充 1）';
+  var G_CODEX = 'Codex';
+  var TAG = 'Week 3 補充 1';
   var MAP = '~ 社區（/Users/an）· Downloads 管理室 · Desktop 中庭 · Desktop/Project 家 · .. 往外一層';
 
   /* ------------------------------------------------------------------ helpers */
@@ -48,8 +54,16 @@
     try { w = LAB.wm.get(id); } catch (e) { w = null; }
     return !!(w && w.state && w.state.path && same(api, w.state.path, path));
   }
+  /* the folder the frontmost Terminal window is in right now (state, for steps that must complete without a new event) */
+  function terminalCwd() {
+    try {
+      var t = LAB.terminal && LAB.terminal.current ? LAB.terminal.current() : null;
+      if (t && t.session && t.session.cwd) return t.session.cwd;
+    } catch (e) { /* no terminal */ }
+    return null;
+  }
 
-  /* Zip-kind files that sit directly in Desktop or Project under any name (the "typo trap": mv to a
+  /* Zip-kind files that sit directly in Desktop, Project, Downloads or ~ under any name (the "typo trap": mv to a
      destination that does not exist renames the zip instead of moving it). */
   function zipCopies(api, includeOriginalName) {
     var out = [];
@@ -64,9 +78,18 @@
     });
     return out;
   }
+  /* remove the renamed copies the typo trap leaves behind (same size as the seeded week3.zip) */
+  function removeRenamedZips(api) {
+    var seedNode = null;
+    try { seedNode = LAB.seed.nodeAt(DOWNLOADS + '/week3.zip'); } catch (e) { seedNode = null; }
+    var seedSize = seedNode && typeof seedNode.s === 'number' ? seedNode.s : 1301;
+    zipCopies(api, true).forEach(function (z) {
+      if (z.size === seedSize) api.remove(z.path);
+    });
+  }
 
   /* every mission starts from a Mac that has the Desktop, Project (with data and AGENTS.md); a Project that was trashed,
-     renamed away or rm -rf'ed in free play comes back (resetsFiles: 「重來這個任務」 does the same) */
+     renamed away or rm -rf'ed comes back (resetsFiles: 「重來這個任務」 does the same) */
   function ensureBase(api) {
     api.ensureSeed(DESKTOP);
     api.ensureSeed(PROJECT);
@@ -80,7 +103,7 @@
     }
     return null;
   }
-  /* a Codex reply that was written outside the Project: the one trap behind M5 s2, M7 s2 and M7 s4 */
+  /* a Codex reply that was written outside the Project: the one trap behind the Codex missions */
   var NOT_IN_PROJECT = '這個對話不在 Project 底下（輸入框上方沒有「Project」標籤），所以檔案沒有放進專案。點 Codex 左邊的 Project，在專案底下再試一次。';
   function orphanReplyTrap(intentId) {
     return function (ev, api) {
@@ -91,10 +114,124 @@
     };
   }
 
-  /* ------------------------------------------------------------------ M1 */
+  /* ------------------------------------------------------------------ cue targets (DESIGN §5.1 `target`)
+     A step may name the thing to click, so the practice Mac can point at it. These helpers only READ the page:
+     they return an Element (or null) and never click anything. A target is a selector string, an array of them, or
+     function(api) → Element|null. Here every target is a function (or a string) built from the pieces below:
+       chain(a, b, c)   the first candidate that is really visible (not covered by another window), else the first one
+                        that exists; strings are selectors, functions return an Element or null */
+  function dock(app) { return '[data-lab=dock-item][data-app=' + app + ']'; }
+
+  function liveWins(appId) {
+    var l = [];
+    try { l = LAB.wm.byApp(appId).filter(function (w) { return !w.minimized; }); } catch (e) { l = []; }
+    return l;                                    // bottom to top
+  }
+  /* the hit-test of the element's centre: true when the element itself (or something inside it) is what the pointer would meet */
+  function seeable(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return false;
+    var t = null;
+    try { t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); } catch (e) { t = null; }
+    return !!t && (t === el || el.contains(t));
+  }
+  /* case-insensitive on the path: macOS keeps the case the student typed (Practice or practice) */
+  function byPath(root, lab, path) {
+    if (!root) return null;
+    if (path === null || path === undefined) return root.querySelector('[data-lab="' + lab + '"]');
+    var want = String(path).toLowerCase();
+    var list = root.querySelectorAll('[data-lab="' + lab + '"]');
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i].getAttribute('data-path');
+      if (p && p.toLowerCase() === want) return list[i];
+    }
+    return null;
+  }
+  /* an element of an app's windows, topmost window first; the first one that is visible, else the first that exists */
+  function inWins(appId, lab, path) {
+    return function () {
+      var l = liveWins(appId), first = null, i, el;
+      for (i = l.length - 1; i >= 0; i--) {
+        el = byPath(l[i].el, lab, path);
+        if (!el) continue;
+        if (seeable(el)) return el;
+        if (!first) first = el;
+      }
+      return first;
+    };
+  }
+  function desktopIcon(path) {
+    return function () { return byPath(document.getElementById('lab-desktop'), 'desktop-icon', path); };
+  }
+  function trusted(fn) { fn.trusted = true; return fn; }      // the function already checked that its element is visible
+  function chain() {
+    var parts = [].slice.call(arguments);
+    return function (api) {
+      var fallback = null;
+      for (var i = 0; i < parts.length; i++) {
+        var part = parts[i], el = null;
+        try { el = typeof part === 'function' ? part(api) : document.querySelector(part); } catch (e) { el = null; }
+        if (!el) continue;
+        if ((typeof part === 'function' && part.trusted) || seeable(el)) return el;
+        if (!fallback) fallback = el;
+      }
+      return fallback;
+    };
+  }
+  var fdItem = function (p) { return inWins('finder', 'fd-item', p); };
+  var fdSide = function (p) { return inWins('finder', 'fd-sidebar-item', p); };
+  var fdSeg = function (p) { return inWins('finder', 'fd-pathbar-seg', p); };
+  /* walking to a folder in Finder: the deepest of `paths` that is on screen, else the sidebar item `side`, else Finder in the Dock */
+  function finderWalk(paths, side) {
+    return chain.apply(null, paths.map(fdItem).concat([fdSide(side || DESKTOP), dock('finder')]));
+  }
+  /* typing in the Terminal: with the window already focused the student is typing (the target is the hidden input, which the
+     cue leaves alone); otherwise the whole screen is the thing to click. No Terminal window: the Dock icon. */
+  var termShown = trusted(function () {
+    var l = liveWins('terminal');
+    if (!l.length) return null;
+    var w = l[l.length - 1];
+    var screen = w.el.querySelector('[data-lab=term-screen]');
+    if (!seeable(screen)) return null;
+    var f = LAB.wm.focused();
+    if (f && f.id === w.id) return w.el.querySelector('[data-lab=term-input]');
+    return screen;
+  });
+  var T_TERM = chain(termShown, dock('terminal'));
+
+  var cxNew = inWins('codex', 'cx-new-chat');
+  var cxComposer = inWins('codex', 'cx-composer');
+  var cxProject = inWins('codex', 'cx-project', PROJECT);
+  var cxPlus = inWins('codex', 'cx-project-plus', PROJECT);
+  function cdRow(p) { return inWins('code', 'cd-explorer-row', p); }
+  /* "put a sentence into Codex": the composer when the open chat is the Project's, else the Project row first */
+  var T_PROJECT_CHAT = chain(function (api) {
+    var c = null;
+    try { c = api.codex.activeChat(); } catch (e) { c = null; }
+    return c && !isNullish(c.projectPath) && same(api, c.projectPath, PROJECT) ? cxComposer() : cxProject();
+  }, dock('codex'));
+
+  /* the first step of every Terminal mission */
+  function openTerminalStep() {
+    return {
+      id: 's1',
+      text: '點 Dock 上的「終端機」（滑鼠移過去會顯示名字）。也可以點右上角選單列的放大鏡，輸入 `terminal`，再按 Return。',
+      hint: '終端機的圖示是黑底，左下角有 `>_`。打指令前，輸入法先切到英文（ABC）。Command＋空白鍵可能被真正的電腦拿去用，Windows 鍵盤的 Ctrl＋空白鍵也常是切換輸入法，所以請用點的。',
+      answer: '點一下 Dock 上的「終端機」。',
+      target: dock('terminal'),
+      // already open (a Terminal from an earlier mission) counts: the step ticks itself
+      check: function (ev, api) {
+        return !!(api.seen('win:open', function (d) { return d.appId === 'terminal'; }) || api.win('terminal').length > 0);
+      }
+    };
+  }
+
+  /* ------------------------------------------------------------------ 1 · 桌面與 Finder */
   LAB.missions.register({
     id: 'w3-01-desktop',
     week: 3, order: 1,
+    group: G_DESKTOP,
     title: '認識桌面與 Finder',
     minutes: 6,
     resetsFiles: true,
@@ -102,7 +239,7 @@
     intro: '這是一台練習用的 Mac。先認識最常用的兩個地方：桌面，和用來看檔案的 Finder。',
     prepare: function (api) {
       ensureBase(api);
-      api.remove(DESKTOP + '/練習');
+      api.remove(DESKTOP + '/Practice');           // the file system ignores case, so this also removes `practice`
     },
     steps: [
       {
@@ -110,6 +247,7 @@
         text: '點 Dock 最左邊的 Finder，打開一個視窗。',
         hint: '螢幕最下面那一排叫 Dock，第一個圖示就是 Finder。',
         answer: '點一下 Dock 上的 Finder。',
+        target: dock('finder'),
         check: function (ev, api) {
           return !!(api.seen('win:open', function (d) { return d.appId === 'finder'; }) || api.win('finder').length > 0);
         }
@@ -119,6 +257,7 @@
         text: '在 Finder 左邊的側邊欄點「桌面」。',
         hint: '側邊欄在視窗左邊，找到寫著「桌面」的那一列。',
         answer: '點側邊欄的「桌面」。',
+        target: chain(fdSide(DESKTOP), dock('finder')),
         check: function (ev, api) {
           return !!(api.seen('finder:navigate', function (d) { return same(api, d.path, DESKTOP); }) || api.finderAt(DESKTOP));
         }
@@ -128,6 +267,7 @@
         text: '在桌面上點兩下 Project 資料夾，打開它。',
         hint: '要連續點兩下，點一下只是選取。桌面的 Project 圖示在螢幕右上角，也可以在 Finder 視窗裡點兩下。',
         answer: '點兩下 Project。',
+        target: chain(desktopIcon(PROJECT), fdItem(PROJECT), fdSide(DESKTOP), dock('finder')),
         check: function (ev, api) {
           return !!(api.seen('finder:navigate', function (d) { return same(api, d.path, PROJECT); }) || api.finderAt(PROJECT));
         }
@@ -137,6 +277,7 @@
         text: '看視窗最下面的路徑列，再點其中的「桌面」，回到上一層。',
         hint: '路徑列從左到右，就是這個資料夾的完整位置：Macintosh HD › 使用者 › an › 桌面 › Project，也就是 /Users/an/Desktop/Project。',
         answer: '點路徑列的「桌面」（或側邊欄的「桌面」，或左上角的返回鍵）。',
+        target: chain(fdSeg(DESKTOP), fdSide(DESKTOP), dock('finder')),
         check: function (ev, api) {
           // any natural way back to the Desktop counts (pathbar, sidebar, back, up, go-to…)
           if (api.seen('finder:navigate', function (d) { return same(api, d.path, DESKTOP); })) return true;
@@ -147,15 +288,15 @@
       },
       {
         id: 's5',
-        text: '在桌面空白處按右鍵，選「新增檔案夾」（macOS 選單裡資料夾叫「檔案夾」），命名為「練習」，按 Return（Windows 鍵盤是 Enter）。',
-        hint: '如果找不到空白處，先把 Finder 視窗拖開或最小化。筆電觸控板：用兩指點一下就是右鍵。新增後名字會變成可以直接輸入的狀態；要先把輸入法切到中文，才打得出「練習」。',
-        answer: '右鍵 → 新增檔案夾 → 輸入 練習 → Return。',
+        text: '在桌面空白處按右鍵，選「新增檔案夾」（macOS 選單裡資料夾叫「檔案夾」），命名為「Practice」，按 Return（Windows 鍵盤是 Enter）。',
+        hint: '如果找不到空白處，先把 Finder 視窗拖開或最小化。筆電觸控板：用兩指點一下就是右鍵。新增後名字會變成可以直接輸入的狀態；輸入法先切到英文（ABC）再打 Practice。',
+        answer: '右鍵 → 新增檔案夾 → 輸入 Practice → Return。',
         check: function (ev, api) {
-          return !!(api.exists(DESKTOP + '/練習') && api.vfs.isDir(DESKTOP + '/練習'));
+          return !!(api.exists(DESKTOP + '/Practice') && api.vfs.isDir(DESKTOP + '/Practice'));      // case-insensitive, like macOS
         },
         trap: function (ev, api) {
-          // a new folder on the Desktop with another name (「練習 」, 「practice」, 「练习」 …)
-          if (!ev || api.exists(DESKTOP + '/練習')) return null;
+          // a new folder on the Desktop with another name (「Practise」, 「Practice 」, 「練習」 …)
+          if (!ev || api.exists(DESKTOP + '/Practice')) return null;
           var list = [];
           try { list = api.vfs.list(DESKTOP); } catch (e) { list = []; }
           var odd = null;
@@ -165,17 +306,18 @@
             if (!odd) odd = s.name;
           });
           if (!odd) return null;
-          return '桌面上多了一個叫「' + odd + '」的資料夾，名字要剛好是「練習」（兩個中文字，沒有空格）。點它一下，按 Return 改名；輸入法要先切到中文。';
+          return '桌面上多了一個叫「' + odd + '」的資料夾，名字要剛好是 Practice（英文，沒有空格，大小寫都可以）。點它一下，按 Return 改名；輸入法要先切到英文（ABC）。';
         }
       },
       {
         id: 's6',
-        text: '在 Finder 的桌面裡找到「練習」，點它一下：它和桌面上的圖示是同一個東西。',
+        text: '在 Finder 的桌面裡找到「Practice」，點它一下：它和桌面上的圖示是同一個東西。',
         hint: 'Finder 視窗要停在「桌面」；如果不在，點側邊欄的「桌面」。',
-        answer: 'Finder → 側邊欄「桌面」→ 點「練習」。',
+        answer: 'Finder → 側邊欄「桌面」→ 點「Practice」。',
+        target: finderWalk([DESKTOP + '/Practice']),
         check: function (ev, api) {
           return !!api.seen('finder:select', function (d) {
-            return (d.paths || []).some(function (p) { return same(api, p, DESKTOP + '/練習'); });
+            return (d.paths || []).some(function (p) { return same(api, p, DESKTOP + '/Practice'); });
           });
         }
       }
@@ -183,192 +325,226 @@
     outro: '做得好。桌面上的東西，其實都是 /Users/an/Desktop 這個資料夾裡的檔案。'
   });
 
-  /* ------------------------------------------------------------------ M2 */
+  /* ------------------------------------------------------------------ 2 · ls 看一圈 */
   LAB.missions.register({
-    id: 'w3-02-terminal',
+    id: 'w3-t1-ls',
     week: 3, order: 2,
-    title: '用終端機走路',
-    minutes: 12,
-    tag: '補充教材',
+    group: G_TERMINAL,
+    title: 'ls 看一圈',
+    minutes: 4,
+    tag: TAG,
     map: MAP,
-    resetsFiles: true,
+    resetsFiles: false,
     needs: [PROJECT],
-    intro: '終端機是用打字叫電腦做事的視窗。這一關練習五個指令：pwd、ls、cd、mkdir、open。影片把電腦比喻成社區：~ 是社區，Desktop 是中庭，Project 是家。不確定時，展開下面的「地圖」。',
+    intro: '終端機是用打字叫電腦做事的視窗。ls 是「看一圈」：看看一個地方裡有什麼。影片把電腦比喻成社區：~ 是社區，Downloads 是管理室，Desktop 是中庭，Project 是家。不確定時，展開卡片裡的「地圖」。',
     prepare: function (api) {
       ensureBase(api);
-      api.remove(PROJECT + '/figures');
-      api.remove(HOME + '/figures');       // a figures folder made in the wrong place on an earlier try
     },
     steps: [
-      {
-        id: 's1',
-        text: '點 Dock 上的「終端機」（滑鼠移過去會顯示名字）。也可以點右上角選單列的放大鏡，輸入 `terminal`，按 Return（Windows 鍵盤是 Enter）。',
-        hint: '終端機的圖示是黑底，左下角有 `>_`。打指令前，輸入法先切到英文（ABC）。Command＋空白鍵可能被真正的電腦拿去用，Windows 鍵盤的 Ctrl＋空白鍵也常是切換輸入法，所以請用點的。',
-        answer: '點一下 Dock 上的「終端機」。',
-        check: function (ev, api) {
-          return !!(api.seen('win:open', function (d) { return d.appId === 'terminal'; }) || api.win('terminal').length > 0);
-        }
-      },
+      openTerminalStep(),
       {
         id: 's2',
-        text: '輸入 `ls`，按 Return：看看這裡有什麼。',
-        hint: 'ls 是「看一圈」。打完要按 Return 才會執行。',
-        answer: '輸入：`ls`',
+        text: '輸入 `ls`，按 Return（Windows 鍵盤是 Enter）：看看社區（~）裡有什麼。',
+        hint: 'ls 是「看一圈」。打完要按 Return 才會執行。提示字元最後一個字是 ~，就表示你站在社區。',
+        answer: '輸入：`ls`（提示字元最後是 ~ 時）。人在別的資料夾的話，輸入 `ls ~`。',
+        where: HOME,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
-          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0; });
+          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), HOME); });
+        },
+        trap: function (ev, api) {
+          // a plain `ls` from another folder lists THAT folder, not the community
+          var wrong = api.termCmd(ev, function (c) {
+            return c.name === 'ls' && c.status === 0 && operands(c.args).length === 0 && !same(api, c.cwd, HOME);
+          });
+          if (!wrong) return null;
+          return '你列出的是「' + LAB.vfs.basename(wrong.cwd) + '」，不是社區：ls 看的是你現在站的地方，提示字元最後一個字不是 ~。想看社區，輸入 `ls ~`。';
         }
       },
       {
         id: 's3',
-        text: '輸入 `cd Desktop`，再輸入 `pwd`。注意提示字元最後面的字變成什麼？',
-        hint: 'cd 是走路，後面接要去的資料夾名字；pwd 會印出你現在的完整位置。你在哪裡，提示字元的最後一個字會告訴你。',
-        answer: '`cd Desktop`，Return；`pwd`，Return。提示字元從 ~ 變成 Desktop，pwd 印出 /Users/an/Desktop。',
+        text: '不用走過去也能看：輸入 `ls Downloads`，看看管理室裡有什麼。',
+        hint: 'ls 後面接地址，就看那個地方，不用走過去。Downloads（下載項目）是管理室。提示字元最後一個字不是 ~ 的話，找不到 Downloads，改用 `ls ~/Downloads`。',
+        answer: '輸入：`ls Downloads`（在社區），或 `ls ~/Downloads`（在哪裡都可以）。',
         where: HOME,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
-          return !!api.termSeen(function (c) { return c.name === 'pwd' && c.status === 0 && same(api, c.cwd, DESKTOP); });
+          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), DOWNLOADS); });
+        }
+      },
+      {
+        id: 's4',
+        text: '看看中庭（Desktop）裡有什麼，找到「家」Project。',
+        hint: '想看哪個地方，就在 ls 後面接它的地址。中庭是 Desktop，就在社區裡面。',
+        answer: '輸入：`ls Desktop`（在社區），或 `ls ~/Desktop`。',
+        where: HOME,
+        replay: 'mission',
+        target: T_TERM,
+        check: function (ev, api) {
+          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), DESKTOP); });
+        }
+      },
+      {
+        id: 's5',
+        text: '看看家（Project）裡有什麼。',
+        hint: '地址用 / 隔開：先中庭 Desktop，再家 Project。把這一串接在 ls 後面。',
+        answer: '輸入：`ls Desktop/Project`（在社區），或 `ls ~/Desktop/Project`。會看到 AGENTS.md、data 和 notes.docx。',
+        where: HOME,
+        replay: 'mission',
+        target: T_TERM,
+        check: function (ev, api) {
+          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), PROJECT); });
+        }
+      }
+    ],
+    outro: 'ls 後面不接東西，看的是你現在站的地方；接地址，就看那個地方。下一個任務用 cd 真的走過去。'
+  });
+
+  /* ------------------------------------------------------------------ 3 · cd 走路 */
+  LAB.missions.register({
+    id: 'w3-t2-cd',
+    week: 3, order: 3,
+    group: G_TERMINAL,
+    title: 'cd 走路',
+    minutes: 6,
+    tag: TAG,
+    map: MAP,
+    resetsFiles: false,
+    needs: [PROJECT],
+    intro: 'cd 是走路。走到哪裡，提示字元最後一個字就跟著變。影片的比喻：~ 是社區，Desktop 是中庭，Project 是家。不確定時，展開卡片裡的「地圖」。',
+    prepare: function (api) {
+      ensureBase(api);
+    },
+    steps: [
+      openTerminalStep(),
+      {
+        id: 's2',
+        text: '輸入 `cd Desktop`，按 Return（Windows 鍵盤是 Enter），走進中庭。提示字元最後的字會變成 Desktop。',
+        hint: 'cd 是走路，後面接要去的資料夾名字。你在哪裡，提示字元的最後一個字會告訴你；要從社區（提示字元是 ~）出發，才找得到 Desktop。',
+        answer: '輸入：`cd Desktop`。提示字元從 ~ 變成 Desktop。',
+        where: HOME,
+        replay: 'mission',
+        target: T_TERM,
+        check: function (ev, api) {
+          return !!api.termSeen(function (c) { return c.name === 'cd' && c.status === 0 && same(api, c.cwdAfter, DESKTOP); });
         },
         trap: function (ev, api) {
           // `cd Desktop` typed while the Terminal is not in ~ (it was left in Project, say)
           var bad = api.termCmd(ev, function (c) { return c.name === 'cd' && c.status !== 0 && !same(api, c.cwd, HOME); });
           if (!bad) return null;
-          return '你現在不在 ~（社區）：提示字元最後一個字不是 ~。先輸入 `cd ~` 回到社區，再輸入 `cd Desktop`。';
+          return '你現在不在社區：提示字元最後一個字不是 ~。先輸入 `cd ~` 回到社區，再輸入 `cd Desktop`。';
+        }
+      },
+      {
+        id: 's3',
+        text: '走進家（Project），再用 `ls` 看一圈。',
+        hint: 'cd 後面接資料夾名字：家（Project）就在中庭（Desktop）裡面。ls 看一圈，會看到 AGENTS.md、data 和 notes.docx。',
+        answer: '輸入：`cd Project`，Return；`ls`，Return。',
+        where: DESKTOP,
+        replay: 'mission',
+        target: T_TERM,
+        check: function (ev, api) {
+          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, c.cwd, PROJECT); });
         }
       },
       {
         id: 's4',
-        text: '走進 Project，用 ls 看看裡面有什麼。',
-        hint: 'cd 後面接資料夾名字，ls 看一圈。Project 裡會看到 AGENTS.md、data 和 筆記.docx。',
-        answer: '`cd Project`，Return；`ls`，Return。',
-        where: DESKTOP,
+        text: '輸入 `pwd`，看看你現在的完整地址。',
+        hint: 'pwd 會印出你現在所在的完整位置，像在社區裡看門牌。在哪個資料夾都可以。',
+        answer: '輸入：`pwd`。在家（Project）會印出 /Users/an/Desktop/Project。',
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
-          return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), PROJECT); });
+          return !!api.termSeen(function (c) { return c.name === 'pwd' && c.status === 0; });
         }
       },
       {
         id: 's5',
-        text: '用 `cd ..` 回到上一層，看看提示字元變成什麼。',
-        hint: '兩個點 .. 代表「往外一層」。從 Project 往外一層，就回到 Desktop。',
+        text: '用 `cd ..` 往外一層，回到中庭。',
+        hint: '兩個點 .. 代表「往外一層」。從 Project 往外一層，就回到 Desktop。提示字元最後一個字會變回 Desktop。',
         answer: '輸入：`cd ..`',
         where: PROJECT,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
           return !!api.termSeen(function (c) {
-            return c.name === 'cd' && /^\.\.\/?$/.test(String((c.args || [])[0])) && same(api, c.cwdAfter, DESKTOP);
+            return c.name === 'cd' && c.status === 0 && /^\.\.\/?$/.test(String((c.args || [])[0])) && same(api, c.cwdAfter, DESKTOP);
           });
         }
       },
       {
         id: 's6',
-        text: '用 `cd ~` 一步回到「社區」，不管你現在在哪裡都可以。',
+        text: '用 `cd ~` 一步回到社區，不管你現在在哪裡都可以。',
         hint: '~ 代表你的「社區」，也就是 /Users/an（正式名稱是家目錄）。回到社區後，提示字元會變成 ~。',
         answer: '輸入：`cd ~`',
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
-          return !!api.termSeen(function (c) { return c.name === 'cd' && same(api, c.cwdAfter, HOME); });
+          return !!api.termSeen(function (c) { return c.name === 'cd' && c.status === 0 && same(api, c.cwdAfter, HOME); });
         }
       },
       {
         id: 's7',
-        text: '走到 Project，輸入 `mkdir figures`，新增一個叫 figures 的資料夾。',
-        hint: 'mkdir 後面接新資料夾的名字，而且要在 Project 裡輸入：先用 cd 加上地址走到 Project（~ 是社區，Desktop 是中庭，Project 是家），打完用 ls 確認它出現了。',
-        answer: '`cd ~/Desktop/Project`，Return；`mkdir figures`，Return；`ls`，Return。',
-        where: PROJECT,
+        text: '用一整串地址，一步走回家。',
+        hint: 'cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。',
+        answer: '輸入：`cd ~/Desktop/Project`',
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
-          return !!(api.exists(PROJECT + '/figures') &&
-            api.termSeen(function (c) { return c.name === 'mkdir' && c.status === 0; }));
-        },
-        trap: function (ev, api) {
-          // mkdir figures succeeded, but somewhere other than Project (usually ~, right after step 6)
-          var wrong = api.termCmd(ev, function (c) {
-            return c.name === 'mkdir' && c.status === 0 && !same(api, c.cwd, PROJECT) && operands(c.args).indexOf('figures') >= 0;
-          });
-          if (!wrong || api.exists(PROJECT + '/figures')) return null;
-          var where = same(api, wrong.cwd, HOME) ? '~' : LAB.vfs.basename(wrong.cwd);
-          return 'figures 被建在「' + where + '」裡了，不是在 Project。先輸入 `rmdir figures` 刪掉它，再用 `cd ~/Desktop/Project` 走到 Project，重新 `mkdir figures`。';
-        }
-      },
-      {
-        id: 's8',
-        text: '輸入 `open .`（open 空白 點），用 Finder 打開這個資料夾，確認 figures 在裡面。',
-        hint: '那個點代表「這裡」；open 後面接地址，就會用 Finder 打開它。',
-        answer: '在 Project 裡輸入：`open .`',
-        where: PROJECT,
-        replay: 'mission',
-        check: function (ev, api) {
+          // one `cd` whose address has a / in it (post-parse, ~ is already /Users/an) and that ends in Project
           return !!api.termSeen(function (c) {
-            if (c.name !== 'open' || c.status !== 0) return false;
-            if ((c.args || []).indexOf('-a') >= 0 || (c.args || []).indexOf('-R') >= 0) return false;
-            var first = operands(c.args)[0];
-            return !!first && same(api, api.resolve(c.cwd, first), PROJECT);
+            return c.name === 'cd' && c.status === 0 && String((c.args || [])[0] || '').indexOf('/') >= 0 && same(api, c.cwdAfter, PROJECT);
           });
         }
       }
     ],
-    outro: '終端機和 Finder 看的是同一個資料夾：你在終端機新增的東西，Finder 馬上就看得到。影片 01 的「一個資料夾，四個視窗」也會用到 mkdir 和 open。'
+    outro: '`cd 資料夾名字` 走進去，`cd ..` 往外一層，`cd ~` 回社區，`cd` 加一整串地址，一步到位。'
   });
 
-  /* ------------------------------------------------------------------ M3 */
+  /* ------------------------------------------------------------------ 4 · mv 搬東西 */
   LAB.missions.register({
-    id: 'w3-03-unzip',
-    week: 3, order: 3,
-    title: '拆包裹：week3.zip',
-    minutes: 12,
-    tag: '補充教材',
+    id: 'w3-t3-mv',
+    week: 3, order: 4,
+    group: G_TERMINAL,
+    title: 'mv 搬東西',
+    minutes: 5,
+    tag: TAG,
     map: MAP,
     resetsFiles: true,
     needs: [PROJECT],
-    intro: '老師給你一個壓縮檔 week3.zip，在「下載項目」（終端機裡叫 Downloads）。把它搬進 Project，拆開，再把包裝紙收到桌面。不確定路怎麼走時，展開下面的「地圖」。',
+    intro: '老師給的壓縮檔 week3.zip 在管理室（Downloads）。把這個包裹搬回家（Project）。mv 是搬走，不是複製。',
     prepare: function (api) {
       ensureBase(api);
       api.remove(DOWNLOADS + '/week3');    // what a double-click in Finder leaves behind
       api.remove(PROJECT + '/week3');
       api.remove(PROJECT + '/week3.zip');
       api.remove(DESKTOP + '/week3.zip');
-      // a renamed copy of the zip left by the "typo trap" (mv to a destination that did not exist), in Downloads, Desktop or Project
-      var seedNode = null;
-      try { seedNode = LAB.seed.nodeAt(DOWNLOADS + '/week3.zip'); } catch (e) { seedNode = null; }
-      var seedSize = seedNode && typeof seedNode.s === 'number' ? seedNode.s : 1301;
-      zipCopies(api, true).forEach(function (z) {
-        if (z.size === seedSize) api.remove(z.path);
-      });
+      removeRenamedZips(api);              // a renamed copy left by the "typo trap" (in Downloads, Desktop, Project or ~)
       api.ensureSeed(DOWNLOADS + '/week3.zip', { overwrite: true });
     },
     steps: [
-      {
-        id: 's1',
-        text: '先確認你在社區：看提示字元是 ~。不在的話，輸入 `cd ~`。',
-        hint: '提示字元最後一個字是 ~，就代表你在社區。如果你剛才停在 Project，提示字元會寫 Project；打指令前先看一下提示字元。',
-        answer: '輸入：`cd ~`（提示字元已經是 ~ 的話，直接做下一步也可以）。',
-        where: HOME,
-        replay: 'mission',
-        check: function (ev, api) {
-          // `cd ~`, or an immediate `cd Downloads` from ~ (the student saw the ~ prompt and went on)
-          return !!api.termSeen(function (c) {
-            return c.name === 'cd' && (same(api, c.cwdAfter, HOME) || same(api, c.cwdAfter, DOWNLOADS));
-          });
-        }
-      },
+      openTerminalStep(),
       {
         id: 's2',
-        text: '走進 Downloads，看看裡面有什麼。',
-        hint: 'cd 後面接資料夾名字，ls 看一圈。下載項目在終端機裡叫 Downloads。',
-        answer: '`cd Downloads`，Return；`ls`，Return。',
+        text: '走到管理室：輸入 `cd Downloads`，按 Return（Windows 鍵盤是 Enter），再輸入 `ls`，看到 week3.zip。',
+        hint: 'cd 後面接資料夾名字，ls 看一圈。下載項目在終端機裡叫 Downloads（管理室）。提示字元最後一個字不是 ~ 的話，找不到 Downloads，改用 `cd ~/Downloads`。',
+        answer: '`cd Downloads`，Return；`ls`，Return。會看到 syllabus.pdf 和 week3.zip。',
         where: HOME,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
           return !!api.termSeen(function (c) { return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), DOWNLOADS); });
         }
       },
       {
         id: 's3',
-        text: '把 week3.zip 搬進 Project：`mv week3.zip ~/Desktop/Project`',
+        text: '把 week3.zip 搬進家：`mv week3.zip ~/Desktop/Project`',
         hint: 'mv 東西 地方。week3.zip 是要搬的東西；地方是一串地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。沒有印出任何字，就是成功了。',
         answer: '輸入：`mv week3.zip ~/Desktop/Project`',
         where: DOWNLOADS,
+        target: T_TERM,
         check: function (ev, api) {
           // a student who ran ahead (moved it, unzipped it, tidied up) must not get stuck here
           return !!((api.exists(PROJECT + '/week3.zip') || api.exists(PROJECT + '/week3')) && !api.exists(DOWNLOADS + '/week3.zip'));
@@ -388,11 +564,12 @@
       },
       {
         id: 's4',
-        text: '再 ls 一次看 Downloads：week3.zip 還在嗎？',
+        text: '再 ls 一次看管理室：week3.zip 還在嗎？',
         hint: 'mv 是搬走，不是複製。',
         answer: '在 Downloads 輸入：`ls`（或在別處輸入 `ls ~/Downloads`）。syllabus.pdf 還在，week3.zip 不見了。',
         where: DOWNLOADS,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
           return !!api.termSeen(function (c) {
             return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), DOWNLOADS) && !/week3\.zip/.test(String(c.out || ''));
@@ -401,26 +578,69 @@
       },
       {
         id: 's5',
-        text: '用一整串地址走到 Project，再 ls 確認包裹到了。',
+        text: '用一整串地址走回家（Project），再 ls 確認包裹到了。',
         hint: 'cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。ls 會看到 week3.zip（還有 Project 原本的東西）。',
         answer: '`cd ~/Desktop/Project`，Return；`ls`，Return。',
         where: DOWNLOADS,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
           return !!api.termSeen(function (c) {
             // week3.zip, or (a student who ran ahead, unzipped and tidied up already) the week3 folder it left behind
             return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), PROJECT) && /week3/.test(String(c.out || ''));
           });
-        },
-        trap: overwritePromptTrap
+        }
+      }
+    ],
+    outro: 'mv 東西 地方。管理室裡的 week3.zip 不見了，因為它已經搬進家裡。'
+  });
+
+  /* ------------------------------------------------------------------ 5 · unzip 拆包裹 */
+  LAB.missions.register({
+    id: 'w3-t4-unzip',
+    week: 3, order: 5,
+    group: G_TERMINAL,
+    title: 'unzip 拆包裹',
+    minutes: 5,
+    tag: TAG,
+    map: MAP,
+    resetsFiles: true,
+    needs: [PROJECT],
+    intro: '包裹 week3.zip 已經在家（Project）裡。把它拆開，再把包裝紙放到家門外（中庭）。',
+    prepare: function (api) {
+      ensureBase(api);
+      api.remove(DOWNLOADS + '/week3');    // what a double-click in Finder leaves behind
+      api.remove(PROJECT + '/week3');
+      api.remove(DESKTOP + '/week3.zip');
+      removeRenamedZips(api);              // the original and any renamed copy: the package is put back in Project below
+      // the story: the package was already carried home (mission 4), so Downloads no longer has it
+      api.remove(DOWNLOADS + '/week3.zip');
+      api.remove(PROJECT + '/week3.zip');
+      api.ensureSeed(DOWNLOADS + '/week3.zip', { overwrite: true });
+      try { api.vfs.move(DOWNLOADS + '/week3.zip', PROJECT + '/week3.zip', { by: 'system' }); } catch (e) { /* the zip stays in Downloads */ }
+    },
+    steps: [
+      openTerminalStep(),
+      {
+        id: 's2',
+        text: '走回家（Project）：輸入 `cd ~/Desktop/Project`，按 Return（Windows 鍵盤是 Enter）。',
+        hint: 'cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。回到家以後，提示字元最後一個字會是 Project。',
+        answer: '輸入：`cd ~/Desktop/Project`',
+        target: T_TERM,
+        check: function (ev, api) {
+          // a cd (or any command) that ended in Project, or a Terminal that is already standing there (it ticks by itself)
+          if (api.termCmd(ev, function (c) { return same(api, c.cwdAfter, PROJECT); })) return true;
+          return same(api, terminalCwd(), PROJECT);
+        }
       },
       {
-        id: 's6',
-        text: '拆包裹：輸入 `unzip week3.zip`，再 `ls` 看看多了什麼。',
+        id: 's3',
+        text: '拆包裹：輸入 `unzip week3.zip`，再輸入 `ls` 看看多了什麼。',
         hint: 'unzip 後面接要拆的檔案。它會把東西拆在現在這個資料夾，多出一個叫 week3 的資料夾。',
         answer: '`unzip week3.zip`，Return；`ls`，Return。',
         where: PROJECT,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
           // ls pads names with spaces, so the standalone word `week3` only appears after the unzip
           // (`week3.zip` alone does not match).
@@ -436,15 +656,22 @@
           if (ev.name !== 'term:run') return null;
           var wrong = api.termCmd(ev, function (c) { return c.name === 'unzip' && c.status === 0 && !same(api, c.cwd, PROJECT); });
           if (wrong) return 'unzip 會把東西拆在你現在所在的資料夾。這一步要在 Project 裡拆：提示字元最後一個字要是 Project。';
+          // the package is not in Project any more (another mission carried it off, or it was renamed by a mv typo)
+          if (!api.exists(PROJECT + '/week3.zip') && !api.exists(PROJECT + '/week3')) {
+            var z = zipCopies(api, false)[0];
+            if (z) return 'week3.zip 被改名成「' + z.name + '」了。在它所在的資料夾輸入 `mv ' + z.name + ' week3.zip` 改回名字，再把它放進 Project。';
+            return '包裹 week3.zip 不在 Project 裡了（可能被別的任務搬走，或被刪掉）。按下面的「重來這個任務」，它會放回 Project。';
+          }
           return null;
         }
       },
       {
-        id: 's7',
-        text: '把包裝紙 week3.zip 放到家門外。',
-        hint: 'mv 東西 地方；家門外是往外一層，怎麼寫？',
+        id: 's4',
+        text: '把包裝紙 week3.zip 放到家門外：輸入 `mv week3.zip ..`',
+        hint: 'mv 東西 地方。東西是 week3.zip；地方是往外一層，用兩個點 .. 表示，也就是中庭（Desktop）。',
         answer: '輸入：`mv week3.zip ..`（.. 就是往外一層，也就是 Desktop）',
         where: PROJECT,
+        target: T_TERM,
         check: function (ev, api) {
           return !!(api.exists(DESKTOP + '/week3.zip') && !api.exists(PROJECT + '/week3.zip') && api.exists(PROJECT + '/week3/A.csv'));
         },
@@ -459,25 +686,89 @@
         }
       },
       {
-        id: 's8',
+        id: 's5',
         text: '用 Finder 打開 Project 裡的 week3，點兩下 README.md，看看裡面寫什麼。',
         hint: 'README.md 會用「文字編輯」打開。（真正的 Mac 預設會把 .zip 藏起來，只顯示 week3；練習版把副檔名都顯示出來，所以你看得到 week3.zip。）',
         answer: 'Finder → 桌面 → Project → week3 → 點兩下 README.md。',
-        // a student who opened README.md a moment before step 7 finished is still credited
+        // a student who opened README.md a moment before step 4 finished is still credited
         replay: 'mission',
+        target: finderWalk([PROJECT + '/week3/README.md', PROJECT + '/week3', PROJECT]),
         check: function (ev, api) {
           return !!api.seen('editor:open', function (d) { return same(api, d.path, PROJECT + '/week3/README.md'); });
         },
         trap: overwritePromptTrap
       }
     ],
-    outro: 'cd 是走路、ls 是看一圈、mv 是搬東西、unzip 是拆包裹。記得：mv 是搬走，不是複製。這就是用終端機整理檔案的基本功。在 Finder 對 zip 點兩下也能解壓縮；這一關為了練習終端機，才用指令。'
+    outro: 'unzip 拆出來的東西，會放在你現在站的地方。cd 走路、ls 看一圈、mv 搬東西、unzip 拆包裹：這就是用終端機整理檔案的基本功。在 Finder 對 zip 點兩下也能解壓縮；這個任務為了練習終端機，才用指令。'
   });
 
-  /* ------------------------------------------------------------------ M4 */
+  /* ------------------------------------------------------------------ 6 · mkdir 和 open */
+  LAB.missions.register({
+    id: 'w3-t5-mkdir',
+    week: 3, order: 6,
+    group: G_TERMINAL,
+    title: 'mkdir 和 open',
+    minutes: 3,
+    tag: TAG,
+    map: MAP,
+    resetsFiles: true,
+    needs: [PROJECT],
+    intro: '影片 01「四個窗口看同一個資料夾」那一幕用到兩個指令：mkdir 新增資料夾，open 用 Finder 打開。',
+    prepare: function (api) {
+      ensureBase(api);
+      api.remove(PROJECT + '/figures');
+      api.remove(HOME + '/figures');       // a figures folder made in the wrong place on an earlier try
+    },
+    steps: [
+      openTerminalStep(),
+      {
+        id: 's2',
+        text: '輸入 `cd ~/Desktop/Project` 走到家（Project），按 Return（Windows 鍵盤是 Enter），再輸入 `mkdir figures`，新增一個叫 figures 的資料夾。',
+        hint: 'cd 後面接地址：~ 是社區，Desktop 是中庭，Project 是家，用 / 隔開。mkdir 後面接新資料夾的名字，而且要在家裡輸入。打完可以用 ls 確認它出現了。',
+        answer: '`cd ~/Desktop/Project`，Return；`mkdir figures`，Return；`ls`，Return。',
+        where: PROJECT,
+        replay: 'mission',
+        target: T_TERM,
+        check: function (ev, api) {
+          return !!(api.exists(PROJECT + '/figures') &&
+            api.termSeen(function (c) { return c.name === 'mkdir' && c.status === 0; }));
+        },
+        trap: function (ev, api) {
+          // mkdir figures succeeded, but somewhere other than Project (usually ~)
+          var wrong = api.termCmd(ev, function (c) {
+            return c.name === 'mkdir' && c.status === 0 && !same(api, c.cwd, PROJECT) && operands(c.args).indexOf('figures') >= 0;
+          });
+          if (!wrong || api.exists(PROJECT + '/figures')) return null;
+          var where = same(api, wrong.cwd, HOME) ? '~' : LAB.vfs.basename(wrong.cwd);
+          return 'figures 被建在「' + where + '」裡了，不是在 Project。先輸入 `rmdir figures` 刪掉它，再用 `cd ~/Desktop/Project` 走到 Project，重新 `mkdir figures`。';
+        }
+      },
+      {
+        id: 's3',
+        text: '輸入 `open .`（open 空白 點），用 Finder 打開這個資料夾，確認 figures 在裡面。',
+        hint: '那個點代表「這裡」；open 後面接地址，就會用 Finder 打開它。',
+        answer: '在 Project 裡輸入：`open .`',
+        where: PROJECT,
+        replay: 'mission',
+        target: T_TERM,
+        check: function (ev, api) {
+          return !!api.termSeen(function (c) {
+            if (c.name !== 'open' || c.status !== 0) return false;
+            if ((c.args || []).indexOf('-a') >= 0 || (c.args || []).indexOf('-R') >= 0) return false;
+            var first = operands(c.args)[0];
+            return !!first && same(api, api.resolve(c.cwd, first), PROJECT);
+          });
+        }
+      }
+    ],
+    outro: '終端機和 Finder 看的是同一個資料夾：在終端機新增的東西，Finder 馬上看得到。'
+  });
+
+  /* ------------------------------------------------------------------ 7 · 把資料夾交給 Codex */
   LAB.missions.register({
     id: 'w3-04-project',
-    week: 3, order: 4,
+    week: 3, order: 7,
+    group: G_CODEX,
     title: '把資料夾交給 Codex',
     minutes: 5,
     resetsFiles: true,
@@ -494,6 +785,7 @@
         text: '點 Dock 上的「Codex」（滑鼠移過去會顯示名字；是 Codex，不是 Code）。',
         hint: 'Codex 的圖示是深色底，中間只有一個線條畫的輪廓；黑底、左下角有 `>_` 的是終端機。',
         answer: '點一下 Dock 上的「Codex」。',
+        target: dock('codex'),
         check: function (ev, api) {
           return !!(api.seen('win:open', function (d) { return d.appId === 'codex'; }) || api.win('codex').length > 0);
         }
@@ -503,6 +795,7 @@
         text: '把桌面上的 Project 資料夾，拖進 Codex 左邊的側邊欄。',
         hint: '按住 Project 圖示不放，拖到 Codex 左邊那一欄，看到側邊欄亮起藍框再放開。放開後桌面上的 Project 還在，這是正常的：只是告訴 Codex 它在哪裡。如果 Codex 蓋住了桌面圖示，先把視窗往左拖開一點，或從 Finder 視窗裡拖。',
         answer: 'Project 圖示 → 按住拖 → 放進 Codex 側邊欄。（也可以：Finder 對 Project 按右鍵 → 打開方式 → Codex。）',
+        target: chain(desktopIcon(PROJECT), fdItem(PROJECT)),
         check: function (ev, api) {
           return !!(
             api.seen('codex:trust-prompt', function (d) { return same(api, d.path, PROJECT); }) ||
@@ -519,6 +812,7 @@
         text: '看到「Trust this folder?」：這是在問你信不信任這個資料夾。按 Trust folder。',
         hint: 'Trust folder 是讓 Codex 可以在這個資料夾裡讀檔、改檔、執行指令。只信任你自己的資料夾。',
         answer: '點白色的 Trust folder。',
+        target: '[data-lab=cx-modal-trust]',
         check: function (ev, api) {
           return !!(api.seen('codex:trust', function (d) { return same(api, d.path, PROJECT); }) || hasProject(api, PROJECT));
         },
@@ -536,6 +830,7 @@
         text: '到 Finder 看看它在電腦裡的真實位置：打開桌面的 Project，看視窗最下面的路徑列。',
         hint: 'Macintosh HD › 使用者 › an › 桌面 › Project 就是它真實的位置，也就是 /Users/an/Desktop/Project。',
         answer: '點兩下桌面上的 Project 資料夾。',
+        target: chain(desktopIcon(PROJECT), fdItem(PROJECT), fdSide(DESKTOP), dock('finder')),
         check: function (ev, api) {
           return !!api.seen('finder:navigate', function (d) { return same(api, d.path, PROJECT); });
         }
@@ -544,10 +839,11 @@
     outro: '記住：Codex 說的「專案」，就是電腦裡真的存在的那個資料夾。拖進去不是搬走，Project 還在桌面上。'
   });
 
-  /* ------------------------------------------------------------------ M5 */
+  /* ------------------------------------------------------------------ 8 · 在專案裡請 Codex 做事 */
   LAB.missions.register({
     id: 'w3-05-in-project',
-    week: 3, order: 5,
+    week: 3, order: 8,
+    group: G_CODEX,
     title: '在專案裡請 Codex 做事',
     minutes: 10,
     resetsFiles: true,
@@ -556,15 +852,16 @@
     prepare: function (api) {
       ensureBase(api);
       ensureProject(api);
-      api.remove(PROJECT + '/output');
+      api.remove(OUTPUT);
       api.remove(PROJECT + '/charts');
     },
     steps: [
       {
         id: 's1',
         text: '在 Codex 側邊欄點一下 Project，確認輸入框上方有「Project」這個標籤。',
-        hint: '點 Project 這一列（不是最上面的 New chat）。',
+        hint: '點 Project 這一列（不是最上面的 New chat）。Codex 還沒打開的話，先點 Dock 上的「Codex」。',
         answer: '點側邊欄的 Project。',
+        target: chain(cxProject, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:select-project', function (d) { return same(api, d.path, PROJECT); });
         },
@@ -575,6 +872,7 @@
         text: '請 Codex 寫報告：點「複製」，貼進輸入框，再按 Return。[[幫我寫一份報告到 output/report.md]]',
         hint: '點「複製」，再點 Codex 的輸入框，按 Ctrl+V（Mac 用 Command+V）貼上。等它出現 Created output/report.md 就是做完了。',
         answer: '把「幫我寫一份報告到 output/report.md」貼到輸入框，按 Return。',
+        target: chain(cxComposer, cxProject, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:reply', function (d) { return d.intent === 'write_report' && same(api, d.projectPath, PROJECT); });
         },
@@ -585,8 +883,9 @@
         text: '真實位置 = 專案資料夾 + output/report.md。到 Finder 找到它，看路徑列是不是這樣。',
         hint: '先打開 Project，再往下找 output。路徑列會寫 Macintosh HD › 使用者 › an › 桌面 › Project › output。',
         answer: 'Finder → 桌面 → Project → output。',
+        target: finderWalk([OUTPUT, PROJECT]),
         check: function (ev, api) {
-          return !!api.seen('finder:navigate', function (d) { return same(api, d.path, PROJECT + '/output'); });
+          return !!api.seen('finder:navigate', function (d) { return same(api, d.path, OUTPUT); });
         }
       },
       {
@@ -594,6 +893,7 @@
         text: '點兩下 report.md，用文字編輯讀它。',
         hint: '裡面有各班的平均分數，是 Codex 讀了 data 裡的 CSV 算出來的。',
         answer: '在 output 資料夾裡點兩下 report.md。',
+        target: finderWalk([REPORT, OUTPUT, PROJECT]),
         check: function (ev, api) {
           return !!api.seen('editor:open', function (d) { return same(api, d.path, REPORT); });
         }
@@ -605,9 +905,10 @@
         hint: '先用地址走到 Project，再用 ls 看 output。想看檔案內容，可以試 `cat output/report.md`。',
         answer: '`cd ~/Desktop/Project`，Return；`ls output`，Return。',
         where: HOME,
+        target: T_TERM,
         check: function (ev, api) {
           return !!api.termSeen(function (c) {
-            return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), PROJECT + '/output') && /report\.md/.test(String(c.out || ''));
+            return c.name === 'ls' && c.status === 0 && same(api, api.lsDir(c), OUTPUT) && /report\.md/.test(String(c.out || ''));
           });
         }
       },
@@ -617,6 +918,7 @@
         hint: '資料夾可以拖到 Code 的視窗或 Dock 圖示上，也可以在 Finder 用右鍵的「打開方式」選 Code（不是 Codex）。',
         answer: 'Finder 對 Project 按右鍵 → 打開方式 → Code。',
         replay: 'mission',
+        target: chain(fdItem(PROJECT), desktopIcon(PROJECT), fdSide(DESKTOP), dock('finder')),
         check: function (ev, api) {
           return !!api.seen('code:folder', function (d) { return same(api, d.path, PROJECT); });
         }
@@ -626,6 +928,7 @@
         text: '在 Code 左邊的檔案列表點開 output，再點 report.md。',
         hint: '左邊那一欄叫 EXPLORER，像 Finder 的側邊欄。',
         answer: 'EXPLORER → output → report.md。',
+        target: chain(cdRow(REPORT), cdRow(OUTPUT), dock('code')),
         check: function (ev, api) {
           return !!api.seen('editor:open', function (d) { return d.appId === 'code' && same(api, d.path, REPORT); });
         }
@@ -638,6 +941,7 @@
         answer: '在 Project 裡輸入：`mkdir charts`',
         where: PROJECT,
         replay: 'mission',
+        target: T_TERM,
         check: function (ev, api) {
           return !!(api.exists(PROJECT + '/charts') &&
             api.termSeen(function (c) { return c.name === 'mkdir' && c.status === 0; }));
@@ -647,10 +951,11 @@
     outro: 'Codex、Finder、終端機、Code，四個視窗看的是同一個資料夾；檔案不在聊天室裡，而是真的存在硬碟上。「output/report.md」是相對路徑，從對話所在的資料夾算起。'
   });
 
-  /* ------------------------------------------------------------------ M6 */
+  /* ------------------------------------------------------------------ 9 · New chat 的陷阱 */
   LAB.missions.register({
     id: 'w3-06-orphan',
-    week: 3, order: 6,
+    week: 3, order: 9,
+    group: G_CODEX,
     title: 'New chat 的陷阱',
     minutes: 8,
     resetsFiles: true,
@@ -660,14 +965,15 @@
       ensureBase(api);
       ensureProject(api);
       api.remove(DOCUMENTS + '/output');
-      api.remove(PROJECT + '/output');   // so M5's file cannot blur the contrast in step 5
+      api.remove(OUTPUT);   // so the earlier Project mission's file cannot blur the contrast in step 5
     },
     steps: [
       {
         id: 's1',
         text: '按 Codex 最上面的 New chat。注意：輸入框上方沒有 Project 標籤。',
-        hint: '主畫面只問 What should we work on?，沒有專案名稱。',
+        hint: '主畫面只問 What should we work on?，沒有專案名稱。Codex 還沒打開的話，先點 Dock 上的「Codex」。',
         answer: '點側邊欄最上面的 New chat。',
+        target: chain(cxNew, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:new-chat', function (d) { return isNullish(d.projectPath); });
         }
@@ -677,6 +983,7 @@
         text: '輸入同一句話：點「複製」，貼進輸入框，再按 Return。[[幫我寫一份報告到 output/report.md]]',
         hint: '整句照打（或複製貼上），和上一個任務一模一樣。等它做完，側邊欄的 Recents 會出現這個對話：它不在 Project 底下。',
         answer: '輸入「幫我寫一份報告到 output/report.md」，按 Return。',
+        target: chain(cxComposer, cxNew, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:reply', function (d) { return d.intent === 'write_report' && isNullish(d.projectPath); });
         }
@@ -686,6 +993,7 @@
         text: '它說「已建立 output/report.md」，可是在哪？點「複製」，貼進輸入框，問它：[[列出你新增的檔案完整路徑]]',
         hint: '在同一個對話裡接著問。可以複製上面這句。',
         answer: '輸入「列出你新增的檔案完整路徑」，按 Return。',
+        target: chain(cxComposer, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:reply', function (d) { return d.intent === 'list_paths' && isNullish(d.projectPath); });
         }
@@ -695,6 +1003,7 @@
         text: '照它給的路徑，在 Finder 找到這個檔案。',
         hint: '路徑裡的 Documents，在 Finder 叫「文件」；一層一層往下找 output。',
         answer: '路徑是 /Users/an/Documents/output/report.md：Finder → 側邊欄「文件」→ output。',
+        target: finderWalk([DOCUMENTS + '/output'], DOCUMENTS),
         check: function (ev, api) {
           return !!api.seen('finder:navigate', function (d) { return same(api, d.path, DOCUMENTS + '/output'); });
         }
@@ -704,6 +1013,7 @@
         text: '改在專案底下重做：點側邊欄的 Project，再把同一句話貼進輸入框（複製過的話，直接貼）。',
         hint: '這次輸入框上方會有 Project 標籤，檔案會寫進 Project 底下的 output。',
         answer: '點 Project → 輸入「幫我寫一份報告到 output/report.md」→ Return。',
+        target: T_PROJECT_CHAT,
         check: function (ev, api) {
           return !!api.seen('codex:reply', function (d) { return d.intent === 'write_report' && same(api, d.projectPath, PROJECT); });
         }
@@ -713,18 +1023,20 @@
         text: '到 Finder 打開 Project 裡的 output，看到 report.md：這次它在專案裡。',
         hint: 'Finder → 桌面 → Project → output。',
         answer: '點兩下桌面的 Project，再點兩下 output。',
+        target: finderWalk([OUTPUT, PROJECT]),
         check: function (ev, api) {
-          return !!api.seen('finder:navigate', function (d) { return same(api, d.path, PROJECT + '/output'); });
+          return !!api.seen('finder:navigate', function (d) { return same(api, d.path, OUTPUT); });
         }
       }
     ],
     outro: 'New chat 開出來的對話不屬於任何專案，它做出來的檔案會放在你沒指定的地方（這次是「文件」，下次可能是別處）。要做正事，先點專案，再開始對話；也一定要知道檔案放在哪裡。'
   });
 
-  /* ------------------------------------------------------------------ M7 */
+  /* ------------------------------------------------------------------ 10 · AGENTS.md */
   LAB.missions.register({
     id: 'w3-07-agents',
-    week: 3, order: 7,
+    week: 3, order: 10,
+    group: G_CODEX,
     title: 'AGENTS.md：給專案的長期記憶',
     minutes: 8,
     resetsFiles: true,
@@ -745,6 +1057,7 @@
         text: '用文字編輯或 Code 打開 Project 裡的 AGENTS.md，看它現在有哪些規則。',
         hint: '在 Finder 的 Project 裡，點兩下 AGENTS.md。',
         answer: 'Finder → 桌面 → Project → 點兩下 AGENTS.md。',
+        target: finderWalk([AGENTS, PROJECT]),
         check: function (ev, api) {
           return !!api.seen('editor:open', function (d) { return same(api, d.path, AGENTS); });
         },
@@ -753,9 +1066,10 @@
       {
         id: 's2',
         text: '在 Codex 點 Project 那一列，開新對話，點「複製」，貼進輸入框，再按 Return。[[把「圖表存到 figures/」加進 AGENTS.md]]',
-        hint: '要用專案底下的對話（輸入框上方有 Project 標籤），不是 New chat。',
+        hint: '要用專案底下的對話（輸入框上方有 Project 標籤），不是 New chat。Codex 還沒打開的話，先點 Dock 上的「Codex」。',
         answer: '點 Project 那一列，輸入整句，按 Return。',
         replay: 'mission',
+        target: T_PROJECT_CHAT,
         trap: orphanReplyTrap('write_agents'),
         check: function (ev, api) {
           var hit = api.seen('codex:reply', function (d) { return d.intent === 'write_agents' && same(api, d.projectPath, PROJECT); });
@@ -773,6 +1087,7 @@
         text: '回到 AGENTS.md 的視窗，看它是不是多了一行「- 圖表存到 figures/」。',
         hint: '視窗被 Codex 蓋住了：點 Dock 的「文字編輯」，或把 Codex 視窗拖開。文字編輯會自己更新，不用重開。',
         answer: '點 Dock 的「文字編輯」（或在 Finder 再點兩下 AGENTS.md），最後一行是「- 圖表存到 figures/」。',
+        target: dock('textedit'),
         check: function (ev, api) {
           // only events after step 2: re-opening, or bringing the already-open window to the front
           return !!(
@@ -789,6 +1104,7 @@
         hint: '把滑鼠移到 Project 那一列，右邊會出現「+」；一定要開新對話，不要接著剛剛那個。新對話的短期記憶是空的，但 AGENTS.md 每次都會帶入。',
         answer: '點 Project 那一列右邊的 +，輸入「你目前遵守哪些規則？」，Return。',
         replay: 'mission',
+        target: chain(cxPlus, cxProject, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:reply', function (d) {
             return d.intent === 'ask_rules' && same(api, d.projectPath, PROJECT) && d.chatId !== api.state.agentsChat;
@@ -808,6 +1124,7 @@
         text: '對照看看：按 New chat（沒有專案），問同一句話。',
         hint: '這個對話看不到專案裡的 AGENTS.md。',
         answer: '點最上面的 New chat，輸入「你目前遵守哪些規則？」，Return。',
+        target: chain(cxNew, dock('codex')),
         check: function (ev, api) {
           return !!api.seen('codex:reply', function (d) { return d.intent === 'ask_rules' && isNullish(d.projectPath); });
         }
@@ -815,13 +1132,4 @@
     ],
     outro: '重要的事寫進 AGENTS.md，專案裡的每個新對話都會讀到；不在專案裡的對話看不到專案的檔案，也看不到 AGENTS.md。完整的 AGENTS.md 通常有三個段落：這個專案在做什麼、希望 AI 怎麼幫忙、有哪些事情不要做（影片 02 示範過）；練習版的只有一段，你可以自己把它補完整。'
   });
-
-  /* ------------------------------------------------------------------ free play */
-  LAB.missions.freePlayTips = [
-    '在桌面新增檔案夾，再把它拖進 Finder 視窗裡。',
-    '在終端機試試 cp、rm、cat，看看會發生什麼事。',
-    '在 Finder 對檔案按空白鍵，快速查看內容。',
-    '請 Codex 列出目前資料夾裡有哪些檔案。',
-    '打錯指令看看，終端機會怎麼回你。'
-  ];
 })(window.LAB);

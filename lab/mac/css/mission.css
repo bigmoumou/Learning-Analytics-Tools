@@ -1,6 +1,7 @@
-/* mission.css — the mission card, the mission sheets (first / start / done), connecting screen, phone notice (DESIGN §6, §16, §17).
+/* mission.css — the mission card, the mission sheets (picker / completion), cues, connecting screen, phone notice (DESIGN §6, §16, §17, §19).
    The card floats over the Mac as Liquid Glass (macOS Tahoe / iOS 26) and can be dragged. Inside: calm type, hairlines,
-   one amber accent, green checks for ticked steps. */
+   one amber accent, green checks for ticked steps. Round 4 (§19): more white in the glass and darker ink for contrast, lively cues,
+   success feedback. Animations are transform and opacity only; prefers-reduced-motion turns them all off. */
 
 /* --------------------------------------------------------------- glass */
 /* Three layers under the content, like the owner's reference (lucasromerodb's liquid-glass-effect-macos):
@@ -9,7 +10,7 @@
    ::after   a thin white tint and the bright inner edges (top-left and bottom-right) where light catches the glass
    The element itself only casts the soft shadow. */
 .lab-glass {
-  --glass-tint: .3;
+  --glass-tint: .62;                         /* pill and notes (§19.3: was .3; the card .74, the sheets .74) */
   position: relative; isolation: isolate;
   background: none;
   box-shadow: 0 6px 6px rgba(0, 0, 0, .18), 0 0 20px rgba(0, 0, 0, .1), 0 0 0 .5px rgba(0, 0, 0, .1);
@@ -41,8 +42,8 @@ html[data-perf="low"] .lab-glass { --glass-tint: .95; }
 /* ------------------------------------------------------------------ card */
 #lab-rail {
   /* it sits on the Mac, so it is always the Mac's light glass, even when the page itself is in dark mode */
-  --lab-bg: transparent; --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #4a4a51;
-  --lab-line: rgba(0, 0, 0, .1); --lab-accent: #8a5400;
+  --lab-bg: transparent; --lab-ink: #111113; --lab-ink-2: #26262b; --lab-ink-3: #3a3a40;
+  --lab-line: rgba(0, 0, 0, .12); --lab-accent: #6b3f00;
   /* --lab-card-top / left: set by desktop.js when the student has dragged the card somewhere else (§17) */
   position: absolute; left: 12px; top: var(--lab-card-top, calc(var(--lab-mb, 28px) + 10px)); z-index: 50;
   width: clamp(268px, 27vw, 340px);
@@ -56,7 +57,7 @@ html[data-perf="low"] .lab-glass { --glass-tint: .95; }
 #lab-rail > .lab-page-foot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
 
 .lab-rail-body {
-  --glass-tint: .4;                          /* a little more white than the pill: it carries a lot of text */
+  --glass-tint: .74;                         /* it carries a lot of text, and a dark Terminal window can sit right behind it (§19.3) */
   display: flex; flex-direction: column; width: 100%; min-height: 0; max-height: 100%;
   border-radius: 22px; overflow: hidden; pointer-events: auto;
   transform-origin: 18px 18px;
@@ -100,10 +101,25 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 .lab-rail-dot { order: 1; display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--lab-accent); flex: none; opacity: 0; }
 .lab-rail-strip.is-attn .lab-rail-dot { opacity: 1; animation: lab-dot 2.4s ease-in-out infinite; }
 @keyframes lab-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+/* a step was ticked while only the pill shows: the dot flashes green and the pill hops twice (§19.5) */
+.lab-rail-strip.is-stepped { animation: lab-pill-hop .7s ease-out both; animation-delay: var(--lab-age, 0ms); }
+.lab-rail-strip.is-stepped .lab-rail-dot { opacity: 1; animation: lab-dot-ok .8s ease-out both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-pill-hop {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-6px); animation-timing-function: ease-in; }
+  42% { transform: translateY(0); }
+  64% { transform: translateY(-6px); animation-timing-function: ease-in; }
+}
+@keyframes lab-dot-ok {
+  0% { background: #2fb34f; transform: scale(1); }
+  30% { background: #2fb34f; transform: scale(1.9); }
+  70% { background: #2fb34f; transform: scale(1); }
+  100% { background: var(--lab-accent); transform: scale(1); }
+}
 .lab-rail-tag { order: 2; font-weight: 600; letter-spacing: .02em; }
 .lab-rail-vert { order: 3; display: inline-flex; align-items: center; gap: 9px; color: var(--lab-ink-2); font-variant-numeric: tabular-nums; }
 .lab-rail-vert::before { content: ""; width: 1px; height: 13px; background: rgba(0, 0, 0, .16); }
-.lab-rail-chev { order: 4; margin-left: auto; font-size: 15px; color: var(--lab-ink-3); transform: rotate(90deg); }
+.lab-rail-chev { order: 4; margin-left: auto; font-size: 15px; color: var(--lab-ink-2); transform: rotate(90deg); }
 .lab-rail-strip:hover .lab-rail-chev { color: var(--lab-ink); }
 
 /* one short note under the pill: a nudge or a trap line (stays until it clears), or "step done, next is ..." (9 s).
@@ -121,12 +137,13 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
   background: none; border: 0; font: inherit; color: inherit; cursor: pointer;
 }
 .lab-peek.is-ok .lab-peek-main { padding-right: 14px; }
-.lab-peek-eyebrow { display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--lab-accent); }
+.lab-peek-eyebrow { display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--lab-ink-2); }   /* ink, not amber: the notes are on the lighter .62 glass */
 .lab-peek-text { display: block; color: var(--lab-ink); overflow-wrap: anywhere; }
-.lab-peek-x { position: absolute; top: 5px; right: 6px; z-index: 3; padding: 2px 6px; margin: 0; background: none; border: 0; font: 16px/1 var(--mac-font); color: var(--lab-ink-3); cursor: pointer; }
+.lab-peek-x { position: absolute; top: 5px; right: 6px; z-index: 3; padding: 2px 6px; margin: 0; background: none; border: 0; font: 16px/1 var(--mac-font); color: var(--lab-ink-2); cursor: pointer; }
 .lab-peek-x:hover { color: var(--lab-ink); }
 @media (prefers-reduced-motion: reduce) {
-  .lab-rail-strip.is-attn .lab-rail-dot, .lab-peek, .lab-rail-body.is-entering, .lab-rail-strip.is-entering { animation: none; }
+  .lab-rail-strip.is-attn .lab-rail-dot, .lab-peek, .lab-rail-body.is-entering, .lab-rail-strip.is-entering, .lab-rail-strip.is-stepped { animation: none; }
+  .lab-rail-strip.is-stepped .lab-rail-dot { animation: none; background: #2fb34f; }
 }
 
 .lab-rail-head {
@@ -155,30 +172,48 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
   background: none; border: 0; font: inherit; color: var(--lab-ink); text-align: left; cursor: pointer;
 }
 .lab-disc-t { font-size: 11px; letter-spacing: .06em; color: var(--lab-ink-3); }
-.lab-disc-cur { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lab-disc-chev { margin-left: auto; color: var(--lab-ink-3); font-family: var(--lab-font-mono); }
 .lab-disc-sm { margin-top: 8px; padding: 0; width: auto; gap: 8px; }
 .lab-disc-sm .lab-disc-chev { margin-left: 0; }
 
-/* mission list */
-.lab-mlist { list-style: none; margin: 8px 0 0; padding: 0; }
-.lab-mrow {
-  display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 4px 0; margin: 0;
-  background: none; border: 0; border-top: 1px solid var(--lab-line); font: inherit; color: var(--lab-ink-2); text-align: left; cursor: pointer;
+/* the picker button: 「任務 3 / 10 · 換任務」 (the list itself is in the picker sheet, §19.2) */
+.lab-pickrow {
+  display: block; width: 100%; padding: 2px 0; margin: 0; background: none; border: 0; font: inherit; font-size: 12.5px;
+  color: var(--lab-ink-3); text-align: left; cursor: pointer;
 }
-.lab-mlist li:first-child .lab-mrow { border-top: 0; }
-.lab-mrow:hover { color: var(--lab-ink); }
-.lab-mrow.is-cur { color: var(--lab-ink); font-weight: 600; }
-.lab-mt { flex: 1; min-width: 0; }
-.lab-mtag { font-size: 11px; letter-spacing: .06em; color: var(--lab-ink-3); }
+.lab-pickrow-go { color: var(--lab-ink); text-decoration: underline; text-decoration-color: var(--lab-accent); text-underline-offset: 3px; }
+.lab-pickrow:hover .lab-pickrow-go { text-decoration-thickness: 2px; }
 .lab-num { flex: none; width: 1.8em; font-family: var(--lab-font-mono); font-size: 12px; color: var(--lab-accent); }
 .lab-num.is-check { color: var(--lab-accent); }
 .lab-num.is-skip { color: var(--lab-ink-3); }
 
 /* steps: the current one sits on a lighter patch of the glass, like a selected row in a Mac list */
 .lab-steps { list-style: none; margin: 0; padding: 0; }
-.lab-step { display: flex; gap: 10px; padding: 7px 10px; margin: 1px -10px; border-radius: 12px; color: var(--lab-ink-2); }
+.lab-step { position: relative; display: flex; gap: 10px; padding: 7px 10px; margin: 1px -10px; border-radius: 12px; color: var(--lab-ink-2); }
 .lab-step.is-current { color: var(--lab-ink); background: rgba(255, 255, 255, .58); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .07), 0 1px 3px rgba(0, 0, 0, .05); }
+/* the amber rule on the left of the current step */
+.lab-step.is-current::before {
+  content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 2px; border-radius: 1px;
+  background: var(--lab-accent); transform-origin: 50% 0;
+}
+/* a step that has just become current (§19.4): the row bounces in (up 10 px, past, settles; a little bigger on the way), the amber
+   rule is drawn from top to bottom and the number hops twice. --lab-age (missions.js) continues it across re-renders. */
+.lab-step.is-enter { animation: lab-step-in .52s cubic-bezier(.3, 1.35, .45, 1) both; animation-delay: var(--lab-age, 0ms); }
+.lab-step.is-enter::before { animation: lab-rule-draw .24s ease-out both; animation-delay: var(--lab-age, 0ms); }
+.lab-step.is-enter .lab-num { animation: lab-num-hop .62s ease-out both; animation-delay: calc(var(--lab-age, 0ms) + .18s); }
+.lab-step.is-waiting { opacity: 0; }               /* the sheet that announced the mission is still flying in */
+@keyframes lab-step-in {
+  0% { transform: translateY(10px) scale(.98); }
+  55% { transform: translateY(-4px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes lab-rule-draw { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lab-num-hop {
+  0%, 100% { transform: translateY(0); }
+  22% { transform: translateY(-5px); animation-timing-function: ease-in; }
+  46% { transform: translateY(0); }
+  68% { transform: translateY(-5px); animation-timing-function: ease-in; }
+}
 .lab-step.is-done { color: var(--lab-ink-3); }
 .lab-step .lab-num { margin-top: 2px; transition: opacity .3s; }
 .lab-step.is-done .lab-num { animation: lab-check .3s ease-out; }
@@ -186,7 +221,7 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 .lab-step-body { flex: 1; min-width: 0; }
 /* a ticked step: a green check (macOS green). A fresh tick pops in and draws itself, and its row glows green once;
    --lab-age (missions.js) is how old the tick is, so a re-render continues the animation instead of restarting it */
-.lab-check { display: inline-flex; width: 18px; height: 18px; vertical-align: -4px; }
+.lab-check { position: relative; display: inline-flex; width: 18px; height: 18px; vertical-align: -4px; }
 .lab-check svg { display: block; overflow: visible; }
 .lab-check circle { fill: #2fb34f; }
 .lab-check path { fill: none; stroke: #fff; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
@@ -196,13 +231,27 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 @keyframes lab-check-draw { to { stroke-dashoffset: 0; } }
 .lab-step.is-justdone { animation: lab-row-done 1.2s ease-out both; animation-delay: var(--lab-age, 0ms); }
 @keyframes lab-row-done { 0% { background: rgba(52, 199, 89, .26); } 100% { background: rgba(52, 199, 89, 0); } }
-.lab-mrow .lab-check { width: 15px; height: 15px; vertical-align: -3px; }
-.lab-mrow .lab-check svg { width: 15px; height: 15px; }
+.lab-pk-num .lab-check { width: 16px; height: 16px; vertical-align: -3px; }
+.lab-pk-num .lab-check svg { width: 16px; height: 16px; }
+/* eight small dots fly out of a fresh check (green and amber, 14 to 22 px, gone in 550 ms), starting as the check pops */
+.lab-burst-dot {
+  position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; pointer-events: none;
+  opacity: 0;
+  /* they shoot out fast and slow down (ease-out), stay solid for the first half and fade in the second */
+  animation: lab-burst .55s cubic-bezier(.15, .75, .3, 1) both, lab-burst-fade .55s linear both;
+  animation-delay: calc(var(--lab-age, 0ms) + .1s), calc(var(--lab-age, 0ms) + .1s);
+}
+@keyframes lab-burst {
+  0% { transform: translate(0, 0) scale(.8); }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.6); }
+}
+@keyframes lab-burst-fade { 0%, 50% { opacity: 1; } 100% { opacity: 0; } }
 .lab-peek-eyebrow .lab-check { width: 14px; height: 14px; margin-right: 5px; vertical-align: -3px; }
 .lab-peek-eyebrow .lab-check svg { width: 14px; height: 14px; }
-.lab-peek.is-ok .lab-peek-eyebrow { color: #1f7a34; }
 @media (prefers-reduced-motion: reduce) {
   .lab-check.is-new svg, .lab-check.is-new path, .lab-step.is-justdone { animation: none; stroke-dashoffset: 0; }
+  .lab-burst-dot { display: none; }
+  .lab-step.is-enter, .lab-step.is-enter::before, .lab-step.is-enter .lab-num { animation: none; }
 }
 .lab-step-text { overflow-wrap: anywhere; }
 .lab-opt { margin-left: 6px; color: var(--lab-ink-3); font-size: 12px; }
@@ -218,8 +267,22 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 }
 
 /* progress + links */
-.lab-prog { height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .08); overflow: hidden; }
-.lab-prog-fill { height: 100%; border-radius: 2px; background: var(--lab-accent); transition: width .3s var(--lab-ease); }
+.lab-prog { position: relative; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .1); overflow: hidden; }
+/* the fill is a full-width bar scaled from the left (transform only); a new tick grows it from its old length and a pale light
+   sweeps along the line once (§19.5) */
+.lab-prog-fill { width: 100%; height: 100%; border-radius: 2px; background: var(--lab-accent); transform-origin: 0 50%; transform: scaleX(var(--to, 0)); }
+.lab-prog-fill.is-grow { animation: lab-prog-grow .55s var(--lab-ease) both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-prog-grow { from { transform: scaleX(var(--from, 0)); } to { transform: scaleX(var(--to, 0)); } }
+.lab-prog-sweep {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 34%; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .85), rgba(255, 255, 255, 0));
+  animation: lab-prog-sweep .7s ease-in-out both; animation-delay: var(--lab-age, 0ms);
+}
+@keyframes lab-prog-sweep { 0% { transform: translateX(-100%); opacity: 1; } 100% { transform: translateX(300%); opacity: 1; } }
+.lab-prog-n { display: inline-block; }
+.lab-prog-n.is-pop { animation: lab-count-pop .45s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: var(--lab-age, 0ms); }
+@keyframes lab-count-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .lab-prog-fill.is-grow, .lab-prog-sweep, .lab-prog-n.is-pop { animation: none; } .lab-prog-sweep { display: none; } }
 .lab-prog-text { margin-top: 6px; font-size: 12px; color: var(--lab-ink-3); }
 .lab-outro { margin: 12px 0 0; color: var(--lab-ink); }
 .lab-nextbtn {
@@ -229,8 +292,6 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 }
 .lab-nextbtn:hover { background: rgba(255, 255, 255, .85); }
 .lab-foot-links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; }
-.lab-tips { margin: 10px 0 0; padding-left: 1.2em; color: var(--lab-ink-2); }
-.lab-tips li { margin: 4px 0; }
 .lab-codeline { display: flex; gap: 10px; align-items: baseline; }
 .lab-codeinput { flex: 1; min-width: 0; padding: 3px 8px; border: 0; border-radius: 6px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .18); background: rgba(255, 255, 255, .5); color: var(--lab-ink); font: 12px var(--lab-font-mono); }
 .lab-page-foot { padding: 12px 0 0; border-top: 1px solid var(--lab-line); font-size: 11.5px; color: var(--lab-ink-3); line-height: 1.6; }
@@ -239,9 +300,9 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 .lab-store-notice { margin-top: 6px; font-size: 12px; color: var(--lab-accent); }
 
 /* ------------------------------------------- mission sheets + phone notice */
-/* The mission sheet (DESIGN §18.2): a big glass sheet in the middle of the Mac, the same Liquid Glass as the card, on a light scrim.
-   It announces a mission (first sheet / 「開始任務」) or a finished one (completion sheet). Closing by starting flies it into the card
-   (missions.js animates it with the Web Animations API). */
+/* The mission sheets (DESIGN §18.2, §19.2): a big glass sheet in the middle of the Mac, the same Liquid Glass as the card, on a light
+   scrim. Two kinds: the picker (the list of missions, and a mission's start page in the same sheet) and the completion sheet.
+   Starting a mission flies the sheet into the card (missions.js animates it with the Web Animations API). */
 .lab-msheet-scrim, .lab-phone {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 3000;
   display: flex; align-items: center; justify-content: center;
@@ -252,8 +313,8 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 .lab-msheet-scrim.is-leaving { pointer-events: none; }
 @keyframes lab-ms-scrim { from { background-color: rgba(0, 0, 0, 0); } }
 .lab-msheet {
-  --glass-tint: .66; text-shadow: 0 0 10px rgba(255, 255, 255, .55);
-  --lab-ink: #1d1d1f; --lab-ink-2: #34343a; --lab-ink-3: #3a3a40; --lab-line: rgba(0, 0, 0, .12); --lab-accent: #6b3f00;
+  --glass-tint: .74; text-shadow: 0 0 10px rgba(255, 255, 255, .55);
+  --lab-ink: #111113; --lab-ink-2: #26262b; --lab-ink-3: #3a3a40; --lab-line: rgba(0, 0, 0, .12); --lab-accent: #6b3f00;
   width: 460px; max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
   padding: 30px 34px 26px;
   border-radius: 26px;
@@ -283,6 +344,11 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 .lab-ms-btn:hover { background: rgba(255, 255, 255, .88); }
 .lab-ms-btn.is-primary { background: #1d1d1f; color: #fff; text-shadow: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
 .lab-ms-btn.is-primary:hover { background: #000; }
+/* a text button: no capsule (「選其他任務」, 「關閉」) */
+.lab-ms-btn.is-text { padding: 9px 12px; background: none; box-shadow: none; color: var(--lab-ink-2); text-decoration: underline; text-decoration-color: rgba(0, 0, 0, .3); text-underline-offset: 4px; }
+.lab-ms-btn.is-text:hover { background: none; color: var(--lab-ink); text-decoration-color: var(--lab-ink); }
+.lab-ms-btns { align-items: center; }
+.lab-ms-btn.is-primary { text-align: left; }
 /* glass buttons take the Mac's blue focus ring, not the page's amber one */
 .lab-ms-btn:focus-visible, .lab-nextbtn:focus-visible, .lab-msheet .lab-linkbtn:focus-visible { outline: 3px solid rgba(10, 108, 255, .5); outline-offset: 1px; }
 .lab-msheet .lab-mono { font-family: var(--lab-font-mono); font-size: .9em; background: rgba(0, 0, 0, .06); padding: 0 .3em; border-radius: 4px; }
@@ -292,6 +358,99 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 }
 @media (prefers-reduced-motion: reduce) {
   .lab-msheet-scrim, .lab-msheet { animation: none; }
+}
+
+/* ---- the picker (§19.2): head, a list that scrolls, a foot with the start button. The same three parts hold a mission's start page. */
+.lab-msheet.is-pick { width: 560px; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: min(80vh, calc(100vh - 32px)); max-height: min(80vh, calc(100dvh - 32px)); }
+.lab-ms-view { min-width: 0; }
+.lab-msheet.is-pick .lab-ms-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.lab-pk-head { flex: none; padding: 28px 34px 8px; }
+.lab-pk-head .lab-ms-title { margin-bottom: 4px; }
+.lab-pk-head.is-start { padding: 22px 34px 0; }
+.lab-pk-sub { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--lab-ink-3); }
+.lab-pk-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 4px 34px 18px; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, .28) transparent;
+  /* a soft fade at the bottom edge: more rows below, as in the card */
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 16px), transparent); mask-image: linear-gradient(#000 calc(100% - 16px), transparent);
+}
+.lab-pk-foot { flex: none; padding: 10px 34px 24px; }
+.lab-pk-foot .lab-ms-btns { margin-top: 8px; }
+.lab-pk-foot .lab-ms-note { margin-top: 12px; }
+.lab-pk-group { margin-top: 14px; }
+.lab-pk-gname { padding-bottom: 5px; border-bottom: 1px solid var(--lab-line); font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--lab-ink-3); }
+.lab-pk-row {
+  display: flex; align-items: baseline; gap: 14px; width: 100%; margin: 0; padding: 7px 10px; border: 0; border-radius: 10px;
+  background: none; font: inherit; color: var(--lab-ink); text-align: left; cursor: pointer; text-shadow: inherit;
+}
+.lab-pk-row:hover, .lab-pk-row:focus-visible { background: rgba(255, 255, 255, .5); }
+.lab-pk-row:focus-visible { outline: 2px solid rgba(10, 108, 255, .55); outline-offset: -2px; }
+.lab-pk-num { flex: none; width: 1.9em; font-family: var(--lab-font-mono); font-size: 13px; color: var(--lab-accent); }
+.lab-pk-title { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.lab-pk-meta { flex: none; font-size: 12.5px; color: var(--lab-ink-3); white-space: nowrap; }
+.lab-pk-row.is-cur .lab-pk-meta { color: var(--lab-ink); }
+/* the way back from a start page */
+.lab-ms-back { margin: 0; padding: 2px 0; background: none; border: 0; font: inherit; font-size: 13.5px; color: var(--lab-ink-2); text-decoration: underline; text-decoration-color: rgba(0, 0, 0, .3); text-underline-offset: 4px; cursor: pointer; }
+.lab-ms-back:hover { color: var(--lab-ink); text-decoration-color: var(--lab-ink); }
+.lab-ms-back:focus-visible, .lab-ms-btn.is-text:focus-visible { outline: 3px solid rgba(10, 108, 255, .5); outline-offset: 2px; }
+.lab-pk-scroll > .lab-ms-eyebrow { margin-top: 8px; }
+.lab-pk-scroll > .lab-ms-step:last-child { margin-bottom: 4px; }
+/* paper confetti over the completion sheet (missions.js draws it for 1.6 s, then removes the canvas) */
+.lab-confetti { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+/* a short screen (1024x640 is the smallest we support): the same picker with tighter spacing so more rows fit in its 80vh */
+@media (max-height: 720px) {
+  .lab-pk-head { padding: 18px 28px 2px; }
+  .lab-pk-head.is-start { padding: 16px 28px 0; }
+  .lab-pk-head .lab-ms-title { font-size: 22px; margin: 2px 0 2px; }
+  .lab-pk-sub { font-size: 12.5px; line-height: 1.5; }
+  .lab-pk-scroll { padding: 0 28px 14px; }
+  .lab-pk-group { margin-top: 8px; }
+  .lab-pk-gname { padding-bottom: 3px; font-size: 11.5px; }
+  .lab-pk-row { padding: 4px 10px; }
+  .lab-pk-title { font-size: 15.5px; line-height: 1.45; }
+  .lab-pk-foot { padding: 6px 28px 14px; }
+  .lab-pk-foot .lab-ms-btns { margin-top: 4px; }
+  .lab-pk-foot .lab-ms-btn { padding-top: 7px; padding-bottom: 7px; }
+  .lab-pk-foot .lab-ms-note { margin-top: 8px; font-size: 11.5px; line-height: 1.55; }
+}
+/* a screen wide enough: the list goes into two columns (Finder + Terminal | Codex), so all ten missions show without scrolling,
+   also on 1366x768 and 1280x720 laptops (swapView animates the panel between the wide list and the narrow start page) */
+@media (min-width: 960px) {
+  .lab-msheet.is-pick[data-view="list"] { width: 860px; }
+  .lab-msheet.is-pick[data-view="list"] .lab-pk-scroll { column-count: 2; column-gap: 44px; }
+  /* the gap goes under each group, so both columns start at the same height */
+  .lab-msheet.is-pick[data-view="list"] .lab-pk-group { break-inside: avoid; margin-top: 0; padding-top: 6px; padding-bottom: 8px; }
+}
+@media (max-width: 620px) {
+  .lab-msheet.is-pick { width: 100%; }
+  .lab-pk-head, .lab-pk-scroll, .lab-pk-foot { padding-left: 22px; padding-right: 22px; }
+  .lab-pk-meta { white-space: normal; text-align: right; max-width: 7.5em; }
+}
+
+/* ---- cues (§19.4): the ring that follows the element a step points at, and the Dock icon that asks for attention */
+.lab-cue {
+  position: absolute; left: 0; top: 0; z-index: 45; box-sizing: border-box; pointer-events: none;
+  border: 2px solid #d98a1c; border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .55);     /* a hairline of white keeps the amber line readable on dark windows and on the wallpaper */
+  animation: lab-cue-in .25s ease-out;
+}
+.lab-cue-wave {
+  position: absolute; top: -2px; right: -2px; bottom: -2px; left: -2px; border: 2px solid #d98a1c; border-radius: inherit;
+  opacity: 0; animation: lab-cue-wave 2.4s ease-out infinite;
+}
+@keyframes lab-cue-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lab-cue-wave { 0% { transform: scale(1); opacity: .5; } 70%, 100% { transform: scale(var(--cue-grow, 1.18)); opacity: 0; } }
+/* the Dock's "needs attention" bounce: up 16 px twice (out fast, back faster), a rest, every 3 s */
+.lab-dock-item.lab-dock-attn .lab-dock-icon { animation: lab-dock-attn 3s infinite; }
+@keyframes lab-dock-attn {
+  0% { transform: translateY(0); animation-timing-function: ease-out; }
+  7.5% { transform: translateY(-16px); animation-timing-function: ease-in; }
+  15% { transform: translateY(0); animation-timing-function: ease-out; }
+  22.5% { transform: translateY(-16px); animation-timing-function: ease-in; }
+  30%, 100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-cue, .lab-cue-wave, .lab-dock-item.lab-dock-attn .lab-dock-icon { animation: none; }
+  .lab-cue-wave { display: none; }
 }
 .lab-phone { background: var(--lab-bg); color: var(--lab-ink); text-align: center; }
 .lab-phone-in { max-width: 420px; }
@@ -325,3 +484,4 @@ html.lab-connecting #lab-stage { filter: blur(10px) brightness(.75); }
   html.lab-connecting #lab-stage { filter: none; }
   .lab-cn-bar i { transition: none; }
 }
+.lab-pickrow:focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }

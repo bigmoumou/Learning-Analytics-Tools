@@ -357,8 +357,89 @@ window.LAB = window.LAB || {};
     isBooted: function () { return booted; }
   };
 
-  /* A no-op in v1 (sound is not built, DESIGN §0.2). */
-  LAB.sfx = function () {};
+  /* LAB.sfx(name) — the practice Mac's two sounds, made on the spot with Web Audio (no audio files, DESIGN §19.5):
+       'step'     a step was ticked: two short glass chimes, E6 then B6 75 ms later
+       'mission'  a mission was finished: C6 E6 G6 C7, the last one rings a little longer
+     Soft sine bells (a faint octave above), 6 ms attack, exponential decay, through a 6 kHz low-pass. Nothing else exists on
+     purpose: no swish, no riser, no noise, no pitch sweep, no reverb tail.
+     The AudioContext is created / resumed by the visitor's first pointerdown or keydown (browsers keep sound shut before that).
+     LAB.sfx.enabled (true; ?sound=0 and the card's 「聲音」 link turn it off, memory only) and LAB.sfx.last =
+     {name, at, played} (the last sound asked for, for tests; played = false when the browser had not unlocked audio yet). */
+  (function () {
+    var ctx = null, master = null, unlocked = false, lastAt = 0;
+
+    function ensure() {
+      if (!unlocked) return null;
+      if (!ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+        var lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 6000; lp.Q.value = 0.7;
+        master = ctx.createGain();
+        master.gain.value = 1;
+        master.connect(lp); lp.connect(ctx.destination);
+      }
+      if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) { /* ignore */ } }
+      return ctx;
+    }
+    function unlock() {
+      unlocked = true;
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+      try { ensure(); } catch (e) { /* ignore */ }
+    }
+    window.addEventListener('pointerdown', unlock, true);
+    window.addEventListener('keydown', unlock, true);
+
+    /* one soft bell: a sine at freq plus a faint sine one octave up, 6 ms in, then an exponential fade over dur seconds */
+    function bell(c, t, freq, peak, dur) {
+      var env = c.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(peak, t + 0.006);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      env.connect(master);
+      var o1 = c.createOscillator(), o2 = c.createOscillator(), g2 = c.createGain();
+      o1.type = 'sine'; o1.frequency.value = freq;
+      o2.type = 'sine'; o2.frequency.value = freq * 2;
+      g2.gain.value = 0.12;
+      o1.connect(env); o2.connect(g2); g2.connect(env);
+      o1.start(t); o2.start(t);
+      o1.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+      o1.onended = function () { try { env.disconnect(); g2.disconnect(); } catch (e) { /* ignore */ } };
+    }
+
+    function play(name) {
+      var c = ensure();
+      if (!c || c.state !== 'running') return false;
+      var t = c.currentTime + 0.01;
+      if (name === 'step') {
+        bell(c, t, 1318.5, 0.10, 0.45);
+        bell(c, t + 0.075, 1975.5, 0.10, 0.45);
+      } else {
+        bell(c, t, 1046.5, 0.09, 0.55);
+        bell(c, t + 0.09, 1318.5, 0.09, 0.55);
+        bell(c, t + 0.18, 1568, 0.09, 0.6);
+        bell(c, t + 0.30, 2093, 0.09, 0.9);
+      }
+      return true;
+    }
+
+    var sfx = function (name) {
+      if (!sfx.enabled || (name !== 'step' && name !== 'mission')) return false;
+      var now = Date.now();
+      // two steps ticked in the same instant make one chime, never two on top of each other (a finished mission always rings)
+      if (name === 'step' && now - lastAt < 160) return false;
+      lastAt = now;
+      var played = false;
+      try { played = play(name); } catch (e) { played = false; }
+      sfx.last = { name: name, at: now, played: played };
+      return played;
+    };
+    sfx.enabled = true;
+    sfx.last = null;
+    LAB.sfx = sfx;
+  })();
 
   /* A minimal perf holder; desktop.js fills it in (§2.10). wm.js calls LAB.perf.probe. */
   LAB.perf = LAB.perf || { low: false, probe: function () {} };
