@@ -485,3 +485,78 @@ html.lab-connecting #lab-stage { filter: blur(10px) brightness(.75); }
   .lab-cn-bar i { transition: none; }
 }
 .lab-pickrow:focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }
+
+/* ---------------------------------------------- the remote-session bar (DESIGN §20, js/remote.js) */
+/* The student's own computer speaks here, not the fake Mac: a dark HUD capsule (macOS vibrancy) at the top centre, inside the
+   menu bar's free middle, above the Mac and above the mission sheets. remote.js picks full / compact / below. */
+.lab-rb {
+  position: fixed; z-index: 3400; top: 3px; left: 50%;
+  display: flex; align-items: center; height: var(--rb-h, 22px); padding: 0 3px 0 9px; box-sizing: border-box;
+  border-radius: calc(var(--rb-h, 22px) / 2);
+  background: rgba(32, 32, 35, .74);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), 0 0 0 .5px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .24);
+  color: rgba(255, 255, 255, .93); font: 500 12px/1 var(--mac-font); letter-spacing: .01em; white-space: nowrap;
+  -webkit-font-smoothing: antialiased; text-shadow: none; user-select: none; -webkit-user-select: none;
+  opacity: 0; transform: translateY(-6px); pointer-events: none;
+  transition: opacity .26s var(--lab-ease), transform .26s var(--lab-ease);
+}
+.lab-rb.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.lab-rb-status { display: inline-flex; align-items: center; gap: 7px; padding-right: 9px; cursor: default; }
+.lab-rb-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #32d74b; box-shadow: 0 0 0 2px rgba(50, 215, 75, .2); }
+.lab-rb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.lab-rb-sep { flex: none; width: 1px; height: 12px; background: rgba(255, 255, 255, .2); }
+.lab-rb-btn {
+  display: inline-flex; align-items: center; gap: 5px; height: calc(var(--rb-h, 22px) - 4px); margin-left: 3px; padding: 0 8px 0 7px;
+  border: 0; border-radius: 9px; background: none; color: inherit; font: inherit; cursor: pointer;
+  transition: background-color .12s ease;
+}
+.lab-rb-btn:hover { background: rgba(255, 255, 255, .15); }
+.lab-rb-btn:active { background: rgba(255, 255, 255, .24); }
+.lab-rb-btn:focus-visible { outline: 2px solid rgba(10, 132, 255, .9); outline-offset: 1px; }
+.lab-rb-btn svg { flex: none; width: 12px; height: 12px; }
+/* compact: only the dot and 「中斷連線」 (the host name is in the tooltip) */
+.lab-rb[data-mode="compact"] .lab-rb-name, .lab-rb[data-mode="compact"] .lab-rb-sep { display: none; }
+.lab-rb[data-mode="compact"] .lab-rb-status { padding-right: 1px; }
+html[data-perf="low"] .lab-rb { background: rgba(32, 32, 35, .95); -webkit-backdrop-filter: none; backdrop-filter: none; }
+body:has(.lab-phone) .lab-rb { display: none; }
+@media (prefers-reduced-motion: reduce) { .lab-rb { transform: none; transition: opacity .2s linear; } }
+
+/* the alert before disconnecting: a macOS alert (app icon, bold title, small text, two equal buttons, the default one blue) */
+.lab-ra-scrim {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 3600;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .1); animation: lab-ra-fade .18s ease-out;
+}
+.lab-ra {
+  width: 260px; box-sizing: border-box; padding: 20px 16px 16px; border-radius: 12px; text-align: center;
+  background: rgba(240, 240, 242, .88);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .7), 0 0 0 .5px rgba(0, 0, 0, .2), 0 24px 60px rgba(0, 0, 0, .34);
+  color: #1d1d1f; font-family: var(--mac-font); -webkit-font-smoothing: antialiased;
+  animation: lab-ra-in .22s cubic-bezier(.2, .9, .3, 1.12);
+}
+.lab-ra-icon svg { display: block; width: 58px; height: 58px; margin: 0 auto 10px; }
+.lab-ra-title { margin: 0 0 6px; font-size: 13px; font-weight: 700; line-height: 1.4; }
+.lab-ra-text { margin: 0 0 16px; font-size: 11.5px; line-height: 1.5; color: #3a3a3f; }
+.lab-ra-btns { display: flex; gap: 8px; }
+.lab-ra-btns button { flex: 1; height: 28px; margin: 0; border: 0; border-radius: 7px; font: 500 13px/1 var(--mac-font); cursor: pointer; }
+.lab-ra-cancel { background: #fff; color: #1d1d1f; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .16), 0 1px 1.5px rgba(0, 0, 0, .12); }
+.lab-ra-cancel:active { background: #ececee; }
+.lab-ra-ok { background: linear-gradient(180deg, #3d96ff, #0a7aff); color: #fff; box-shadow: 0 0 0 .5px rgba(0, 70, 190, .4), 0 1px 1.5px rgba(0, 0, 0, .16); }
+.lab-ra-ok:active { background: linear-gradient(180deg, #2a86f0, #0068e0); }
+.lab-ra-btns button:focus-visible { outline: 3px solid rgba(10, 132, 255, .45); outline-offset: 1px; }
+@keyframes lab-ra-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes lab-ra-fade { from { opacity: 0; } }
+html[data-perf="low"] .lab-ra { background: rgba(240, 240, 242, .98); -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (prefers-reduced-motion: reduce) { .lab-ra, .lab-ra-scrim { animation: none; } }
+
+/* after 「中斷連線」: the connecting screen's look in reverse, for a moment, then the page goes back */
+.lab-bye {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  background: #0d0e11; color: #e9e9ec; font-family: var(--mac-font); text-align: center; cursor: progress;
+  opacity: 0; transition: opacity .35s var(--lab-ease);
+}
+.lab-bye.is-in { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .lab-bye { transition: none; } }

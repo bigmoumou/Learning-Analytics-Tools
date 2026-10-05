@@ -39,7 +39,7 @@ python -m http.server 8810
 
 - `index.html`：頁面骨架（假的 Mac 畫面佔滿整頁，任務卡是浮在左上角的液態玻璃卡片）。
 - `css/`：`base`（變數、版面）、`shell`（選單列、Dock、桌面、Spotlight）、`window`（視窗外框）、`mission`（液態玻璃任務卡、任務單），以及各程式自己的 CSS。
-- `js/`：全部掛在一個全域 `window.LAB` 底下，不用 ES module，也不用建置。`lab.js`（工具、事件匯流排）、`store.js`（只存在記憶體裡的狀態，不寫入瀏覽器）、`vfs.js` + `seed.js`（假檔案系統）、`wm.js`（視窗）、`apps.js`、`menu.js`、`dnd.js`（拖放）、`desktop.js`（桌面、Dock、Spotlight）、`missions.js`（任務引擎與任務卡）、`boot.js`。
+- `js/`：全部掛在一個全域 `window.LAB` 底下，不用 ES module，也不用建置。`lab.js`（工具、事件匯流排）、`store.js`（只存在記憶體裡的狀態，不寫入瀏覽器）、`vfs.js` + `seed.js`（假檔案系統）、`wm.js`（視窗）、`apps.js`、`menu.js`、`dnd.js`（拖放）、`desktop.js`（桌面、Dock、Spotlight）、`missions.js`（任務引擎與任務卡）、`remote.js`（上方中間的「中斷連線」膠囊：離開遠端連線、回到上一頁）、`boot.js`。
 - 標成 `[PORTABLE]` 的檔案與 Mac 外觀無關，之後做 Windows 版時可以直接共用。
 
 設計規格見 `DESIGN.md`。
