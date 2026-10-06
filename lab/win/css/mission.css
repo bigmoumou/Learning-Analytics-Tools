@@ -40,7 +40,7 @@ html[data-perf="low"] .lab-glass { background: #f9f9f9; -webkit-backdrop-filter:
   position: absolute; right: 12px; left: auto; top: var(--lab-card-top, calc(var(--lab-mb, 0px) + 10px)); z-index: 50;
   width: clamp(268px, 27vw, 340px);
   /* --lab-card-bottom (desktop.js) = the taskbar's height: the card stops 10 px above the taskbar */
-  max-height: calc(100% - var(--lab-card-top, calc(var(--lab-mb, 0px) + 10px)) - var(--lab-card-bottom, 48px) - 10px);
+  max-height: calc(100% - var(--lab-card-top, calc(var(--lab-mb, 0px) + 10px)) - var(--lab-card-bottom, 60px) - 10px);
   display: flex; flex-direction: column; align-items: flex-start;
   font-family: var(--fl-font); font-size: 13.5px; line-height: 1.6; color: var(--lab-ink);
   pointer-events: none;                      /* only the card, the pill and the note take clicks */
@@ -446,8 +446,9 @@ body.lab-card-dragging, body.lab-card-dragging * { cursor: grabbing !important; 
 @keyframes lab-cue-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lab-cue-wave { 0% { transform: scale(1); opacity: .5; } 70%, 100% { transform: scale(var(--cue-grow, 1.18)); opacity: 0; } }
 /* The taskbar's "needs attention" flash (the class lab-dock-attn that missions.js puts on a taskbar button) is drawn by shell.css
-   (the tile's ::before fades in and out in the accent, and the indicator pill under the icon pulses): the taskbar is its. With reduced
-   motion it stays lit. Targets that are not taskbar buttons (Start, the search box, desktop icons, windows) get the ring above. */
+   (like Windows 11: the button's own tile softly flashes amber #f7630c, no outline, and the long indicator bar under the icon is amber too):
+   the taskbar is its. With reduced motion it stays lit. Targets that are not taskbar buttons (Start, the search box, desktop icons,
+   windows) get the ring above. */
 @media (prefers-reduced-motion: reduce) {
   .lab-cue, .lab-cue-wave { animation: none; }
   .lab-cue-wave { display: none; }

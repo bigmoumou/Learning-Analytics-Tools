@@ -447,12 +447,224 @@
   LAB.desktop.transfer = transfer;
 
   /* ==================================================== desktop icons (§2.6) */
-  var icons = new Map();            // path -> {el, st}
+  var icons = new Map();            // path -> {el, st, icon, dispose}
   var selected = new Set();
   var renaming = null;              // path currently in the inline editor
-  var iconPos = new Map();          // path -> {x,y}
   var renderTimer = null;
-  var rubber = null;
+
+  /* ---- where the icons sit (round 6, 製作/lab-round6/SPEC.md §2) ----
+     As on a real Mac an icon sits wherever it was dropped: free placement, nothing snaps unless the student picks 整理 (Clean Up)
+     or a sort order. iconPos: path -> {x, y, r} = the top-left of the 96x100 cell in stage px, r = true when the icon hangs on the
+     right half of the screen (it then keeps its distance from the right edge when the stage widens or narrows).
+     New items take the next free cell, counting from the top right, down, then to the left. Everything stays in memory only. */
+  var CELL_W = 96, CELL_H = 100, PITCH = 100, GRID_TOP = 56, GRID_RIGHT = 14;
+  var iconPos = new Map();
+  var lastPos = new Map();          // path -> {x, y, r, w}: where an item that left the desktop sat (undo puts it back there)
+  var spots = new Map();            // path -> {x, y}: a new item that should appear under the pointer (dropped from a Finder window)
+  var dropHint = null;              // {x, y, n, t}: the last drop from a Finder window, used by the items that arrive next
+  var sortMode = 'none';            // none | name | kind | modified | size   (排序方式)
+  var lastW = 0, lastH = 0;         // the stage size the positions were last laid out for
+
+  function dockLimit() {
+    var t = stage.dockTop ? stage.dockTop() : stage.h - 93;
+    return Math.min(t, stage.h - 40);
+  }
+  /* the area a cell may sit in: below the menu bar, above the Dock, inside the screen (top-left of the cell) */
+  function box() {
+    var minX = 4, minY = stage.menubarH + 2;
+    return { minX: minX, minY: minY, maxX: Math.max(minX, stage.w - CELL_W - 4), maxY: Math.max(minY, dockLimit() - CELL_H - 8) };
+  }
+  function gridDims() {
+    var b = box();
+    return {
+      rows: Math.max(1, Math.floor((b.maxY - GRID_TOP) / PITCH) + 1),
+      cols: Math.max(1, Math.floor((stage.w - GRID_RIGHT - CELL_W - b.minX) / PITCH) + 1)
+    };
+  }
+  function slotAt(c, r) { return { x: stage.w - GRID_RIGHT - CELL_W - c * PITCH, y: GRID_TOP + r * PITCH }; }
+  function clampX(x, b) { return Math.round(Math.max(b.minX, Math.min(b.maxX, x))); }
+  function clampY(y, b) { return Math.round(Math.max(b.minY, Math.min(b.maxY, y))); }
+  function setPos(path, x, y) {
+    var b = box();
+    x = clampX(x, b); y = clampY(y, b);
+    iconPos.set(path, { x: x, y: y, r: x + CELL_W / 2 > stage.w / 2 });
+  }
+  /* is there room for a cell at (x, y)? (an icon within about 70 px blocks it) */
+  function isFree(x, y, ignore) {
+    var free = true;
+    iconPos.forEach(function (p, path) {
+      if (free && !(ignore && ignore.has(path)) && Math.abs(p.x - x) < 70 && Math.abs(p.y - y) < 70) free = false;
+    });
+    return free;
+  }
+  function nextFreeCell() {
+    var g = gridDims();
+    for (var c = 0; c < g.cols; c++) {
+      for (var r = 0; r < g.rows; r++) { var s = slotAt(c, r); if (isFree(s.x, s.y)) return s; }
+    }
+    // the screen is full: pile onto the first cell, a little off each time
+    var n = iconPos.size % 6, s0 = slotAt(0, 0);
+    return { x: s0.x - n * 14, y: s0.y + n * 14 };
+  }
+  function nearestFreeCell(x, y, ignore) {
+    var g = gridDims(), best = null, bd = Infinity;
+    for (var c = 0; c < g.cols; c++) {
+      for (var r = 0; r < g.rows; r++) {
+        var s = slotAt(c, r);
+        if (!isFree(s.x, s.y, ignore)) continue;
+        var d = (s.x - x) * (s.x - x) + (s.y - y) * (s.y - y);
+        if (d < bd) { bd = d; best = s; }
+      }
+    }
+    return best;
+  }
+  /* an icon dropped almost exactly on another one steps aside a little (macOS lets icons overlap, but not sit exactly on each other) */
+  var NUDGES = [[0, 0], [22, 16], [-22, 16], [22, -16], [-22, -16], [44, 32], [-44, 32], [44, -32], [-44, -32], [66, 48], [-66, 48], [66, -48], [-66, -48]];
+  function nearOther(x, y, skip) {
+    var near = false;
+    iconPos.forEach(function (p, path) {
+      if (!near && !(skip && skip.has(path)) && Math.abs(p.x - x) < 14 && Math.abs(p.y - y) < 14) near = true;
+    });
+    return near;
+  }
+  function placeNear(path, x, y) {
+    var b = box(), self = new Set([path]);
+    for (var k = 0; k < NUDGES.length; k++) {
+      var nx = clampX(x + NUDGES[k][0], b), ny = clampY(y + NUDGES[k][1], b);
+      if (!nearOther(nx, ny, self)) { setPos(path, nx, ny); return; }
+    }
+    setPos(path, x, y);
+  }
+
+  /* ---- sorting (排序方式): Latin and digits before Chinese, case-insensitive, 2 before 10 (the same order as the Finder) ---- */
+  var COLL = null;
+  try { COLL = new Intl.Collator(['zh-Hant-TW', 'zh-TW'], { numeric: true, sensitivity: 'base' }); } catch (e) { COLL = null; }
+  function cmpName(a, b) {
+    var ha = a.codePointAt(0) >= 0x2E80 ? 1 : 0, hb = b.codePointAt(0) >= 0x2E80 ? 1 : 0;
+    if (ha !== hb) return ha - hb;
+    if (COLL) { var r = COLL.compare(a, b); if (r !== 0) return r; }
+    else {
+      var la = a.toLowerCase(), lb = b.toLowerCase();
+      if (la !== lb) return la < lb ? -1 : 1;
+    }
+    return a < b ? -1 : (a > b ? 1 : 0);
+  }
+  function sortedList(list, mode) {
+    var arr = list.slice();
+    arr.sort(function (a, b) {
+      if (mode === 'kind') {
+        var ka = a.type === 'dir' ? 0 : 1, kb = b.type === 'dir' ? 0 : 1;
+        if (ka !== kb) return ka - kb;
+        var ea = LAB.vfs.extname(a.name), eb = LAB.vfs.extname(b.name);
+        if (ea !== eb) return ea < eb ? -1 : 1;
+      } else if (mode === 'modified') {
+        if (a.mtime !== b.mtime) return b.mtime - a.mtime;
+      } else if (mode === 'size') {
+        if ((a.size || 0) !== (b.size || 0)) return (b.size || 0) - (a.size || 0);
+      }
+      return cmpName(a.name, b.name);
+    });
+    return arr;
+  }
+  /* every icon in sorted order, filling the cells from the top right: down, then to the left */
+  function arrangeSorted(list) {
+    var g = gridDims();
+    sortedList(list, sortMode).forEach(function (st, i) {
+      var c = Math.min(g.cols - 1, Math.floor(i / g.rows)), r = i % g.rows, s = slotAt(c, r);
+      setPos(st.path, s.x, s.y);
+    });
+  }
+
+  /* 整理 (Clean Up): every icon moves to the nearest cell of the grid; two that want the same cell, the later one takes the nearest free one */
+  function cleanUp() {
+    var g = gridDims(), taken = {};
+    var items = [];
+    iconPos.forEach(function (p, path) {
+      var c = Math.max(0, Math.min(g.cols - 1, Math.round((stage.w - GRID_RIGHT - CELL_W - p.x) / PITCH)));
+      var r = Math.max(0, Math.min(g.rows - 1, Math.round((p.y - GRID_TOP) / PITCH)));
+      items.push({ path: path, p: p, c: c, r: r });
+    });
+    items.sort(function (a, b) { return a.c - b.c || a.r - b.r || a.p.y - b.p.y || b.p.x - a.p.x; });
+    items.forEach(function (it) {
+      var cell = null;
+      if (!taken[it.c + ',' + it.r]) cell = { c: it.c, r: it.r };
+      for (var d = 1; !cell && d <= Math.max(g.cols, g.rows); d++) {
+        var bd = Infinity;
+        for (var dc = -d; dc <= d; dc++) {
+          for (var dr = -d; dr <= d; dr++) {
+            if (Math.max(Math.abs(dc), Math.abs(dr)) !== d) continue;
+            var c2 = it.c + dc, r2 = it.r + dr;
+            if (c2 < 0 || r2 < 0 || c2 >= g.cols || r2 >= g.rows || taken[c2 + ',' + r2]) continue;
+            var s2 = slotAt(c2, r2), dist = (s2.x - it.p.x) * (s2.x - it.p.x) + (s2.y - it.p.y) * (s2.y - it.p.y);
+            if (dist < bd) { bd = dist; cell = { c: c2, r: r2 }; }
+          }
+        }
+      }
+      if (!cell) return;                                    // more icons than cells: it stays where it is
+      taken[cell.c + ',' + cell.r] = true;
+      var s = slotAt(cell.c, cell.r);
+      setPos(it.path, s.x, s.y);
+    });
+  }
+
+  /* an icon that lies outside the usable area (the stage got smaller, the Dock got taller) is moved in: just clamped when that spot is
+     free, else to the nearest free cell. Returns true when something moved. */
+  function fitInside() {
+    var b = box(), out = [];
+    iconPos.forEach(function (p, path) {
+      if (p.x < b.minX || p.x > b.maxX || p.y < b.minY || p.y > b.maxY) out.push(path);
+    });
+    out.sort(function (a, c) { var pa = iconPos.get(a), pc = iconPos.get(c); return pc.x - pa.x || pa.y - pc.y; });
+    out.forEach(function (path) {
+      var p = iconPos.get(path), x = clampX(p.x, b), y = clampY(p.y, b);
+      iconPos.delete(path);
+      if (isFree(x, y)) { setPos(path, x, y); return; }
+      var cell = nearestFreeCell(x, y);
+      if (cell) setPos(path, cell.x, cell.y); else setPos(path, x, y);
+    });
+    return out.length > 0;
+  }
+
+  var arrangeTimer = null;
+  /* a short slide, only when many icons move at once (sorting, 整理, the screen changing size); dragging and dropping never slide */
+  function slideIcons() {
+    if (!desktopEl) return;
+    desktopEl.classList.add('is-arranging');
+    clearTimeout(arrangeTimer);
+    arrangeTimer = setTimeout(function () { desktopEl.classList.remove('is-arranging'); }, 320);
+  }
+  function applyPositions() {
+    iconPos.forEach(function (p, path) {
+      var rec = icons.get(path);
+      if (rec) { rec.el.style.left = p.x + 'px'; rec.el.style.top = p.y + 'px'; }
+    });
+  }
+  /* lay out every icon in `list` (the visible Desktop entries) */
+  function layoutIcons(list) {
+    var resized = lastW > 0 && (Math.abs(stage.w - lastW) > 0.5 || Math.abs(stage.h - lastH) > 0.5);
+    if (resized) iconPos.forEach(function (p) { if (p.r) p.x += stage.w - lastW; });
+    lastW = stage.w; lastH = stage.h;
+    iconPos.forEach(function (p, path) { if (!icons.has(path)) iconPos.delete(path); });
+    var moved = false;
+    if (sortMode !== 'none') arrangeSorted(list);
+    else {
+      list.forEach(function (st) {
+        if (iconPos.has(st.path)) return;
+        var spot = spots.get(st.path), mem = lastPos.get(st.path);
+        spots.delete(st.path);
+        if (spot) { placeNear(st.path, spot.x, spot.y); return; }
+        if (mem) {
+          var mx = mem.x + (mem.r ? stage.w - mem.w : 0);
+          if (isFree(mx, mem.y)) { setPos(st.path, mx, mem.y); return; }
+        }
+        var s = nextFreeCell();
+        setPos(st.path, s.x, s.y);
+      });
+      moved = fitInside();
+    }
+    if (moved || resized) slideIcons();
+    applyPositions();
+  }
 
   function setSelected(paths, silent) {
     var next = new Set(paths);
@@ -464,48 +676,13 @@
     if (!same && !silent) LAB.bus.emit('desktop:select', { paths: Array.from(selected) });
   }
 
-  function cellRows() {
-    var top = 56;
-    return Math.max(1, Math.floor((stage.h - top - 12) / 100));
-  }
-  function positionIcons(list) {
-    var rows = cellRows();
-    list.forEach(function (st, idx) {
-      var col = Math.floor(idx / rows), row = idx % rows;
-      var x = stage.w - 14 - 96 - col * 100, y = 56 + row * 100;
-      iconPos.set(st.path, { x: x, y: y });
-      var rec = icons.get(st.path);
-      if (rec) { rec.el.style.left = x + 'px'; rec.el.style.top = y + 'px'; }
-    });
-  }
-
   function updateKey() {
     if (!desktopEl) return;
     desktopEl.classList.toggle('is-key', !LAB.wm.focused());
   }
-  /* 排序方式 on the desktop (round 5): name (the default), kind, date modified, size */
-  var desktopSort = 'name';
-  function sortDesktop(list) {
-    if (desktopSort === 'name') return list;
-    var arr = list.slice();
-    arr.sort(function (a, b) {
-      if (desktopSort === 'kind') {
-        var ka = a.type === 'dir' ? 0 : 1, kb = b.type === 'dir' ? 0 : 1;
-        if (ka !== kb) return ka - kb;
-        var ea = LAB.vfs.extname(a.name), eb = LAB.vfs.extname(b.name);
-        if (ea !== eb) return ea < eb ? -1 : 1;
-      } else if (desktopSort === 'modified') {
-        if (a.mtime !== b.mtime) return b.mtime - a.mtime;
-      } else if (desktopSort === 'size') {
-        if ((a.size || 0) !== (b.size || 0)) return (b.size || 0) - (a.size || 0);
-      }
-      return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
-    });
-    return arr;
-  }
   function renderIcons() {
     var list = [];
-    try { list = sortDesktop(LAB.vfs.visible(LAB.vfs.list(DESKTOP))); } catch (e) { list = []; }
+    try { list = LAB.vfs.visible(LAB.vfs.list(DESKTOP)); } catch (e) { list = []; }
     var seen = new Set();
     list.forEach(function (st) {
       seen.add(st.path);
@@ -515,7 +692,7 @@
         rec.st = st;
         if (renaming !== st.path) {
           var lab = rec.el.querySelector('.lab-dicon-label');
-          if (lab && lab.textContent !== st.name) lab.textContent = st.name;
+          if (lab && lab.textContent !== labelFor(st)) lab.textContent = labelFor(st);
         }
         var ic = LAB.icons.forNode(st);
         if (rec.icon !== ic) { rec.icon = ic; rec.el.querySelector('.lab-dicon-img').innerHTML = LAB.icons.get(ic, { size: 64 }); }
@@ -523,12 +700,17 @@
     });
     icons.forEach(function (rec, p) {
       if (!seen.has(p) && renaming !== p) {
+        var pos = iconPos.get(p);
+        if (pos) {
+          lastPos.set(p, { x: pos.x, y: pos.y, r: pos.r, w: stage.w });
+          if (lastPos.size > 200) lastPos.delete(lastPos.keys().next().value);
+        }
         if (rec.el.parentNode) rec.el.parentNode.removeChild(rec.el);
         icons.delete(p); iconPos.delete(p); selected.delete(p);
         if (rec.dispose) rec.dispose();
       }
     });
-    positionIcons(list.filter(function (s) { return icons.has(s.path); }));
+    layoutIcons(list.filter(function (s) { return icons.has(s.path); }));
     setSelected(Array.from(selected).filter(function (p) { return icons.has(p); }), true);
   }
   function scheduleRender() {
@@ -542,7 +724,166 @@
   var pendingFlush = false;
   function flushAfterDrag() { if (pendingFlush) { pendingFlush = false; renderIcons(); } }
 
-  function labelFor(st) { return st.name; }
+  /* a very long name keeps its start and its end with a middle ellipsis, like the Finder (the full name stays in aria-label) */
+  function takeWidth(cps, maxW, fromEnd) {
+    var out = [], w = 0, i;
+    if (fromEnd) {
+      for (i = cps.length - 1; i >= 0; i--) {
+        var cw = LAB.util.charWidth(cps[i].codePointAt(0));
+        if (w + cw > maxW) break;
+        w += cw; out.unshift(cps[i]);
+      }
+    } else {
+      for (i = 0; i < cps.length; i++) {
+        var cw2 = LAB.util.charWidth(cps[i].codePointAt(0));
+        if (w + cw2 > maxW) break;
+        w += cw2; out.push(cps[i]);
+      }
+    }
+    return out.join('');
+  }
+  function labelFor(st) {
+    var name = st.name;
+    if (!LAB.util.displayWidth || LAB.util.displayWidth(name) <= 28) return name;
+    var cps = Array.from(name);
+    return takeWidth(cps, 14, false) + '…' + takeWidth(cps, 11, true);
+  }
+
+  /* ---- dragging icons (round 6) ----
+     The drag engine (dnd.js) does the hit-testing; here the icons themselves follow the pointer (a translucent copy of each dragged icon,
+     keeping its place relative to the others) while the originals stay dimmed where they were. Where the pointer lets go decides:
+     a folder icon, the Trash, a window or an app in the Dock -> the drop rules of dnd.js; empty desktop -> the icons move there;
+     the menu bar, the Dock's gaps or off the screen -> the icons move to the nearest allowed spot; a window that refuses -> they slide back. */
+  var press = null;                 // the icon last pressed: {path, pt} (pt = the pointer at the press, in stage px)
+  var watch = null;                 // the window listeners that follow a press
+  var lastPtr = null;               // the last pointer event of the press (client px)
+  var relInfo = null;               // where the pointer was released: {x, y, overWin, t}
+  var dd = null;                    // the icon drag in progress: {paths, ghosts, lead, badge, obs}
+
+  function unwatch() {
+    if (!watch) return;
+    window.removeEventListener('pointermove', watch.move, true);
+    window.removeEventListener('pointerup', watch.up, true);
+    window.removeEventListener('pointercancel', watch.cancel, true);
+    watch = null;
+  }
+  /* pointerdown on an icon: listeners are added here, before dnd.js adds its own, so they run first on every event */
+  function watchPress(e, path) {
+    unwatch();
+    press = { path: path, pt: LAB.stage.toStage(e.clientX, e.clientY) };
+    lastPtr = e; relInfo = null;
+    watch = {
+      move: function (ev) { lastPtr = ev; if (dd) placeDrag(ev); },
+      up: function (ev) {
+        var list = document.elementsFromPoint(ev.clientX, ev.clientY), overWin = false;
+        for (var i = 0; i < list.length; i++) { if (list[i].closest && list[i].closest('.lab-win')) { overWin = true; break; } }
+        relInfo = { x: ev.clientX, y: ev.clientY, overWin: overWin, t: performance.now() };
+        unwatch();
+      },
+      cancel: function () { relInfo = null; unwatch(); }
+    };
+    window.addEventListener('pointermove', watch.move, true);
+    window.addEventListener('pointerup', watch.up, true);
+    window.addEventListener('pointercancel', watch.cancel, true);
+  }
+  function placeDrag(ev) {
+    if (!dd || !press) return;
+    var p = LAB.stage.toStage(ev.clientX, ev.clientY);
+    var t = 'translate(' + (p.x - press.pt.x) + 'px,' + (p.y - press.pt.y) + 'px)';
+    dd.ghosts.forEach(function (g) { g.style.transform = t; });
+  }
+  function beginIconDrag(payload) {
+    endIconDrag(true);
+    var layer = document.getElementById('lab-dnd');
+    if (!press || !layer) return;
+    var paths = (payload.paths || []).filter(function (p) { return icons.has(p) && iconPos.has(p); });
+    if (!paths.length) return;
+    dd = { paths: paths, ghosts: [], lead: null, badge: null, obs: null };
+    paths.forEach(function (p) {
+      var rec = icons.get(p), pos = iconPos.get(p);
+      var g = rec.el.cloneNode(true);
+      ['data-lab', 'data-path', 'role', 'aria-label', 'aria-selected', 'tabindex'].forEach(function (a) { g.removeAttribute(a); });
+      g.classList.remove('is-dragsrc', 'is-drop', 'is-renaming', 'lab-dnd-src');
+      g.classList.add('lab-dicon-ghost');
+      g.setAttribute('aria-hidden', 'true');
+      g.style.left = pos.x + 'px'; g.style.top = pos.y + 'px';
+      layer.appendChild(g);
+      rec.el.classList.add('is-dragsrc');
+      dd.ghosts.push(g);
+      if (p === press.path) dd.lead = g;
+    });
+    if (!dd.lead) dd.lead = dd.ghosts[0];
+    if (paths.length > 1) dd.lead.appendChild(h('div', { class: 'lab-dicon-count' }, String(paths.length)));
+    dd.badge = h('div', { class: 'lab-dicon-badge' });
+    dd.lead.appendChild(dd.badge);
+    // the + (copy) and ↪ (alias) badges that dnd.js works out while the pointer moves are shown on the lead icon instead of the hidden engine ghost
+    var eb = layer.querySelector('.lab-ghost-badge');
+    var mirror = function () {
+      if (!dd || !eb) return;
+      dd.badge.className = 'lab-dicon-badge' + (eb.classList.contains('is-copy') ? ' is-copy' : eb.classList.contains('is-link') ? ' is-link' : '');
+      dd.badge.textContent = eb.classList.contains('is-copy') ? '+' : eb.classList.contains('is-link') ? '↪' : '';
+    };
+    if (eb && window.MutationObserver) { dd.obs = new MutationObserver(mirror); dd.obs.observe(eb, { attributes: true, attributeFilter: ['class'] }); mirror(); }
+    document.body.classList.add('lab-dd-own');
+    if (lastPtr) placeDrag(lastPtr);
+  }
+  function endIconDrag(instant) {
+    if (!dd) return;
+    var d = dd; dd = null;
+    if (d.obs) d.obs.disconnect();
+    document.body.classList.remove('lab-dd-own');
+    d.paths.forEach(function (p) { var rec = icons.get(p); if (rec) rec.el.classList.remove('is-dragsrc'); });
+    var gone = function () { d.ghosts.forEach(function (g) { if (g.parentNode) g.parentNode.removeChild(g); }); };
+    if (instant || reduced()) { gone(); return; }
+    d.ghosts.forEach(function (g) { g.style.transition = 'transform .25s ease, opacity .25s ease'; g.style.transform = 'translate(0px, 0px)'; g.style.opacity = '0'; });
+    setTimeout(gone, 280);
+  }
+  /* the icons let go at `pt` (stage px): the whole group moves by what the pointer moved, kept inside the usable area as one block */
+  function moveIcons(paths, pt) {
+    var arr = (paths || []).filter(function (p) { return iconPos.has(p); });
+    if (!arr.length || !press || !pt) return false;
+    var set = new Set(arr), b = box();
+    var dx = pt.x - press.pt.x, dy = pt.y - press.pt.y;
+    var loX = -Infinity, hiX = Infinity, loY = -Infinity, hiY = Infinity;
+    arr.forEach(function (p) {
+      var q = iconPos.get(p);
+      loX = Math.max(loX, b.minX - q.x); hiX = Math.min(hiX, b.maxX - q.x);
+      loY = Math.max(loY, b.minY - q.y); hiY = Math.min(hiY, b.maxY - q.y);
+    });
+    if (loX <= hiX) dx = Math.max(loX, Math.min(hiX, dx));
+    if (loY <= hiY) dy = Math.max(loY, Math.min(hiY, dy));
+    var picked = null;
+    for (var k = 0; k < NUDGES.length && !picked; k++) {
+      var tmp = [], ok = true;
+      for (var i = 0; i < arr.length; i++) {
+        var q2 = iconPos.get(arr[i]);
+        var x = clampX(q2.x + dx + NUDGES[k][0], b), y = clampY(q2.y + dy + NUDGES[k][1], b);
+        tmp.push([arr[i], x, y]);
+        if (nearOther(x, y, set)) { ok = false; break; }
+      }
+      if (ok) picked = tmp;
+    }
+    if (!picked) picked = arr.map(function (p) { var q3 = iconPos.get(p); return [p, clampX(q3.x + dx, b), clampY(q3.y + dy, b)]; });
+    picked.forEach(function (it) { setPos(it[0], it[1], it[2]); });
+    sortMode = 'none';                                      // dragging an icon takes the sort order away, as on a Mac
+    applyPositions();
+    var pos = arr.map(function (p) { var q4 = iconPos.get(p); return { x: q4.x, y: q4.y }; });
+    LAB.bus.emit('desktop:move', { paths: arr.slice(), positions: pos });
+    return true;
+  }
+
+  /* ---- public: sorting and clean-up (the same as the 排序方式 and 整理 menu items) ---- */
+  function sortBy(mode) {
+    if (['none', 'name', 'kind', 'modified', 'size'].indexOf(mode) < 0) return;
+    sortMode = mode;
+    if (mode !== 'none') { slideIcons(); renderIcons(); }
+    LAB.bus.emit('desktop:arrange', { kind: 'sort', mode: mode });
+  }
+  function doCleanUp() {
+    slideIcons();
+    if (sortMode !== 'none') renderIcons(); else { cleanUp(); applyPositions(); }
+    LAB.bus.emit('desktop:arrange', { kind: 'cleanup', mode: sortMode });
+  }
 
   function makeIcon(st) {
     var iconName = LAB.icons.forNode(st);
@@ -564,6 +905,7 @@
     }, {
       onPressSelect: function (e) {
         var p = path();
+        watchPress(e, p);
         LAB.wm.focusDesktop();
         if (e.metaKey || e.ctrlKey || e.shiftKey) {
           var n = new Set(selected);
@@ -631,13 +973,13 @@
       var val = input.value;
       renaming = null;
       rec.el.classList.remove('is-renaming');
-      label.textContent = rec.st.name;
+      label.textContent = labelFor(rec.st);
       if (commit && val !== rec.st.name && val.trim() !== '') {
         try {
           var oldPathR = rec.st.path, oldNameR = rec.st.name;
-          var np = LAB.vfs.rename(rec.st.path, val, { by: 'desktop' });
+          var np = LAB.vfs.rename(rec.st.path, val, { by: 'desktop' });   // the fs:change handler moves the icon's spot to the new name
           LAB.undo.push('重新命名「' + oldNameR + '」', function () { LAB.vfs.rename(np, oldNameR, { by: 'desktop' }); });
-          icons.delete(rec.st.path); iconPos.delete(rec.st.path);
+          icons.delete(oldPathR);
           rec.st = LAB.vfs.stat(np) || rec.st;
           rec.el.dataset.path = np;
           icons.set(np, rec);
@@ -661,11 +1003,23 @@
   LAB.desktop.startRename = startRename;
   LAB.desktop.selected = function () { return Array.from(selected); };
   LAB.desktop.refreshIcons = renderIcons;
+  LAB.desktop.sortBy = sortBy;
+  LAB.desktop.sortMode = function () { return sortMode; };
+  LAB.desktop.cleanUp = doCleanUp;
+  /* {path: {x, y}} in stage px (the top-left of each icon's 96x100 cell) and the area the cells may sit in */
+  LAB.desktop.positions = function () {
+    var o = {};
+    iconPos.forEach(function (p, path) { o[path] = { x: p.x, y: p.y }; });
+    return o;
+  };
+  LAB.desktop.iconArea = function () { var b = box(); return { x: b.minX, y: b.minY, w: b.maxX - b.minX + CELL_W, h: b.maxY - b.minY + CELL_H }; };
 
-  function newFolderOnDesktop() {
+  /* a new folder from the desktop's right-click menu appears where the pointer was, like on a Mac (at x, y in stage px) */
+  function newFolderOnDesktop(at) {
     var name = LAB.vfs.uniqueName(DESKTOP, '未命名檔案夾');
     var p = LAB.vfs.join(DESKTOP, name);
-    try { LAB.vfs.mkdir(p, { by: 'desktop' }); } catch (e) { LAB.ui.vfsFail(null, e, '無法新增檔案夾', p); return; }
+    if (at && typeof at.x === 'number') spots.set(p, { x: at.x - CELL_W / 2, y: at.y - 8 });
+    try { LAB.vfs.mkdir(p, { by: 'desktop' }); } catch (e) { spots.delete(p); LAB.ui.vfsFail(null, e, '無法新增檔案夾', p); return; }
     startRename(p);
   }
 
@@ -704,20 +1058,22 @@
     var dest = LAB.vfs.join(DESKTOP, LAB.vfs.uniqueName(DESKTOP, base, '.zip'));
     try { LAB.vfs.zipCreate(paths, dest, { by: 'desktop' }); } catch (e) { LAB.ui.toast('壓縮沒有成功'); }
   }
+  /* 排序方式: 無 leaves the icons where they are; the others line them up from the top right, down and then to the left */
   function sortMenu() {
-    return [['name', '名稱'], ['kind', '種類'], ['modified', '修改日期'], ['size', '大小']].map(function (s) {
-      return { label: s[1], checked: desktopSort === s[0], action: function () { desktopSort = s[0]; renderIcons(); } };
+    return [['none', '無'], ['name', '名稱'], ['kind', '種類'], ['modified', '修改日期'], ['size', '大小']].map(function (s) {
+      return { label: s[1], checked: sortMode === s[0], action: function () { sortBy(s[0]); } };
     });
   }
   function emptyMenu(x, y) {
     LAB.menu.contextMenu(x, y, [
-      { label: '新增檔案夾', action: newFolderOnDesktop },
+      { label: '新增檔案夾', action: function () { newFolderOnDesktop({ x: x, y: y }); } },
       { separator: true },
       { label: '取得資訊', enabled: !!(LAB.finder && LAB.finder.info), action: function () { LAB.finder.info([DESKTOP]); } },
       { label: '更改桌布⋯', action: function () { if (LAB.sys && LAB.sys.openSettings) LAB.sys.openSettings('wallpaper'); else LAB.ui.toast('這個功能還沒安裝（練習版）'); } },
       { separator: true },
       { label: '使用堆疊', enabled: false },
-      { label: '排序方式', submenu: sortMenu() }
+      { label: '排序方式', submenu: sortMenu() },
+      { label: '整理', action: doCleanUp }
     ]);
   }
   function trashSelection(paths) {
@@ -735,12 +1091,83 @@
     renderIcons();
   }
 
+  /* ---- keyboard on the desktop (Finder frontmost, no window focused): arrows, type-to-select, ⌘A, Space ---- */
+  var typeBuf = '', typeAt = 0;
+  function keyReady() { return !LAB.wm.focused() && !renaming && !LAB.dnd.active() && !(LAB.keys.hasModal && LAB.keys.hasModal()); }
+  function arrowSelect(dir, extend) {
+    var all = [];
+    iconPos.forEach(function (p, path) { if (icons.has(path)) all.push({ path: path, p: p }); });
+    if (!all.length) return false;
+    var cur = null;
+    if (selected.size) {
+      // the "current" icon is the selected one nearest to where the key points
+      Array.from(selected).forEach(function (sp) {
+        var q = iconPos.get(sp);
+        if (!q) return;
+        var key = dir === 'left' ? q.x : dir === 'right' ? -q.x : dir === 'up' ? q.y : -q.y;
+        if (!cur || key < cur.key) cur = { path: sp, p: q, key: key };
+      });
+    }
+    if (!cur) {
+      // nothing selected: start from the first icon (top right), like the order the icons were laid out in
+      all.sort(function (a, b) { return b.p.x - a.p.x || a.p.y - b.p.y; });
+      setSelected([all[0].path]);
+      return true;
+    }
+    var best = null, bs = Infinity;
+    all.forEach(function (o) {
+      if (o.path === cur.path) return;
+      var dx = o.p.x - cur.p.x, dy = o.p.y - cur.p.y, along, across;
+      if (dir === 'left') { along = -dx; across = Math.abs(dy); }
+      else if (dir === 'right') { along = dx; across = Math.abs(dy); }
+      else if (dir === 'up') { along = -dy; across = Math.abs(dx); }
+      else { along = dy; across = Math.abs(dx); }
+      if (along < 10) return;
+      var score = along + across * 3;
+      if (score < bs) { bs = score; best = o; }
+    });
+    if (!best) return true;
+    setSelected(extend ? Array.from(selected).concat([best.path]) : [best.path]);
+    return true;
+  }
+  function typeSelect(ch) {
+    var now = Date.now();
+    typeBuf = (now - typeAt > 800 ? '' : typeBuf) + ch;
+    typeAt = now;
+    var list = [];
+    icons.forEach(function (rec, p) { if (iconPos.has(p)) list.push(rec.st); });
+    list.sort(function (a, b) { return cmpName(a.name, b.name); });
+    var hit = null;
+    for (var i = 0; i < list.length; i++) { if (list[i].name.toLowerCase().indexOf(typeBuf) === 0) { hit = list[i]; break; } }
+    if (hit) setSelected([hit.path]);
+    return !!hit;
+  }
+
   function setupDesktop() {
     // fs changes
-    LAB.bus.on('fs:change', function () { scheduleRender(); });
-    LAB.bus.on('dnd:drop', flushAfterDrag);
-    LAB.bus.on('dnd:cancel', flushAfterDrag);
+    LAB.bus.on('fs:change', function (e) {
+      if (e && e.from && e.path && (e.op === 'rename' || e.op === 'move') && iconPos.has(e.from) && LAB.vfs.same(LAB.vfs.dirname(e.path), DESKTOP)) {
+        iconPos.set(e.path, iconPos.get(e.from)); iconPos.delete(e.from);      // a renamed item keeps its place
+      }
+      if (e && e.path && e.by === 'desktop' && (e.op === 'move' || e.op === 'copy') && dropHint && Date.now() - dropHint.t < 3000 && LAB.vfs.same(LAB.vfs.dirname(e.path), DESKTOP)) {
+        spots.set(e.path, { x: dropHint.x - CELL_W / 2 + dropHint.n * 18, y: dropHint.y - 40 + dropHint.n * 18 });   // dropped from a window: lands under the pointer
+        dropHint.n++;
+      }
+      scheduleRender();
+    });
+    LAB.bus.on('dnd:start', function (d) { if (d && d.payload && d.payload.from === 'desktop') beginIconDrag(d.payload); });
+    LAB.bus.on('dnd:drop', function () { endIconDrag(true); flushAfterDrag(); });
+    LAB.bus.on('dnd:cancel', function (d) {
+      var pl = d && d.payload;
+      if (dd && pl && pl.from === 'desktop' && relInfo && performance.now() - relInfo.t < 80 && !relInfo.overWin) {
+        // let go over the menu bar, a gap in the Dock or outside the screen: the icons are put at the nearest spot they may sit
+        moveIcons(dd.paths, LAB.stage.toStage(relInfo.x, relInfo.y));
+        endIconDrag(true);
+      } else endIconDrag(false);
+      flushAfterDrag();
+    });
     LAB.bus.on('stage:resize', function () { renderIcons(); });
+    LAB.bus.on('dock:fit', function () { if (fitInside()) { slideIcons(); applyPositions(); } });
     ['win:focus', 'win:close', 'win:minimize', 'win:restore', 'app:frontmost'].forEach(function (n) { LAB.bus.on(n, updateKey); });
     updateKey();
 
@@ -763,19 +1190,24 @@
       } else { LAB.wm.focusDesktop(); setSelected([]); emptyMenu(p.x, p.y); }
     });
 
-    // desktop is a drop target: files from a Finder window are moved into ~/Desktop (⌥ = copy)
+    // the desktop is a drop target. Icons of the desktop itself land where they are dropped (a window or the Dock is another target, so
+    // they never reach this one); files from a Finder window are moved into ~/Desktop (⌥ = copy) and appear under the pointer.
     LAB.dnd.target(desktopEl, {
       id: 'desktop',
       accept: function (pl, mods) {
         if (pl.kind !== 'fs') return false;
-        if (pl.from === 'desktop') return false;
+        if (pl.from === 'desktop') return mods.mode === 'copy' ? false : 'move';
         for (var i = 0; i < pl.paths.length; i++) { if (LAB.vfs.same(LAB.vfs.dirname(pl.paths[i]), DESKTOP) && !(mods.altKey || mods.mode === 'copy')) return false; }
         return mods.altKey || mods.mode === 'copy' ? 'copy' : 'move';
       },
-      drop: function (pl, ctx) { transfer(pl.paths, DESKTOP, ctx.mode === 'copy' ? 'copy' : 'move', 'desktop'); }
+      drop: function (pl, ctx) {
+        if (pl.from === 'desktop') { moveIcons(pl.paths, { x: ctx.x, y: ctx.y }); return; }
+        dropHint = { x: ctx.x, y: ctx.y, n: 0, t: Date.now() };
+        transfer(pl.paths, DESKTOP, ctx.mode === 'copy' ? 'copy' : 'move', 'desktop');
+      }
     });
 
-    // keyboard (Return, ⌘↓, ⌘⌫) while Finder has no focused window
+    // keyboard (Return, ⌘↓, ⌘⌫, arrows, ⌘A, Space, type-to-select) while Finder has no focused window
     LAB.keys.on('enter', function () {
       if (LAB.wm.focused() || renaming || selected.size !== 1) return false;
       startRename(Array.from(selected)[0]);
@@ -788,6 +1220,21 @@
       if (LAB.wm.focused() || renaming || !selected.size) return false;
       trashSelection(Array.from(selected));
     }, { scope: 'finder' });
+    ['left', 'right', 'up', 'down'].forEach(function (dir) {
+      LAB.keys.on('arrow' + dir, function () { return keyReady() && icons.size ? arrowSelect(dir, false) : false; }, { scope: 'finder' });
+      LAB.keys.on('shift+arrow' + dir, function () { return keyReady() && icons.size ? arrowSelect(dir, true) : false; }, { scope: 'finder' });
+    });
+    LAB.keys.on('mod+a', function () {
+      if (!keyReady() || !icons.size) return false;
+      setSelected(Array.from(icons.keys()));
+    }, { scope: 'finder' });
+    LAB.keys.on('space', function () {
+      if (!keyReady() || !selected.size || !LAB.quicklook || !LAB.quicklook.toggle) return false;
+      LAB.quicklook.toggle(Array.from(selected)[0]);
+    }, { scope: 'finder' });
+    'abcdefghijklmnopqrstuvwxyz0123456789'.split('').forEach(function (ch) {
+      LAB.keys.on(ch, function () { return keyReady() && icons.size ? typeSelect(ch) : false; }, { scope: 'finder' });
+    });
 
     renderIcons();
   }
@@ -796,7 +1243,8 @@
     var start = LAB.stage.toStage(e0.clientX, e0.clientY);
     var pid = e0.pointerId;
     var band = null;
-    var base = (e0.metaKey || e0.ctrlKey || e0.shiftKey) ? new Set(selected) : new Set();
+    var additive = !!(e0.metaKey || e0.ctrlKey || e0.shiftKey);
+    var base = additive ? new Set(selected) : new Set();
     function move(ev) {
       if (ev.pointerId !== pid) return;
       var p = LAB.stage.toStage(ev.clientX, ev.clientY);
@@ -810,7 +1258,10 @@
       var hit = new Set(base);
       iconPos.forEach(function (pos, path) {
         if (!icons.has(path)) return;
-        if (pos.x < x + w && pos.x + 96 > x && pos.y < y + hh && pos.y + 100 > y) hit.add(path);
+        // the part of the cell that is really drawn: the icon and its name (a little inside the 96x100 cell)
+        if (pos.x + 10 < x + w && pos.x + CELL_W - 10 > x && pos.y + 4 < y + hh && pos.y + CELL_H - 4 > y) {
+          if (additive && base.has(path)) hit.delete(path); else hit.add(path);       // ⌘ or ⇧ toggles what the band touches
+        }
       });
       setSelected(Array.from(hit));
     }
@@ -1369,7 +1820,8 @@
     // a click anywhere in the stage closes the rail drawer
     stageEl.addEventListener('pointerdown', function () { if (layout.isDrawerOpen()) layout.closeDrawer(); }, true);
     LAB.keys.on('escape', function () { if (layout.isDrawerOpen()) { layout.closeDrawer(); return true; } return false; });
-    LAB.bus.on('store:reset', function () { renderIcons(); });
+    // 重設全部: the files are back as at the start, so are the places of the icons
+    LAB.bus.on('store:reset', function () { iconPos.clear(); lastPos.clear(); spots.clear(); sortMode = 'none'; renderIcons(); });
   }, 30);
 
   LAB.ready(function () { showPhoneNotice(); }, 90);

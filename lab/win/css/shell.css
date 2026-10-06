@@ -1,5 +1,7 @@
 /* shell.css — Windows 11: taskbar, tray, Start menu, Search panel, flyouts, desktop icons, context menus, notifications, dialogs, drag ghost (DESIGN W3).
-   Windows mode is DARK (taskbar, Start, Search, flyouts, taskbar tooltips); app mode is LIGHT (context menus, dialogs). */
+   Windows mode is DARK (taskbar, Start, Search, flyouts, taskbar tooltips); app mode is LIGHT (context menus, dialogs).
+   Round 6: the taskbar and what comes out of it are drawn at 125 % (taskbar 60 px, buttons 50 px, app icons 30 px, search box 44 px tall; Start and
+   Search a little bigger), the "needs attention" flash is amber like Windows 11, and the desktop icons have three sizes and can be dragged anywhere. */
 
 /* ------------------------------------------------------------ taskbar */
 #lab-dock { display: block; }
@@ -11,43 +13,44 @@
   backdrop-filter: blur(30px) saturate(1.3);
   border-top: 1px solid rgba(255, 255, 255, .08);
   color: #fff;
-  font-size: 12px; line-height: 1.3;
+  font-size: 14px; line-height: 1.3;
 }
-.lab-tb-center { position: absolute; left: 50%; top: 0; height: 100%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; }
-.lab-tb-apps { display: flex; align-items: center; gap: 4px; }
+.lab-tb-center { position: absolute; left: 50%; top: 0; height: 100%; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; }
+.lab-tb-apps { display: flex; align-items: center; gap: 5px; }
 .lab-tb-btn, .lab-tray-btn {
   position: relative;
   display: flex; align-items: center; justify-content: center;
-  height: 40px; margin: 0; padding: 0; border: 0; border-radius: 4px;
+  height: 50px; margin: 0; padding: 0; border: 0; border-radius: 5px;
   background: transparent; color: #fff; font: inherit; cursor: default;
   transition: background-color .1s;
 }
-.lab-tb-btn { width: 40px; }
+.lab-tb-btn { width: 50px; isolation: isolate; }
 .lab-tb-btn:hover, .lab-tray-btn:hover, .lab-tb-search:hover { background-color: rgba(255, 255, 255, .06); }
 .lab-tb-btn:active, .lab-tray-btn:active { background-color: rgba(255, 255, 255, .04); }
 .lab-tb-btn.is-open { background-color: rgba(255, 255, 255, .06); }
 .lab-tb-btn svg, .lab-dock-icon svg { display: block; transition: transform .1s; }
 .lab-tb-btn:active svg, .lab-tb-btn:active .lab-dock-icon svg { transform: scale(.86); }
-.lab-tb-ico { display: block; width: 24px; height: 24px; }
-.lab-tb-ico svg { width: 24px; height: 24px; }
-.lab-dock-icon { display: block; width: 24px; height: 24px; }
-.lab-dock-icon svg { width: 24px; height: 24px; }
+.lab-tb-ico { display: block; width: 30px; height: 30px; }
+.lab-tb-ico svg { width: 30px; height: 30px; }
+.lab-dock-icon { display: block; width: 30px; height: 30px; }
+.lab-dock-icon svg { width: 30px; height: 30px; }
 /* running = a short grey pill under the icon; focused = a longer accent pill (the width animates 160 ms) */
 .lab-dock-dot {
-  position: absolute; bottom: 1px; left: 50%; width: 6px; height: 3px; margin-left: -3px; border-radius: 2px;
+  position: absolute; bottom: 2px; left: 50%; width: 8px; height: 4px; margin-left: -4px; border-radius: 2px;
   background: #9d9d9d; opacity: 0; pointer-events: none;
   transition: width .16s var(--lab-ease), margin-left .16s var(--lab-ease), background-color .16s, opacity .16s;
 }
 .lab-dock-item.is-running .lab-dock-dot { opacity: 1; }
-.lab-dock-item.is-focused .lab-dock-dot { width: 16px; margin-left: -8px; background: #4cc2ff; opacity: 1; }
+.lab-dock-item.is-focused .lab-dock-dot { width: 20px; margin-left: -10px; background: #4cc2ff; opacity: 1; }
 .lab-dock-item.is-drop { background-color: rgba(76, 194, 255, .22); box-shadow: inset 0 0 0 1px rgba(76, 194, 255, .7); }
-/* "needs attention" (the cue engine adds lab-dock-attn): the tile flashes in the accent colour and the pill pulses */
-.lab-dock-item::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 4px; background: rgba(76, 194, 255, .3); opacity: 0; pointer-events: none; }
+/* "needs attention" (the cue engine adds lab-dock-attn), the way Windows 11 does it: the button's own tile softly flashes amber (#f7630c family, drawn
+   BEHIND the icon, no outline and no ring) and the long indicator bar under the icon turns amber; 1.5 s loop. Reduced motion: it just stays lit. */
+.lab-dock-item::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: -1; border-radius: 5px; background: rgba(247, 99, 12, .62); opacity: 0; pointer-events: none; }
 .lab-dock-item.lab-dock-attn::before { animation: lab-tb-flash 1.5s ease-in-out infinite; }
-.lab-dock-item.lab-dock-attn .lab-dock-dot { opacity: 1; width: 16px; margin-left: -8px; background: #4cc2ff; animation: lab-tb-pill 1.5s ease-in-out infinite; }
+.lab-dock-item.lab-dock-attn .lab-dock-dot { opacity: 1; width: 20px; margin-left: -10px; background: #f7630c; animation: lab-tb-pill 1.5s ease-in-out infinite; }
 #lab-dock .lab-dock-item.lab-dock-attn .lab-dock-icon { animation: none; }       /* the Mac bounce in mission.css is not a Windows effect */
 @keyframes lab-tb-flash { 0%, 100% { opacity: 0; } 45%, 60% { opacity: 1; } }
-@keyframes lab-tb-pill { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.55); } }
+@keyframes lab-tb-pill { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.7); } }
 @media (prefers-reduced-motion: reduce) {
   #lab-dock .lab-dock-item.lab-dock-attn::before { animation: none !important; opacity: 1 !important; }
   #lab-dock .lab-dock-item.lab-dock-attn .lab-dock-dot { animation: none !important; }
@@ -56,31 +59,34 @@
 /* the search box */
 .lab-tb-search {
   position: relative;
-  display: flex; align-items: center; gap: 8px;
-  width: 170px; height: 36px; margin: 0 2px; padding: 0 14px;
-  border: 1px solid rgba(255, 255, 255, .08); border-radius: 20px;
+  display: flex; align-items: center; gap: 10px;
+  width: 210px; height: 44px; margin: 0 3px; padding: 0 17px;
+  border: 1px solid rgba(255, 255, 255, .08); border-radius: 22px;
   background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .86);
-  font: inherit; font-size: 13px; text-align: left; cursor: default;
+  font: inherit; font-size: 15px; text-align: left; cursor: default;
   transition: background-color .1s;
 }
 .lab-tb-search .lab-tb-sglass { display: flex; flex: none; }
-.lab-tb-search .lab-tb-sglass svg { width: 16px; height: 16px; }
+.lab-tb-search .lab-tb-sglass svg { width: 20px; height: 20px; }
 .lab-tb-search .lab-tb-stext { flex: 1; min-width: 0; white-space: nowrap; }
 .lab-tb-search.is-open { background-color: rgba(255, 255, 255, .1); }
 .lab-tb-search .lab-tb-sart { display: flex; flex: none; opacity: .92; }
-.lab-tb-search .lab-tb-sart svg { width: 18px; height: 18px; display: block; }
+.lab-tb-search .lab-tb-sart svg { width: 22px; height: 22px; display: block; }
+/* folded into an icon when the buttons need the room (desktop.js fitTaskbar): the same size as the other buttons (sysapps.css has the 100 % numbers) */
+.lab-tb .lab-tb-search.is-compact { width: 50px; height: 50px; margin: 0; border-radius: 5px; border-color: transparent; background: transparent; }
+.lab-tb .lab-tb-search.is-compact:hover { background-color: rgba(255, 255, 255, .06); }
 
 /* an app button sits in a slot together with its tooltip and its window-preview cards (siblings, so nothing interactive is nested in a button) */
 .lab-tb-slot { position: relative; display: flex; flex: none; }
-.lab-tb-slot > .lab-tb-btn { width: 40px; }
+.lab-tb-slot > .lab-tb-btn { width: 50px; }
 
 /* tooltips of the taskbar (dark, above the button). App buttons use a sibling .lab-tb-tip (inside a .lab-tb-slot); the other buttons carry
    data-tip and draw it with ::after, so the button's own text (e.g. the IME's 中) stays clean */
 .lab-tb-tip, .lab-tb-btn[data-tip]::after, .lab-tray-btn[data-tip]::after {
-  position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translate(-50%, 4px);
-  padding: 5px 10px; border-radius: 6px;
+  position: absolute; bottom: calc(100% + 14px); left: 50%; transform: translate(-50%, 4px);
+  padding: 6px 12px; border-radius: 7px;
   background: rgba(44, 44, 44, .97); border: 1px solid rgba(255, 255, 255, .1); color: #fff;
-  font-size: 12px; font-weight: 400; line-height: 1.35; white-space: nowrap; text-align: center;
+  font-size: 14px; font-weight: 400; line-height: 1.35; white-space: nowrap; text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, .4);
   opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity .12s, transform .12s, visibility 0s .12s;
@@ -96,43 +102,43 @@
 
 /* several windows of one app: hover shows small cards (title and a close button) above the button */
 .lab-tb-prev {
-  position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translate(-50%, 4px);
-  display: flex; gap: 8px; padding: 8px;
-  background: rgba(32, 32, 32, .96); border: 1px solid rgba(255, 255, 255, .1); border-radius: 8px;
+  position: absolute; bottom: calc(100% + 14px); left: 50%; transform: translate(-50%, 4px);
+  display: flex; gap: 10px; padding: 10px;
+  background: rgba(32, 32, 32, .96); border: 1px solid rgba(255, 255, 255, .1); border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
   opacity: 0; visibility: hidden; transition: opacity .12s, transform .12s, visibility 0s .12s;
   z-index: 4; cursor: default;
 }
-/* an invisible bridge over the 12 px gap, so moving the pointer from the button up to a card does not drop the hover */
-.lab-tb-prev::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 14px; }
+/* an invisible bridge over the 14 px gap, so moving the pointer from the button up to a card does not drop the hover */
+.lab-tb-prev::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 16px; }
 .lab-tb-slot.has-prev:hover > .lab-tb-prev, .lab-tb-slot.has-prev:focus-within > .lab-tb-prev {
   opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .12s .35s, transform .12s .35s, visibility 0s .35s;
 }
 .lab-tb-slot.has-prev:hover > .lab-tb-tip { display: none; }
-.lab-tb-pcard { position: relative; display: flex; flex-direction: column; width: 176px; height: 112px; padding: 0; border: 1px solid rgba(255, 255, 255, .08); border-radius: 6px; background: rgba(255, 255, 255, .05); overflow: hidden; text-align: left; }
+.lab-tb-pcard { position: relative; display: flex; flex-direction: column; width: 220px; height: 140px; padding: 0; border: 1px solid rgba(255, 255, 255, .08); border-radius: 7px; background: rgba(255, 255, 255, .05); overflow: hidden; text-align: left; }
 .lab-tb-pcard:hover { background: rgba(255, 255, 255, .1); }
 .lab-tb-pcard.is-front { box-shadow: inset 0 -2px 0 #4cc2ff; }
-.lab-tb-phead { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 8px; font-size: 12px; color: #fff; }
-.lab-tb-phead svg { width: 14px; height: 14px; flex: none; }
+.lab-tb-phead { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 5px 0 10px; font-size: 13px; color: #fff; }
+.lab-tb-phead svg { width: 16px; height: 16px; flex: none; }
 .lab-tb-ptitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lab-tb-pclose { flex: none; width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: #fff; display: flex; align-items: center; justify-content: center; opacity: 0; }
+.lab-tb-pclose { flex: none; width: 28px; height: 28px; border: 0; border-radius: 5px; background: transparent; color: #fff; display: flex; align-items: center; justify-content: center; opacity: 0; }
 .lab-tb-pcard:hover .lab-tb-pclose { opacity: 1; }
 .lab-tb-pclose:hover { background: #c42b1c; }
-.lab-tb-pclose svg { width: 10px; height: 10px; }
-.lab-tb-pbody { flex: 1; margin: 0 8px 8px; border-radius: 3px; background: #f3f3f3; position: relative; overflow: hidden; }
+.lab-tb-pclose svg { width: 11px; height: 11px; }
+.lab-tb-pbody { flex: 1; margin: 0 10px 10px; border-radius: 4px; background: #f3f3f3; position: relative; overflow: hidden; }
 .lab-tb-pbody.is-dark { background: #1e1e1e; }
-.lab-tb-pbody::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 7px; background: rgba(0, 0, 0, .08); }
+.lab-tb-pbody::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 9px; background: rgba(0, 0, 0, .08); }
 .lab-tb-pbody.is-dark::before { background: rgba(255, 255, 255, .1); }
 
 /* tray (right) */
 .lab-tb-tray { position: absolute; right: 0; top: 0; height: 100%; display: flex; align-items: center; padding-left: 8px; }
-.lab-tray-btn { min-width: 32px; padding: 0 8px; }
-.lab-tray-btn svg { width: 16px; height: 16px; }
-.lab-tray-ime { font-size: 14px; font-weight: 400; min-width: 34px; }
-.lab-tray-sys { gap: 14px; padding: 0 10px; }
+.lab-tray-btn { min-width: 40px; padding: 0 10px; }
+.lab-tray-btn svg { width: 20px; height: 20px; }
+.lab-tray-ime { font-size: 14px; font-weight: 400; min-width: 42px; }
+.lab-tray-sys { gap: 16px; padding: 0 12px; }
 .lab-tray-sys .lab-tray-g { display: flex; }
-.lab-tray-clock { flex-direction: column; align-items: flex-end; justify-content: center; padding: 0 8px; font-size: 12px; line-height: 16px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.lab-tb-show { width: 4px; height: 100%; margin-left: 4px; padding: 0; border: 0; border-left: 1px solid rgba(255, 255, 255, .2); background: transparent; }
+.lab-tray-clock { flex-direction: column; align-items: flex-end; justify-content: center; padding: 0 10px; font-size: 13px; line-height: 18px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lab-tb-show { width: 5px; height: 100%; margin-left: 4px; padding: 0; border: 0; border-left: 1px solid rgba(255, 255, 255, .2); background: transparent; }
 .lab-tb-show:hover { background: rgba(255, 255, 255, .14); }
 /* the network glyph while "joining" (kept from the Mac for the same test hook): the arcs light up one after another */
 .lab-tray-g.is-joining path { animation: lab-wifi-join 1.4s ease-in-out infinite; opacity: .35; }
@@ -169,7 +175,7 @@
 .lab-qs-row svg { width: 18px; height: 18px; flex: none; }
 .lab-qs-row input[type=range] { flex: 1; accent-color: #4cc2ff; }
 .lab-ime-osd {
-  position: absolute; left: 50%; bottom: 128px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: calc(var(--win-taskbar-h) + 80px); transform: translateX(-50%);
   width: 60px; height: 60px; border-radius: 10px; z-index: var(--z-toast);
   display: flex; align-items: center; justify-content: center;
   background: rgba(32, 32, 32, .94); border: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
@@ -186,115 +192,147 @@
   -webkit-backdrop-filter: blur(40px) saturate(1.3); backdrop-filter: blur(40px) saturate(1.3);
   border: 1px solid rgba(255, 255, 255, .1); border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, .42);
-  color: #fff; font-size: 13px; line-height: 1.35;
+  color: #fff; font-size: 14px; line-height: 1.35;
   display: flex; flex-direction: column; overflow: hidden;
   animation: lab-start-in .2s var(--lab-ease);
 }
 @keyframes lab-start-in { from { opacity: 0; transform: translate(-50%, 22px); } to { opacity: 1; transform: translate(-50%, 0); } }
-.lab-start { width: 600px; max-width: calc(100% - 24px); height: 650px; }
-.lab-start-top { padding: 24px 32px 0; flex: none; }
+.lab-start { width: 680px; max-width: calc(100% - 24px); height: 720px; }
+.lab-start-top { padding: 28px 36px 0; flex: none; }
 .lab-start-field, .lab-search-field {
-  display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px;
-  border-radius: 20px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .08);
+  display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 16px;
+  border-radius: 22px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .08);
   border-bottom-color: rgba(255, 255, 255, .45);
 }
 .lab-start-field:focus-within, .lab-search-field:focus-within { background: rgba(255, 255, 255, .1); border-bottom: 2px solid #4cc2ff; padding-bottom: 0; }
 .lab-start-field .lab-sf-glass, .lab-search-field .lab-sf-glass { display: flex; flex: none; color: rgba(255, 255, 255, .8); }
 .lab-sf-input {
   flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: none; background: transparent;
-  color: #fff; font: inherit; font-size: 14px; -webkit-user-select: text; user-select: text;
+  color: #fff; font: inherit; font-size: 15px; -webkit-user-select: text; user-select: text;
 }
 .lab-sf-input::placeholder { color: rgba(255, 255, 255, .62); }
-.lab-start-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 32px 8px; }
-.lab-start-h { display: flex; align-items: center; justify-content: space-between; height: 28px; margin: 26px 0 8px; font-size: 14px; font-weight: 600; }
-.lab-start-allbtn { display: flex; align-items: center; gap: 4px; height: 26px; padding: 0 8px 0 10px; border: 0; border-radius: 4px; background: rgba(255, 255, 255, .07); color: #fff; font: inherit; font-size: 12px; }
+.lab-start-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 36px 8px; }
+.lab-start-h { display: flex; align-items: center; justify-content: space-between; height: 30px; margin: 28px 0 10px; font-size: 15px; font-weight: 600; }
+.lab-start-allbtn { display: flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px 0 12px; border: 0; border-radius: 5px; background: rgba(255, 255, 255, .07); color: #fff; font: inherit; font-size: 13px; }
 .lab-start-allbtn:hover { background: rgba(255, 255, 255, .11); }
 .lab-start-allbtn svg { width: 12px; height: 12px; }
 .lab-start-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px 0; }
 .lab-start-app {
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px;
-  height: 84px; padding: 10px 2px 0; border: 0; border-radius: 4px; background: transparent; color: #fff;
-  font: inherit; font-size: 12px; line-height: 1.25; text-align: center; cursor: default;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px;
+  height: 96px; padding: 12px 2px 0; border: 0; border-radius: 5px; background: transparent; color: #fff;
+  font: inherit; font-size: 13px; line-height: 1.25; text-align: center; cursor: default;
 }
 .lab-start-app:hover, .lab-start-rec:hover { background: rgba(255, 255, 255, .07); }
 .lab-start-app:active, .lab-start-rec:active { background: rgba(255, 255, 255, .04); }
-.lab-start-app .lab-ico-box { display: block; width: 32px; height: 32px; flex: none; }
-.lab-start-app .lab-ico-box svg { width: 32px; height: 32px; display: block; }
-.lab-start-app span.lab-sa-name { display: block; max-width: 84px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.lab-start-app .lab-ico-box { display: block; width: 36px; height: 36px; flex: none; }
+.lab-start-app .lab-ico-box svg { width: 36px; height: 36px; display: block; }
+.lab-start-app span.lab-sa-name { display: block; max-width: 96px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
 .lab-start-recgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; }
-.lab-start-rec { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: #fff; font: inherit; text-align: left; cursor: default; }
-.lab-start-rec .lab-ico-box { display: block; width: 28px; height: 28px; flex: none; }
-.lab-start-rec .lab-ico-box svg { width: 28px; height: 28px; display: block; }
+.lab-start-rec { display: flex; align-items: center; gap: 14px; height: 58px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; color: #fff; font: inherit; text-align: left; cursor: default; }
+.lab-start-rec .lab-ico-box { display: block; width: 32px; height: 32px; flex: none; }
+.lab-start-rec .lab-ico-box svg { width: 32px; height: 32px; display: block; }
 .lab-sr-text { display: flex; flex-direction: column; min-width: 0; }
-.lab-sr-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lab-sr-sub { font-size: 11px; color: rgba(255, 255, 255, .6); }
-.lab-start-foot { flex: none; display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 28px; background: rgba(0, 0, 0, .2); border-top: 1px solid rgba(255, 255, 255, .08); }
-.lab-start-user { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px 0 6px; border: 0; border-radius: 4px; background: transparent; color: #fff; font: inherit; font-size: 13px; cursor: default; }
+.lab-sr-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-sr-sub { font-size: 12px; color: rgba(255, 255, 255, .6); }
+.lab-start-foot { flex: none; display: flex; align-items: center; justify-content: space-between; height: 72px; padding: 0 32px; background: rgba(0, 0, 0, .2); border-top: 1px solid rgba(255, 255, 255, .08); }
+.lab-start-user { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px 0 8px; border: 0; border-radius: 5px; background: transparent; color: #fff; font: inherit; font-size: 14px; cursor: default; }
 .lab-start-user:hover, .lab-start-power:hover { background: rgba(255, 255, 255, .07); }
-.lab-start-avatar { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, .18); }
-.lab-start-avatar svg { width: 18px; height: 18px; }
-.lab-start-power { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: 4px; background: transparent; color: #fff; }
-.lab-start-power svg { width: 18px; height: 18px; }
+.lab-start-avatar { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, .18); }
+.lab-start-avatar svg { width: 20px; height: 20px; }
+.lab-start-power { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 5px; background: transparent; color: #fff; }
+.lab-start-power svg { width: 20px; height: 20px; }
 
 /* ------------------------------------------------------------- Search */
-.lab-search { width: 640px; max-width: calc(100% - 24px); height: 560px; max-height: calc(100% - var(--win-taskbar-h) - 24px); }
-.lab-search-field { margin: 20px 24px 8px; flex: none; }
+.lab-search { width: 720px; max-width: calc(100% - 24px); height: 640px; max-height: calc(100% - var(--win-taskbar-h) - 24px); }
+.lab-search-field { margin: 22px 28px 10px; flex: none; }
 .lab-search-body { flex: 1; min-height: 0; display: flex; }
-.lab-search-left { flex: 0 0 56%; min-width: 0; overflow-y: auto; padding: 4px 8px 16px 24px; }
-.lab-search-right { flex: 1; min-width: 0; margin: 8px 24px 16px 8px; padding: 24px 16px; border-radius: 8px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .06); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.lab-search-left { flex: 0 0 56%; min-width: 0; overflow-y: auto; padding: 4px 8px 16px 28px; }
+.lab-search-right { flex: 1; min-width: 0; margin: 8px 28px 16px 8px; padding: 28px 18px; border-radius: 8px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .06); display: flex; flex-direction: column; align-items: center; text-align: center; }
 .lab-search-right:empty { visibility: hidden; }
-.lab-search-grp { padding: 12px 8px 6px; font-size: 13px; font-weight: 600; }
+.lab-search-grp { padding: 14px 8px 6px; font-size: 14px; font-weight: 600; }
 .lab-search-row {
-  position: relative; display: flex; align-items: center; gap: 12px; padding: 0 10px; min-height: 44px; border-radius: 4px; cursor: default; color: #fff;
+  position: relative; display: flex; align-items: center; gap: 14px; padding: 0 12px; min-height: 50px; border-radius: 5px; cursor: default; color: #fff;
 }
-.lab-search-row.is-best { min-height: 60px; background: rgba(255, 255, 255, .07); }
+.lab-search-row.is-best { min-height: 68px; background: rgba(255, 255, 255, .07); }
 .lab-search-row:hover { background: rgba(255, 255, 255, .06); }
 .lab-search-row.is-hl { background: rgba(255, 255, 255, .1); }
-.lab-search-row.is-hl::before { content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 16px; margin-top: -8px; border-radius: 2px; background: #4cc2ff; }
-.lab-search-ico { display: block; width: 24px; height: 24px; flex: none; }
-.lab-search-ico svg { width: 24px; height: 24px; display: block; }
-.lab-search-row.is-best .lab-search-ico, .lab-search-row.is-best .lab-search-ico svg { width: 32px; height: 32px; }
+.lab-search-row.is-hl::before { content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 18px; margin-top: -9px; border-radius: 2px; background: #4cc2ff; }
+.lab-search-ico { display: block; width: 28px; height: 28px; flex: none; }
+.lab-search-ico svg { width: 28px; height: 28px; display: block; }
+.lab-search-row.is-best .lab-search-ico, .lab-search-row.is-best .lab-search-ico svg { width: 36px; height: 36px; }
 .lab-search-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.lab-search-label { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lab-search-sub { font-size: 12px; color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lab-search-none { padding: 24px 12px; color: rgba(255, 255, 255, .62); font-size: 13px; }
-.lab-search-big { display: block; width: 64px; height: 64px; margin: 8px 0 12px; }
-.lab-search-big svg { width: 64px; height: 64px; display: block; }
-.lab-search-dname { font-size: 20px; font-weight: 600; line-height: 1.25; word-break: break-all; }
-.lab-search-dkind { margin-top: 2px; font-size: 12px; color: rgba(255, 255, 255, .62); }
-.lab-search-acts { width: 100%; margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .08); text-align: left; }
-.lab-search-act { display: flex; align-items: center; gap: 12px; width: 100%; height: 36px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #fff; font: inherit; font-size: 13px; text-align: left; cursor: default; }
+.lab-search-label { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-search-sub { font-size: 13px; color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-search-none { padding: 24px 12px; color: rgba(255, 255, 255, .62); font-size: 14px; }
+.lab-search-big { display: block; width: 72px; height: 72px; margin: 8px 0 14px; }
+.lab-search-big svg { width: 72px; height: 72px; display: block; }
+.lab-search-dname { font-size: 22px; font-weight: 600; line-height: 1.25; word-break: break-all; }
+.lab-search-dkind { margin-top: 2px; font-size: 13px; color: rgba(255, 255, 255, .62); }
+.lab-search-acts { width: 100%; margin-top: 18px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .08); text-align: left; }
+.lab-search-act { display: flex; align-items: center; gap: 12px; width: 100%; height: 40px; padding: 0 12px; border: 0; border-radius: 5px; background: transparent; color: #fff; font: inherit; font-size: 14px; text-align: left; cursor: default; }
 .lab-search-act:hover { background: rgba(255, 255, 255, .07); }
-.lab-search-act svg { width: 16px; height: 16px; flex: none; }
+.lab-search-act svg { width: 18px; height: 18px; flex: none; }
 .lab-search-act.is-dim { color: rgba(255, 255, 255, .5); }
 
-/* -------------------------------------------------------- desktop icons */
+/* -------------------------------------------------------- desktop icons
+   Three sizes (檢視 > 大圖示 / 中圖示 / 小圖示): desktop.js sets data-size on #lab-desktop, the grid cell and the icon follow these variables.
+   Icons are placed with left/top (stage px) by desktop.js; they can be dragged anywhere (see the drag section below). */
+#lab-desktop { --di-w: 76px; --di-h: 84px; --di-icon: 48px; }
+#lab-desktop[data-size="large"] { --di-w: 110px; --di-h: 126px; --di-icon: 96px; }
+#lab-desktop[data-size="small"] { --di-w: 68px; --di-h: 74px; --di-icon: 32px; }
+#lab-desktop.is-icons-off .lab-dicon { display: none; }
 .lab-dicon {
-  position: absolute; width: 76px; height: 84px; padding: 4px 2px 0;
+  position: absolute; width: var(--di-w); height: var(--di-h); padding: 4px 2px 0;
   display: flex; flex-direction: column; align-items: center;
-  border: 1px solid transparent; border-radius: 3px;
+  border: 1px solid transparent; border-radius: 4px;
   cursor: default; outline: none;
 }
-.lab-dicon:hover { background: rgba(255, 255, 255, .26); border-color: rgba(255, 255, 255, .32); }
-.lab-dicon.is-sel { background: rgba(110, 178, 255, .42); border-color: rgba(160, 208, 255, .95); }
+.lab-dicon:hover { background: rgba(255, 255, 255, .24); border-color: rgba(255, 255, 255, .34); }
+.lab-dicon.is-sel { z-index: 1; background: rgba(110, 178, 255, .42); border-color: rgba(160, 208, 255, .9); }
+.lab-dicon.is-sel:hover { background: rgba(110, 178, 255, .52); }
 #lab-desktop:not(.is-key) .lab-dicon.is-sel { background: rgba(200, 204, 214, .45); border-color: rgba(230, 232, 238, .8); }
 .lab-dicon.is-drop { background: rgba(110, 178, 255, .5); border-color: rgba(160, 208, 255, 1); }
-.lab-dicon-img { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-.lab-dicon-img svg { width: 48px; height: 48px; display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .28)); }
+.lab-dicon.is-focus { outline: 1px dotted rgba(255, 255, 255, .9); outline-offset: -3px; }
+.lab-dicon-img { width: var(--di-icon); height: var(--di-icon); flex: none; display: flex; align-items: center; justify-content: center; }
+.lab-dicon-img svg { width: var(--di-icon); height: var(--di-icon); display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .28)); }
 .lab-dicon-label {
-  margin-top: 3px; max-width: 72px; padding: 0 1px;
+  margin-top: 3px; max-width: calc(var(--di-w) - 4px); padding: 0 1px;
   font-size: 12px; font-weight: 400; line-height: 1.25; text-align: center; color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 4px rgba(0, 0, 0, .7), 0 0 8px rgba(0, 0, 0, .35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .78), 0 0 1px rgba(0, 0, 0, .55);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all;
 }
+/* a selected icon shows its whole name (Windows does the same when the name is cut) */
+.lab-dicon.is-sel .lab-dicon-label { display: block; overflow: visible; -webkit-line-clamp: unset; }
 .lab-dicon.is-renaming .lab-dicon-label { padding: 0; overflow: visible; display: block; -webkit-line-clamp: unset; }
 .lab-dicon-edit {
-  display: block; width: 72px; height: 20px; padding: 0 2px; margin: 0 auto; border: 1px solid #005fb8; border-radius: 0;
+  display: block; width: calc(var(--di-w) - 4px); height: 20px; padding: 0 2px; margin: 0 auto; border: 1px solid #005fb8; border-radius: 0;
   background: #fff; color: #000; font: 12px/18px var(--win-font); text-align: center; text-shadow: none;
   outline: none; -webkit-user-select: text; user-select: text;
 }
 .lab-dicon-edit::selection { background: #0078d4; color: #fff; }
 .lab-rubber { position: absolute; border: 1px solid rgba(0, 95, 184, .9); background: rgba(0, 120, 215, .22); pointer-events: none; }
+
+/* dragging desktop icons: the originals stay behind half see-through, copies of them (the proxies, in #lab-dnd) follow the pointer;
+   dropped on empty desktop they glide into their cell, dropped on a folder / the Recycle Bin / a window the ordinary drop rules apply.
+   The dnd ghost keeps only its + / link badge while icons are dragged (the proxies are the picture). */
+.lab-dicon.is-dragsrc { opacity: .45; }
+.lab-dicon.is-landing { opacity: 0; }
+.lab-dicon-proxy { position: absolute; left: 0; top: 0; z-index: 1; opacity: .8; pointer-events: none !important; background: transparent; border-color: transparent; will-change: transform; }
+.lab-dicon-proxy.is-sel { background: rgba(110, 178, 255, .42); border-color: rgba(160, 208, 255, .9); }
+.lab-dicon-proxy.is-gliding { transition: transform .14s var(--lab-ease); }
+.lab-dicon-proxy.is-back { transition: transform .24s var(--lab-ease), opacity .24s; opacity: 0; }
+body.lab-dd-desk .lab-ghost-icons, body.lab-dd-desk .lab-ghost-label, body.lab-dd-desk .lab-ghost-count { visibility: hidden; }
+
+/* dragging a window to a screen edge: the translucent preview of where it will land (top = maximize, left / right = half, corners = quarter) */
+.lab-edge-prev {
+  position: absolute; box-sizing: border-box; pointer-events: none; border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .6); background: rgba(255, 255, 255, .2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .1), 0 8px 24px rgba(0, 0, 0, .14);
+  opacity: 0; transition: opacity .14s linear;
+}
+.lab-edge-prev.is-in { opacity: 1; }
+html[data-perf="low"] .lab-edge-prev { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255, 255, 255, .36); }
 
 /* --------------------------------------------------- context menus (Windows 11) */
 .lab-menu {
@@ -313,6 +351,8 @@
 .lab-mi-lead { flex: none; width: 36px; display: flex; align-items: center; justify-content: center; }
 .lab-mi-glyph { display: inline-flex; }
 .lab-mi-glyph svg { display: block; }
+/* a chosen option of a group (icon size, sort key): a small round dot where a check mark would be */
+.lab-mi-dot { display: block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .lab-mi-label { flex: 1; padding-right: 12px; }
 .lab-mi-sc { margin-left: 24px; color: #5c5c5c; font-size: 12px; }
 .lab-mi-arrow { color: #5c5c5c; margin-left: 12px; }

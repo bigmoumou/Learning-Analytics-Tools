@@ -247,6 +247,14 @@
       });
       el.appendChild(row);
     });
+    // the light goes out when the pointer leaves the menu (unless a submenu is open from it, which keeps its parent lit)
+    el.addEventListener('mouseleave', function () {
+      var idx = -1;
+      for (var q = 0; q < stack.length; q++) { if (stack[q].el === el) idx = q; }
+      if (idx < 0 || stack.length > idx + 1) return;
+      stack[idx].hl = -1;
+      stack[idx].itemEls.forEach(function (r) { r.el.classList.remove('is-hl'); });
+    });
     var host = overlays();
     host.appendChild(el);
     // position and keep inside the stage
@@ -306,11 +314,39 @@
     var n = p.itemEls.length;
     if (!n) return;
     var i = p.hl;
+    if (i < 0 && dir < 0) i = n;               // Up in a menu with nothing lit starts from the bottom, as on a Mac
     for (var k = 0; k < n; k++) {
       i = (i + dir + n) % n;
       if (i < 0) i = n - 1;
       if (p.itemEls[i].enabled) { highlight(stack.indexOf(p), p.itemEls[i]); return; }
     }
+  }
+  /* Home / End (and Page Up / Down) go to the first / last item that can be used */
+  function edgeHl(p, last) {
+    var n = p.itemEls.length;
+    for (var k = 0; k < n; k++) {
+      var i = last ? n - 1 - k : k;
+      if (p.itemEls[i].enabled) { highlight(stack.indexOf(p), p.itemEls[i]); return; }
+    }
+  }
+  /* typing in an open menu jumps to the next item that starts with the letters typed (a pause of 0.9 s starts a new word) */
+  var taBuf = '', taAt = 0;
+  function typeAhead(p, ch) {
+    var n = p.itemEls.length, c = ch.toLowerCase(), now = Date.now(), hit = null;
+    function find(prefix, from) {
+      for (var k = 0; k < n; k++) {
+        var r = p.itemEls[(Math.max(0, from) + k) % n];
+        if (r.enabled && String(r.item.label || '').toLowerCase().indexOf(prefix) === 0) return r;
+      }
+      return null;
+    }
+    if (taBuf && now - taAt <= 900) {
+      hit = find(taBuf + c, p.hl);
+      if (hit) taBuf += c;
+    }
+    if (!hit) { taBuf = c; hit = find(c, p.hl + 1); }
+    taAt = now;
+    if (hit) highlight(stack.indexOf(p), hit);
   }
   function onMenuKey(e) {
     if (!stack.length) return false;
@@ -340,7 +376,11 @@
           else run(rec.item);
         }
         return true;
+      case 'Home': case 'PageUp': edgeHl(p, false); return true;
+      case 'End': case 'PageDown': edgeHl(p, true); return true;
       default:
+        // a plain letter is typed into the menu (it must not reach the desktop or the app behind it)
+        if (e.key && e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey && !e.isComposing && e.keyCode !== 229) { typeAhead(p, e.key); return true; }
         return e.key === 'Tab';
     }
   }

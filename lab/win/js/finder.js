@@ -1028,7 +1028,7 @@
     var r0 = win && win.getRect ? win.getRect() : { x: 0, y: 0, w: LAB.stage.w, h: LAB.stage.h };
     var offs = (propsOpen.length % 5) * 24;
     panel.style.left = Math.round(Math.max(8, Math.min(LAB.stage.w - pw - 8, r0.x + (r0.w - pw) / 2 + offs))) + 'px';
-    panel.style.top = Math.round(Math.max(8, Math.min(LAB.stage.h - 48 - ph - 8, r0.y + (r0.h - ph) / 2 + offs))) + 'px';
+    panel.style.top = Math.round(Math.max(8, Math.min((LAB.stage.dockTop ? LAB.stage.dockTop() : LAB.stage.h - 60) - ph - 8, r0.y + (r0.h - ph) / 2 + offs))) + 'px';
     var offWin = win && win.on ? win.on('close', close) : null;
     propsOpen.push({ panel: panel, close: close });
     showTab('general');

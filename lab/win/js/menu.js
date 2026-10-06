@@ -124,7 +124,9 @@
         'aria-disabled': enabled ? null : 'true', dataset: { lab: 'menu-item' }
       });
       var lead = h('span', { class: 'lab-mi-lead', 'aria-hidden': 'true' });
-      if (checked) lead.appendChild(iconNode('fl-check', 14));
+      // `radio: true` + checked = the chosen one of a group (icon size, sort key): a round dot instead of the check mark
+      if (checked && it.radio) lead.appendChild(h('span', { class: 'lab-mi-dot' }));
+      else if (checked) lead.appendChild(iconNode('fl-check', 14));
       else if (it.icon) lead.appendChild(iconNode(it.icon, 16));
       rowEl.appendChild(lead);
       // `accel: 'e'` draws the Windows keyboard accelerator after the label (終端機(I)) and makes that letter work while the menu is open
@@ -213,6 +215,13 @@
       if (p.itemEls[i].enabled) { highlight(stack.indexOf(p), p.itemEls[i]); return; }
     }
   }
+  /* Home / End: the first / the last item that can be chosen */
+  function moveEdge(p, dir) {
+    var n = p.itemEls.length, i = dir > 0 ? 0 : n - 1;
+    for (var k = 0; k < n; k++, i += dir) {
+      if (p.itemEls[i].enabled) { highlight(stack.indexOf(p), p.itemEls[i]); return; }
+    }
+  }
   function moveInRow(p, dir) {
     var cur = p.itemEls[p.hl];
     if (!cur || !cur.row) return false;
@@ -234,6 +243,8 @@
         return true;
       case 'ArrowDown': moveHl(p, 1); return true;
       case 'ArrowUp': moveHl(p, -1); return true;
+      case 'Home': moveEdge(p, 1); return true;
+      case 'End': moveEdge(p, -1); return true;
       case 'ArrowRight':
         if (moveInRow(p, 1)) return true;
         if (p.hl >= 0 && p.itemEls[p.hl].item.submenu && p.itemEls[p.hl].enabled) { openSub(level, p.itemEls[p.hl]); var sp = stack[stack.length - 1]; moveHl(sp, 1); }
@@ -260,6 +271,9 @@
             else run(hit.item);
             return true;
           }
+          // no accelerator: the letter moves the highlight to the next item whose name starts with it (like the first-letter jump of a Windows menu)
+          var firsts = p.itemEls.filter(function (r) { return r.enabled && !r.row && String(r.item.label || '').toLowerCase().charAt(0) === ch; });
+          if (firsts.length) { var at = firsts.indexOf(p.itemEls[p.hl]); highlight(level, firsts[(at + 1) % firsts.length]); return true; }
         }
         return e.key === 'Tab';
     }

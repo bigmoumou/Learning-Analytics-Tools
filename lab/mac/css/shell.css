@@ -113,6 +113,8 @@
 .lab-dock-dot { position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: rgba(20, 24, 30, .78); opacity: 0; }
 .lab-dock-item.is-running .lab-dock-dot { opacity: 1; }
 .lab-dock-item.is-drop .lab-dock-icon { background: rgba(255, 255, 255, .45); box-shadow: 0 0 0 2px rgba(255, 255, 255, .75); }
+/* pressing a Dock icon darkens it until the button comes up, as on a Mac */
+.lab-dock-item:active .lab-dock-icon svg { filter: brightness(.7) drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); }
 .lab-dock-label {
   position: absolute; bottom: calc(100% + 22px); left: 50%; transform: translateX(-50%);
   padding: 3px 10px; border-radius: 7px;
@@ -160,7 +162,25 @@
   background: #fff; color: #000; font: 12px/1.25 var(--lab-font-ui); text-align: center; text-shadow: none;
   outline: 3px solid rgba(10, 108, 255, .35); -webkit-user-select: text; user-select: text;
 }
-.lab-rubber { position: absolute; border: 1px solid rgba(255, 255, 255, .75); background: rgba(120, 160, 255, .22); pointer-events: none; }
+/* the rubber band: a translucent blue box with a thin edge that shows on bright sky and on dark water alike */
+.lab-rubber { position: absolute; border: 1px solid rgba(96, 156, 255, .9); background: rgba(60, 124, 255, .2); border-radius: 2px; pointer-events: none; }
+/* free placement (round 6). While icons are dragged each one is a translucent copy that keeps its place among the others; the originals
+   stay where they were, dimmed. Sorting, 整理 and a screen that changed size slide the icons into place (dragging never does). */
+.lab-dicon.is-dragsrc { opacity: .4; }
+.lab-dicon-ghost { pointer-events: none; opacity: .82; will-change: transform; }
+.lab-dicon-count {
+  position: absolute; top: 0; right: 12px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  background: #ff3b30; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .95);
+  color: #fff; font-size: 12px; font-weight: 700; line-height: 20px; text-align: center;
+}
+.lab-dicon-badge {
+  position: absolute; top: 8px; left: 10px; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; border: 2px solid #fff;
+  color: #fff; font: 700 13px/14px sans-serif; text-align: center; display: none;
+}
+.lab-dicon-badge.is-copy { display: block; background: #34c759; }
+.lab-dicon-badge.is-link { display: block; background: #8e8e93; font-size: 11px; }
+body.lab-dd-own .lab-ghost { visibility: hidden; }
+#lab-desktop.is-arranging .lab-dicon { transition: left .18s var(--lab-ease), top .18s var(--lab-ease); }
 /* ------------------------------------------------------------ Spotlight */
 .lab-spot { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: var(--z-spotlight); pointer-events: auto; }
 .lab-spot-panel {

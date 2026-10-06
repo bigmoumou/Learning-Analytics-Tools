@@ -26,7 +26,7 @@
   --win-d-bg: rgba(28, 28, 28, .86); --win-d-solid: #1c1c1c; --win-d-flyout: rgba(32, 32, 32, .94);
   --win-d-text: #fff; --win-d-text-2: rgba(255, 255, 255, .72); --win-d-text-3: rgba(255, 255, 255, .55);
   --win-d-hair: rgba(255, 255, 255, .08); --win-d-hover: rgba(255, 255, 255, .06); --win-d-press: rgba(255, 255, 255, .04);
-  --win-taskbar-h: 48px;
+  --win-taskbar-h: 60px;          /* the 125% taskbar (round 6: 48 -> 60). desktop.js has the same number as TB_H; keep both in step */
 
   /* ---- old names (the Mac copy's CSS still uses them): same variables, Windows values ---- */
   --mac-win-bg: #fff; --mac-bar: #f3f3f3; --mac-bar-line: #e5e5e5; --mac-text: #1a1a1a; --mac-text-2: #5c5c5c;

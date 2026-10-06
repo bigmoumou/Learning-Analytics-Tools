@@ -2745,6 +2745,7 @@
     var rs = null;                    // Ctrl+R: {query, idx, saved, failed}
     var app = null;                   // a full-screen program (less, man, nano, top): {def, api, timer, cache}
     var waitingLib = false;
+    var waitTok = 0;                  // which wait is current: Ctrl+C and every new wait bump it, so a given-up line never runs later
     var busy = false, dead = false, composing = false, userSized = false, selfSizing = false;
     var sleepTimer = 0, clearAnchor = null, closed = false;
     var lastCwd = session.cwd;
@@ -3164,10 +3165,11 @@
       buf = []; cur = 0; comp = ''; histPos = -1; stash = null; tabState = null; rs = null;
       if (lib.state === 'ready' || lib.state === 'failed' || !needsLibrary(line)) { runNow(line); return; }
       // the command library is still on its way: wait for it (Ctrl+C gives up)
+      var tok = ++waitTok;
       waitingLib = true;
       renderLive();
       loadLibrary(function () {
-        if (!waitingLib || closed) return;
+        if (tok !== waitTok || !waitingLib || closed) return;
         waitingLib = false;
         runNow(line);
       });
@@ -3175,7 +3177,7 @@
     function interrupt() {
       if (dead) return;
       rs = null;
-      if (waitingLib) { waitingLib = false; commitLine('^C', false); showPrompt(); return; }
+      if (waitingLib) { waitingLib = false; waitTok++; commitLine('^C', false); showPrompt(); return; }
       if (busy) {
         clearTimeout(sleepTimer); sleepTimer = 0; busy = false;
         commitLine('^C', false);

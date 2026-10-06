@@ -227,6 +227,7 @@
     var moved = false, dx = 0, dy = 0, pending = null, rafId = 0, pid = e.pointerId, lastPt = null;
     var frames = 0, lastT = 0, sumDt = 0;
     var wa = work();
+    var canEdge = !!win.el.querySelector('.lab-rz');           // a window that cannot be resized is not snapped or maximized by the screen edges
 
     function apply() {
       rafId = 0;
@@ -255,6 +256,7 @@
       var ny = Math.max(wa.y, Math.min(r0.y + ndy, wa.y + wa.h - 32));
       dx = nx - r0.x; dy = ny - r0.y;
       win.el.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
+      if (canEdge) edgeShow(win, edgeTarget(p));          // the translucent preview of where the window will land
     }
     function move(ev) {
       if (ev.pointerId !== pid) return;
@@ -274,6 +276,7 @@
       window.removeEventListener('pointercancel', up, true);
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; if (pending) apply(); }
       document.body.classList.remove('lab-dragging-win');
+      edgeHide();
       if (moved) {
         win.el.style.transform = '';
         win.el.style.willChange = '';
@@ -283,13 +286,50 @@
         setZoomedUI(win, false);
         win._emit('move', win.getRect());
         LAB.bus.emit('win:move', { id: win.id, appId: win.appId, rect: win.getRect() });
-        // dropping a window with the pointer at the very top edge maximizes it (Windows snap)
-        if (lastPt && lastPt.y <= 2 && win.el.querySelector('.lab-rz')) zoomWin(win);
+        // let go at a screen edge (Windows snap): the top edge maximizes, the left / right edge fills that half, a corner fills that quarter
+        var tgt = lastPt && canEdge && ev.type === 'pointerup' ? edgeTarget(lastPt) : null;
+        if (tgt) { if (tgt.kind === 'max') zoomWin(win); else snapWin(win, tgt.layout, tgt.zone); }
       }
     }
     window.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
     window.addEventListener('pointercancel', up, true);
+  }
+
+  /* ------------------------------------------------ dragging a window to a screen edge (round 6)
+     The pointer at the top edge = maximize; at the left / right edge = that half of the screen; in a corner = that quarter. While the pointer is
+     there a translucent preview shows where the window will land (it sits under the dragged window, above the others). The zones are the Snap
+     layouts' own (snapRect: clear of the desktop icon column and of the mission card). */
+  var edgeEl = null, edgeKey = '';
+  function edgeTarget(pt) {
+    var st = stage(), s = st.scale || 1, th = Math.max(4, 3 / s);
+    var L = pt.x <= th, R = pt.x >= st.w - th - 1, T = pt.y <= th, B = pt.y >= st.dockTop() - th - 8;
+    if ((L || R) && T) return { kind: 'snap', layout: 'quad', zone: L ? 0 : 1 };
+    if ((L || R) && B) return { kind: 'snap', layout: 'quad', zone: L ? 2 : 3 };
+    if (L) return { kind: 'snap', layout: 'half', zone: 0 };
+    if (R) return { kind: 'snap', layout: 'half', zone: 1 };
+    if (T) return { kind: 'max' };
+    return null;
+  }
+  function edgeShow(win, tgt) {
+    if (!tgt) { edgeHide(); return; }
+    var key = tgt.kind + (tgt.layout || '') + (tgt.zone === undefined ? '' : tgt.zone);
+    var r = tgt.kind === 'max' ? stage().zoomRect() : snapRect(tgt.layout, tgt.zone);
+    if (!r) { edgeHide(); return; }
+    if (!edgeEl) {
+      edgeEl = h('div', { class: 'lab-edge-prev', 'aria-hidden': 'true', dataset: { lab: 'edge-preview' } });
+      layer().insertBefore(edgeEl, win.el);          // same z-index as the dragged window, earlier in the tree: just under it
+      requestAnimationFrame(function () { if (edgeEl) edgeEl.classList.add('is-in'); });
+    }
+    if (key === edgeKey) return;
+    edgeKey = key;
+    edgeEl.style.zIndex = String(win.z);
+    edgeEl.style.left = r.x + 'px'; edgeEl.style.top = r.y + 'px'; edgeEl.style.width = r.w + 'px'; edgeEl.style.height = r.h + 'px';
+  }
+  function edgeHide() {
+    if (!edgeEl) return;
+    if (edgeEl.parentNode) edgeEl.parentNode.removeChild(edgeEl);
+    edgeEl = null; edgeKey = '';
   }
 
   function startResize(win, dir, e) {

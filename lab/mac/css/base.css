@@ -100,6 +100,8 @@ html.lab-small #lab-stage { touch-action: none; }
 
 body.lab-dragging, body.lab-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
 body.lab-dragging-win * { cursor: default !important; }
+/* dragging desktop icons keeps the plain arrow, as the Finder does (the icons themselves move with it) */
+body.lab-dd-own, body.lab-dd-own * { cursor: default !important; }
 body.lab-resizing { -webkit-user-select: none; user-select: none; }
 
 /* ---------------------------------------- thin overlay scrollbars inside the fake Mac */
