@@ -74,6 +74,32 @@
         },
       },
     },
+    5: {
+      status: "ready",
+      title: "模型與 context window",
+      summary: "每個模型有自己的 context window；中途換模型，新模型要整段重讀、快取失效，用量一次跳高。開工前選好模型，真的要換就帶交接摘要開新對話。",
+      href: "weeks/week05/",
+      thumb: "weeks/week05/video/01-model-switch/thumb.jpg",
+      still: "weeks/week05/video/01-model-switch/poster.jpg",
+      meta: "影片 1 分 40 秒・5 則重點",
+      i18n: {
+        "zh-Hans": {
+          title: "模型与 context window",
+          summary: "每个模型有自己的 context window；中途换模型，新模型要整段重读、缓存失效，用量一下子跳高。开工前选好模型，真的要换就带交接摘要开新对话。",
+          meta: "视频 1 分 40 秒・5 条重点",
+        },
+        en: {
+          title: "Models and the Context Window",
+          summary: "Each model has its own context window; switching mid-chat makes the new model reread everything and breaks the cache, so usage jumps. Pick the model before you start, and if you must switch, open a new chat with a hand-off summary.",
+          meta: "Video 1 min 40 s · 5 key points",
+        },
+        vi: {
+          title: "Mô hình và context window",
+          summary: "Mỗi mô hình có context window riêng; đổi mô hình giữa chừng khiến mô hình mới phải đọc lại toàn bộ và bộ nhớ đệm mất hiệu lực, nên mức sử dụng tăng vọt. Hãy chọn mô hình trước khi bắt đầu; nếu buộc phải đổi, mở cuộc hội thoại mới kèm bản tóm tắt bàn giao.",
+          meta: "Video 1 phút 40 giây · 5 ý chính",
+        },
+      },
+    },
   };
 
   window.COURSE = COURSE;

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-i18n
+  data-zh-hans="Week 5｜模型与 context window"
+  data-en="Week 5 | Models and the Context Window"
+  data-vi="Tuần 5 | Mô hình và context window">Week 5｜模型與 context window</title>
+<meta name="description" content="Week 5：每個模型有自己的 context window，中途換模型為什麼比較耗用量，以及怎麼做比較好。一支影片和五則重點。" data-i18n-attr="content"
+  data-zh-hans="Week 5：每个模型有自己的 context window，中途换模型为什么比较耗用量，以及怎么做比较好。一个视频和五条重点。"
+  data-en="Week 5: each model has its own context window, why switching models mid-chat uses more, and what to do instead. One video and five key points."
+  data-vi="Tuần 5: mỗi mô hình có context window riêng, vì sao đổi mô hình giữa chừng tốn hơn, và nên làm thế nào. Một video và năm ý chính.">
+<meta name="author" content="JUNHAO CHEN">
+<meta name="copyright" content="© 2026 JUNHAO CHEN">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="../../assets/week.css">
+<!-- 多語系要比其他程式先載入（不要 defer） -->
+<script src="../../assets/i18n-strings.js"></script>
+<script src="../../assets/i18n.js"></script>
+<script src="../../assets/course.js" defer></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f6efdc'/%3E%3Cpath d='M9.5 24v-5M16 24v-9M22.5 24V8' stroke='%238a5400' stroke-width='4.2'/%3E%3C/svg%3E">
+</head>
+<body data-root="../../">
+<div class="page">
+  <header class="top">
+    <a class="brand" href="../../">
+      <span class="brand-name">Learning Analytics Tools</span>
+      <span class="brand-sub" data-ui="brand.sub">NTNU・課程教材・Week 3 – 16</span>
+    </a>
+    <a class="pill nav-works" href="../../works/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5zm9 0h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5zm-9 9h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5zm9 0h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span data-ui="nav.works">作品集</span></a>
+    <button class="pill icon-only" id="themeBtn" type="button">深色</button>
+  </header>
+
+  <main>
+    <div class="head">
+      <p class="kicker"><span class="dot" aria-hidden="true"></span>WEEK 05</p>
+      <h1 data-i18n
+        data-zh-hans="模型与 context window"
+        data-en="Models and the Context Window"
+        data-vi="Mô hình và context window">模型與 context window</h1>
+      <p class="lede" data-i18n
+        data-zh-hans="Codex 可以在对话中途换模型，但每个模型都有自己的 context window。这周看换模型时发生什么事、用量为什么会一下子跳高，以及开工前怎么选、真的要换时怎么换。"
+        data-en="Codex lets you switch models in the middle of a chat, but each model has its own context window. This week shows what happens when you switch, why usage suddenly jumps, and how to choose before you start, or switch properly when you must."
+        data-vi="Codex cho phép đổi mô hình giữa cuộc hội thoại, nhưng mỗi mô hình có context window riêng. Tuần này xem chuyện gì xảy ra khi đổi mô hình, vì sao mức sử dụng tăng vọt, cách chọn trước khi bắt đầu và cách đổi đúng khi thật sự cần.">Codex 可以在對話中途換模型，但每個模型都有自己的 context window。這週看換模型時發生什麼事、用量為什麼會一次跳高，以及開工前怎麼選、真的要換時怎麼換。</p>
+      <p class="lang-note" data-ui="video.note"></p>
+    </div>
+
+    <!-- 一支影片一個 section：id 和 video/ 裡的資料夾同名；影片、片段、重點都由 assets/video.js 接起來。
+         翻譯寫在 data-zh-hans、data-en、data-vi（assets/i18n.js），三種都要有 -->
+
+    <section class="unit" id="01-model-switch" aria-labelledby="u01-title">
+      <h2 class="unit-title" id="u01-title"><span class="unit-num" data-ui="video.n" data-n="01">影片 01</span><span data-i18n
+        data-zh-hans="不要一直换模型"
+        data-en="Don't Keep Switching Models"
+        data-vi="Đừng đổi mô hình liên tục">不要一直換模型</span></h2>
+
+      <div class="film">
+        <div class="player">
+          <video controls preload="metadata" playsinline data-hls="video/01-model-switch/hls/index.m3u8" poster="video/01-model-switch/poster.jpg" width="1920" height="1080">
+            你的瀏覽器無法播放這支影片。
+          </video>
+        </div>
+      </div>
+
+      <ol class="chapters" aria-label="影片片段（點了直接跳到那一段）" data-ui-attr="aria-label:video.chapters">
+        <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t" data-i18n data-zh-hans="开场" data-en="Opening" data-vi="Mở đầu">開場</span></button></li>
+        <li><button type="button" data-t="8"><span class="k">00:08</span><span class="t" data-i18n data-zh-hans="一个模型，一个 context window" data-en="One model, one context window" data-vi="Mỗi mô hình, một context window">一個模型，一個 context window</span></button></li>
+        <li><button type="button" data-t="26"><span class="k">00:26</span><span class="t" data-i18n data-zh-hans="换成 GPT-6.1 Sol" data-en="Switching to GPT-6.1 Sol" data-vi="Đổi sang GPT-6.1 Sol">換成 GPT-6.1 Sol</span></button></li>
+        <li><button type="button" data-t="48"><span class="k">00:48</span><span class="t" data-i18n data-zh-hans="为什么比较贵？" data-en="Why it costs more" data-vi="Vì sao tốn hơn?">為什麼比較貴？</span></button></li>
+        <li><button type="button" data-t="72"><span class="k">01:12</span><span class="t" data-i18n data-zh-hans="怎么做比较好" data-en="What to do instead" data-vi="Nên làm thế nào">怎麼做比較好</span></button></li>
+        <li><button type="button" data-t="94"><span class="k">01:34</span><span class="t" data-i18n data-zh-hans="结论" data-en="Wrap-up" data-vi="Kết luận">結論</span></button></li>
+      </ol>
+
+      <ol class="points">
+        <li><p data-i18n
+          data-zh-hans="<strong>每个模型都有自己的 context window。</strong>用 GPT-6 Luna 做了一阵子，读过的对话都装在 Luna 自己的 context window 里，对话越长，装得越满。"
+          data-en="<strong>Each model has its own context window.</strong> After working with GPT-6 Luna for a while, everything it has read sits in Luna's own context window, and the longer the chat, the fuller it gets."
+          data-vi="<strong>Mỗi mô hình có context window riêng.</strong> Sau một thời gian làm việc với GPT-6 Luna, mọi đoạn hội thoại nó đã đọc đều nằm trong context window của riêng Luna; hội thoại càng dài thì càng đầy."><strong>每個模型都有自己的 context window。</strong>用 GPT-6 Luna 做了一陣子，讀過的對話都裝在 Luna 自己的 context window 裡，對話越長，裝得越滿。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>中途换模型，新模型要从头读一遍。</strong>换成 GPT-6.1 Sol 之后，Sol 要把整段对话放进它自己的 context window，所以换过去的那一轮，用量一下子跳得很高。"
+          data-en="<strong>Switch models mid-chat and the new model reads it all again.</strong> After switching to GPT-6.1 Sol, Sol has to load the whole conversation into its own context window, so usage jumps on the turn where you switch."
+          data-vi="<strong>Đổi mô hình giữa chừng, mô hình mới phải đọc lại từ đầu.</strong> Sau khi đổi sang GPT-6.1 Sol, Sol phải nạp toàn bộ hội thoại vào context window của chính nó, nên ở lượt đổi mô hình, mức sử dụng tăng vọt."><strong>中途換模型，新模型要從頭讀一遍。</strong>換成 GPT-6.1 Sol 之後，Sol 要把整段對話放進它自己的 context window，所以換過去的那一輪，用量一次跳很高。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>换模型会让缓存失效。</strong>Codex 平常用缓存（prompt caching）便宜地重用前面读过的内容；OpenAI 官方文章《Unrolling the Codex agent loop》说明，中途换模型，缓存会失效，整段要重新读。"
+          data-en="<strong>Switching models breaks the cache.</strong> Codex normally uses prompt caching to reuse what it has already read at a lower cost; OpenAI's article “Unrolling the Codex agent loop” explains that switching models mid-conversation invalidates the cache, so everything is read again."
+          data-vi="<strong>Đổi mô hình làm bộ nhớ đệm mất hiệu lực.</strong> Bình thường Codex dùng bộ nhớ đệm (prompt caching) để dùng lại phần đã đọc với chi phí thấp; bài viết “Unrolling the Codex agent loop” của OpenAI giải thích rằng đổi mô hình giữa cuộc hội thoại sẽ làm bộ nhớ đệm mất hiệu lực, nên phải đọc lại toàn bộ."><strong>換模型會讓快取失效。</strong>Codex 平常用快取（prompt caching）便宜地重用前面讀過的內容；OpenAI 官方文章〈Unrolling the Codex agent loop〉說明，中途換模型，快取會失效，整段要重新讀。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>开工前就选好模型。</strong>选好之后，这段对话就一路用它。真的要换，先在原本的对话里请当前的模型写一段交接摘要，再开新对话、换模型、贴上摘要；也可以写进 Week 3 学过的 <code>AGENTS.md</code>、<code>progress.md</code>。"
+          data-en="<strong>Pick the model before you start.</strong> Once chosen, stay with it for the whole chat. If you really need to switch, first ask the current model, in the original chat, to write a short hand-off summary, then start a new chat with the new model and paste the summary in; you can also keep it in <code>AGENTS.md</code> or <code>progress.md</code> from Week 3."
+          data-vi="<strong>Chọn mô hình trước khi bắt đầu.</strong> Đã chọn thì dùng nó suốt cuộc hội thoại. Nếu thật sự cần đổi, trước tiên hãy nhờ mô hình hiện tại viết một bản tóm tắt bàn giao ngay trong cuộc hội thoại cũ, rồi mở cuộc hội thoại mới với mô hình mới và dán bản tóm tắt vào; cũng có thể ghi vào <code>AGENTS.md</code>, <code>progress.md</code> đã học ở Tuần 3."><strong>開工前就選好模型。</strong>選好之後，這段對話就一路用它。真的要換，先在原本的對話裡請目前的模型寫一段交接摘要，再開新對話、換模型、貼上摘要；也可以寫進 Week 3 學過的 <code>AGENTS.md</code>、<code>progress.md</code>。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>视频里的面板和数字都是示意。</strong>context window 面板借用 Claude Code 的 <code>/context</code> 画面，Codex 看不到这张表；长条和用量也不是实测数字。"
+          data-en="<strong>The panels and numbers in the video are illustrations.</strong> The context window panel borrows Claude Code's <code>/context</code> view, which Codex cannot show; the bars and usage are not measured numbers."
+          data-vi="<strong>Bảng và con số trong video chỉ là minh họa.</strong> Bảng context window mượn giao diện <code>/context</code> của Claude Code, Codex không hiển thị được bảng này; các cột và mức sử dụng cũng không phải số đo thật."><strong>影片裡的面板和數字都是示意。</strong>context window 面板借用 Claude Code 的 <code>/context</code> 畫面，Codex 看不到這張表；長條和用量也不是實測數字。</p></li>
+      </ol>
+    </section>
+
+    <nav class="pager" id="pager" data-week="5" aria-label="其他週次" data-ui-attr="aria-label:pager.label"></nav>
+  </main>
+
+  <footer class="foot">
+    <span>Learning Analytics Tools Implementation Applications (NTNU)</span>
+    <span><span data-ui="footer.copyright">Copyright © 2026 JUNHAO CHEN・程式碼 MIT・內容 CC BY-NC-SA 4.0</span> <a class="foot-lic" href="https://github.com/bigmoumou/Learning-Analytics-Tools#授權" data-ui="footer.license" data-ui-attr="href:footer.licenseUrl">授權說明</a></span>
+    <a href="../../" data-ui="nav.home">回到課程首頁</a>
+  </footer>
+</div>
+
+<!-- 先 hls.js、再 video.js（播放、片段、#t= 連結都在 video.js） -->
+<script src="../../assets/vendor/hls.light.min.js"></script>
+<script src="../../assets/video.js"></script>
+</body>
+</html>

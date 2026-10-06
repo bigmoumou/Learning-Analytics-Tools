@@ -38,7 +38,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ### AI 教學影片
 
-目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」與 Week 4「AI Agent 內建瀏覽器」：共 4 支影片加 2 支補充教材（合計 18 分鐘）、56 個章節、33 則重點。Week 5 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
+目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」、Week 4「AI Agent 內建瀏覽器」與 Week 5「模型與 context window」：共 5 支影片加 2 支補充教材（合計 20 分鐘）、62 個章節、38 則重點。Week 6 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
 
 影片沒有旁白，用動畫、字卡和程式合成的配樂說明一個主題，長度從 1 分多到 4 分鐘左右。課程教的是 AI 程式助理的實際用法，影片中示範的工具主要是 OpenAI 的 Codex。
 
@@ -50,6 +50,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 | <img src="weeks/week03/video/s1-terminal-mac/thumb.jpg" width="180" alt="Week 3 補充 1 縮圖"> | Week 3・補充 1<br>[終端機介紹（Mac）](https://learning-analytics-tools.pages.dev/weeks/week03/#s1-terminal-mac) | 4:01 | 10／6 | 什麼是終端機、怎麼打開、看懂提示字元；用狐狸小安收包裹的故事教 `~`、`cd`、`ls`、`mv`、`unzip`，最後照同一個故事練習（附練習檔 `week3.zip`） |
 | <img src="weeks/week03/video/s2-terminal-win/thumb.jpg" width="180" alt="Week 3 補充 2 縮圖"> | Week 3・補充 2<br>[終端機介紹（Win）](https://learning-analytics-tools.pages.dev/weeks/week03/#s2-terminal-win) | 4:03 | 10／6 | 同一個狐狸小安的故事搬到 Windows 11：從搜尋打開終端機、看懂 `PS C:\Users\an>` 提示字元、`ls` 的表格輸出、`mv`，解壓縮改用內建的 `tar -xvf`；練習頁加上 OneDrive 桌面的提醒 |
 | <img src="weeks/week04/video/01-built-in-browser/thumb.jpg" width="180" alt="Week 4 影片 01 縮圖"> | Week 4・01<br>[AI Agent 內建瀏覽器](https://learning-analytics-tools.pages.dev/weeks/week04/) | 2:24 | 8／5 | AI Agent 控制瀏覽器的五種方法；Codex 內建瀏覽器卡住後，Codex 自己找出原因並修好，再實際在 Blockbench 做出方塊桌椅（22 分 34 秒的操作，影片中加速播放） |
+| <img src="weeks/week05/video/01-model-switch/thumb.jpg" width="180" alt="Week 5 影片 01 縮圖"> | Week 5・01<br>[不要一直換模型](https://learning-analytics-tools.pages.dev/weeks/week05/) | 1:40 | 6／5 | 每個模型有自己的 context window；做到一半從 GPT-6 Luna 換成 GPT-6.1 Sol，Sol 要整段重讀、快取失效，用量一次跳高（依 OpenAI〈Unrolling the Codex agent loop〉）；開工前選好模型，真的要換就先請原本的模型寫交接摘要、開新對話。context window 面板借用 Claude Code 的 `/context` 當示意圖 |
 
 ### 學生參與和互動複習
 
@@ -98,7 +99,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 |---|---|
 | 網站程式（HTML、CSS、JavaScript）、工具（`tools/`）、範本與說明文件 | 已公開，MIT 授權 |
 | AI 教學影片（HLS）、封面、縮圖，以及每週的文字（繁體中文原文與簡中、英文、越南文翻譯） | 已公開，CC BY-NC-SA 4.0 |
-| Week 5 到 Week 16 | 依課程進度陸續開放 |
+| Week 6 到 Week 16 | 依課程進度陸續開放 |
 | 學生作品展示（作品集） | 已上線，陸續加入學生同意公開的作品；著作權屬於各作者 |
 | 練習用的模擬電腦（課堂練習） | Mac 版、Windows 版都已上線（Week 3 的 10 個任務，可以直接選；終端機、系統設定、檔案管理都可以真的操作） |
 | 教學影片生成 prompt：每支影片的 `brief.md`、動態素材規格、三方案提案 | 規劃中，整理後公開 |
@@ -219,7 +220,7 @@ This repository is the website itself; every file the site serves is here.
 
 ### AI teaching videos
 
-As of October 2026, Week 3, "The AI Assistant's Working Folder", and Week 4, "AI Agent Built-in Browser", are published: 4 videos plus 2 extras (18 min in total), 56 chapters and 33 key points. Weeks 5 to 16 open as the course goes on and show as "Coming soon" on the site until then.
+As of October 2026, Week 3, "The AI Assistant's Working Folder", Week 4, "AI Agent Built-in Browser", and Week 5, "Models and the Context Window", are published: 5 videos plus 2 extras (20 min in total), 62 chapters and 38 key points. Weeks 6 to 16 open as the course goes on and show as "Coming soon" on the site until then.
 
 The videos have no voice-over. Each one explains a single topic with animation, text cards and music synthesized in code, and runs between one and about four minutes. The course teaches the practical use of AI coding agents, and the tool shown in the videos is mostly OpenAI's Codex.
 
@@ -231,6 +232,7 @@ The videos have no voice-over. Each one explains a single topic with animation, 
 | <img src="weeks/week03/video/s1-terminal-mac/thumb.jpg" width="180" alt="Thumbnail of Week 3 extra 1"> | Week 3 · Extra 1<br>[Intro to the Terminal (Mac)](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#s1-terminal-mac) | 4:01 | 10 / 6 | What a terminal is, how to open it and how to read the prompt; the story of 小安 the fox picking up a parcel teaches `~`, `cd`, `ls`, `mv` and `unzip`, then students repeat the same story as practice (practice file `week3.zip` included) |
 | <img src="weeks/week03/video/s2-terminal-win/thumb.jpg" width="180" alt="Thumbnail of Week 3 extra 2"> | Week 3 · Extra 2<br>[Intro to the Terminal (Win)](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#s2-terminal-win) | 4:03 | 10 / 6 | The same story of 小安 the fox on Windows 11: opening Terminal from Search, reading the `PS C:\Users\an>` prompt, the table output of `ls`, `mv`, and unpacking with the built-in `tar -xvf`; the practice page adds a reminder about a Desktop backed up by OneDrive |
 | <img src="weeks/week04/video/01-built-in-browser/thumb.jpg" width="180" alt="Thumbnail of Week 4 video 01"> | Week 4 · 01<br>[AI Agent Built-in Browser](https://learning-analytics-tools.pages.dev/weeks/week04/?lang=en) | 2:24 | 8 / 5 | Five ways an AI agent can control a browser; when Codex's built-in browser gets stuck, Codex finds the cause and fixes it, then builds a block table and chair in Blockbench (22 min 34 s of real work, sped up in the video) |
+| <img src="weeks/week05/video/01-model-switch/thumb.jpg" width="180" alt="Thumbnail of Week 5 video 01"> | Week 5 · 01<br>[Don't Keep Switching Models](https://learning-analytics-tools.pages.dev/weeks/week05/?lang=en) | 1:40 | 6 / 5 | Each model has its own context window; switching from GPT-6 Luna to GPT-6.1 Sol halfway makes Sol reread the whole chat and breaks the cache, so usage jumps (per OpenAI's "Unrolling the Codex agent loop"); pick the model before you start, and if you must switch, have the original model write a hand-off summary and open a new chat. The context window panel borrows Claude Code's `/context` view as an illustration |
 
 ### Student participation and interactive review
 
@@ -279,7 +281,7 @@ The visuals are mainly animated web pages written in HTML, CSS and JavaScript an
 |---|---|
 | Site code (HTML, CSS, JavaScript), tools (`tools/`), templates and documentation | Published, MIT License |
 | AI teaching videos (HLS), posters and thumbnails, and each week's text in Traditional Chinese with its Simplified Chinese, English and Vietnamese translations | Published, CC BY-NC-SA 4.0 |
-| Weeks 5 to 16 | Opening one by one as the course goes on |
+| Weeks 6 to 16 | Opening one by one as the course goes on |
 | Student work showcase | Live; more work is added as students agree to publish it; copyright stays with each author |
 | Practice environment: a simulated computer (in-class practice) | Mac and Windows versions live (10 missions for Week 3, pick any; the terminal, settings and file managers really work) |
 | Teaching-video prompts: each video's `brief.md`, the specs for the animated materials, and the three-plan proposals | Planned, to be released once cleaned up |
