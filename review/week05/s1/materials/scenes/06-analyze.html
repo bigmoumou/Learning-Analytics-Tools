@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>06 分析</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/loop.js"></script>
+<script>
+(function () {
+  const $ = L.$;
+  L.mount();
+  const D = 22;
+  const FROM_CODEX = { x: 560, y: 470 };
+  const R12 = 0.4, A4 = 2.0, R3 = 2.4, ADD13 = 3.0, SEND5 = 4.6, R14 = 6.6, PUSH0 = 8.8, PUSH1 = 9.8, A5 = 9.6, R4 = 10.0, X4 = 10.5, PULL0 = 16.2, PULL1 = 17.2, ADD15 = 17.4, SEND6 = 19.0;
+  const CAM = [[0, ...L.WIDE], [PUSH0, ...L.WIDE], [PUSH1, ...L.PUSH], [PULL0, ...L.PUSH], [PULL1, ...L.WIDE]];
+  const CAPS = [
+    [0.4, 6.2, "模型請 Codex 寫一個小程式：<code>analyze.py</code>", "寫檔案，也是 Codex 在小安的 Mac 上做"],
+    [6.6, 9.6, "再請 Codex 跑它", "<code>python3 analyze.py</code>"],
+    [10.0, 16.4, "數字是程式算出來的，不是模型「心算」的", "比較可靠；但你要看得到它跑了什麼"],
+    [17.2, 21.7, "結果一樣疊上去，再傳一次", ""],
+  ];
+  function render(t) {
+    const cam = L.cam(t, CAM), k = L.pushK(cam.z);
+    L.scrims(k); L.dim(k);
+    L.sec(t, "06", "分析");
+    L.thread(t, { at: { tm: -1, ask: -1, work: -1, a1: -1, r1: -1, a2: -1, r2: -1, a3: -1, p1: -1, a4: A4, r3: R3, a5: A5, r4: R4, x4: X4 }, allowAt: -1 });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1], ["survey.csv", -1], ["analyze.py", R3 + 0.2, 6.0]]);
+    // 一疊紙條：11 → 12（請寫 analyze.py）→ 13（已寫入）→ 14（請跑）→ 15（印出幾個數字）
+    L.stack(t, 11, [[R12 + 1.4, 12], [ADD13 + 1.2, 13], [R14 + 1.4, 14], [ADD15 + 1.2, 15]]);
+    L.flies(t, [{ a: R12, i: 11 }, { a: ADD13, i: 12, from: FROM_CODEX, d: 1.2, s0: 0.6, arc: 30 }, { a: R14, i: 13 }, { a: ADD15, i: 14, from: FROM_CODEX, d: 1.2, s0: 0.6, arc: 30 }]);
+    const c = L.sends(t, [[SEND5, 13], [SEND6, 15]], 4);
+    L.count(t, c); L.countBump(t, [SEND5, SEND6]);
+    L.led(t, [[0, R12 + 0.2], [SEND5 + L.FLY, R14 + 0.2], [SEND6 + L.FLY, 1e9]]);
+    L.illus(t, [[X4, PULL0, "展開的指令和輸出是示意；analyze.py 在假資料夾真的跑過（缺考的人不算進平均）"]]);
+    L.caps(t, CAPS);
+  }
+  L.start("06 分析", D, render);
+})();
+</script>
+</body>
+</html>

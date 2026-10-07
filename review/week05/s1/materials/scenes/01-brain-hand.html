@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>01 腦和手</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<style>
+  .side { position: absolute; top: 650px; white-space: nowrap; font-size: 40px; font-weight: 800; color: #fff; }
+  .side em { font-style: normal; color: #f0b545; margin-right: 16px; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/loop.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  L.mount({ world: `<div class="side" id="sideR" style="left:1610px"><em>腦</em>模型</div><div class="side" id="sideL" style="left:48px"><em>手</em>Codex app</div>` });
+  const D = 20;
+  const SRV = 1.0, BRAIN = 5.0, HAND = 11.0, NET = 15.6, OUT = 18.8;
+  const CAPS = [
+    [0.4, 4.6, "腦和手，是分開的", ""],
+    [5.0, 10.6, "腦：模型在 OpenAI 的伺服器上", "它只會讀文字、寫文字"],
+    [11.0, 15.4, "手：Codex 在小安的 Mac 上", "跑指令、讀檔、寫檔，都是 Codex 做的"],
+    [15.8, 19.7, "Codex 透過 OpenAI 的 API，把對話送過去", ""],
+  ];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]);
+    ["stack", "stackN", "folder"].forEach((id) => K.vis($(id), 0));
+    L.thread(t, { at: { tm: -1, ask: -1, work: -1 } });
+    L.sec(t, "01", "腦和手", 0.3);
+    // 右邊：伺服器（腦）
+    K.fade($("zSrv"), t, SRV); K.rise($("srv"), t, SRV + 0.1);
+    K.rise($("sideR"), t, BRAIN + 0.2, OUT + 0.6);
+    // 左邊：Codex（手）
+    K.fade($("zMac"), t, 0.3);
+    K.rise($("sideL"), t, HAND + 0.2, OUT + 0.6);
+    // 網路線：從 Mac 長到伺服器
+    const g = E((t - NET) / 1.2), x0 = 794, x1 = L.P.net.x1;
+    Object.assign($("net").style, { left: x0 + "px", width: (x1 - x0) + "px", transformOrigin: "0 50%", transform: `scaleX(${g.toFixed(4)})` });
+    $("netL").style.left = (x0 + x1) / 2 + "px"; $("netL").style.top = "276px";
+    K.fade($("netL"), t, NET + 0.8);
+    // 小安：站在自己的 Mac 旁邊；講到「手」的時候開心地點頭；最後離場，讓出位置給一疊紙條
+    const nod = Math.max(0, Math.sin(C((t - HAND - 0.3) / 0.6) * Math.PI)) * 0.45;
+    const out = C((t - OUT) / 0.8);
+    L.fox("foxW", 1000, 600 + 12 * E(out), 0.78, "front", { look: t > SRV + 0.4 && t < BRAIN + 3 ? 0.6 : -0.55, nod, expr: t > HAND && t < HAND + 3 ? "happy" : "neutral", blink: Math.floor(t * 10) % 41 === 0, alpha: 1 - out });
+    L.caps(t, CAPS);
+  }
+  L.start("01 腦和手", D, render);
+})();
+</script>
+</body>
+</html>

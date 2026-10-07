@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>04 上網搜尋</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<style>
+  /* 模型在伺服器那一側寫的紙條（還沒送回 Mac） */
+  .out { position: absolute; left: 1630px; }
+  /* 比較表：你自己搜 vs Codex 搜（PLAN「搜尋：人和 Codex 的差別」） */
+  #tbl { position: absolute; left: 80px; top: 160px; width: 1760px; }
+  #tbl .hd, #tbl .r { display: grid; grid-template-columns: 240px 620px 1fr; column-gap: 48px; }
+  #tbl .hd { padding-bottom: 18px; border-bottom: 2px solid #3a4556; font-size: 36px; font-weight: 800; color: #fff; }
+  #tbl .hd span:first-child { color: #8a95a6; font-weight: 700; font-size: 26px; align-self: end; }
+  #tbl .r { position: relative; padding: 28px 0 28px; border-bottom: 1px solid #2b3646; font-size: 31px; line-height: 1.45; color: #e6e6e6; }
+  #tbl .r .k { font-weight: 800; color: #aeb8c6; }
+  #tbl .r .me { color: #aeb8c6; }
+  #tbl .r::before { content: ""; position: absolute; left: -24px; top: 28px; bottom: 28px; width: 4px; background: #f0b545; opacity: var(--hi, 0); }
+  #tbl .r em { font-style: normal; color: #f0b545; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/loop.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  const ROWS = [
+    ["看到什麼", "整個網頁：排版、圖片、廣告", "只有文字：標題、網址、摘要，或網頁的文字內容"],
+    ["一次查幾個", "一次一個關鍵字，一頁一頁點", "可以連續查好幾組關鍵字"],
+    ["新不新", "即時的網頁", "預設查 OpenAI 整理好的快取索引，可能不是最新的；要最新的得開「即時搜尋」"],
+    ["判斷可不可信", "你看網站、作者、日期自己判斷", "它也會判斷，但可能看錯；網頁裡的文字甚至可能藏著給 AI 的指令（提示注入）"],
+    ["你該做的", "—", "<em>請它附上來源網址，重要的事自己點開看</em>"],
+  ];
+  const slip = (i, id) => { const [k, v] = L.SLIPS[i]; return `<div class="slip out" id="${id}"><span class="k">${k}</span><span class="v">${v}</span></div>`; };
+  L.mount({
+    world: slip(7, "o8") + slip(8, "o9"),
+    boards: `<div class="board" id="board"><div id="tbl"><div class="hd"><span></span><span>你自己搜</span><span>Codex 搜</span></div>` +
+      ROWS.map(([k, a, b], i) => `<div class="r" id="row${i}"><span class="k">${k}</span><span class="me">${a}</span><span>${b}</span></div>`).join("") + `</div></div>`,
+  });
+  const D = 42;
+  const PAN0 = 0.4, PAN1 = 2.4, W8 = 2.6, RES = 3.6, W9 = 8.8, BACK0 = 13.2, BACK1 = 15.2, F8 = 13.6, F9 = 14.5, TBL = 18.6, TBL_OUT = 38.4;
+  const OUT8 = { x: 1630, y: 520 }, OUT9 = { x: 1630, y: 590 };
+  const ROW_T = [19.6, 23.4, 27.2, 31.0, 34.8];
+  const CAPS = [
+    [0.6, 6.4, "模型決定上網搜尋", "搜尋是 OpenAI 提供的工具，在 OpenAI 那邊做"],
+    [6.8, 12.8, "回來的是幾筆標題、網址、摘要", "全部是文字，留在伺服器這邊給模型讀"],
+    [13.2, 18.2, "飛回小安這邊的，是模型寫的紙條", "搜尋不是終端機指令：不在你的電腦上跑，也不用你允許"],
+    [39.2, 41.8, "搜尋在 OpenAI 那邊做，不用小安允許", "下一段的下載，就不一樣了"],
+  ];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE], [PAN0, ...L.WIDE], [PAN1, ...L.PAN], [BACK0, ...L.PAN], [BACK1, ...L.WIDE]]);
+    L.sec(t, "04", "上網搜尋");
+    L.thread(t, { at: { tm: -1, ask: -1, work: -1, a1: -1, r1: -1, a2: W8 - 0.2, r2: RES } });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1]]);
+    // 一疊紙條：7 → 8（網路搜尋）→ 9（找到了）；張數不變的話，傳送次數也不變
+    L.stack(t, 7, [[F8 + 1.4, 8], [F9 + 1.4, 9]]);
+    L.flies(t, [{ a: F8, i: 7, from: OUT8, s0: 1, arc: 60 }, { a: F9, i: 8, from: OUT9, s0: 1, arc: 60 }]);
+    L.count(t, 3);
+    L.led(t, [[0, W9 + 0.6]]);
+    // 伺服器那一側：模型寫的紙條、搜尋結果（不飛回 Mac）
+    K.rise($("o8"), t, W8, 1e9, 14); $("o8").style.top = OUT8.y + "px"; K.vis($("o8"), t < F8 ? C((t - W8) / 0.3) : 0);
+    K.rise($("o9"), t, W9, 1e9, 14); $("o9").style.top = OUT9.y + "px"; K.vis($("o9"), t < F9 ? C((t - W9) / 0.3) : 0);
+    L.search(t, RES, 0.8, BACK1);
+    // 比較表：整個場景退下，表一列一列出來，目前這一列左邊一條琥珀色細線
+    const wo = C((t - TBL) / 0.5) * (1 - C((t - TBL_OUT) / 0.5));
+    $("world").style.opacity = 1 - wo;
+    K.vis($("board"), C((t - TBL - 0.3) / 0.4) * (1 - C((t - TBL_OUT + 0.2) / 0.4)));
+    ROWS.forEach((_, i) => {
+      const r = $("row" + i), a = ROW_T[i];
+      K.rise(r, t, a, 1e9, 16);
+      r.style.setProperty("--hi", C((t - a) / 0.3) * (1 - C((t - (ROW_T[i + 1] || TBL_OUT - 0.6)) / 0.3)));
+    });
+    L.illus(t, [[TBL + 0.6, TBL_OUT, "來源：OpenAI Codex 文件〈Agent approvals &amp; security〉"]]);
+    L.caps(t, CAPS);
+  }
+  L.start("04 上網搜尋", D, render);
+})();
+</script>
+</body>
+</html>

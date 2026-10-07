@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>03 讀本地檔案</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/loop.js"></script>
+<script>
+(function () {
+  const { WIDE, PUSH } = L;
+  L.mount();
+  const D = 28;
+  // 事件（秒）
+  const LS_ROW = 1.6, LS_OUT = 2.1, ADD5 = 6.8, SEND2 = 8.4, REPLY6 = 10.9, HEAD_OUT = 13.8, ADD7 = 19.2, SEND3 = 20.8;
+  const FROM_CODEX = { x: 560, y: 470 };     // Codex 跑完的結果，從 Codex 視窗出發
+  const CAM = [[0, ...WIDE], [0.4, ...WIDE], [1.4, ...PUSH], [5.6, ...PUSH], [6.6, ...WIDE], [12.6, ...WIDE], [13.6, ...PUSH], [18.0, ...PUSH], [19.0, ...WIDE]];
+  const CAPS = [
+    [0.4, 5.6, "模型自己看不到你的檔案", "它請 Codex 在小安的 Mac 上跑 <code>ls</code>，看看資料夾裡有什麼"],
+    [6.4, 12.4, "跑完的結果寫成新紙條，疊上去", "整疊再傳一次，模型才讀得到 <code>ls</code> 的結果"],
+    [12.8, 18.4, "是 Codex 把檔案內容「貼」給它看", "模型讀到的，就是這幾行文字"],
+    [19.0, 27.7, "讀過的內容，<em>會送到 OpenAI</em>", "所以個資、學生資料，不要放在專案資料夾裡"],
+  ];
+  const ILLUS = [
+    [1.6, 5.6, "展開的指令和輸出是示意；指令都在假資料夾真的跑過"],
+    [13.8, 18.4, "Codex 實際用的指令可能不同（例如 <code>rg</code>、<code>sed</code>），做的事一樣：讀檔案。"],
+  ];
+  function render(t) {
+    const cam = L.cam(t, CAM), k = L.pushK(cam.z);
+    L.scrims(k); L.dim(k);
+    L.sec(t, "03", "讀本地檔案");
+    // Codex：Ran commands（ls、head 合在同一列，下面展開）
+    L.thread(t, { at: { tm: -1, ask: -1, work: -1, a1: -1, r1: LS_ROW, x1: LS_OUT, x2: HEAD_OUT } });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1]]);
+    // 一疊紙條：4 → 5（ls 的結果）→ 6（模型：請跑 head）→ 7（head 的結果）
+    L.stack(t, 4, [[ADD5 + 1.2, 5], [REPLY6 + 1.4, 6], [ADD7 + 1.2, 7]]);
+    L.flies(t, [{ a: ADD5, i: 4, from: FROM_CODEX, d: 1.2, s0: 0.6, arc: 30 }, { a: REPLY6, i: 5 }, { a: ADD7, i: 6, from: FROM_CODEX, d: 1.2, s0: 0.6, arc: 30 }]);
+    const c = L.sends(t, [[SEND2, 5], [SEND3, 7]], 1);
+    L.count(t, c); L.countBump(t, [SEND2, SEND3]);
+    L.led(t, [[SEND2 + L.FLY, REPLY6 + 0.2], [SEND3 + L.FLY, 1e9]]);
+    L.caps(t, CAPS); L.illus(t, ILLUS);
+  }
+  L.start("03 讀本地檔案", D, render);
+})();
+</script>
+</body>
+</html>

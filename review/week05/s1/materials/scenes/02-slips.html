@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>02 一疊紙條</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<style>
+  /* 模型只會回兩種紙條：寫在伺服器下面，一行一種 */
+  #kinds { position: absolute; left: 1610px; top: 520px; width: 300px; }
+  #kinds div { font-size: 24px; color: #aeb8c6; white-space: nowrap; line-height: 1.5; padding: 8px 0; border-top: 1px solid #2b3646; }
+  #kinds div b { color: #fff; font-weight: 700; }
+  #kinds div code { font-family: "Cascadia Mono", monospace; }
+  #kinds .or { border: 0; padding: 2px 0; color: #8a95a6; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/loop.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, lerp = K.lerp, $ = L.$;
+  L.mount({ world: `<div id="kinds"><div><b>「請幫我跑…」</b><br>一個工具呼叫</div><div class="or">或是</div><div><b>「做好了」</b><br>最後的回答</div></div>` });
+  const D = 26;
+  const FROM_CODEX = { x: 560, y: 380 };
+  const P1 = 1.4, P2 = 2.3, P3 = 3.2, SEND1 = 7.4, KINDS = 12.6, REPLY4 = 14.4, LOOP = 18.6;
+  const CAPS = [
+    [0.6, 6.6, "小安按下 Enter，Codex 先把對話整理成一疊紙條", "一開始有三張：Codex 的說明書、AGENTS.md、小安說的話"],
+    [7.0, 12.2, "Codex 把整疊傳給模型", "透過 OpenAI 的 API，送到 OpenAI 的伺服器"],
+    [12.6, 18.2, "模型只回一張紙條", "不是「請幫我跑某個指令」，就是「做好了」"],
+    [18.6, 25.7, "你只按一次 Enter，<em>背後會來回很多次</em>", "Codex 照著跑，把結果疊上去，再整疊傳一次"],
+  ];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]);
+    L.sec(t, "02", "一疊紙條");
+    L.thread(t, { at: { tm: -1, ask: -1, work: -1 } });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1]], 0, C((t - 0.2) / 0.4));
+    // 網路線：左端從 Mac 縮到紙條旁邊（中間讓給一疊紙條）
+    const g = E((t - 0.3) / 0.9), left = lerp(794, L.P.net.x0, g);
+    Object.assign($("net").style, { left: left + "px", width: (L.P.net.x1 - left) + "px" });
+    // 一開始的三張：從 Codex 視窗一張一張疊上去
+    L.stack(t, 0, [[P1 + 0.8, 1], [P2 + 0.8, 2], [P3 + 0.8, 3], [REPLY4 + 1.4, 4]]);
+    L.flies(t, [{ a: P1, i: 0, from: FROM_CODEX, d: 0.8, s0: 0.5, arc: 24 }, { a: P2, i: 1, from: FROM_CODEX, d: 0.8, s0: 0.5, arc: 24 }, { a: P3, i: 2, from: FROM_CODEX, d: 0.8, s0: 0.5, arc: 24 }, { a: REPLY4, i: 3 }]);
+    // 第 1 次傳送
+    const c = L.sends(t, [[SEND1, 3]], 0);
+    L.count(t, c, SEND1); L.countBump(t, [SEND1]);
+    L.led(t, [[SEND1 + L.FLY, REPLY4 + 0.2]]);
+    // 模型只會回兩種紙條
+    K.rise($("kinds"), t, KINDS + 0.2, REPLY4 + 3.6);
+    // 最後：計數輕輕強調一下（還會再傳很多次）
+    $("count").style.transform = t > LOOP && t < LOOP + 1.2 ? `translateY(${(-6 * Math.sin(C((t - LOOP) / 1.2) * Math.PI)).toFixed(1)}px)` : "";
+    L.caps(t, CAPS);
+  }
+  L.start("02 一疊紙條", D, render);
+})();
+</script>
+</body>
+</html>

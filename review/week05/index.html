@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../assets/i18n-strings.js"></script>
+<script src="../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 5 補充教材審核</title>
+<style>
+  :root { --bg:#ebe9e4; --ink:#111; --sub:#6b665d; --line:#cfc9bd; --amber:#a36500; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14161a; --ink:#ece9e2; --sub:#a29d93; --line:#3a3d44; --amber:#f0b545; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 "Noto Sans TC",system-ui,sans-serif; }
+  main { max-width:1180px; margin:0 auto; padding:28px 16px 64px; }
+  h1 { font-size:26px; margin:0 0 6px; } h2 { font-size:21px; margin:44px 0 6px; padding-top:16px; border-top:1px solid var(--line); }
+  .note { color:var(--sub); margin:0 0 8px; }
+  section { padding:14px 0; border-bottom:1px solid var(--line); }
+  h3 { font-size:17px; margin:0; display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; }
+  h3 .n { color:var(--amber); font-family:ui-monospace,monospace; } h3 a { color:var(--ink); }
+  h3 .d { color:var(--sub); font-weight:400; font-size:14px; }
+  section p { margin:4px 0 8px; color:var(--sub); font-size:15px; }
+  .shots { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .shots img, .keys img { width:100%; display:block; border:1px solid var(--line); }
+  .keys { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:8px; margin-top:12px; }
+  video { width:100%; max-width:960px; display:block; background:#000; margin-top:10px; }
+  details { margin-top:12px; } summary { cursor:pointer; color:var(--amber); }
+  pre { white-space:pre-wrap; font:14px/1.6 "Noto Sans TC",system-ui,sans-serif; background:rgba(127,127,127,.08); padding:12px; }
+  @media (max-width:640px) { .shots { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Week 5 補充教材審核</h1>
+  <p class="note">學弟交來的草稿，只給老師看：這一頁沒有任何地方連進來，也不給搜尋引擎收錄。點標題或截圖會打開那一段素材，可以播放、拖時間軸。</p>
+
+  <h2>補充 1「按下 Enter 之後」：全部素材（檢查點 2）</h2>
+  <p class="note">10 段合計 4:10。截圖是每段的開頭、中間、結尾。</p>
+  <section><h3><span class="n">00</span><a href="s1/materials/scenes/00-enter.html">按下 Enter</a><span class="d">14 秒｜成片 0:00–0:14</span></h3><p>小安打字、按 Enter，快轉 30 秒，report.md 出現。「這 30 秒裡，發生了什麼？」</p><div class="shots"><a href="s1/materials/scenes/00-enter.html?t=3.0"><img src="s1/materials/stills/00-a.png" alt="按下 Enter 3.0 秒" loading="lazy"></a><a href="s1/materials/scenes/00-enter.html?t=7.2"><img src="s1/materials/stills/00-b.png" alt="按下 Enter 7.2 秒" loading="lazy"></a><a href="s1/materials/scenes/00-enter.html?t=13.5"><img src="s1/materials/stills/00-c.png" alt="按下 Enter 13.5 秒" loading="lazy"></a></div></section><section><h3><span class="n">01</span><a href="s1/materials/scenes/01-brain-hand.html">腦和手</a><span class="d">20 秒｜成片 0:14–0:34</span></h3><p>左邊小安的 Mac（手：Codex），右邊 OpenAI 的伺服器（腦：模型），中間一條網路線。</p><div class="shots"><a href="s1/materials/scenes/01-brain-hand.html?t=3.0"><img src="s1/materials/stills/01-a.png" alt="腦和手 3.0 秒" loading="lazy"></a><a href="s1/materials/scenes/01-brain-hand.html?t=13.0"><img src="s1/materials/stills/01-b.png" alt="腦和手 13.0 秒" loading="lazy"></a><a href="s1/materials/scenes/01-brain-hand.html?t=19.2"><img src="s1/materials/stills/01-c.png" alt="腦和手 19.2 秒" loading="lazy"></a></div></section><section><h3><span class="n">02</span><a href="s1/materials/scenes/02-slips.html">一疊紙條</a><span class="d">26 秒｜成片 0:34–1:00</span></h3><p>一開始三張紙條；第 1 次傳送；模型只回一張（請幫我跑…／做好了）。</p><div class="shots"><a href="s1/materials/scenes/02-slips.html?t=4.6"><img src="s1/materials/stills/02-a.png" alt="一疊紙條 4.6 秒" loading="lazy"></a><a href="s1/materials/scenes/02-slips.html?t=15.6"><img src="s1/materials/stills/02-b.png" alt="一疊紙條 15.6 秒" loading="lazy"></a><a href="s1/materials/scenes/02-slips.html?t=24.0"><img src="s1/materials/stills/02-c.png" alt="一疊紙條 24.0 秒" loading="lazy"></a></div></section><section><h3><span class="n">03</span><a href="s1/materials/scenes/03-read-files.html">讀本地檔案</a><span class="d">28 秒｜成片 1:00–1:28</span></h3><p>推近看 ls、head grades.csv；結果疊上去；第 2、3 次傳送；讀過的內容會送到 OpenAI。</p><div class="shots"><a href="s1/materials/scenes/03-read-files.html?t=4.0"><img src="s1/materials/stills/03-a.png" alt="讀本地檔案 4.0 秒" loading="lazy"></a><a href="s1/materials/scenes/03-read-files.html?t=16.0"><img src="s1/materials/stills/03-b.png" alt="讀本地檔案 16.0 秒" loading="lazy"></a><a href="s1/materials/scenes/03-read-files.html?t=26.0"><img src="s1/materials/stills/03-c.png" alt="讀本地檔案 26.0 秒" loading="lazy"></a></div></section><section><h3><span class="n">04</span><a href="s1/materials/scenes/04-search.html">上網搜尋</a><span class="d">42 秒｜成片 1:28–2:10</span></h3><p>鏡頭移到伺服器那一側：搜尋結果留在那邊，飛回來的是模型寫的紙條；你自己搜 vs Codex 搜。</p><div class="shots"><a href="s1/materials/scenes/04-search.html?t=10.0"><img src="s1/materials/stills/04-a.png" alt="上網搜尋 10.0 秒" loading="lazy"></a><a href="s1/materials/scenes/04-search.html?t=32.0"><img src="s1/materials/stills/04-b.png" alt="上網搜尋 32.0 秒" loading="lazy"></a><a href="s1/materials/scenes/04-search.html?t=41.0"><img src="s1/materials/stills/04-c.png" alt="上網搜尋 41.0 秒" loading="lazy"></a></div></section><section><h3><span class="n">05</span><a href="s1/materials/scenes/05-download.html">下載資料</a><span class="d">28 秒｜成片 2:10–2:38</span></h3><p>允許提示（示意）：小安看清網址才按允許；curl 在 Mac 上跑；搜尋和下載的對比；第 4 次傳送。</p><div class="shots"><a href="s1/materials/scenes/05-download.html?t=8.4"><img src="s1/materials/stills/05-a.png" alt="下載資料 8.4 秒" loading="lazy"></a><a href="s1/materials/scenes/05-download.html?t=13.5"><img src="s1/materials/stills/05-b.png" alt="下載資料 13.5 秒" loading="lazy"></a><a href="s1/materials/scenes/05-download.html?t=24.0"><img src="s1/materials/stills/05-c.png" alt="下載資料 24.0 秒" loading="lazy"></a></div></section><section><h3><span class="n">06</span><a href="s1/materials/scenes/06-analyze.html">分析</a><span class="d">22 秒｜成片 2:38–3:00</span></h3><p>寫 analyze.py、推近看 python3 analyze.py 的輸出；第 5、6 次傳送。</p><div class="shots"><a href="s1/materials/scenes/06-analyze.html?t=3.6"><img src="s1/materials/stills/06-a.png" alt="分析 3.6 秒" loading="lazy"></a><a href="s1/materials/scenes/06-analyze.html?t=13.0"><img src="s1/materials/stills/06-b.png" alt="分析 13.0 秒" loading="lazy"></a><a href="s1/materials/scenes/06-analyze.html?t=21.0"><img src="s1/materials/stills/06-c.png" alt="分析 21.0 秒" loading="lazy"></a></div></section><section><h3><span class="n">07</span><a href="s1/materials/scenes/07-write.html">寫檔案</a><span class="d">20 秒｜成片 3:00–3:20</span></h3><p>寫出 report.md；Project 那一行加框「Codex 只在這裡面寫」；第 7 次傳送。</p><div class="shots"><a href="s1/materials/scenes/07-write.html?t=4.0"><img src="s1/materials/stills/07-a.png" alt="寫檔案 4.0 秒" loading="lazy"></a><a href="s1/materials/scenes/07-write.html?t=10.0"><img src="s1/materials/stills/07-b.png" alt="寫檔案 10.0 秒" loading="lazy"></a><a href="s1/materials/scenes/07-write.html?t=18.0"><img src="s1/materials/stills/07-c.png" alt="寫檔案 18.0 秒" loading="lazy"></a></div></section><section><h3><span class="n">08</span><a href="s1/materials/scenes/08-context.html">越疊越高</a><span class="d">26 秒｜成片 3:20–3:46</span></h3><p>最後一張「做好了」；18 張接到 context window 面板；工具不只這些。</p><div class="shots"><a href="s1/materials/scenes/08-context.html?t=5.6"><img src="s1/materials/stills/08-a.png" alt="越疊越高 5.6 秒" loading="lazy"></a><a href="s1/materials/scenes/08-context.html?t=13.0"><img src="s1/materials/stills/08-b.png" alt="越疊越高 13.0 秒" loading="lazy"></a><a href="s1/materials/scenes/08-context.html?t=23.5"><img src="s1/materials/stills/08-c.png" alt="越疊越高 23.5 秒" loading="lazy"></a></div></section><section><h3><span class="n">09</span><a href="s1/materials/scenes/09-habits.html">三個好習慣</a><span class="d">24 秒｜成片 3:46–4:10</span></h3><p>三個好習慣＋「Windows 上指令名稱不一樣（PowerShell），流程一樣。」</p><div class="shots"><a href="s1/materials/scenes/09-habits.html?t=4.0"><img src="s1/materials/stills/09-a.png" alt="三個好習慣 4.0 秒" loading="lazy"></a><a href="s1/materials/scenes/09-habits.html?t=12.5"><img src="s1/materials/stills/09-b.png" alt="三個好習慣 12.5 秒" loading="lazy"></a><a href="s1/materials/scenes/09-habits.html?t=22.0"><img src="s1/materials/stills/09-c.png" alt="三個好習慣 22.0 秒" loading="lazy"></a></div></section>
+
+  <h2>補充 2「對話滿了會怎樣」：分鏡第 2 版＋第 3 段測試片</h2>
+  <p class="note">第 3 段「自動壓縮」30 秒，有聲音（−27 LUFS）。請聽紙張聲的大小和質感。</p>
+  <video src="s2/s3-compact-test.mp4" controls playsinline preload="metadata"></video>
+  <div class="keys"><a href="s2/key-01a-closeup.png"><img src="s2/key-01a-closeup.png" alt="key-01a-closeup.png" loading="lazy"></a><a href="s2/key-01b-decision-on-top.png"><img src="s2/key-01b-decision-on-top.png" alt="key-01b-decision-on-top.png" loading="lazy"></a><a href="s2/key-01c-ok-on-top.png"><img src="s2/key-01c-ok-on-top.png" alt="key-01c-ok-on-top.png" loading="lazy"></a><a href="s2/key-03-0-row.png"><img src="s2/key-03-0-row.png" alt="key-03-0-row.png" loading="lazy"></a><a href="s2/key-03-1-full.png"><img src="s2/key-03-1-full.png" alt="key-03-1-full.png" loading="lazy"></a><a href="s2/key-03-2-gather.png"><img src="s2/key-03-2-gather.png" alt="key-03-2-gather.png" loading="lazy"></a><a href="s2/key-03-3-press.png"><img src="s2/key-03-3-press.png" alt="key-03-3-press.png" loading="lazy"></a><a href="s2/key-03-4-after.png"><img src="s2/key-03-4-after.png" alt="key-03-4-after.png" loading="lazy"></a><a href="s2/key-08-agents.png"><img src="s2/key-08-agents.png" alt="key-08-agents.png" loading="lazy"></a></div>
+
+  <h2>我給學弟的回覆</h2>
+  <details><summary>給學弟的回覆（補充 1）</summary><pre># 給學弟（補充 1 的對話）｜Week 5 補充 1｜檢查點 2（素材）的回覆
+
+2026-10-07　老師、Claude
+
+素材通過，做得很好。10 段的節奏、推近讀字、搜尋在伺服器那一側、允許提示、第 5 段「搜尋在 OpenAI 那邊，下載在你的電腦」的對照、第 8 段接到面板，都清楚又好看。第 6 段 analyze.py 的輸出先埋下「缺考 3 人不算進平均」，剛好接到補充 2，很好。
+
+下面幾個小地方改完，就可以接成整支，交檢查點 3。
+
+## 你問的 7 件事
+
+1. **「Created analyze.py」「Created report.md」：** 可以，算示意。
+2. **單一指令也寫「Ran commands」：** 可以，跟截圖一致。
+3. **允許提示用中文：** 可以，旁邊已標示意。
+4. **個資和 grades.csv 的矛盾：** 這點抓得很好，但不要用「這是假資料」帶過，改成教學生怎麼做：
+   - 字幕第二行改成：「姓名、學號這類個資，先拿掉或換成代號，再放進專案資料夾」。
+   - 小字：「這裡的 grades.csv 用的就是代號（S01…）」。
+   - 這門課本來就要分析學生資料，所以重點是「去識別化再放進去」，不是「不要放」。PLAN 第 3 段和驗收清單都已經改了。
+5. **面板字 18–22 px：** 維持和影片 01 一樣。
+6. **第 4 段比較表：** 成片時再看。每一列出現後至少停 4 秒，整張表出齊後再停 5 秒以上；不夠就加時間。
+7. **對話字放大到 30 px：** 可以。
+
+## 另外要改的兩個小地方
+
+1. **第 8 段字幕：** 「每一個工具的結果，都疊進了 context window」改成「每一步的結果，都疊進了 context window」。搜尋的原始結果我們畫成留在伺服器那一側，所以不能說「每一個工具的結果」都疊進來。
+2. **第 5 段游標：** 字幕叫大家「先看清楚它要連去哪」的時候，游標正好蓋在網址上（`example.org/`）。請讓游標先停在提示框外面，等網址的琥珀底線畫完、停一下，再移到「允許」。
+
+## 下一步
+
+- 改完上面幾點，就接成整支、配音樂和音效（−27 LUFS、不用咻咻聲），交檢查點 3：`out/s1-codex-loop.mp4`，附上照 PLAN 驗收清單自己逐條檢查的結果。
+- 補充 2 會沿用你的紙條、Codex 視窗和面板。這幾個元件之後如果還有改，請在 PROGRESS.md 記一行「改了什麼」，補充 2 才對得齊。
+</pre></details><details><summary>給學弟的回覆（補充 2）</summary><pre># 給學弟（補充 2 的對話）｜Week 5 補充 2｜分鏡第 2 版＋第 3 段測試片的回覆
+
+2026-10-07　老師、Claude
+
+分鏡第 2 版通過，6 個地方都改對了。底部的「說明書」「AGENTS.md」、決定那張先停在最上面再被「好」蓋住、第 8 段琥珀線回到 AGENTS.md，整條線很清楚。第 3 段測試片的動態也很好：−27.1 LUFS，留下的三張和新訊息的順序都看得懂。
+
+## 補充 1 的素材檢查點過了，可以開始做全部素材
+
+- 補充 1 的素材在 `week05-s1-codex-loop/materials/`（`common/loop.js`、`loop.css`、`scenes/`）。紙條、Codex 視窗、面板、小安、允許提示的樣子都以它為準。只讀，複製到你的專案再用。
+- 補充 1 還有幾個小修改：字幕、游標，不影響共用的元件。之後那邊如果改了共用元件，會記在它的 `PROGRESS.md`。
+- 假資料照舊讀 `week05-s1-codex-loop/source/data/grades.csv`。
+
+## 你問的 4 件事
+
+1. **提早改用補充 1 的紙條畫法：** 照你的做法。現在補充 1 過關了，再對齊一次它的正式版本。
+2. **留下的三則畫成紙邊：** 可以，維持紙邊。請確認動畫裡看得出「就是剛才浮在上面的那三張」。
+3. **第 0 段面板只畫外框、不顯示百分比：** 可以。
+4. **19–27 秒停太久：** 縮短 2–3 秒，時間讓給第 4 段。
+
+## 另外一個小地方
+
+測試片大約 8 秒，鏡頭從推近拉回來的那幾格，放大的紙條堆會蓋過右上角的時鐘。請讓段落標和時鐘一直在最上層，或讓紙條堆在拉回時先淡一點。
+
+## 聲音
+
+老師會親自聽測試片，聽完再回覆紙張聲要大一點、小一點，還是換質感。在那之前先照現在的做，不用等。
+
+## 下一步
+
+做全部 10 段素材（`materials/index.html`，每頁截開頭、中間、結尾三張），交檢查點 2。
+</pre></details>
+  <p class="note" style="margin-top:40px">Copyright © 2026 JUNHAO CHEN</p>
+</main>
+</body>
+</html>

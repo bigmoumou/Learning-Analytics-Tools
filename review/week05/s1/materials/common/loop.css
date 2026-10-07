@@ -1,0 +1,146 @@
+/* ==========================================================================
+   Week 5 補充 1 共用版面（照 Week 5 影片 01：深色底、琥珀段落標、大字幕、示意小字）
+   顏色：底 #0f141b；字 #fff / #e6e6e6；灰 #aeb8c6、#8a95a6；線 #2b3646、#3a4556；強調只有琥珀 #f0b545
+   結構：#stage 裡面有 #world（會推近、平移的整個場景）和不動的文字層（段落標、計數、字幕、示意）。
+   ========================================================================== */
+@font-face { font-family: "Noto Sans TC"; src: url("../../assets/kit/fonts/NotoSansTC-VF.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Cascadia Mono"; src: url("../../assets/kit/fonts/CascadiaMono.ttf"); font-weight: 200 700; }
+
+#viewport { background: #0f141b; }
+#stage { background: #0f141b; font-family: "Noto Sans TC", sans-serif; color: #e6e6e6; }
+#world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+
+/* ---- 推近時的上下遮罩：讓段落標、字幕壓在乾淨的底上 ---- */
+.scrim { position: absolute; left: 0; right: 0; pointer-events: none; opacity: 0; }
+.scrim.top { top: 0; height: 150px; background: linear-gradient(#0f141b 0, #0f141b 96px, rgba(15,20,27,0) 150px); }
+.scrim.bot { bottom: 0; height: 360px; background: linear-gradient(rgba(15,20,27,0) 0, #0f141b 70px, #0f141b 100%); }
+
+/* ---- 文字層：段落標、計數、字幕、示意 ---- */
+.sec { position: absolute; left: 48px; top: 54px; font-size: 30px; font-weight: 800; color: #e6e6e6; white-space: nowrap; }
+.sec b { font-family: "Cascadia Mono", monospace; color: #f0b545; margin-right: 18px; }
+.count { position: absolute; right: 48px; top: 50px; font-size: 30px; font-weight: 700; color: #e6e6e6; white-space: nowrap; text-align: right; }
+.count b { font-family: "Cascadia Mono", monospace; font-size: 40px; font-weight: 700; color: #f0b545; margin: 0 6px; vertical-align: -3px; display: inline-block; }
+.count small { display: inline-block; margin-left: 14px; font-size: 24px; font-weight: 500; color: #8a95a6; vertical-align: 3px; }
+.cap { position: absolute; left: 48px; top: 772px; width: 1820px; }
+.cap .t { font-size: 56px; font-weight: 900; color: #fff; line-height: 1.25; white-space: nowrap; }
+.cap .t em { font-style: normal; color: #f0b545; }
+.cap .s { margin-top: 12px; font-size: 30px; color: #aeb8c6; white-space: nowrap; }
+.cap .s code, .cap .t code { font-family: "Cascadia Mono", monospace; font-size: .92em; }
+.illus { position: absolute; left: 48px; top: 1004px; font-size: 24px; color: #8a95a6; white-space: nowrap; }
+.illus b { color: #e6e6e6; font-weight: 700; }
+.illus code { font-family: "Cascadia Mono", monospace; color: #c4ccd8; }
+
+/* ---- 區塊標題（小安的 Mac／OpenAI 的伺服器） ---- */
+.zone { position: absolute; font-size: 24px; color: #e6e6e6; font-weight: 700; white-space: nowrap; letter-spacing: .02em; }
+
+/* ---- Codex 視窗（仿真元件 1920×1080，縮小擺在左邊；對話字放大，推近時讀得到） ---- */
+.app { position: absolute; left: 48px; top: 150px; width: 1920px; height: 1080px; transform-origin: 0 0; border-radius: 26px; overflow: hidden;
+  box-shadow: 0 0 0 2px #2b3646, 0 30px 80px rgba(0,0,0,.5); }
+.app .cx-thread { bottom: 196px; }
+.app .cx-thread, .app .cx-composer { width: 900px; left: 120px; }
+.app .cx-msgs { gap: 22px; padding-bottom: 40px; }
+.app .cx-time { font-size: 22px; }
+.app .cx-user, .app .cx-agent { font-size: 30px; line-height: 1.5; }
+.app .cx-user { max-width: 760px; padding: 14px 24px; border-radius: 24px; }
+.app .cx-agent p { margin: 0; }
+.app .cx-agent code { font-size: 26px; }
+.app .cx-file { gap: 8px; }
+.app .cx-file svg { width: 24px; height: 24px; }
+.app .cx-worked { font-size: 24px; padding-bottom: 14px; }
+.app .cx-worked svg { width: 20px; height: 20px; }
+.app .cx-composer { height: 150px; border-radius: 26px; }
+.app .cx-composer .text { font-size: 28px; line-height: 1.45; top: 18px; white-space: normal; height: 82px; overflow: hidden; }
+.app .cx-composer .row { font-size: 20px; }
+.app .cx-composer .row svg { width: 24px; height: 24px; }
+.app .cx-composer .send { width: 44px; height: 44px; }
+.app .cx-composer .access { visibility: hidden; }   /* 權限鈕：藏起來（PLAN 檢查點 1 的決定 11） */
+.app .cx-caret { height: 32px; vertical-align: -6px; }
+/* 工具列：灰色小字一行，前面一個圖示（照 Week 4 的 04-fix-log 和老師的截圖） */
+.app .tr { display: inline-flex; align-self: flex-start; align-items: center; gap: 12px; color: #8f8f8f; font-size: 26px; line-height: 40px; height: 40px; white-space: nowrap; }
+.app .tr svg { width: 26px; height: 26px; color: #8f8f8f; }
+/* Working…（閃光）／Worked for … */
+.app .working { color: #9a9a9a; font-size: 24px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--cx-line); padding-bottom: 14px; }
+.app .working .shine { background: linear-gradient(90deg, #6f6f6f 0%, #e0e0e0 50%, #6f6f6f 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* 展開的指令和輸出（示意） */
+.app .exp { margin: -8px 0 0 38px; padding: 6px 0 6px 22px; border-left: 2px solid #3a3a3a; font-family: "Cascadia Mono", monospace; font-size: 24px; line-height: 1.5; color: #a9a9a9; white-space: pre; }
+.app .exp .c { color: #ececec; }
+.app .exp .c::before { content: "$ "; color: #7a7a7a; }
+.app .exp .e { color: #d9d9d9; font-family: "Noto Sans TC", sans-serif; }
+/* 允許連網的提示（示意：以前的素材沒有，照 Codex 視窗的樣子自己畫） */
+.app .ask { background: #262626; border: 1px solid #3c3c3c; border-radius: 20px; padding: 22px 26px 22px; }
+.app .ask .h { font-size: 28px; color: #ececec; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+.app .ask .h svg { width: 28px; height: 28px; color: #bdbdbd; }
+.app .ask .cmd { margin-top: 14px; background: #1b1b1b; border: 1px solid #333; border-radius: 12px; padding: 12px 18px; font-family: "Cascadia Mono", monospace; font-size: 24px; color: #e6e6e6; white-space: nowrap; overflow: hidden; }
+.app .ask .cmd u { text-decoration: none; position: relative; }
+.app .ask .cmd u::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 3px; background: #f0b545; transform-origin: 0 50%; transform: scaleX(var(--ul, 0)); }
+.app .ask .btns { margin-top: 18px; display: flex; justify-content: flex-end; gap: 14px; }
+.app .ask .btns span { font-size: 24px; border-radius: 12px; padding: 8px 26px; }
+.app .ask .btns .no { background: #333; color: #dcdcdc; }
+.app .ask .btns .yes { background: #f0f0f0; color: #1f1f1f; font-weight: 700; }
+
+/* ---- Project 資料夾（Codex 視窗下面一行字：路徑＋裡面的檔案） ---- */
+.pfolder { position: absolute; left: 48px; top: 584px; width: 730px; }
+.pfolder .p { font-family: "Cascadia Mono", monospace; font-size: 24px; color: #8a95a6; white-space: nowrap; }
+.pfolder .f { margin-top: 8px; font-family: "Cascadia Mono", monospace; font-size: 24px; line-height: 1.4; color: #e6e6e6; white-space: nowrap; display: flex; flex-wrap: wrap; column-gap: 22px; row-gap: 2px; max-width: 700px; }
+.pfolder .f span { position: relative; }
+.pfolder .f span.new { color: #f0b545; }
+.pfolder .box { position: absolute; left: -16px; top: -12px; right: -16px; bottom: -14px; border: 2px solid #f0b545; border-radius: 6px; opacity: 0; }
+.pfolder .box i { position: absolute; left: 14px; top: -16px; padding: 0 10px; background: #0f141b; font-style: normal; font-size: 24px; color: #f0b545; white-space: nowrap; line-height: 30px; }
+
+/* ---- 紙條 ---- */
+.stack { position: absolute; left: 806px; top: 652px; width: 440px; }
+.slip { position: absolute; left: 0; width: 440px; height: 58px; border-radius: 3px; background: #ebe5d8; color: #1d232c;
+  display: flex; align-items: center; gap: 14px; padding: 0 18px; white-space: nowrap; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 6px 14px rgba(0,0,0,.28); }
+.slip .k { font-size: 24px; font-weight: 800; color: #6b5a3a; flex: none; }
+.slip .v { font-size: 24px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+.slip .v code { font-family: "Cascadia Mono", monospace; font-size: 23px; font-weight: 600; }
+.slip.new::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #f0b545; }
+.edge { position: absolute; left: 0; width: 440px; height: 9px; border-radius: 2px; background: #ddd6c7; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.edge.alt { background: #e6e0d2; }
+.stack-n { position: absolute; left: 806px; top: 668px; font-size: 24px; color: #8a95a6; white-space: nowrap; }
+.stack-n b { font-family: "Cascadia Mono", monospace; color: #e6e6e6; font-weight: 700; }
+.fly { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.bundle { position: absolute; left: 0; top: 0; width: 120px; }
+
+/* ---- 網路線 ---- */
+.net { position: absolute; left: 1272px; top: 330px; width: 318px; height: 2px; background: #3a4556; transform-origin: 100% 50%; }
+.net-l { position: absolute; left: 1431px; top: 346px; font-size: 24px; color: #aeb8c6; white-space: nowrap; transform: translateX(-50%); }
+
+/* ---- 伺服器（線條畫） ---- */
+.server { position: absolute; left: 1610px; top: 168px; width: 262px; }
+.server .unit { position: relative; height: 54px; border: 2px solid #3a4556; border-radius: 8px; background: #121922; margin-bottom: 10px; }
+.server .unit i { position: absolute; top: 22px; width: 7px; height: 7px; border-radius: 50%; background: #4a5668; }
+.server .unit s { position: absolute; left: 20px; right: 80px; top: 25px; height: 2px; background: #2b3646; text-decoration: none; }
+.server .name { margin-top: 18px; font-size: 34px; font-weight: 800; color: #fff; white-space: nowrap; }
+.led { position: absolute; left: 1798px; top: 192px; width: 9px; height: 9px; border-radius: 50%; background: #f0b545; opacity: 0; }
+
+/* ---- 搜尋結果（只在伺服器那一側） ---- */
+.search { position: absolute; left: 2090px; top: 150px; width: 440px; }
+.search .h { font-size: 26px; font-weight: 800; color: #fff; white-space: nowrap; }
+.search .h small { display: block; font-size: 24px; font-weight: 500; color: #8a95a6; margin-top: 4px; }
+.search .r { margin-top: 22px; padding-top: 18px; border-top: 1px solid #2b3646; }
+.search .r .ti { font-size: 26px; font-weight: 700; color: #e6e6e6; white-space: nowrap; }
+.search .r .u { margin-top: 2px; font-family: "Cascadia Mono", monospace; font-size: 24px; color: #8a95a6; white-space: nowrap; }
+.search .r .sn { margin-top: 4px; font-size: 24px; color: #aeb8c6; line-height: 1.45; }
+
+/* ---- 狐狸、游標 ---- */
+canvas.fox { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+.cur { position: absolute; left: 0; top: 0; width: 26px; height: 38px; opacity: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 44'%3E%3Cpath d='M1.5 1.5V33L9.3 25.6L14.4 37.6L19.4 35.4L14.3 23.8H24.6Z' fill='%23111' stroke='%23fff' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat 0 0 / 26px 38px; }
+
+/* ---- context window 面板（Week 5 影片 01 的樣子；只放比例） ---- */
+.ctx { position: absolute; left: 1482px; top: 150px; width: 390px; background: #1e1f22; border: 1px solid #3a3a3a; border-radius: 8px; color: #cfcfcf; font-size: 18px;
+  padding: 14px 16px 14px; box-shadow: 0 20px 50px rgba(0,0,0,.5); transform-origin: 50% 0; opacity: 0; }
+.ctx .who { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.ctx .who i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: #8a8a8a; }
+.ctx .top { display: flex; justify-content: space-between; color: #9a9a9a; white-space: nowrap; }
+.ctx .top b { color: #e6e6e6; font-weight: 600; font-family: "Cascadia Mono", monospace; font-size: 17px; }
+.ctx .bar { height: 10px; border-radius: 5px; background: #3a3a3a; margin: 10px 0 10px; display: flex; overflow: hidden; }
+.ctx .bar i { display: block; height: 100%; flex: none; }
+.ctx .item { display: flex; align-items: center; gap: 10px; height: 29px; white-space: nowrap; }
+.ctx .item .sw { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+.ctx .item .p { margin-left: auto; width: 70px; text-align: right; color: #e2e2e2; font-weight: 700; font-family: "Cascadia Mono", monospace; font-size: 16px; }
+
+/* ---- 深色說明板（第 4 段的比較表、第 9 段的結尾） ---- */
+.board { position: absolute; inset: 0; opacity: 0; }
