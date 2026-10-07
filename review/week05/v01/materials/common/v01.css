@@ -1,0 +1,74 @@
+/* ==========================================================================
+   Week 5 影片 01 專用：家規、驗收單兩張紙（補充 1 紙條的紙色和質感）、地圖、手機外框、回報表
+   顏色照系列：深色底 #0f141b；紙 #ebe5d8；墨 #1d232c；紙上的標籤 #6b5a3a；強調只有琥珀 #f0b545
+   ========================================================================== */
+
+/* ---- 兩張紙 ---- */
+.sheet { position: absolute; background: #ebe5d8; color: #1d232c; border-radius: 4px; padding: 30px 40px 26px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 18px 40px rgba(0,0,0,.35); transform-origin: 50% 0; }
+.sheet .hd { display: flex; align-items: baseline; gap: 18px; white-space: nowrap; }
+.sheet .ttl { font-size: 46px; font-weight: 900; color: #2b2418; letter-spacing: .04em; }
+.sheet .fn { font-family: "Cascadia Mono", monospace; font-size: 28px; font-weight: 600; color: #6b5a3a; }
+.sheet .wk { margin-left: auto; font-size: 24px; color: #8a7a5a; }
+.sheet .sub { margin-top: 8px; padding-bottom: 14px; border-bottom: 2px solid #d4ccb9; font-size: 28px; font-weight: 700; color: #6b5a3a; white-space: nowrap; }
+.sheet .ln { position: relative; padding: 12px 0 12px 30px; border-bottom: 1px dashed #d3cbb9; font-size: 27px; line-height: 1.45; white-space: nowrap; }
+.sheet .ln::before { content: "・"; position: absolute; left: 0; color: #8a7a5a; }
+.sheet .ln.add { font-weight: 700; }
+.sheet .ln u { text-decoration: none; position: relative; }
+.sheet .ln u::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; background: #f0b545; transform-origin: 0 50%; transform: scaleX(var(--ul, 0)); }
+.sheet code, .vrow code { font-family: "Cascadia Mono", monospace; font-size: .9em; }
+
+/* 驗收單的一列：格子、編號、要看什麼、怎麼檢查 */
+.vgrp { margin-top: 12px; font-size: 24px; font-weight: 700; color: #8a7a5a; letter-spacing: .08em; }
+.vrow { position: relative; display: grid; grid-template-columns: 46px 36px 1fr auto; align-items: center; column-gap: 8px; padding: 9px 0; border-bottom: 1px dashed #d3cbb9; font-size: 26px; white-space: nowrap; }
+.vrow .n { font-family: "Cascadia Mono", monospace; font-size: 24px; color: #8a7a5a; }
+.vrow .how { font-size: 24px; color: #7a6d55; }
+.vrow::before { content: ""; position: absolute; left: -40px; top: 6px; bottom: 6px; width: 6px; background: #f0b545; opacity: var(--hi, 0); }
+.box { position: relative; width: 32px; height: 32px; border: 3px solid #6b5a3a; border-radius: 5px; }
+.box svg { position: absolute; left: -6px; top: -10px; width: 42px; height: 42px; overflow: visible; }
+.box svg path { fill: none; stroke: #1d232c; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.box.ng { background: #f0b545; border-color: #b9821c; }
+
+/* 小張的驗收單（第 6、7 段放在右邊，鏡頭推近時也讀得到） */
+.mini { position: absolute; left: 1336px; top: 150px; width: 536px; padding: 22px 26px 18px; }
+.mini .ttl { font-size: 34px; }
+.mini .fn { font-size: 24px; }
+.mini .sub { font-size: 24px; margin-top: 4px; padding-bottom: 10px; }
+.mini .vrow { grid-template-columns: 44px 32px 1fr; font-size: 25px; padding: 8px 0; }
+.mini .vrow .how { display: none; }
+.mini .vrow::before { left: -26px; }
+
+/* ---- 地圖（照 Codex 實跑做出來的 index.html 畫） ---- */
+.gmap { position: absolute; left: 0; top: 0; }
+/* Codex 視窗的樣式會把視窗裡的 svg 都變成 20 px 的線條圖示：地圖要排除 */
+.cx svg.gmap { width: 100%; height: 100%; fill: none; stroke: none; stroke-width: 0; }
+.gmap .pin { fill: #d99a2b; stroke: #fffefa; stroke-width: 3; }
+.gmap .num { fill: #fff; font: 700 13px "Noto Sans TC", sans-serif; text-anchor: middle; dominant-baseline: central; }
+.gmap .lbl { fill: #6f7d62; font: 700 15px "Noto Sans TC", sans-serif; }
+.gpage { position: absolute; inset: 0; background: #f4f1e8; color: #23402f; font-family: "Noto Sans TC", sans-serif; overflow: hidden; }
+.gpage .eb { font-size: 13px; font-weight: 700; letter-spacing: .14em; color: #a3772a; }
+.gpage h1 { margin: 6px 0 4px; font-size: 34px; font-weight: 900; color: #1f3a2c; }
+.gpage .intro { font-size: 15px; color: #6b7a69; }
+.gpage .frame { position: absolute; border: 1px solid #dedbcc; border-radius: 18px; overflow: hidden; background: #e9edda; }
+.gpop { position: absolute; background: #fffefa; border: 1px solid #e4dfd2; border-radius: 16px; overflow: hidden; box-shadow: 0 14px 40px rgba(30,44,33,.35); }
+.gpop img { display: block; width: 100%; }
+.gpop .t { padding: 10px 14px 2px; font-size: 18px; font-weight: 800; color: #1f3a2c; }
+.gpop .d { padding: 0 14px 12px; font-size: 14px; color: #6b7a69; }
+.gpop img.broken { opacity: 0; }
+.gpop .bk { position: absolute; left: 0; right: 0; top: 0; display: grid; place-items: center; background: #f1efe8; color: #9a9a90; font-size: 14px; }
+.gpop .bk svg { width: 34px; height: 34px; stroke: #b6b4aa; fill: none; stroke-width: 1.6; }
+
+/* ---- 手機外框（不畫成任何品牌） ---- */
+.phone { position: absolute; border-radius: 44px; background: #161b22; box-shadow: 0 0 0 2px #3a4556, 0 30px 70px rgba(0,0,0,.5); }
+.phone .scr { position: absolute; left: 12px; top: 12px; right: 12px; bottom: 12px; border-radius: 34px; overflow: hidden; background: #f4f1e8; }
+.phone .spk { position: absolute; left: 50%; top: 3px; width: 70px; height: 6px; margin-left: -35px; border-radius: 3px; background: #0d1015; z-index: 2; }
+
+/* ---- 回報表（Codex 最後的回答裡的表；字放大，推近時讀得到） ---- */
+.app .rep { border-collapse: collapse; width: 100%; font-size: 24px; line-height: 1.35; }
+.app .rep th, .app .rep td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #3a3a3a; vertical-align: top; }
+.app .rep th { color: #b4b4b4; font-weight: 600; border-bottom: 1px solid #555; }
+.app .rep td:first-child { white-space: nowrap; }
+.app .rep td.ok { color: #ececec; font-weight: 700; white-space: nowrap; }
+.app .rep td.ev { color: #c8c8c8; }
+.app .rep code { font-family: "Cascadia Mono", monospace; font-size: 21px; background: #2f2f2f; border-radius: 5px; padding: 0 5px; }
+.app .rep tr.on td { background: rgba(240,181,69,.10); }

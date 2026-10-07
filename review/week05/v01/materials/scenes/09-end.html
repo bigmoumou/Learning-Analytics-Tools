@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>09 結尾</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+<style>
+  #end { position: absolute; left: 96px; top: 300px; }
+  #end .a, #end .b { font-size: 76px; font-weight: 900; line-height: 1.3; color: #fff; white-space: nowrap; }
+  #end .b em, #end .a em { font-style: normal; font-family: "Cascadia Mono", monospace; font-weight: 700; font-size: .9em; }
+  #end .b { color: #f0b545; }
+  #end .rule { margin-top: 40px; width: 980px; height: 2px; background: #3a4556; transform-origin: 0 50%; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  L.mount({ boards: `<div id="end"><div class="a" id="ea"><em>AGENTS.md</em> 寫怎麼做，</div><div class="b" id="eb"><em>VERIFY.md</em> 寫怎樣算做好。</div><div class="rule" id="er"></div></div>` });
+  ["zMac", "zSrv", "app", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 10;
+  function render(t) {
+    V.dip(t, D, 0.5);
+    L.cam(t, [[0, ...L.WIDE]]);
+    K.rise($("ea"), t, 0.5, 1e9, 18);
+    K.rise($("eb"), t, 1.6, 1e9, 18);
+    $("er").style.transform = `scaleX(${E((t - 2.6) / 0.8).toFixed(4)})`;
+    const nod = Math.max(0, Math.sin(C((t - 1.8) / 0.6) * Math.PI)) * 0.4;
+    L.fox("foxO", 1560, 860, 1.25, "front", { alpha: C((t - 0.8) / 0.5), look: -0.35, nod, expr: "happy", blink: Math.floor(t * 10) % 41 === 0 });
+  }
+  L.start("09 結尾", D, render);
+})();
+</script>
+</body>
+</html>

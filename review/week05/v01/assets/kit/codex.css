@@ -1,0 +1,152 @@
+/* ==========================================================================
+   Codex 桌面版介面（仿真）— 依照使用者提供的截圖 source/codex-ui.webp
+   畫布 1920×1080，深色主題。只負責「長得像」，動畫由各素材的 render(t) 控制。
+   ========================================================================== */
+.cx {
+  --cx-bg: #1f1f1f;          /* 主畫面 */
+  --cx-side: #181818;        /* 左側欄 */
+  --cx-title: #181818;       /* 標題列 */
+  --cx-line: #2e2e2e;
+  --cx-row: #2b2b2b;         /* 側欄選取列 */
+  --cx-bubble: #303030;      /* 使用者訊息 */
+  --cx-code: #262626;
+  --cx-card: #252525;
+  --cx-ink: #ececec;
+  --cx-ink-2: #b4b4b4;
+  --cx-ink-3: #8a8a8a;
+  --cx-blue: #5b9dff;
+  --cx-badge: #2f6fe8;
+  --cx-orange: #f0883e;
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--cx-bg); color: var(--cx-ink);
+  font-family: "Noto Sans TC", sans-serif; font-size: 17px; line-height: 1.6;
+}
+.cx svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cx .mono, .cx code, .cx pre { font-family: "Cascadia Mono", "Noto Sans TC", monospace; }
+
+/* ---------- 標題列 ---------- */
+.cx-titlebar { position: absolute; left: 0; right: 0; top: 0; height: 46px; background: var(--cx-title); display: flex; align-items: center; gap: 28px; padding-left: 20px; color: #cfcfcf; font-size: 15px; }
+.cx-titlebar .nav { display: flex; align-items: center; gap: 16px; color: #9a9a9a; }
+/* macOS 紅黃綠三顆燈：14px 圓、間距 8px、一圈很淡的深色內緣 */
+.cx-titlebar .lights { display: flex; align-items: center; gap: 8px; }
+.cx-titlebar .lights i { display: block; width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .26); }
+.cx-titlebar .lights .r { background: #ff5f57; }
+.cx-titlebar .lights .y { background: #febc2e; }
+.cx-titlebar .lights .g { background: #28c840; }
+
+/* ---------- 最左邊的圖示列 ---------- */
+.cx-rail { position: absolute; left: 0; top: 46px; bottom: 0; width: 54px; background: var(--cx-side); display: flex; flex-direction: column; align-items: center; gap: 22px; padding-top: 22px; color: #8f8f8f; }
+.cx-rail .on { color: #f2f2f2; position: relative; }
+.cx-rail .on::after { content: ""; position: absolute; right: -6px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--cx-badge); }
+.cx-rail .avatar { margin-top: auto; margin-bottom: 18px; width: 30px; height: 30px; border-radius: 50%; background: #3a3a3a; color: #cfcfcf; font-size: 12px; display: grid; place-items: center; }
+
+/* ---------- 側欄 ---------- */
+.cx-side { position: absolute; left: 54px; top: 46px; bottom: 0; width: 470px; background: var(--cx-side); border-right: 1px solid #222; padding: 16px 14px 0 16px; overflow: hidden; }
+.cx-side .brand { display: flex; align-items: center; gap: 6px; font-size: 22px; font-weight: 700; padding: 4px 6px 10px; }
+.cx-side .brand .tools { margin-left: auto; display: flex; gap: 18px; color: #9a9a9a; }
+.cx-row { display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 10px; border-radius: 8px; font-size: 16px; color: #e2e2e2; white-space: nowrap; overflow: hidden; position: relative; }
+.cx-row svg { width: 18px; height: 18px; color: #bdbdbd; }
+.cx-row.chat { padding-left: 36px; color: #d6d6d6; }
+.cx-row.on { background: var(--cx-row); }
+.cx-row .badge { margin-left: auto; min-width: 22px; height: 20px; border-radius: 6px; background: var(--cx-badge); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; padding: 0 5px; }
+.cx-row .meta { margin-left: auto; color: var(--cx-ink-3); font-size: 13px; }
+.cx-side .group { height: 12px; }
+.cx-side .section { font-size: 15px; color: #9a9a9a; padding: 14px 10px 6px; }
+
+/* ---------- 主畫面 ---------- */
+.cx-main { position: absolute; left: 524px; right: 0; top: 46px; bottom: 0; }
+.cx-head { height: 60px; display: flex; align-items: center; gap: 10px; padding: 0 22px 0 28px; font-size: 17px; font-weight: 700; }
+.cx-head svg { width: 19px; height: 19px; color: #cfcfcf; }
+.cx-head .tools { margin-left: auto; display: flex; gap: 20px; align-items: center; color: #a8a8a8; }
+.cx-head .tools .sel { background: #2e2e2e; border-radius: 6px; padding: 4px; color: #e8e8e8; }
+
+/* 對話欄：置中的一欄，訊息往下排；捲動用 transform 模擬 */
+.cx-thread { position: absolute; left: 150px; width: 770px; top: 60px; bottom: 150px; overflow: hidden; }
+.cx-msgs { position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; gap: 18px; padding-top: 16px; }
+.cx-time { align-self: center; color: var(--cx-ink-3); font-size: 15px; padding: 6px 0; }
+.cx-user { align-self: flex-end; max-width: 560px; background: var(--cx-bubble); border-radius: 18px; padding: 9px 18px; font-size: 17px; white-space: pre-wrap; position: relative; }
+.cx-user .tools { position: absolute; right: 4px; bottom: -30px; display: flex; gap: 14px; color: #8a8a8a; align-items: center; font-size: 13px; opacity: 0; } /* 滑鼠移上去才出現，素材要用時自己設 opacity */
+.cx-user .tools svg { width: 16px; height: 16px; }
+.cx-worked { color: #9a9a9a; font-size: 15px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--cx-line); padding-bottom: 12px; }
+.cx-worked svg { width: 14px; height: 14px; }
+.cx-agent { font-size: 17px; line-height: 1.75; color: #e6e6e6; }
+.cx-agent p { margin: 0 0 6px; }
+.cx-agent ul { margin: 4px 0; padding-left: 22px; }
+.cx-agent li { margin: 2px 0; }
+.cx-agent b, .cx-agent strong { color: #f4f4f4; }
+.cx-agent code { background: #2f2f2f; border-radius: 5px; padding: 1px 6px; font-size: 15px; }
+.cx-agent a, .cx-link { color: var(--cx-blue); text-decoration: none; }
+.cx-codeblock { background: var(--cx-code); border: 1px solid #333; border-radius: 12px; overflow: hidden; }
+.cx-codeblock .bar { display: flex; align-items: center; gap: 8px; padding: 9px 16px; font-size: 15px; color: #dcdcdc; }
+.cx-codeblock .bar .r { margin-left: auto; display: flex; gap: 14px; color: #9a9a9a; }
+.cx-codeblock .bar svg { width: 16px; height: 16px; }
+.cx-codeblock pre { margin: 0; padding: 4px 18px 14px; font-size: 15px; line-height: 1.6; color: #d4d4d4; white-space: pre; }
+.cx-actions { display: flex; gap: 16px; color: #8a8a8a; padding-top: 2px; }
+.cx-actions svg { width: 17px; height: 17px; }
+.cx-file { display: inline-flex; align-items: center; gap: 6px; color: var(--cx-blue); }
+.cx-file svg { width: 15px; height: 15px; }
+
+/* 輸入框 */
+.cx-composer { position: absolute; left: 150px; width: 770px; bottom: 32px; height: 104px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 22px; }
+.cx-composer .text { position: absolute; left: 22px; right: 22px; top: 16px; font-size: 17px; color: #ececec; white-space: nowrap; overflow: hidden; }
+.cx-composer .text.ph { color: #8a8a8a; }
+.cx-composer .row { position: absolute; left: 16px; right: 14px; bottom: 12px; display: flex; align-items: center; gap: 14px; color: #bdbdbd; font-size: 15px; }
+.cx-composer .access { display: flex; align-items: center; gap: 6px; color: var(--cx-orange); }
+.cx-composer .access svg { width: 16px; height: 16px; }
+.cx-composer .model { margin-left: auto; display: flex; align-items: center; gap: 4px; color: #bdbdbd; }
+.cx-composer .model svg { width: 14px; height: 14px; }
+.cx-composer .send { width: 34px; height: 34px; border-radius: 50%; background: #f0f0f0; color: #1f1f1f; display: grid; place-items: center; }
+.cx-composer .send svg { width: 18px; height: 18px; stroke-width: 2.2; }
+.cx-caret { display: inline-block; width: 2px; height: 20px; background: #ececec; vertical-align: -4px; margin-left: 1px; }
+
+/* 右上角的面板（Outputs / Subagents / Sources） */
+.cx-panel { position: absolute; right: 12px; top: 72px; width: 316px; background: var(--cx-card); border: 1px solid #333; border-radius: 16px; padding: 14px 20px 16px; font-size: 15px; }
+.cx-panel .h { display: flex; align-items: center; color: #e2e2e2; font-size: 16px; margin-top: 6px; }
+.cx-panel .h svg { margin-left: auto; width: 16px; height: 16px; color: #9a9a9a; }
+.cx-panel .s { color: #8f8f8f; padding: 5px 0 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #333; }
+.cx-panel .s:last-child { border-bottom: 0; padding-bottom: 0; }
+.cx-panel .s svg { width: 16px; height: 16px; }
+
+/* Side chat：從右邊滑進來的暫時對話 */
+.cx-sidechat { position: absolute; top: 46px; right: 0; bottom: 0; width: 600px; background: #1b1b1b; border-left: 1px solid #333; }
+.cx-sidechat .tab { height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 18px; font-size: 15px; color: #e2e2e2; border-bottom: 1px solid #2c2c2c; }
+.cx-sidechat .tab .chip { display: flex; align-items: center; gap: 8px; background: #2a2a2a; border-radius: 8px; padding: 4px 12px; }
+.cx-sidechat .empty { position: absolute; left: 0; right: 0; top: 40%; text-align: center; color: #9a9a9a; font-size: 15px; }
+.cx-sidechat .empty b { display: block; color: #e2e2e2; font-size: 18px; margin: 8px 0 4px; }
+.cx-sidechat .cx-composer { left: 20px; right: 20px; width: auto; bottom: 20px; }
+
+/* Context window 用量面板（截圖 slide-04） */
+.cx-ctx { position: absolute; width: 380px; background: #1e1f22; border: 1px solid #3a3a3a; border-radius: 6px; font-size: 14px; color: #cfcfcf; padding: 10px 12px 12px; box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+.cx-ctx .top { display: flex; justify-content: space-between; color: #9a9a9a; font-size: 14px; }
+.cx-ctx .top b { color: #cfcfcf; font-weight: 500; }
+.cx-ctx .bar { height: 5px; border-radius: 3px; background: #3a3a3a; margin: 10px 0 10px; display: flex; overflow: hidden; }
+.cx-ctx .bar i { display: block; height: 100%; }
+.cx-ctx .item { display: flex; align-items: center; gap: 8px; height: 23px; }
+.cx-ctx .item .sw { width: 10px; height: 10px; border-radius: 2px; }
+.cx-ctx .item .v { margin-left: auto; color: #9a9a9a; }
+.cx-ctx .item .p { width: 54px; text-align: right; color: #e2e2e2; font-weight: 700; }
+.cx-ctx .foot { display: flex; justify-content: space-between; color: #9a9a9a; margin-top: 8px; }
+.cx-ctx .foot a { color: var(--cx-blue); text-decoration: underline; }
+
+/* ==========================================================================
+   內建瀏覽器（Week 4）：Codex 視窗右側的瀏覽器面板，照使用者的錄影和投影片截圖
+   面板寬 700（錄影 804×1182 縮到高 1034 正好是 703 寬），打開時主畫面往左讓位。
+   開合由 K.setBrowser(u) 控制：u = 0 收起、1 打開。
+   ========================================================================== */
+.cx-browser { position: absolute; top: 46px; right: 0; bottom: 0; width: 700px; background: #1b1b1b; border-left: 1px solid #333; overflow: hidden; }
+.cx-browser .bt { height: 46px; display: flex; align-items: center; gap: 10px; padding: 0 12px; }
+.cx-browser .bt .tab { display: flex; align-items: center; gap: 9px; height: 34px; width: 286px; padding: 0 12px; border: 1px solid #3a3a3a; border-radius: 9px; background: #232323; color: #e6e6e6; font-size: 15px; white-space: nowrap; overflow: hidden; }
+.cx-browser .bt .tab .ttl { flex: 1; overflow: hidden; text-overflow: clip; }
+.cx-browser .bt .tab .fav { width: 18px; height: 18px; border-radius: 50%; flex: none; display: grid; place-items: center; }
+.cx-browser .bt .tab svg { width: 15px; height: 15px; color: #a8a8a8; }
+.cx-browser .bt > svg { width: 18px; height: 18px; color: #b4b4b4; }
+.cx-browser .bt .r { margin-left: auto; display: flex; gap: 18px; color: #b4b4b4; }
+.cx-browser .bt .r svg { width: 17px; height: 17px; }
+.cx-browser .nv { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 12px; color: #b4b4b4; }
+.cx-browser .nv svg { width: 19px; height: 19px; flex: none; }
+.cx-browser .nv .dim { color: #5a5a5a; }
+.cx-browser .nv .circ { width: 36px; height: 36px; border-radius: 50%; background: #2a2a2a; display: grid; place-items: center; flex: none; }
+.cx-browser .nv .addr { flex: 1; height: 38px; border-radius: 19px; background: #2c2c2c; color: #ececec; font-size: 16px; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+.cx-browser .pg { position: absolute; left: 0; right: 0; top: 98px; bottom: 0; overflow: hidden; background: #1f1f1f; color: #e6e6e6; }
+.cx-browser .pg img.shot { position: absolute; left: 50%; top: 0; transform: translateX(-50%); height: 100%; display: block; }
+.cx-browser .loading { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, transparent, #5b9dff, transparent); background-size: 40% 100%; background-repeat: no-repeat; }

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>04 一份 VERIFY.md</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+<style>
+  #vf { left: 96px; top: 128px; width: 1728px; padding: 26px 40px 24px; }
+  #vf .intro { margin-top: 10px; font-size: 26px; line-height: 1.5; color: #3b3326; }
+  #cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 46px; margin-top: 8px; }
+  .g { margin-top: 14px; font-size: 25px; font-weight: 800; color: #8a7a5a; letter-spacing: .1em; padding-bottom: 4px; border-bottom: 2px solid #d4ccb9; }
+  .it { display: grid; grid-template-columns: 36px 1fr; padding: 10px 0; border-bottom: 1px dashed #d3cbb9; font-size: 26px; line-height: 1.4; }
+  .it .n { font-family: "Cascadia Mono", monospace; color: #8a7a5a; }
+  .it .ck { display: block; margin-top: 4px; font-size: 24px; color: #6b5a3a; }
+  .it code { font-family: "Cascadia Mono", monospace; font-size: .9em; }
+  .it b { font-weight: 800; position: relative; }
+  .it b::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 4px; background: #f0b545; transform-origin: 0 50%; transform: scaleX(var(--ul, 0)); }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  const F = V.FULL;
+  let n = 0;
+  const it = ([what, ck]) => `<div class="it" data-k="${n}"><span class="n">${++n}</span><span>${what}${ck ? `<span class="ck">${ck}</span>` : ""}</span></div>`;
+  const left = `<div class="g" data-g="0">資料</div>` + F.data.map(it).join("");
+  const right = `<div class="g" data-g="1">網頁</div>` + F.web.map(it).join("") + `<div class="g" data-g="2">回報</div>` + F.report.map(it).join("");
+  L.mount({ world: `<div class="sheet" id="vf"><div class="hd"><span class="ttl" style="font-size:40px">VERIFY.md</span><span class="fn">銀杏散步地圖怎樣才算做好</span></div>
+    <div class="intro" id="intro">${F.intro}</div><div id="cols"><div>${left}</div><div>${right}</div></div></div>` });
+  ["zMac", "zSrv", "app", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 22;
+  const INTRO = 0.9, G = [2.0, 5.2, 9.6], ITEM = [2.4, 3.6, 5.6, 6.6, 7.6, 8.6, 10.0], NUM = 11.2;
+  const CAPS = [
+    [0.4, 6.6, "一份 VERIFY.md：資料、網頁、回報三組", ""],
+    [7.0, 14.0, "每一條都寫怎麼檢查；有數字就寫數字", ""],
+    [14.4, 21.7, "寫成「人看得到、驗得了」的樣子", "OpenAI Cookbook〈Using PLANS.md〉：Validation is not optional"],
+  ];
+  function render(t) {
+    V.dip(t, D);
+    L.cam(t, [[0, ...L.WIDE]]);
+    L.sec(t, "04", "一份 VERIFY.md");
+    K.vis($("vf"), C((t - 0.2) / 0.4));
+    $("vf").style.transform = `translateY(${((1 - K.spring(t - 0.2, 14, 0.85)) * 20).toFixed(1)}px)`;
+    $("intro").style.opacity = C((t - INTRO) / 0.4);
+    $("vf").querySelectorAll(".g").forEach((g) => { g.style.opacity = C((t - G[+g.dataset.g]) / 0.3); });
+    $("vf").querySelectorAll(".it").forEach((el) => {
+      const a = ITEM[+el.dataset.k];
+      el.style.opacity = C((t - a) / 0.35);
+      el.style.transform = `translateY(${((1 - K.easeOut((t - a) / 0.5)) * 10).toFixed(1)}px)`;
+      el.querySelectorAll("b").forEach((b) => b.style.setProperty("--ul", E((t - NUM - 0.2 * +el.dataset.k) / 0.5).toFixed(3)));
+    });
+    L.caps(t, CAPS);
+  }
+  L.start("04 一份 VERIFY.md", D, render);
+})();
+</script>
+</body>
+</html>

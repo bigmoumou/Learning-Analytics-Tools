@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>06 再做一次</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+<style>
+  /* 內建瀏覽器裡的頁面（照 Codex 實跑做出來的 index.html） */
+  #bpage { position: absolute; inset: 0; background: #2a2a2a; overflow: hidden; }
+  #bpage .gpage { left: 50%; right: auto; transform: translateX(-50%); padding: 26px 22px; }
+  #bwid { position: absolute; left: 0; right: 0; bottom: 70px; text-align: center; font: 600 26px "Cascadia Mono", monospace; color: #f0b545; }
+  #bcon { position: absolute; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 20px; background: #1b1b1b; border-top: 1px solid #333; font: 22px "Cascadia Mono", monospace; color: #c8c8c8; }
+  #bcnt { position: absolute; right: 26px; top: 22px; font: 800 30px "Noto Sans TC", sans-serif; color: #1f3a2c; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, lerp = K.lerp, $ = L.$;
+  L.mount({ boards: `<div class="sheet mini" id="vm"></div>` });
+  ["zSrv", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  // 對話重建時，把內建瀏覽器面板插回去
+  L.AFTER_BUILD = (app) => app.querySelector("#cx").insertAdjacentHTML("beforeend",
+    K.cx.browser({ title: "銀杏散步地圖", url: "ginkgo-map/index.html", page: `<div id="bpage"></div><div id="bwid"></div><div id="bcon"><span style="color:#8a8a8a">Console</span><span id="bconT"></span></div>` }));
+  const D = 40;
+  // 事件（秒）
+  const ASK = 0.4, A1 = 1.4, R1 = 2.0, PUSH0 = 2.6, PUSH1 = 3.6, A2 = 3.8, R2 = 4.4, X1 = 5.0, OK1 = 6.0, NG2 = 6.8;
+  const A3 = 12.0, R3 = 13.0, X2 = 13.6, OK2 = 15.4;
+  const A4 = 21.8, R4 = 22.4, BR0 = 22.6, BR1 = 23.4, LOAD1 = 24.0, CNT0 = 24.4, CNTD = 0.15, OK3 = 26.4;
+  const TAP3 = 27.2, POP = 27.4, OK4 = 28.4, RS0 = 29.0, RS1 = 30.4, OK5 = 31.0, CON = 31.6, OK6 = 32.6;
+  const BROWSER = [833, 512, 1.15];
+  const CAM = [[0, ...L.WIDE], [PUSH0, ...L.WIDE], [PUSH1, ...V.PUSH], [21.4, ...V.PUSH], [22.8, ...BROWSER]];
+  const CAPS = [
+    [0.4, 3.8, "開新對話，請 Codex 再做一次", "這次家規裡多了一句：做完照 VERIFY.md 檢查"],
+    [4.8, 10.8, "檢查第 2 條：<em>照片 10/12</em>，沒過", "兩個檔名的大小寫不一樣：<code>ginkgo-03.JPG</code>、<code>ginkgo-08.JPG</code>"],
+    [11.2, 16.4, "這個問題在 Mac 上看不出來", "Mac 不分檔名大小寫，網站會分；是 <code>check_data.py</code> 抓到的"],
+    [16.8, 21.8, "它自己發現、自己修，再檢查一次", "照片 12/12：第 2 條通過"],
+    [22.4, 27.8, "再用內建瀏覽器打開，一條一條看", "內建瀏覽器是 Week 4 學過的"],
+    [28.2, 33.6, "點一個標記、縮到手機寬度、看 Console", ""],
+    [34.0, 39.7, "第 1 到 6 條都通過了", "最後一條：列一張表回報"],
+  ];
+  function page(t) {
+    // 頁面寬度：700（內建瀏覽器的寬）→ 390（手機寬度）；地圖跟著縮
+    const W = Math.round(lerp(700, 390, E((t - RS0) / (RS1 - RS0)))), mw = W - 44, mh = Math.round(mw * 560 / 900);
+    const n = t < CNT0 ? 12 : 12, cnt = Math.min(12, Math.max(0, Math.floor((t - CNT0) / CNTD) + 1));
+    const hi = t >= CNT0 && t < CNT0 + 12 * CNTD ? cnt - 1 : t >= TAP3 && t < RS0 ? 2 : -1;
+    let h = `<div class="gpage" style="width:${W}px"><div class="eb">GINKGO WALK · 杏林公園</div><h1>銀杏散步地圖</h1><div class="intro">沿著金黃色的步道，慢慢走訪公園裡的風景。</div>
+      <div class="frame" style="left:22px;top:142px;width:${mw}px;height:${mh}px">${V.map({ w: mw, h: mh, n, hi })}</div>`;
+    if (t >= CNT0 && t < TAP3) h += `<div id="bcnt">${cnt} 個</div>`;
+    if (t >= POP && t < RS0 + 0.2) h += V.popup(2, { x: 90, y: 236, w: W - 180 });   // 跳出的卡片蓋在地圖上（名稱、說明都看得到）
+    h += `</div>`;
+    return h;
+  }
+  function render(t) {
+    V.dip(t, D);
+    const cam = L.cam(t, CAM), k = L.pushK(cam.z);
+    L.scrims(C((cam.z - 1.2) / 0.5)); L.dim(C((cam.z - 1) / 0.1), ["zMac"]);
+    L.sec(t, "06", "再做一次");
+    // 打開瀏覽器之後，對話欄變窄：展開的指令輸出收起來
+    L.thread(t, { title: () => V.TITLE2, at: { tm: -1, ask: ASK, work: ASK + 0.3, a1: A1, r1: R1, a2: A2, r2: R2, x1: X1, a3: A3, r3: R3, x2: X2, a4: A4, r4: R4 }, hide: (tt) => tt >= BR0 ? ["x1", "x2"] : [] });
+    // 內建瀏覽器：打開 → 載入 → 頁面
+    K.setBrowser(E((t - BR0) / (BR1 - BR0)));
+    K.browserLoading(t, BR1, LOAD1);
+    const bp = $("bpage");
+    if (bp) {
+      const h = t >= LOAD1 ? page(t) : "";
+      if (bp.__h !== h) { bp.innerHTML = h; bp.__h = h; }
+      bp.style.opacity = C((t - LOAD1) / 0.3);
+      $("bwid").textContent = t >= RS0 ? `寬 ${Math.round(lerp(700, 390, E((t - RS0) / (RS1 - RS0))))} px` : "";
+      $("bconT").textContent = t >= CON ? "沒有錯誤" : "";
+    }
+    // 驗收單：1 ✓ → 2 ✗ → 2 ✓ → 3–6 ✓
+    const m2 = t < NG2 ? ["", 0] : t < OK2 ? ["ng", C((t - NG2) / 0.4)] : ["ok", C((t - OK2) / 0.4)];
+    const ok = (a) => (t >= a ? ["ok", C((t - a) / 0.4)] : ["", 0]);
+    const hi = t >= NG2 - 0.1 && t < OK2 + 1.2 ? 1 : t >= CNT0 && t < OK3 + 0.8 ? 2 : t >= TAP3 && t < OK4 + 0.6 ? 3 : t >= RS0 && t < OK5 + 0.6 ? 4 : t >= CON && t < OK6 + 0.8 ? 5 : -1;
+    V.verify($("vm"), { marks: [ok(OK1), m2, ok(OK3), ok(OK4), ok(OK5), ok(OK6)], hi });
+    K.vis($("vm"), C((t - 0.3) / 0.4));
+    L.illus(t, [[X1, 21.8, "順序和展開的指令輸出是示意；<code>check_data.py</code> 在假資料夾真的跑過"], [BR1, 39.7, "內建瀏覽器的畫面是示意"]]);
+    L.caps(t, CAPS);
+  }
+  L.start("06 再做一次", D, render);
+})();
+</script>
+</body>
+</html>
