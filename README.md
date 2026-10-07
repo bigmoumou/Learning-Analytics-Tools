@@ -38,7 +38,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ### AI 教學影片
 
-目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」、Week 4「AI Agent 內建瀏覽器」與 Week 5「模型與 context window」：共 5 支影片加 2 支補充教材（合計 20 分鐘）、62 個章節、38 則重點。Week 6 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
+目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」、Week 4「AI Agent 內建瀏覽器」與 Week 5「模型與 context window」：共 5 支影片加 3 支補充教材（合計 24 分鐘）、72 個章節、43 則重點。Week 6 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
 
 影片沒有旁白，用動畫、字卡和程式合成的配樂說明一個主題，長度從 1 分多到 4 分鐘左右。課程教的是 AI 程式助理的實際用法，影片中示範的工具主要是 OpenAI 的 Codex。
 
@@ -51,6 +51,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 | <img src="weeks/week03/video/s2-terminal-win/thumb.jpg" width="180" alt="Week 3 補充 2 縮圖"> | Week 3・補充 2<br>[終端機介紹（Win）](https://learning-analytics-tools.pages.dev/weeks/week03/#s2-terminal-win) | 4:03 | 10／6 | 同一個狐狸小安的故事搬到 Windows 11：從搜尋打開終端機、看懂 `PS C:\Users\an>` 提示字元、`ls` 的表格輸出、`mv`，解壓縮改用內建的 `tar -xvf`；練習頁加上 OneDrive 桌面的提醒 |
 | <img src="weeks/week04/video/01-built-in-browser/thumb.jpg" width="180" alt="Week 4 影片 01 縮圖"> | Week 4・01<br>[AI Agent 內建瀏覽器](https://learning-analytics-tools.pages.dev/weeks/week04/) | 2:24 | 8／5 | AI Agent 控制瀏覽器的五種方法；Codex 內建瀏覽器卡住後，Codex 自己找出原因並修好，再實際在 Blockbench 做出方塊桌椅（22 分 34 秒的操作，影片中加速播放） |
 | <img src="weeks/week05/video/01-model-switch/thumb.jpg" width="180" alt="Week 5 影片 01 縮圖"> | Week 5・01<br>[不要一直換模型](https://learning-analytics-tools.pages.dev/weeks/week05/) | 1:40 | 6／5 | 每個模型有自己的 context window；做到一半從 GPT-6 Luna 換成 GPT-6.1 Sol，Sol 要整段重讀、快取失效，用量一次跳高（依 OpenAI〈Unrolling the Codex agent loop〉）；開工前選好模型，真的要換就先請原本的模型寫交接摘要、開新對話。context window 面板借用 Claude Code 的 `/context` 當示意圖 |
+| <img src="weeks/week05/video/s1-codex-loop/thumb.jpg" width="180" alt="Week 5 補充 1 縮圖"> | Week 5・補充 1<br>[按下 Enter 之後，Codex 做了什麼](https://learning-analytics-tools.pages.dev/weeks/week05/#s1-codex-loop) | 4:14 | 10／5 | 用「一疊紙條」講 Codex 背後的流程：模型在 OpenAI 的伺服器只讀寫文字，Codex 在你的電腦上動手；按一次 Enter，背後來回很多次（依 OpenAI〈Unrolling the Codex agent loop〉）。讀檔、上網搜尋（在 OpenAI 那邊）、下載（預設沙箱不能連網，要你允許）、寫程式分析、寫檔，每一步的結果都疊進 context window；讀過的內容會送到 OpenAI，個資先換成代號 |
 
 ### 學生參與和互動複習
 
@@ -220,7 +221,7 @@ This repository is the website itself; every file the site serves is here.
 
 ### AI teaching videos
 
-As of October 2026, Week 3, "The AI Assistant's Working Folder", Week 4, "AI Agent Built-in Browser", and Week 5, "Models and the Context Window", are published: 5 videos plus 2 extras (20 min in total), 62 chapters and 38 key points. Weeks 6 to 16 open as the course goes on and show as "Coming soon" on the site until then.
+As of October 2026, Week 3, "The AI Assistant's Working Folder", Week 4, "AI Agent Built-in Browser", and Week 5, "Models and the Context Window", are published: 5 videos plus 3 extras (24 min in total), 72 chapters and 43 key points. Weeks 6 to 16 open as the course goes on and show as "Coming soon" on the site until then.
 
 The videos have no voice-over. Each one explains a single topic with animation, text cards and music synthesized in code, and runs between one and about four minutes. The course teaches the practical use of AI coding agents, and the tool shown in the videos is mostly OpenAI's Codex.
 
@@ -233,6 +234,7 @@ The videos have no voice-over. Each one explains a single topic with animation, 
 | <img src="weeks/week03/video/s2-terminal-win/thumb.jpg" width="180" alt="Thumbnail of Week 3 extra 2"> | Week 3 · Extra 2<br>[Intro to the Terminal (Win)](https://learning-analytics-tools.pages.dev/weeks/week03/?lang=en#s2-terminal-win) | 4:03 | 10 / 6 | The same story of 小安 the fox on Windows 11: opening Terminal from Search, reading the `PS C:\Users\an>` prompt, the table output of `ls`, `mv`, and unpacking with the built-in `tar -xvf`; the practice page adds a reminder about a Desktop backed up by OneDrive |
 | <img src="weeks/week04/video/01-built-in-browser/thumb.jpg" width="180" alt="Thumbnail of Week 4 video 01"> | Week 4 · 01<br>[AI Agent Built-in Browser](https://learning-analytics-tools.pages.dev/weeks/week04/?lang=en) | 2:24 | 8 / 5 | Five ways an AI agent can control a browser; when Codex's built-in browser gets stuck, Codex finds the cause and fixes it, then builds a block table and chair in Blockbench (22 min 34 s of real work, sped up in the video) |
 | <img src="weeks/week05/video/01-model-switch/thumb.jpg" width="180" alt="Thumbnail of Week 5 video 01"> | Week 5 · 01<br>[Don't Keep Switching Models](https://learning-analytics-tools.pages.dev/weeks/week05/?lang=en) | 1:40 | 6 / 5 | Each model has its own context window; switching from GPT-6 Luna to GPT-6.1 Sol halfway makes Sol reread the whole chat and breaks the cache, so usage jumps (per OpenAI's "Unrolling the Codex agent loop"); pick the model before you start, and if you must switch, have the original model write a hand-off summary and open a new chat. The context window panel borrows Claude Code's `/context` view as an illustration |
+| <img src="weeks/week05/video/s1-codex-loop/thumb.jpg" width="180" alt="Thumbnail of Week 5 extra 1"> | Week 5 · Extra 1<br>[After You Press Enter: What Codex Does](https://learning-analytics-tools.pages.dev/weeks/week05/?lang=en#s1-codex-loop) | 4:14 | 10 / 5 | Codex's agent loop told as "a stack of notes": the model on OpenAI's servers only reads and writes text, while Codex does the work on your computer; one press of Enter means many round trips (per OpenAI's "Unrolling the Codex agent loop"). Reading files, web search (done at OpenAI), downloading (the default sandbox has no network, so you approve it), analysing with a script and writing files: every step's result piles into the context window; what Codex reads is sent to OpenAI, so replace personal data with codes |
 
 ### Student participation and interactive review
 
