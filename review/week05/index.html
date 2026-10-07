@@ -30,6 +30,7 @@
   section p { margin:4px 0 8px; color:var(--sub); font-size:15px; }
   .shots { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
   .shots img { width:100%; display:block; border:1px solid var(--line); }
+  .still { width:100%; max-width:960px; display:block; border:1px solid var(--line); margin:6px 0 14px; }
   video { width:100%; max-width:960px; display:block; background:#000; margin:6px 0 10px; }
   details { margin-top:12px; } summary { cursor:pointer; color:var(--amber); }
   pre { white-space:pre-wrap; font:14px/1.6 "Noto Sans TC",system-ui,sans-serif; background:rgba(127,127,127,.08); padding:12px; }
@@ -42,9 +43,44 @@
   <p class="note">學弟交來的草稿，只給老師看：這一頁沒有任何地方連進來，也不給搜尋引擎收錄。</p>
   <p class="pub"><a href="../../weeks/week05/#s1-codex-loop">補充 1「按下 Enter 之後，Codex 做了什麼」已經上線（4:14） →</a></p><p class="pub"><a href="../../weeks/week05/#s2-context-full">補充 2「對話滿了會怎樣」已經上線（3:12） →</a></p>
   
-  
+  <h2>這一輪要看的</h2><p class="note">影片 01「怎樣才算做好：寫一份驗證清單」分鏡（檢查點 1）：第 2 段 家規和驗收單</p><a href="v01/kf-02.png"><img class="still" src="v01/kf-02.png" alt="影片 01「怎樣才算做好：寫一份驗證清單」分鏡（檢查點 1）：第 2 段 家規和驗收單" loading="lazy"></a><p class="note">第 6 段 檢查第 2 條：照片 10/12，沒過</p><a href="v01/kf-06.png"><img class="still" src="v01/kf-06.png" alt="第 6 段 檢查第 2 條：照片 10/12，沒過" loading="lazy"></a><p class="note">第 7 段 回報表</p><a href="v01/kf-07.png"><img class="still" src="v01/kf-07.png" alt="第 7 段 回報表" loading="lazy"></a>
   <h2>我給學弟的回覆</h2>
-  <details><summary>給學弟的回覆（補充 1）</summary><pre># 給學弟（補充 1 的對話）｜Week 5 補充 1｜檢查點 3（成片）的回覆
+  <details><summary>給學弟的回覆（影片 01）</summary><pre># 給學弟（影片 01 的對話）｜Week 5 影片 01｜檢查點 1（分鏡）的回覆
+
+2026-10-07　老師、Claude
+
+分鏡的方向通過，三張都很好：
+- 家規和驗收單一暗一亮並排，清楚；
+- 第 6 段驗收單縮在右邊，邊檢查邊打勾打叉，「照片 10/12」的琥珀格很醒目；
+- 回報表加上全部打勾的驗收單，收得好。
+
+實測做得非常紮實，特別是兩個發現：
+- **Mac 不分大小寫，所以破圖在 Mac 上看不出來。** 這讓整支片更有說服力：有些問題在自己電腦上看不出來，要靠清單抓。
+- **沙箱裡沒有瀏覽器時，Codex 照實回報「沒通過」，沒有假裝通過。**
+
+`PLAN.md` 新增一節「檢查點 1 的決定」（7 點）和事實 6（檔名大小寫），以那兩處為準。
+
+## 你問的 6 件事
+
+1. **開場的破圖：** 要說「在 Mac 上看不出來」。
+   - 開場加一小步「小安把網站放上網路（示意）」，再用手機打開。
+   - 第 6 段抓到時加一行：「這個問題在 Mac 上看不出來，是 check_data.py 抓到的」。
+   - 依據寫進事實 6：Apple 的 APFS 預設不分大小寫，網址路徑分大小寫。
+   - 請再實測破圖的那一半：用 `hdiutil` 建一個區分大小寫的磁碟映像，用 `python3 -m http.server` 打開，確認兩張真的破圖，截圖存到 `source/`。
+2. **第 6 段的順序：** 照 PLAN 畫「檢查 → 10/12 → 修 → 12/12」，順序標示意。實跑的順序記在 PROGRESS 就好。
+3. **第 3–6 條的證據：** 照 Week 4 的內建瀏覽器素材畫，標示意。老師在外面，不用等截圖。
+4. **第 8 條：** 改成「寬 390 px：每個標記至少 44 px，手指點得到」。44 px 取自 Apple 介面設計指南建議的最小點擊範圍，畫面上不用講出處。
+5. **回報表欄位：** 縮成「項目／結果／證據」，可以。
+6. **第 2 段先不分組：** 可以。
+
+## 一個可以加的小地方
+
+片長允許的話，在第 8 段「你要做的」加一行小字：「沒辦法檢查的，它應該照實說。」用的就是你實跑時看到的情況。
+
+## 下一步
+
+把其餘段落的素材做出來（`materials/index.html`，每頁截開頭、中間、結尾三張），交檢查點 2。第 6 段「檢查 → 沒過 → 修 → 再檢查」是整支的重點，請做精緻。
+</pre></details><details><summary>給學弟的回覆（補充 1）</summary><pre># 給學弟（補充 1 的對話）｜Week 5 補充 1｜檢查點 3（成片）的回覆
 
 2026-10-07　老師、Claude
 
