@@ -13,10 +13,10 @@
   data-zh-hans="Week 5｜模型与 context window"
   data-en="Week 5 | Models and the Context Window"
   data-vi="Tuần 5 | Mô hình và context window">Week 5｜模型與 context window</title>
-<meta name="description" content="Week 5：每個模型有自己的 context window，中途換模型為什麼比較耗用量，以及怎麼做比較好；補充教材講按下 Enter 之後，Codex 在背後做了什麼。一支影片、一支補充教材。" data-i18n-attr="content"
-  data-zh-hans="Week 5：每个模型有自己的 context window，中途换模型为什么比较耗用量，以及怎么做比较好；补充教材讲按下 Enter 之后，Codex 在背后做了什么。一个视频、一个补充教材。"
-  data-en="Week 5: each model has its own context window, why switching models mid-chat uses more, and what to do instead; the extra shows what Codex does after you press Enter. One video and one extra."
-  data-vi="Tuần 5: mỗi mô hình có context window riêng, vì sao đổi mô hình giữa chừng tốn hơn, và nên làm thế nào; phần bổ sung cho thấy Codex làm gì sau khi bạn bấm Enter. Một video và một phần bổ sung.">
+<meta name="description" content="Week 5：每個模型有自己的 context window，中途換模型為什麼比較耗用量，以及怎麼做比較好；補充教材講按下 Enter 之後 Codex 在背後做了什麼，以及對話滿了會怎樣。一支影片、兩支補充教材。" data-i18n-attr="content"
+  data-zh-hans="Week 5：每个模型有自己的 context window，中途换模型为什么比较耗用量，以及怎么做比较好；补充教材讲按下 Enter 之后 Codex 在背后做了什么，以及对话满了会怎样。一个视频、两个补充教材。"
+  data-en="Week 5: each model has its own context window, why switching models mid-chat uses more, and what to do instead; the extras show what Codex does after you press Enter and what happens when the conversation fills up. One video and two extras."
+  data-vi="Tuần 5: mỗi mô hình có context window riêng, vì sao đổi mô hình giữa chừng tốn hơn, và nên làm thế nào; phần bổ sung cho thấy Codex làm gì sau khi bạn bấm Enter và điều gì xảy ra khi cuộc trò chuyện đầy. Một video và hai phần bổ sung.">
 <meta name="author" content="JUNHAO CHEN">
 <meta name="copyright" content="© 2026 JUNHAO CHEN">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +152,57 @@
           data-zh-hans="<strong>每一步的结果都叠进 context window。</strong>读很大的文件、搜索很多次，对话就满得很快。视频里的面板、纸条张数和发送次数都是示意；Windows 上命令名称不一样（PowerShell），流程一样。"
           data-en="<strong>The result of every step piles into the context window.</strong> Reading big files or searching many times fills the conversation quickly. The panel, the number of notes and the number of sends in the video are illustrations; on Windows the command names differ (PowerShell), but the flow is the same."
           data-vi="<strong>Kết quả của từng bước đều chồng vào context window.</strong> Đọc tệp lớn hay tìm kiếm nhiều lần sẽ làm cuộc trò chuyện đầy rất nhanh. Bảng, số tờ giấy và số lần gửi trong video chỉ là minh hoạ; trên Windows tên lệnh khác (PowerShell), nhưng quy trình giống nhau."><strong>每一步的結果都疊進 context window。</strong>讀很大的檔案、搜很多次，對話就滿得很快。影片裡的面板、紙條張數和傳送次數都是示意；Windows 上指令名稱不一樣（PowerShell），流程一樣。</p></li>
+      </ol>
+    </section>
+
+    <section class="unit unit-supp" id="s2-context-full" aria-labelledby="us2-title">
+      <h2 class="unit-title" id="us2-title"><span class="unit-num" data-ui="video.supp" data-n="2">補充 2</span><span data-i18n
+        data-zh-hans="对话满了会怎样"
+        data-en="When the Conversation Fills Up"
+        data-vi="Khi cuộc trò chuyện đầy">對話滿了會怎樣</span></h2>
+
+      <div class="film">
+        <div class="player">
+          <video controls preload="metadata" playsinline data-hls="video/s2-context-full/hls/index.m3u8" poster="video/s2-context-full/poster.jpg" width="1920" height="1080">
+            你的瀏覽器無法播放這支影片。
+          </video>
+        </div>
+      </div>
+
+      <ol class="chapters" aria-label="影片片段（點了直接跳到那一段）" data-ui-attr="aria-label:video.chapters">
+        <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t" data-i18n data-zh-hans="开场" data-en="Opening" data-vi="Mở đầu">開場</span></button></li>
+        <li><button type="button" data-t="10"><span class="k">00:10</span><span class="t" data-i18n data-zh-hans="一开始的决定" data-en="The decision at the start" data-vi="Quyết định lúc đầu">一開始的決定</span></button></li>
+        <li><button type="button" data-t="30"><span class="k">00:30</span><span class="t" data-i18n data-zh-hans="越来越满" data-en="Filling up" data-vi="Ngày càng đầy">越來越滿</span></button></li>
+        <li><button type="button" data-t="48"><span class="k">00:48</span><span class="t" data-i18n data-zh-hans="自动压缩" data-en="Automatic compaction" data-vi="Tự động nén">自動壓縮</span></button></li>
+        <li><button type="button" data-t="76"><span class="k">01:16</span><span class="t" data-i18n data-zh-hans="丢了什么" data-en="What got lost" data-vi="Mất đi điều gì">掉了什麼</span></button></li>
+        <li><button type="button" data-t="98"><span class="k">01:38</span><span class="t" data-i18n data-zh-hans="记错了" data-en="Remembering it wrong" data-vi="Nhớ sai">記錯了</span></button></li>
+        <li><button type="button" data-t="122"><span class="k">02:02</span><span class="t" data-i18n data-zh-hans="官方的提醒" data-en="The official warning" data-vi="Lời nhắc chính thức">官方的提醒</span></button></li>
+        <li><button type="button" data-t="138"><span class="k">02:18</span><span class="t" data-i18n data-zh-hans="习惯一：一件事一段对话" data-en="Habit 1: one task, one chat" data-vi="Thói quen 1: mỗi việc một cuộc trò chuyện">習慣一：一件事一段對話</span></button></li>
+        <li><button type="button" data-t="160"><span class="k">02:40</span><span class="t" data-i18n data-zh-hans="习惯二：写进文件" data-en="Habit 2: write it into a file" data-vi="Thói quen 2: ghi vào tệp">習慣二：寫進檔案</span></button></li>
+        <li><button type="button" data-t="184"><span class="k">03:04</span><span class="t" data-i18n data-zh-hans="结尾" data-en="Wrap-up" data-vi="Kết">結尾</span></button></li>
+      </ol>
+
+      <ol class="points">
+        <li><p data-i18n
+          data-zh-hans="<strong>快满的时候，Codex 会自动压缩。</strong>它把前面的对话换成一份比较短的精简版，再接着做，你不用按任何东西。根据 Codex 源代码，压缩后留下的是这段对话的固定说明、你最近说的话和一份摘要；Codex app 的活动记录会多一行“Context automatically compacted”。"
+          data-en="<strong>When the conversation is nearly full, Codex compacts it automatically.</strong> It replaces the earlier part of the chat with a shorter condensed version and carries on; you don’t have to press anything. According to the Codex source code, what remains is the conversation’s standing instructions, your most recent messages and a summary; the Codex app’s activity log shows an extra line, “Context automatically compacted”."
+          data-vi="<strong>Khi gần đầy, Codex tự động nén cuộc trò chuyện.</strong> Nó thay phần trò chuyện phía trước bằng một bản rút gọn ngắn hơn rồi làm tiếp; bạn không cần bấm gì. Theo mã nguồn Codex, sau khi nén sẽ còn lại phần hướng dẫn cố định của cuộc trò chuyện, những tin nhắn gần nhất của bạn và một bản tóm tắt; nhật ký hoạt động của ứng dụng Codex có thêm một dòng “Context automatically compacted”."><strong>快滿的時候，Codex 會自動壓縮。</strong>它把前面的對話換成一份比較短的精簡版，再接著做，你不用按什麼。依 Codex 原始碼，壓縮後留下的是這段對話的固定說明、你最近說的話和一份摘要；Codex app 的活動紀錄會多一列「Context automatically compacted」。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>压缩可能会丢掉细节。</strong>精简版留下的是重点，前面讲过的细节，例如为什么这样决定、确切的字段名称、某次算出来的数字，可能就不在了，模型会开始“记错”。视频里缺考的人被算成 0 分是示意，压缩不是每次都会丢掉同一件事。"
+          data-en="<strong>Compaction can lose details.</strong> The condensed version keeps the main points; earlier details, such as why a decision was made, exact column names or a number worked out earlier, may be gone, and the model starts to “remember it wrong”. Counting the absent students as 0 in the video is an illustration; compaction does not lose the same thing every time."
+          data-vi="<strong>Nén có thể làm mất chi tiết.</strong> Bản rút gọn chỉ giữ ý chính; các chi tiết nói trước đó, như lý do quyết định, tên cột chính xác hay một con số đã tính, có thể không còn, và mô hình bắt đầu “nhớ sai”. Việc học sinh vắng thi bị tính 0 điểm trong video chỉ là minh hoạ; không phải lần nén nào cũng mất cùng một thứ."><strong>壓縮可能會掉細節。</strong>精簡版留的是重點，前面講過的細節，例如為什麼這樣決定、確切的欄位名稱、某次算出來的數字，可能就不在了，模型會開始「記錯」。影片裡缺考的人被算成 0 分是示意，壓縮不是每次都會掉同一件事。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>官方的提醒。</strong>Codex 源代码里写着：长对话和多次压缩，可能让模型不那么准确；可以的话开新对话，让每段对话小而专一。这句提醒在 Codex app 里不会显示。"
+          data-en="<strong>The official warning.</strong> The Codex source code says that long threads and multiple compactions can make the model less accurate, and that you should start a new thread when possible to keep threads small and targeted. The Codex app does not show this warning."
+          data-vi="<strong>Lời nhắc chính thức.</strong> Mã nguồn Codex ghi rằng cuộc trò chuyện dài và nén nhiều lần có thể làm mô hình kém chính xác hơn; nếu được, hãy mở cuộc trò chuyện mới để mỗi cuộc trò chuyện ngắn gọn và tập trung. Ứng dụng Codex không hiển thị lời nhắc này."><strong>官方的提醒。</strong>Codex 原始碼裡寫著：長對話和多次壓縮，可能讓模型比較不準；可以的話開新對話，讓每段對話小而專一。這句提醒在 Codex app 裡不會顯示。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>习惯一：一件事，一段对话。</strong>一个分析问题、一张图、一个错误、报告的一节，做完就开新对话。想看用了多少，可以在 Codex app 的设置 › General 打开 Show context window usage，输入框下面会出现一个小圆环。"
+          data-en="<strong>Habit 1: one task, one chat.</strong> One analysis question, one chart, one error, one section of a report: when it is done, open a new chat. To see how much you have used, turn on Show context window usage under Settings › General in the Codex app; a small ring appears below the input box."
+          data-vi="<strong>Thói quen 1: mỗi việc một cuộc trò chuyện.</strong> Một câu hỏi phân tích, một biểu đồ, một lỗi, một phần của báo cáo: làm xong thì mở cuộc trò chuyện mới. Muốn xem đã dùng bao nhiêu, hãy bật Show context window usage trong Settings › General của ứng dụng Codex; một vòng tròn nhỏ sẽ hiện dưới ô nhập."><strong>習慣一：一件事，一段對話。</strong>一個分析問題、一張圖、一個錯誤、報告的一節，做完就開新對話。想看用了多少，可以在 Codex app 的設定 › General 打開 Show context window usage，輸入框底下會出現一個小圓環。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>习惯二：要一直遵守的事，写进文件。</strong>写进 <code>AGENTS.md</code> 或 <code>progress.md</code>。文件存在你的电脑上，压缩只动对话、不动文件，开新对话时 Codex 会读 <code>AGENTS.md</code>。视频里的面板、纸条张数和数字都是示意。"
+          data-en="<strong>Habit 2: anything that must always hold goes into a file.</strong> Put it in <code>AGENTS.md</code> or <code>progress.md</code>. Files live on your computer; compaction only touches the conversation, not the files, and Codex reads <code>AGENTS.md</code> when you open a new chat. The panel, the number of notes and the numbers in the video are illustrations."
+          data-vi="<strong>Thói quen 2: điều gì cần luôn tuân theo thì ghi vào tệp.</strong> Ghi vào <code>AGENTS.md</code> hoặc <code>progress.md</code>. Tệp nằm trên máy tính của bạn; nén chỉ động đến cuộc trò chuyện chứ không động đến tệp, và khi mở cuộc trò chuyện mới Codex sẽ đọc <code>AGENTS.md</code>. Bảng, số tờ giấy và các con số trong video chỉ là minh hoạ."><strong>習慣二：要一直遵守的事，寫進檔案。</strong>寫進 <code>AGENTS.md</code> 或 <code>progress.md</code>。檔案存在你的電腦上，壓縮只動對話、不動檔案，開新對話時 Codex 會讀 <code>AGENTS.md</code>。影片裡的面板、紙條張數和數字都是示意。</p></li>
       </ol>
     </section>
 

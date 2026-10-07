@@ -81,22 +81,22 @@
       href: "weeks/week05/",
       thumb: "weeks/week05/video/01-model-switch/thumb.jpg",
       still: "weeks/week05/video/01-model-switch/poster.jpg",
-      meta: "1 支影片＋1 支補充・共 5 分 54 秒",
+      meta: "1 支影片＋2 支補充・共 9 分 6 秒",
       i18n: {
         "zh-Hans": {
           title: "模型与 context window",
           summary: "每个模型有自己的 context window；中途换模型，新模型要整段重读、缓存失效，用量一下子跳高。开工前选好模型，真的要换就带交接摘要开新对话。",
-          meta: "1 个视频＋1 个补充・共 5 分 54 秒",
+          meta: "1 个视频＋2 个补充・共 9 分 6 秒",
         },
         en: {
           title: "Models and the Context Window",
           summary: "Each model has its own context window; switching mid-chat makes the new model reread everything and breaks the cache, so usage jumps. Pick the model before you start, and if you must switch, open a new chat with a hand-off summary.",
-          meta: "1 video + 1 extra · 5 min 54 s in total",
+          meta: "1 video + 2 extras · 9 min 6 s in total",
         },
         vi: {
           title: "Mô hình và context window",
           summary: "Mỗi mô hình có context window riêng; đổi mô hình giữa chừng khiến mô hình mới phải đọc lại toàn bộ và bộ nhớ đệm mất hiệu lực, nên mức sử dụng tăng vọt. Hãy chọn mô hình trước khi bắt đầu; nếu buộc phải đổi, mở cuộc hội thoại mới kèm bản tóm tắt bàn giao.",
-          meta: "1 video + 1 bổ sung · tổng cộng 5 phút 54 giây",
+          meta: "1 video + 2 bổ sung · tổng cộng 9 phút 6 giây",
         },
       },
     },
