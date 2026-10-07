@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>06 官方的提醒</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+<style>
+  /* 原始碼裡的一段字串：畫成程式碼卡片，不畫成 app 裡的一列（app 不會顯示這句） */
+  #src { position: absolute; left: 80px; top: 196px; width: 1300px; background: #161b22; border: 1px solid #3a4556; border-radius: 10px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+  #src .hd { height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid #2b3646; font-family: "Cascadia Mono", monospace; font-size: 24px; color: #aeb8c6; white-space: nowrap; }
+  #src .hd svg { width: 24px; height: 24px; fill: none; stroke: #aeb8c6; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  #src pre { margin: 0; padding: 28px 30px 32px; font-family: "Cascadia Mono", monospace; font-size: 30px; line-height: 1.6; color: #e6e6e6; white-space: pre-wrap; }
+  #src pre .q { color: #6f7a8c; }
+  #srcNote { position: absolute; left: 80px; top: 560px; font-size: 26px; color: #8a95a6; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  const MSG = "Heads up: Long threads and multiple compactions can cause the model to be less accurate. Start a new thread when possible to keep threads small and targeted.";
+  const CODE = '<svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>';
+  L.mount({ boards: `<div class="board" id="board"><div id="src"><div class="hd">${CODE}openai/codex　codex-rs/core/src/compact.rs</div><pre><span class="q">"</span><span id="msg"></span><span class="q">"</span></pre></div>` +
+    `<div id="srcNote">Codex 原始碼裡寫的提醒。app 裡不會顯示這句。</div></div>` });
+  const D = 16;
+  // 引用原始碼裡的提醒（英文原文）＋中文翻譯（字幕）
+  const CAPS = [[3.4, 9.2, "長對話和多次壓縮，可能讓模型比較不準", "官方的提醒（中文翻譯）"], [9.4, 15.6, "可以的話開新對話，讓每段對話小而專一", "官方的提醒（中文翻譯）"]];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]); L.scrims(0);
+    $("world").style.opacity = 1 - C(t / 0.5);
+    K.vis($("board"), C((t - 0.3) / 0.5));
+    L.sec(t, "06", "官方的提醒", 0.4);
+    L.clock(17 * 60 + 32, 1 - C(t / 0.5));
+    K.rise($("src"), t, 0.6, 1e9, 18);
+    // 原文一個字一個字打出來（約 2.4 秒），讀起來像在看原始碼
+    $("msg").textContent = K.typed(MSG, t, 1.0, 64);
+    K.rise($("srcNote"), t, 3.6, 1e9, 10);
+    L.caps(t, CAPS);
+  }
+  L.start("06 官方的提醒", D, render);
+})();
+</script>
+</body>
+</html>

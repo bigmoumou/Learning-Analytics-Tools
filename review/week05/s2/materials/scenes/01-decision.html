@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>01 一開始的決定</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  L.mount();
+  const D = 20;
+  // 14:00，新的一段對話「分析成績」。回覆那張先落下、停在最上面；推近讀那句決定；拉回；「好」再疊上去；接著畫圖、寫 report.md
+  const ASK = 0.6, REPLY = 2.4, PUSH0 = 3.2, PUSH1 = 4.6, PULL0 = 9.0, PULL1 = 10.4, TYPE0 = 11.6, SEND = 12.6;
+  const ADDS = [[ASK + 0.3, 3], [1.5, 4], [2.0, 5], [REPLY + 0.2, 6], [SEND + 0.4, 7], [13.8, 8], [14.4, 9], [15.0, 10], [15.6, 11], [16.2, 12], [16.8, 13], [17.4, 14]];
+  const CAM = [[0, ...L.WIDE], [PUSH0, ...L.WIDE], [PUSH1, 471, 345, 2.2], [PULL0, 471, 345, 2.2], [PULL1, ...L.WIDE]];
+  const CAPS = [[17.8, 19.8, "第一張圖和 report.md，都照這個算", "小安只回了一個「好」。"]];
+  function render(t) {
+    const cam = L.cam(t, CAM), k = L.pushK(cam.z);
+    L.scrims(k); L.dim(k);
+    L.sec(t, "01", "一開始的決定", 0.2);
+    L.clock(14 * 60 + lerp(0, 4, C((t - 13) / 5)));
+    const done1 = t >= REPLY, done2 = t >= 17.4;
+    L.thread(t, {
+      title: "分析成績",
+      items: [
+        ["tm", K.cx.time("Today 2:00 PM"), -1],
+        ["ask", L.user(L.S1[0][1]), ASK],
+        ["w1", L.work(done1, "Worked for 38s"), ASK + 0.3],
+        ["dec", L.agent(L.DECISION), REPLY],
+        ["ok", L.user("好"), SEND],
+        ["w2", L.work(done2, "Worked for 1m 12s"), SEND + 0.3],
+        ["r1", L.tr("pencil", "Created plot.py"), 14.0],
+        ["r2", L.tr("termBox", "Ran commands"), 15.2],
+        ["r3", L.tr("pencil", "Edited report.md"), 16.4],
+        ["fin", L.agent(`已畫好散佈圖 ${K.cx.file("scatter.png")}，各班平均寫進 ${K.cx.file("report.md")}（缺考的 3 人不算進平均）。`), 17.4],
+      ],
+      input: (tt) => (tt >= TYPE0 && tt < SEND ? "好" : ""),
+      ul: (tt) => E((tt - (REPLY + 0.5)) / 1.0),
+    });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1], ["survey.csv", -1], ["analyze.py", -1], ["report.md", -1, 0], ["plot.py", 14.4], ["scatter.png", 15.6]]);
+    const n = L.stack(t, 2, ADDS);
+    L.panel(t, -1, lerp(12, 40, E(C((t - 0.6) / 17))));
+    L.caps(t, CAPS);
+    L.illus(t, [[0.4, PUSH0 + 0.4, "情境是示意：資料、班級、數字都是假的"], [PULL1, D, L.ILLUS]]);
+  }
+  L.start("01 一開始的決定", D, render);
+})();
+</script>
+</body>
+</html>

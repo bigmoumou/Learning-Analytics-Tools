@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>05 記錯了</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+<link rel="stylesheet" href="../common/compare.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script src="../common/compare.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  L.mount({ boards: CMP.html("新的圖：缺考算成 0 分") });
+  const D = 24;
+  // 壓縮之後，Codex 接著畫「各班平均」：這次缺考的 3 人被算成 0 分。和 report.md 並排，三班都對不起來（琥珀圈）
+  const EX = [[1.0, ["模型", "請幫我寫 <code>class_avg.py</code>"]], [1.6, ["結果", "已寫入 class_avg.py"]], [2.2, ["模型", "請幫我跑 <code>python3 class_avg.py</code>"]],
+    [2.8, ["結果", "A 64.8、B 65.4、C 58.6"]], [3.4, ["模型", "畫好了：class_avg.png"]]].map(([a, s]) => ({ a, s }));
+  const BOARD = 4.6, CIRC = [7.2, 7.6, 8.0];
+  const CAPS = [[5.2, 11.6, "新的圖，和 report.md 對不起來", "缺考的 3 人被算成 0 分"], [12.0, 23.6, "它不是故意的：那個決定，可能在壓縮時掉了。", ""]];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]); L.scrims(0); L.dim(0);
+    L.sec(t, "05", "記錯了", 0.1);
+    L.clock(17 * 60 + 30 + lerp(0, 2, C(t / 4)));
+    const done = t >= 3.4;
+    L.thread(t, { title: "分析成績", items: [["u4", L.user(L.NEW[1]), -1], ["w", L.work(done, "Worked for 46s"), -1], ["row", L.tr("compact", "Context automatically compacted"), -1],
+      ["r1", L.tr("pencil", "Created class_avg.py"), 1.0], ["r2", L.tr("termBox", "Ran commands"), 2.2],
+      ["fin", L.agent(`畫好了 ${K.cx.file("class_avg.png")}：A 班 64.8、B 班 65.4、C 班 58.6。`), 3.4]] });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1], ["survey.csv", -1], ["analyze.py", -1], ["report.md", -1], ["plot.py", -1], ["scatter.png", -1], ["merge.py", -1], ["class_avg.png", 3.4]]);
+    const A = L.afterItems(t, EX);
+    L.draw(A.items); L.count(A.n);
+    L.panel(t, -1, lerp(33, 38, C((t - 1) / 3)));
+    // 並排比較（說明板）：世界退暗
+    const b = C((t - BOARD) / 0.5);
+    $("world").style.opacity = (1 - 0.97 * b).toFixed(3);
+    CMP.render(t, { on: b, a: BOARD, fresh: [64.8, 65.4, 58.6], circles: CIRC, check: null });
+    // 小安：先好奇地看，琥珀圈出現時嚇一跳
+    const sur = t >= CIRC[0] + 0.2;
+    L.fox("foxO", 1690, 1040, 0.9, "front", { alpha: C((t - BOARD - 0.4) / 0.5), expr: sur ? "surprised" : "curious", look: -0.45, tilt: sur ? 0 : -0.06, blink: !sur && Math.floor(t * 10) % 41 === 0 });
+    L.caps(t, CAPS);
+    L.illus(t, [[0, D, "情境是示意：資料、班級、數字都是假的"]]);
+  }
+  L.start("05 記錯了", D, render);
+})();
+</script>
+</body>
+</html>

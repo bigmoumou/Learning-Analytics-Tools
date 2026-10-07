@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>08 習慣二：寫進檔案</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+<link rel="stylesheet" href="../common/compare.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script src="../common/compare.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  L.mount({ boards: CMP.html("新對話畫的") });
+  const D = 24;
+  // 舊對話：請 Codex 把規則寫進 AGENTS.md → 開新對話：最下面「說明書」、第二張「AGENTS.md」（琥珀線回來了）→ 新圖的數字和 report.md 對上了
+  const RULE = "把「缺考的人不算進平均」寫進 AGENTS.md";
+  const TYPE0 = 0.6, SEND = 2.6, EDIT = 3.6, REPLY = 4.2, NEWCHAT = 7.6, F1 = 8.6, F2 = 9.4, ASK0 = 10.4, ASK = 11.4, BOARD = 16.0, CHECK = 17.6;
+  const FRESH = [["說明書", "Codex 的工作說明"], ["AGENTS.md", "<u>缺考的人不算進平均</u>"], ["小安", "幫我畫一張各班平均的圖"],
+    ["模型", "請幫我跑 <code>python3 plot.py</code>"], ["結果", "A 74.0、B 74.7、C 67.0"], ["模型", "畫好了：class_avg.png"]];
+  const FADDS = [[F1, 1], [F2, 2], [ASK + 0.3, 3], [12.4, 4], [13.0, 5], [13.6, 6]];
+  // 舊對話的紙條堆：接第 5 段結束時的樣子，再疊上這一輪
+  const EX05 = [["模型", "請幫我寫 <code>class_avg.py</code>"], ["結果", "已寫入 class_avg.py"], ["模型", "請幫我跑 <code>python3 class_avg.py</code>"], ["結果", "A 64.8、B 65.4、C 58.6"], ["模型", "畫好了：class_avg.png"]];
+  const OLD_EX = EX05.map((s) => ({ a: -1, s })).concat([{ a: SEND + 0.3, s: ["小安", RULE] }, { a: EDIT, s: ["模型", "請幫我改 <code>AGENTS.md</code>"] }, { a: EDIT + 0.5, s: ["結果", "已更新 AGENTS.md"] }, { a: REPLY, s: ["模型", "寫好了"] }]);
+  const CAPS = [[1.0, 7.4, "要一直遵守的事，寫進檔案", "檔案不會被壓縮"], [8.6, 15.6, "開新對話時，Codex 會讀 AGENTS.md", "Week 3 學過"], [16.6, 23.6, "數字和 report.md 對上了", ""]];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]); L.scrims(0); L.dim(0);
+    L.sec(t, "08", "習慣二：要一直遵守的事，寫進檔案", 0.1);
+    L.clock(17 * 60 + 40 + lerp(0, 6, C(t / 14)));
+    const fresh = t >= NEWCHAT;
+    if (!fresh) {
+      L.thread(t, { title: "分析成績", items: [["row", L.tr("compact", "Context automatically compacted"), -1],
+        ["fin", L.agent(`畫好了 ${K.cx.file("class_avg.png")}：A 班 64.8、B 班 65.4、C 班 58.6。`), -1],
+        ["u5", L.user(RULE), SEND], ["w", L.work(t >= REPLY, "Worked for 9s"), SEND + 0.3], ["r1", L.tr("pencil", "Edited AGENTS.md"), EDIT],
+        ["fin2", L.agent(`已寫進 ${K.cx.file("AGENTS.md")}：缺考的人不算進平均。`), REPLY]],
+        input: (tt) => (tt >= TYPE0 && tt < SEND ? K.typed(RULE, tt, TYPE0, 16) : "") });
+      const A = L.afterItems(t, OLD_EX);
+      // 舊對話的紙條堆：開新對話時退下
+      A.items.forEach((s) => { s.alpha = (s.alpha == null ? 1 : s.alpha) * (1 - C((t - (NEWCHAT - 0.6)) / 0.6)); });
+      L.draw(A.items); L.count(A.n, 1 - C((t - (NEWCHAT - 0.6)) / 0.6));
+      L.panel(t, -1, lerp(38, 40, C((t - SEND) / 2)));
+    } else {
+      // 新對話「畫各班平均」：一開始是空的，說明書和 AGENTS.md 先放上去
+      L.thread(t, { title: "畫各班平均", chats: ["分析成績", "課程問卷報告"], empty: true,
+        items: [["tm", K.cx.time("Today 5:48 PM"), ASK], ["u1", L.user("幫我畫一張各班平均的圖"), ASK], ["w", L.work(t >= 13.6, "Worked for 41s"), ASK + 0.3],
+          ["r1", L.tr("termBox", "Ran commands"), 12.4],
+          ["fin", L.agent(`畫好了 ${K.cx.file("class_avg.png")}。照 AGENTS.md，缺考的人不算進平均：A 班 74.0、B 班 74.7、C 班 67.0。`), 13.6]],
+        input: (tt) => (tt >= ASK0 && tt < ASK ? K.typed("幫我畫一張各班平均的圖", tt, ASK0, 12) : "") });
+      L.stack(t, 0, FADDS, { slips: FRESH });
+      L.panel(t, NEWCHAT, lerp(6, 12, C((t - F1) / 5.5)), { sub: "新對話" });
+    }
+    L.folder(t, [["AGENTS.md", -1, EDIT >= 0 && t >= EDIT ? 1e9 : -2], ["grades.csv", -1], ["survey.csv", -1], ["analyze.py", -1], ["report.md", -1], ["plot.py", -1], ["scatter.png", -1], ["merge.py", -1], ["class_avg.png", -1]]);
+    // 新對話第二張（AGENTS.md）右邊一行小字
+    L.label("foundL", t, F2 + 0.6, BOARD, "← 新對話一開始就讀到", 1262, L.P.stack.y + L.lay(Math.max(2, L.stackState(t, 0, FADDS).n))[1].y + 15);
+    // 並排比較：數字和 report.md 一樣，打勾；小安開心
+    const b = C((t - BOARD) / 0.5);
+    $("world").style.opacity = (1 - 0.97 * b).toFixed(3);
+    CMP.render(t, { on: b, a: BOARD, fresh: [74.0, 74.7, 67.0], circles: null, check: CHECK });
+    L.fox("foxO", 1690, 1040, 0.9, "front", { alpha: C((t - BOARD - 0.4) / 0.5), expr: t >= CHECK + 0.4 ? "happy" : "curious", look: -0.45, nod: t >= CHECK + 0.4 ? 0.3 * Math.max(0, Math.sin(C((t - CHECK - 0.4) / 0.7) * Math.PI)) : 0 });
+    L.caps(t, CAPS);
+    L.illus(t, [[0, D, L.ILLUS]]);
+  }
+  L.start("08 習慣二：寫進檔案", D, render);
+})();
+</script>
+</body>
+</html>

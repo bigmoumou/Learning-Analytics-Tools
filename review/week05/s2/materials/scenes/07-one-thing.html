@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>07 習慣一：一件事一段對話</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+<style>
+  .col { position: absolute; top: 0; height: 1080px; }
+  .col .ttl { position: absolute; left: 0; top: 168px; font-size: 34px; font-weight: 900; color: #fff; white-space: nowrap; }
+  .col .ttl small { margin-left: 14px; font-size: 24px; font-weight: 500; color: #8a95a6; }
+  .col .st { position: absolute; left: 0; top: 650px; width: 440px; }
+  .col .pc { position: absolute; left: 0; top: 676px; width: 440px; font-size: 24px; color: #8a95a6; white-space: nowrap; display: flex; align-items: center; gap: 12px; }
+  .col .pc b { font-family: "Cascadia Mono", monospace; color: #e6e6e6; font-weight: 700; }
+  .col .pc i { flex: 1; height: 8px; border-radius: 4px; background: #3a3a3a; position: relative; overflow: hidden; }
+  .col .pc i s { position: absolute; left: 0; top: 0; bottom: 0; background: #3b82f6; text-decoration: none; }
+  #long { position: absolute; left: 80px; top: 0; height: 1080px; width: 300px; }
+  #long .st { position: absolute; left: 0; top: 650px; width: 440px; transform-origin: 0 100%; transform: scale(.6); }
+  .ring { display: inline-block; width: 26px; height: 26px; vertical-align: -5px; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  // 三段小對話：每段最下面一樣是說明書、AGENTS.md
+  const F = [["說明書", "Codex 的工作說明"], ["AGENTS.md", "用繁體中文回答…"]];
+  const COLS = [
+    ["分析", F.concat([["小安", "算一下各班平均"], ["模型", "請幫我跑 <code>python3 analyze.py</code>"], ["結果", "A 74.0、B 74.7、C 67.0"], ["模型", "做好了"]]), 11],
+    ["畫圖", F.concat([["小安", "畫一張各班平均的圖"], ["模型", "請幫我跑 <code>python3 plot.py</code>"], ["結果", "已畫好 class_avg.png"], ["模型", "做好了"]]), 12],
+    ["改報告", F.concat([["小安", "把報告第二節改短"], ["模型", "請幫我改 <code>report.md</code>"], ["結果", "已更新 report.md"], ["模型", "做好了"]]), 10],
+  ];
+  const X = [472, 952, 1432], T0 = [3.6, 5.4, 7.2];
+  const RING = '<svg class="ring" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="#3a3a3a" stroke-width="4"/><circle cx="13" cy="13" r="10" fill="none" stroke="#aeb8c6" stroke-width="4" stroke-dasharray="15.7 62.8" transform="rotate(-90 13 13)"/></svg>';
+  L.mount({ boards: `<div class="board" id="board">` +
+    `<div id="long"><div class="ttl" style="position:absolute;top:168px;font-size:28px;font-weight:700;color:#8a95a6;white-space:nowrap">一段對話做一整個下午</div><div class="st" id="lst"></div><div class="pc" style="position:absolute;top:676px;font-size:24px;color:#8a95a6">95%</div></div>` +
+    COLS.map(([n], i) => `<div class="col" id="c${i}" style="left:${X[i]}px"><div class="ttl">${n}<small>一段對話</small></div><div class="st" id="st${i}"></div><div class="pc"><span>Context window</span><i><s id="pb${i}"></s></i><b id="pp${i}"></b></div></div>`).join("") + `</div>` });
+  const D = 22;
+  const CAPS = [
+    [1.0, 9.6, "習慣一：一件事，一段對話", "做完一件事，就開新對話"],
+    [9.8, 16.2, "習慣一：一件事，一段對話", "一件事＝一個分析問題、一張圖、一個錯誤、報告的一節"],
+    [16.4, 21.6, "習慣一：一件事，一段對話", RING + "想看用了多少：設定 › General › Show context window usage"],
+  ];
+  // 一疊紙條畫進某個容器（和主畫面同一套畫法）
+  function stackInto(id, slips, t, a, step) {
+    const adds = slips.map((_, j) => [a + j * step, j + 1]).slice(0);
+    const st = L.stackState(t, 0, adds), n = st.n, B = L.lay(n), A0 = L.lay(Math.max(0, n - 1)), out = [];
+    for (let i = 0; i < n; i++) {
+      const top = i === n - 1, b = B[i], aa = A0[i] || b, e = top ? 1 : E(st.k);
+      const it = L.item(slips, i, { y: lerp(aa.y, b.y, e), h: lerp(aa.h, b.h, e), fa: top ? b.fa : lerp(aa.fa, b.fa, e) });
+      if (top && st.since < 1.6) { it.y -= (1 - K.spring(st.since, 16, 0.8)) * 26; it.alpha = C(st.since / 0.25); }
+      out.push(it);
+    }
+    L.draw(out, id);
+    return n;
+  }
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]); L.scrims(0);
+    $("world").style.opacity = 1 - C(t / 0.5);
+    K.vis($("board"), 1);
+    L.sec(t, "07", "習慣一：一件事一段對話", 0.4);
+    L.clock(17 * 60 + 32, 1 - C(t / 0.5));
+    // 左邊：一整個下午的那一疊（縮小、退暗）
+    L.draw(L.lay(L.NFULL).map((l, i) => L.item(L.SLIPS, i, l, { tab: 0, fa: 0 })), "lst");   // 縮小的那疊全畫成紙邊（字太小就不放字）
+    K.vis($("long"), C((t - 0.3) / 0.5) * (1 - 0.55 * C((t - 3.0) / 0.8)));
+    // 右邊：切成三段小對話，各自從低的開始
+    COLS.forEach(([, slips, pct], i) => {
+      K.vis($("c" + i), C((t - T0[i] + 0.4) / 0.4));
+      const n = stackInto("st" + i, slips, t, T0[i], 0.32);
+      const p = lerp(4, pct, C(n / slips.length));
+      $("pb" + i).style.width = p + "%"; $("pp" + i).textContent = Math.round(p) + "%";
+    });
+    L.caps(t, CAPS);
+    L.illus(t, [[3.0, D, "示意：每段對話的比例不是實測"]]);
+  }
+  L.start("07 習慣一：一件事一段對話", D, render);
+})();
+</script>
+</body>
+</html>
