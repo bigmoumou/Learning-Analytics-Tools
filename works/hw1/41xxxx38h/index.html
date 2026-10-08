@@ -1,3 +1,259 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>東京銀杏地圖與散步指南</title><meta name="description" content="可查證的銀杏地點、證據日期與教學用季節資訊。"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><link rel="stylesheet" href="style.css"><script defer src="data.js"></script><script defer src="app.js"></script></head>
-<body class="journal"><a class="skip-link" href="#explore">跳到地圖與清單</a><header id="site-header"></header><main id="app"></main><footer id="site-footer"></footer><dialog id="detail" aria-labelledby="detail-title"><div id="detail-content"></div></dialog><p id="notice" role="status" aria-live="polite"></p><noscript>請啟用 JavaScript 以操作地圖、搜尋及景點詳情。</noscript></body></html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京銀杏地圖與散步指南</title>
+<meta name="description" content="給前往東京賞銀杏的旅客：有來源支持的 26 處銀杏景點、當季觀測與歷史資料的區分，以及 2–5 站的散步順序。 / A bilingual guide to 26 sourced ginkgo spots in Tokyo, with a clear line between current-season observations and history, and a 2 to 5 stop walking order.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1f3a2b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 98V80M50 80C42 76 24 64 10 46C4 38 6 32 13 30C25 26 38 26 47 32L50 38L53 32C62 26 75 26 87 30C94 32 96 38 90 46C76 64 58 76 50 80Z' fill='%23d6a024' stroke='%231f3a2b' stroke-width='5' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Noto+Serif+TC:wght@500;600;700&amp;family=Shippori+Mincho:wght@500;700&amp;display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Noto+Serif+TC:wght@500;600;700&amp;family=Shippori+Mincho:wght@500;700&amp;display=swap"></noscript>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="style.css">
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script defer src="data.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#explore" data-t="skip">跳到地圖與清單</a>
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+<linearGradient id="gr2" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4B7F46"/><stop offset=".5" stop-color="#7FA547"/><stop offset="1" stop-color="#D9BE33"/></linearGradient>
+<linearGradient id="gr3" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9CB444"/><stop offset=".55" stop-color="#D5B72D"/><stop offset="1" stop-color="#E4A912"/></linearGradient>
+<linearGradient id="gr4" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E9A90F"/><stop offset="1" stop-color="#F4C230"/></linearGradient>
+<linearGradient id="gr5" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#DD9A1E"/><stop offset=".6" stop-color="#C47629"/><stop offset="1" stop-color="#A55E27"/></linearGradient>
+<path id="blade" d="M50 80C42 76 24 64 10 46C4 38 6 32 13 30C25 26 38 26 47 32L50 38L53 32C62 26 75 26 87 30C94 32 96 38 90 46C76 64 58 76 50 80Z"/>
+<path id="veins" fill="none" stroke-linecap="round" d="M50 80L13 44M50 80L17 34M50 80L27 29M50 80L38 28M50 80L46 34M50 80L87 44M50 80L83 34M50 80L73 29M50 80L62 28M50 80L54 34"/>
+<g id="lf1"><path d="M50 98V76" stroke="#3E6A3A" stroke-width="3.2" stroke-linecap="round" fill="none"/><use href="#blade" fill="#4B7F46" stroke="#2f2a1e" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/><use href="#veins" stroke="#fff" stroke-opacity="0.35" stroke-width="1.4"/></g>
+<g id="lf2"><path d="M50 98V76" stroke="#55803F" stroke-width="3.2" stroke-linecap="round" fill="none"/><use href="#blade" fill="url(#gr2)" stroke="#2f2a1e" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/><use href="#veins" stroke="#fff" stroke-opacity="0.35" stroke-width="1.4"/></g>
+<g id="lf3"><path d="M50 98V76" stroke="#7B8C35" stroke-width="3.2" stroke-linecap="round" fill="none"/><use href="#blade" fill="url(#gr3)" stroke="#2f2a1e" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/><use href="#veins" stroke="#fff" stroke-opacity="0.4" stroke-width="1.4"/></g>
+<g id="lf4"><path d="M50 98V76" stroke="#A9780C" stroke-width="3.2" stroke-linecap="round" fill="none"/><use href="#blade" fill="url(#gr4)" stroke="#2f2a1e" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/><use href="#veins" stroke="#fff" stroke-opacity="0.5" stroke-width="1.4"/></g>
+<g id="lf5"><path d="M50 98V76" stroke="#8C4F20" stroke-width="3.2" stroke-linecap="round" fill="none"/><use href="#blade" fill="url(#gr5)" stroke="#2f2a1e" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/><use href="#veins" stroke="#fff" stroke-opacity="0.35" stroke-width="1.4"/></g>
+<g id="lf6"><path d="M50 98V76" stroke="#6B4B30" stroke-width="3.2" stroke-linecap="round" fill="none"/><use href="#blade" fill="#85623F" stroke="#2f2a1e" stroke-opacity=".5" stroke-width="1.8" stroke-linejoin="round"/><use href="#veins" stroke="#fff" stroke-opacity="0.28" stroke-width="1.4"/></g>
+<g id="st1"><use href="#lf1"/></g><g id="st2"><use href="#lf2"/></g><g id="st3"><use href="#lf3"/></g><g id="st4"><use href="#lf4"/><path d="M50 14V5M22 22L16 15M78 22L84 15" stroke="#A9780C" stroke-width="3.4" stroke-linecap="round"/></g>
+<g id="st5"><g transform="translate(8 -8) rotate(-30 50 80) scale(.9) translate(5.5 8)"><use href="#lf5"/></g><path d="M62 94h26" stroke="#8C4F20" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="1 6"/></g>
+<g id="st6"><g transform="translate(8 16) rotate(76 50 60) scale(.78)"><use href="#lf6"/></g><path d="M6 94H94" stroke="#2f2a1e" stroke-opacity=".6" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="1 6"/></g>
+<g id="st-none"><path d="M50 98V80" stroke="#4A4C42" stroke-width="3.4" stroke-linecap="round" fill="none"/><use href="#blade" fill="none" stroke="#4A4C42" stroke-width="3.6" stroke-linejoin="round"/><path d="M36 58H64" stroke="#4A4C42" stroke-width="3.6" stroke-linecap="round"/></g>
+<g id="st-pend"><path d="M50 98V80" stroke="#4A4C42" stroke-width="3.4" stroke-linecap="round" fill="none"/><use href="#blade" fill="none" stroke="#4A4C42" stroke-width="3.6" stroke-linejoin="round" stroke-dasharray="8 7"/><circle cx="50" cy="58" r="8" fill="#C98E12"/></g>
+<g id="mark"><path d="M50 98V80" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/><use href="#blade" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 80V42M50 80L26 36M50 80L74 36" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" fill="none"/></g>
+</defs></svg>
+
+<header class="top" id="top">
+  <div class="top-in">
+    <a class="brand" href="#hero" aria-label="東京銀杏地圖與散步指南">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#mark"/></svg>
+      <span class="brand-text"><span class="brand-long" data-t="brand.long">東京銀杏地圖與散步指南</span><span class="brand-short" data-t="brand.short">東京銀杏地圖</span></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="頁面導覽" data-t-aria="nav.aria">
+      <a href="#explore" data-t="nav.explore">探索</a>
+      <a href="#foliage" data-t="nav.foliage">葉況說明</a>
+      <a href="#walk" data-t="nav.walk">散步</a>
+      <a href="#sources" data-t="nav.sources">資料來源</a>
+    </nav>
+    <div class="top-tools">
+      <div class="lang" role="group" aria-label="語言 / Language">
+        <button type="button" class="lang-btn" id="lang-zh" data-lang="zh" lang="zh-Hant" aria-pressed="true" aria-label="繁體中文"><span class="l-long" aria-hidden="true">繁體中文</span><span class="l-short" aria-hidden="true">繁中</span></button>
+        <button type="button" class="lang-btn" id="lang-en" data-lang="en" lang="en" aria-pressed="false" aria-label="English"><span class="l-long" aria-hidden="true">English</span><span class="l-short" aria-hidden="true">EN</span></button>
+      </div>
+      <a class="ribbon" id="ribbon" href="#walk" data-t-aria="ribbon.aria"><span class="ribbon-label" data-t="nav.walk">散步</span><b class="ribbon-n" id="ribbon-n">0/5</b></a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="hero" aria-labelledby="h1">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#mark"/></svg><span data-t="hero.eyebrow">東京 · 2026 秋</span></p>
+      <h1 id="h1" data-t="title">東京銀杏地圖與散步指南</h1>
+      <p class="lead" data-t="hero.lead">給前往東京賞銀杏的旅客：找到有資料支持的景點，分清楚「當季現場觀測」和「歷史或一般季節資訊」，再排出 2 到 5 站的散步順序。</p>
+      <dl class="ledger" id="ledger"></dl>
+      <p class="hero-status" id="hero-status"></p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#explore" data-t="hero.cta1">開始探索</a>
+        <a class="btn btn-quiet" href="#walk" data-t="hero.cta2">安排散步順序</a>
+      </div>
+    </div>
+    <figure class="plate">
+      <svg class="plate-svg" viewBox="0 0 560 560" aria-hidden="true" focusable="false">
+<rect x="1" y="1" width="558" height="558" class="fr1"/><rect x="9" y="9" width="542" height="542" class="fr2"/>
+<text x="28" y="44" class="cap">Ginkgo biloba</text><text x="532" y="44" text-anchor="end" class="cap">Pl. I</text>
+<g class="branch"><path d="M16 520C120 500 200 450 262 380C324 310 370 250 430 170C470 118 506 80 546 44" class="b1" pathLength="1"/><path d="M16 520C120 500 200 450 262 380C324 310 370 250 430 170C470 118 506 80 546 44" class="b2"/><g class="stems"><path d="M154.8 468.8Q168.8 445.1 150.4 427.0"/><path d="M242.9 400.4Q260.5 396.9 256.9 426.9"/><path d="M314.3 318.9Q321.9 289.4 303.2 274.3"/><path d="M388.8 224.6Q406.8 221.5 408.9 256.8"/><path d="M469.7 121.3Q468.3 106.8 431.8 118.7"/></g></g>
+<path d="M400 196C408 226 414 252 412 282" class="fall"/><path d="M488 150C500 196 496 248 482 300" class="fall"/><path d="M512 330C518 352 514 372 506 388" class="fall"/>
+<g class="lf-i" style="--i:0"><g transform="translate(150.4 427.0) rotate(-22) scale(1.1) translate(-50 -98)"><use href="#lf1"/></g></g>
+<g class="lf-i" style="--i:1"><g transform="translate(256.9 426.9) rotate(152) scale(1.1) translate(-50 -98)"><use href="#lf2"/></g></g>
+<g class="lf-i" style="--i:2"><g transform="translate(303.2 274.3) rotate(-32) scale(1.26) translate(-50 -98)"><use href="#lf3"/></g></g>
+<g class="lf-i" style="--i:3"><g transform="translate(408.9 256.8) rotate(174) scale(1.4) translate(-50 -98)"><use href="#lf4"/></g></g>
+<g class="lf-i" style="--i:4"><g transform="translate(431.8 118.7) rotate(-70) scale(1.08) translate(-50 -98)"><use href="#lf5"/></g></g>
+<g class="lf-i" style="--i:5"><g transform="translate(470 418) rotate(52) scale(1.05) translate(-50 -60)"><use href="#lf6"/></g></g>
+<text x="112" y="318" text-anchor="middle" class="num">1</text>
+<text x="226" y="468" text-anchor="middle" class="num">2</text>
+<text x="236" y="170" text-anchor="middle" class="num">3</text>
+<text x="498" y="334" text-anchor="middle" class="num">4</text>
+<text x="330" y="100" text-anchor="middle" class="num">5</text>
+<text x="424" y="490" text-anchor="middle" class="num">6</text>
+<path d="M28 524H532" class="ground"/>
+</svg>
+      <figcaption class="plate-cap"><span data-t="plate.cap">圖 1　季節參考流程（教學示意；不代表任何景點的現況）</span><ol class="plate-key" aria-hidden="true"><li>青葉</li><li>色づき始め</li><li>黄葉進行</li><li>見頃</li><li>落葉始め</li><li>落葉</li></ol></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="explore" id="explore" aria-labelledby="explore-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">01</span>
+      <h2 id="explore-h" data-t="explore.h">探索景點</h2>
+      <p class="sec-sub" data-t="explore.sub">用名稱、區域、來源等級或葉況找景點；點清單或地圖標記，就能看證據、日期與注意事項。</p>
+    </header>
+
+    <form class="toolbar" id="filters" role="search" autocomplete="off">
+      <div class="f-row">
+        <div class="f-search">
+          <span class="lbl" id="lbl-q" data-t="f.search">搜尋景點</span>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+            <input id="q" type="search" aria-labelledby="lbl-q" enterkeyhint="search" spellcheck="false" data-t-ph="f.search.ph" placeholder="例：新宿、Ueno">
+            <button type="button" class="q-clear" id="q-clear" hidden data-t-aria="f.search.clear" aria-label="清除搜尋"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6L18 18M18 6L6 18"/></svg></button>
+          </div>
+        </div>
+        <button type="button" class="f-toggle" id="filter-toggle" aria-expanded="false" aria-controls="filter-panel"><span data-t="f.toggle">篩選</span><b id="filter-badge" hidden></b><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9L12 15L18 9"/></svg></button>
+      </div>
+      <div class="f-panel" id="filter-panel">
+        <div class="f-field"><span class="lbl" id="lbl-region" data-t="f.region">區域</span><select id="f-region" aria-labelledby="lbl-region"></select></div>
+        <div class="f-field"><span class="lbl" id="lbl-grade" data-t="f.grade">來源等級</span><select id="f-grade" aria-labelledby="lbl-grade"></select></div>
+        <fieldset class="f-status">
+          <legend data-t="f.status">葉況</legend>
+          <div class="status-groups" id="status-groups"></div>
+        </fieldset>
+      </div>
+      <div class="f-meta">
+        <p class="result-count" id="result-count" role="status" aria-live="polite"></p>
+        <button type="button" class="link-btn" id="f-clear" data-t="f.clear">清除條件</button>
+      </div>
+    </form>
+
+    <div class="tabs" id="tabs" role="tablist" aria-label="清單與地圖切換" data-t-aria="tabs.aria">
+      <button type="button" role="tab" id="tab-list" aria-controls="pane-list" aria-selected="true" tabindex="0"><span data-t="tabs.list">清單</span><b id="tab-count"></b></button>
+      <button type="button" role="tab" id="tab-map" aria-controls="pane-map" aria-selected="false" tabindex="-1"><span data-t="tabs.map">地圖</span></button>
+    </div>
+
+    <div class="split" id="split">
+      <div class="panes">
+        <div class="pane pane-list" id="pane-list" role="tabpanel" aria-labelledby="tab-list">
+          <ol class="spots" id="spot-list"></ol>
+          <div class="empty" id="empty" hidden></div>
+        </div>
+        <div class="pane pane-map" id="pane-map" role="tabpanel" aria-labelledby="tab-map">
+          <div class="map-frame">
+            <div id="map" class="map" role="region" aria-label="地圖" data-t-aria="map.aria"></div>
+            <div class="map-msg" id="map-msg" hidden></div>
+          </div>
+          <p class="map-note" id="map-note"></p>
+        </div>
+      </div>
+      <div class="scrim" id="scrim" hidden></div>
+      <aside class="detail" id="detail" role="dialog" aria-modal="false" aria-labelledby="detail-title" tabindex="-1" hidden>
+        <div class="detail-head">
+          <div class="detail-titles">
+            <p class="detail-kicker" id="detail-kicker"></p>
+            <h3 id="detail-title" lang="ja"></h3>
+            <p class="detail-names" id="detail-names"></p>
+          </div>
+          <button type="button" class="icon-btn" id="detail-close" data-t-aria="d.close" aria-label="關閉詳情"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6L18 18M18 6L6 18"/></svg></button>
+        </div>
+        <div class="detail-body" id="detail-body"></div>
+        <div class="detail-foot">
+          <button type="button" class="btn btn-primary" id="detail-add"></button>
+          <a class="btn" id="detail-official" target="_blank" rel="noopener noreferrer"></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="foliage" id="foliage" aria-labelledby="foliage-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">02</span>
+      <h2 id="foliage-h" data-t="fol.h">葉況怎麼讀</h2>
+      <p class="sec-sub" data-t="fol.sub">這裡把「教學用的六個階段」和「這個網站目前能不能確認」分開說明。顏色之外，每個階段都有編號、圖形和文字。</p>
+    </header>
+    <div class="fol-grid">
+      <div class="fol-stages">
+        <h3 data-t="fol.stages.h">六個季節階段（教學參考）</h3>
+        <p class="note" data-t="fol.stages.note">這是教學用的參考流程，不代表任何一個景點的現況。沒有合格的當季證據時，本站不會把景點放進其中任何一個階段。</p>
+        <ol class="stages" id="stage-list"></ol>
+      </div>
+      <div class="fol-other">
+        <div class="fol-col">
+          <h3 data-t="fol.none.h">不屬於六階段的兩種狀態</h3>
+          <dl class="nostage" id="nostage-list"></dl>
+        </div>
+        <div class="fol-col">
+          <h3 data-t="fol.kinds.h">資料性質</h3>
+          <dl class="kinds" id="kind-list"></dl>
+        </div>
+      </div>
+    </div>
+    <details class="jma" id="jma">
+      <summary data-t="jma.h">東京全域的季節參考（氣象廳標本木）</summary>
+      <div class="jma-body" id="jma-body"></div>
+    </details>
+  </div>
+</section>
+
+<section class="walk" id="walk" aria-labelledby="walk-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">03</span>
+      <h2 id="walk-h" data-t="walk.h">安排散步順序</h2>
+      <p class="sec-sub" data-t="walk.sub">選 2 到 5 個有座標的景點，手動調整順序。距離是依近似座標算出的直線估算，不是實際步行路線，也不是導航時間。</p>
+    </header>
+    <div class="walk-grid">
+      <div class="walk-plan">
+        <div class="walk-add">
+          <span class="lbl" id="lbl-walk" data-t="walk.add.label">加入一個停靠景點</span>
+          <div class="walk-add-row"><select id="walk-select" aria-labelledby="lbl-walk"></select><button type="button" class="btn" id="walk-add-btn" data-t="walk.add.btn">加入</button></div>
+        </div>
+        <p class="hint" id="walk-hint" role="status" aria-live="polite"></p>
+        <ol class="itinerary" id="itinerary"></ol>
+        <div class="walk-empty" id="walk-empty"></div>
+      </div>
+      <aside class="walk-sum" id="walk-sum" aria-labelledby="walk-sum-h"></aside>
+    </div>
+  </div>
+</section>
+
+<section class="sources" id="sources" aria-labelledby="sources-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">04</span>
+      <h2 id="sources-h" data-t="src.h">資料來源與方法</h2>
+      <p class="sec-sub" data-t="src.sub">每個景點都要有可追溯的證據才會列入。這裡列出用了哪些來源、各來源支持什麼，以及查核日期。</p>
+    </header>
+    <div id="src-body"></div>
+  </div>
+</section>
+</main>
+
+<footer class="foot" id="foot">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#mark"/></svg>
+      <p id="foot-meta"></p>
+    </div>
+    <div class="disclaimers">
+      <p lang="zh-Hant" class="disc disc-zh">本網站僅供課程教學使用，非營利；葉況與開放資訊以各管理單位官方公告為準。本網站不是即時觀測或導航服務。</p>
+      <p lang="en" class="disc disc-en">This website is for educational, non-profit use. Check each site operator’s official announcements for current foliage and opening information. This site does not provide live observations or navigation.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<noscript><p class="noscript">請啟用 JavaScript 以使用地圖、搜尋與散步規劃。 / Please enable JavaScript to use the map, search and walk planner.</p></noscript>
+</body>
+</html>

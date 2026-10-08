@@ -1,196 +1,1131 @@
+/* Tokyo ginkgo map and walking guide: plain JavaScript, no framework, no build step.
+   Data lives in data.js (window.GINKGO_DATA). Opens from file://. */
+(function () {
 'use strict';
-(() => {
-const D = window.GINKGO_DATA, C = D.config, P = D.places;
-const $ = (s, root=document) => root.querySelector(s);
-const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const readStore = key => { try { return JSON.parse(localStorage.getItem(C.storageKey+key)); } catch (_) { return null; } };
-const saveStore = (key,val) => { try { localStorage.setItem(C.storageKey+key, JSON.stringify(val)); } catch (_) { showNotice(tx('瀏覽器無法儲存；本次操作仍可繼續。','Storage is unavailable; you can continue in this session.','保存できません。この画面での操作は続けられます。')); } };
-const localDate = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-let today=localDate();
-const year=Number(today.slice(0,4));
-const start=C.date==='season'?`${year}-10-15`:'2022-01-01', end=`${year}-12-31`;
-let State={lang:'zh',query:'',region:'',grade:'',status:'',recommend:'',peakOnly:false,selected:null,route:[],tab:'map',date:C.date==='season'?(today<start?start:today>end?end:today):today,geo:null,playing:false,plan:'half',motion:true};
-if(C.language){ const l=readStore('-lang'); if(l===C.language)State.lang=l; }
-if(C.store){ const r=readStore('-route'); if(Array.isArray(r))State.route=[...new Set(r.filter(id=>P.some(p=>p.id===id)))].slice(0,5); }
-let map=null, markerLayer=null, routeLayer=null, mapObserver=null, svgBounds=null, filtered=P, timer=null, fitPending=true, lastMapSize=null, previousWindow={w:innerWidth,h:innerHeight}, tileFailures=0, mapUnavailable=false;
-const tx=(zh,en,ja) => State.lang==='en'?(en||zh):State.lang==='ja'?(ja||zh):zh;
-const stageNames=[['青葉','Green leaves','青葉'],['色づき始め（開始轉色）','Starting to yellow','色づき始め'],['黄葉進行','Yellowing','黄葉進行'],['見頃','Peak viewing','見頃'],['落葉始め（開始落葉）','Leaves beginning to fall','落葉始め'],['落葉','Leaves fallen','落葉']];
-if(C.theme==='botanical'){stageNames[2][0]='黃葉進行';stageNames[3][0]='黃葉見頃（最佳觀賞期）';}
-if(C.theme==='index'){stageNames[1][0]='色づき始め';stageNames[4][0]='落葉始め';}
-if(C.theme==='season'){stageNames[1][0]='色づき始め（轉色）';stageNames[4][0]='落葉始め（落葉初期）';}
-if(C.theme==='japan'){stageNames[0][0]='未轉黃';stageNames[1][0]='轉黃中';stageNames[2][0]='轉黃中';stageNames[4][0]='落葉中';stageNames[5][0]='已落葉';}
-const routeGroups={north:{names:['上野・本鄉','Ueno / Hongo','上野・本郷'],ids:['TKG-002','TKG-013','TKG-040-hongo','TKG-018']},east:{names:['皇居・日比谷','Imperial Palace / Hibiya','皇居・日比谷'],ids:['TKG-011','TKG-017','TKG-030-kitanomaru','TKG-026']},central:{names:['神宮・新宿','Gaien / Shinjuku','神宮・新宿'],ids:['TKG-023','TKG-015','TKG-012','TKG-009']},innerwest:{names:['杉並・善福寺川','Suginami / Zenpukuji River','杉並・善福寺川'],ids:['TKG-007','TKG-008','TKG-024']},west:{names:['府中・國立','Fuchu / Kunitachi','府中・国立'],ids:['TKG-025','TKG-041']}};
-const stageNotes=[['葉片主要呈綠色。','Leaves are predominantly green.','葉の大部分が緑色。'],['部分葉片開始轉黃。','Some leaves begin to turn yellow.','一部の葉が黄色になり始める。'],['黃葉比例增加。','More leaves are turning yellow.','黄色い葉が増える。'],['教學上指最佳觀賞階段；實際依現地證據。','A teaching label for peak viewing; site evidence is required.','見頃の目安。実際は現地の証拠で確認。'],['葉片開始明顯掉落。','Leaves visibly begin to fall.','落葉が目立ち始める。'],['大部分葉片已掉落。','Most leaves have fallen.','大部分の葉が落ちた状態。']];
-const leaf = (color='currentColor') => '<svg class="leaf" viewBox="0 0 100 100" aria-hidden="true"><path d="M49 80C35 73 16 60 5 42L8 30 18 20 30 13 42 10 50 18 58 10 70 13 82 20 92 30 95 42C84 60 65 73 51 80Z" fill="'+color+'"/><path d="M50 79V96M50 78 14 34M50 78 26 23M50 78 39 17M50 78 61 17M50 78 74 23M50 78 86 34" stroke="var(--paper)" stroke-width="1.5" fill="none" opacity=".6"/><path d="M50 80V96" stroke="'+color+'" stroke-width="2" fill="none"/></svg>';
-const link = (url,label) => /^https?:\/\//.test(url||'')?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`:'';
-const regionName=key => {const r=C.regions[key];return r?tx(r[0],r[2],r[1]):key;};
-const dateNumber=s=>Math.round(Date.parse(s+'T00:00:00Z')/86400000);
-function season(date){const days=dateNumber(date)-dateNumber(date.slice(0,4)+'-11-23');return days<-28?0:days<-14?1:days<0?2:days<6?3:days<10?4:5;}
-function observation(p){return p.history.find(h=>h.date===State.date && h.stage!==null);}
-function statusOf(p){if(C.season)return season(C.date?State.date:today);if(C.date==='observations'){const h=observation(p);return h?h.stage:null;}return null;}
-function statusLabel(p){const s=statusOf(p);if(s!==null)return tx(stageNames[s][0],stageNames[s][1],stageNames[s][2])+(C.season?tx('（推估／示意）',' (seasonal estimate)','（推定・イメージ）'):tx('（歷史觀測）',' (historical observation)','（過去の観測）'));return tx(C.status,C.theme==='journal'?'No current-season report':'Not verified',C.theme==='yellow'?'資料未提供':'未確認');}
-const gradeLabels={S:['官方公園協會','Official park association','公式公園協会'],A:['官方有日期現地觀察','Official dated observation','日付付き公式観測'],B:['官方・銀杏專項待補證','Official; ginkgo-specific evidence pending','公式・イチョウ情報要確認'],C:['官方入口或地點介紹','Official portal or place introduction','公式案内・入口'],O:['氣象廳標準化觀測','JMA observation-station scale','気象庁標本木観測'],T:['第三方彙整','Third-party aggregation','第三者まとめ'],X:['排除或失效來源','Excluded or unavailable source','除外・無効な出典']};
-const gradeLabel=g=>gradeLabels[g]?`${g} · ${tx(...gradeLabels[g])}`:g;
-function distance(a,b){const rad=Math.PI/180, la=(b.lat-a.lat)*rad,lo=(b.lng-a.lng)*rad;const h=Math.sin(la/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(lo/2)**2;return 6371000*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
-function distLabel(m){return m<1000?`${Math.round(m)} ${tx('公尺','m','m')}`:`${(m/1000).toFixed(2)} ${tx('公里','km','km')}`;}
-const nameOf=p=>State.lang==='zh'?p.name_zh:p.name_ja;
-const unknown=()=>tx('資料未提供','Not provided by the source','情報が提供されていません');
-function factText(v){if(v===null||v===undefined||v==='')return unknown();if(Array.isArray(v))return v.map(factText).join('；');if(typeof v==='object')return Object.values(v).filter(x=>typeof x==='string'&&!x.startsWith('http')).join('；')||unknown();return String(v);}
-function titleText(){return tx(C.title,C.theme==='journal'?'Tokyo Ginkgo Map & Walking Journal':'Tokyo Ginkgo Map',C.theme==='yellow'?'東京イチョウマップ':C.title);}
-function noticeBox(){if(C.season)return tx('依往年平均推估的季節示意，各地最新狀況請點官方連結','Seasonal estimates based on Tokyo normals; check each official source for current conditions.','東京の平年値に基づく季節イメージです。各地の最新状況は公式サイトで確認してください。');return tx('目前快照沒有已核實的 2026 年景點銀杏葉況；過去紀錄保留日期，不當作今年現況。','The snapshot contains no verified 2026 site-specific foliage stages. Dated records remain historical.','この資料には2026年の現地のイチョウ状態を確認できる観測はありません。過去の記録は今年の状態ではありません。');}
-function showNotice(message){$('#notice').textContent=message;$('#notice').classList.add('visible');clearTimeout(showNotice.timeout);showNotice.timeout=setTimeout(()=>$('#notice').classList.remove('visible'),5000);}
-function seasonGuide(){let items=stageNames.map((n,i)=>`<li><span class="season-icon" style="--stage:${C.stageColors[i]}">${leaf(C.stageColors[i])}</span><strong>${tx(n[0],n[1],n[2])}</strong><span>${tx(...stageNotes[i])}</span>${C.counts?`<b>${P.filter(p=>statusOf(p)===i).length}</b>`:''}</li>`).join('');return `<section class="season-guide" aria-labelledby="seasons-title"><div class="section-heading"><h2 id="seasons-title">${tx('讀懂一片銀杏葉','Read a ginkgo leaf','イチョウの季節を知る')}</h2><p>${tx('六階段是物候指引，不能代替個別景點觀測。','Six stages are a teaching guide, not evidence of site conditions.','六段階は季節の目安であり、各地の観測ではありません。')}</p></div><ol>${items}</ol>${C.counts?`<p>${tx('未確認','Not verified','未確認')}：${P.length}；${tx('不計入六階段實測統計。','Excluded from observed-stage counts.','六段階の観測数には含めません。')}</p>`:''}${C.photos?`<p>${tx('階段插圖：本站自繪 SVG（教學示意）；下方授權照片僅呈現拍攝當時景色，不是六階段或今年葉況的證據。','Stage illustrations are original SVG teaching diagrams. Licensed photos below show historic scenery, not verified stage or current-season observations.','段階図は自作SVGのイメージです。写真は撮影時の風景で、各段階や今年の状態を示す証拠ではありません。')}</p><div class="photo-strip">${D.images.map(img=>`<figure><img loading="lazy" src="${esc(img.thumburl)}" alt="${esc(img.place)}" data-photo><figcaption>${esc(img.place)} · ${esc(img.date_taken)}<br>${link(img.file_page,esc(img.author))} · ${link(img.license_url,esc(img.license_short))}</figcaption></figure>`).join('')}</div>`:''}</section>`;}
-function dateControls(){if(!C.date)return '';return `<section class="date-controls" aria-label="${tx('選擇日期','Select a date','日付選択')}"><div><label for="date-slider">${tx(C.date==='season'?'東京季節示意日期':'查閱證據日期','Evidence date','日付')}</label><output id="date-value">${esc(State.date)}</output><strong id="season-value"></strong></div><input id="date-slider" type="range" min="${dateNumber(start)}" max="${dateNumber(end)}" value="${dateNumber(State.date)}" step="1">${C.play?`<div class="play-controls"><button id="play" type="button">${tx('播放','Play','再生')}</button><label for="speed">${tx('播放速度','Playback speed','再生速度')}</label><select id="speed"><option value="1">1 ${tx('日／秒','day / sec','日／秒')}</option><option value="7">7 ${tx('日／秒','days / sec','日／秒')}</option><option value="14">14 ${tx('日／秒','days / sec','日／秒')}</option></select><button id="motion" aria-pressed="${State.motion}" type="button">${tx(State.motion?'暫停見頃動畫':'啟用見頃動畫',State.motion?'Pause peak animation':'Enable peak animation',State.motion?'見頃の動きを停止':'見頃の動きを再開')}</button></div><p>${tx('日期只顯示該日有證據的歷史觀測；不從單日推造整季見頃期間。','Only dated observations match. A single day does not imply a season-long viewing window.','日付のある観測だけ表示します。1日の観測から期間を推測しません。')}</p>`:''}</section>`;}
-function filtersHtml(){return `<form id="filters" class="filters" role="search"><label class="search-label" for="query">${tx('尋找景點','Find a place','スポットを探す')}<input type="search" id="query" placeholder="${tx('地點名稱或關鍵字','Name or keyword','名前・キーワード')}" value="${esc(State.query)}" autocomplete="off"></label>${C.filters.map(key=>{let labels={region:tx('地區','Region','地域'),grade:tx(C.theme==='botanical'?'證據類型':'來源等級','Source grade','出典区分'),status:tx('銀杏狀態','Foliage stage','イチョウの状態'),recommend:tx('推薦','Recommendation','おすすめ')};let opts=key==='region'?[...new Set(P.map(p=>p.region))].map(r=>[r,regionName(r)]):key==='grade'?[...new Set(P.map(p=>p.source.grade))].sort().map(g=>[g,gradeLabel(g)]):key==='status'?[['unknown',tx(C.status,C.theme==='journal'?'No current-season report':'Not verified','未確認')],...stageNames.map((n,i)=>[String(i),tx(...n)]).filter((_,i)=>C.theme!=='japan'||i!==2)]:[['pending',tx('推薦待確認','Recommendation pending','おすすめ未確認')],...[1,2,3,4,5].map(n=>[String(n),'★'.repeat(n)+'☆'.repeat(5-n)])];return `<label for="filter-${key}">${labels[key]}<select id="filter-${key}"><option value="">${tx('全部','All','すべて')}</option>${opts.map(([v,label])=>`<option value="${esc(v)}" ${State[key]===v?'selected':''}>${esc(label)}</option>`).join('')}</select></label>`;}).join('')}<button id="reset" type="button">${tx('清除條件','Clear filters','条件を解除')}</button>${C.geo?`<button id="nearby" type="button">${tx('我附近','Near me','近くのスポット')}</button>`:''}${C.theme==='japan'?`<label class="check-label"><input id="peak-only" type="checkbox" ${State.peakOnly?'checked':''}>${tx('只看見頃','Peak viewing only','見頃のみ')}</label>`:''}</form>`;}
-function routeTitle(){return tx(C.route==='five'?'五條分區散步提案':C.route==='teaching'?'分區教學散步':C.route==='recommended'?'推薦賞銀杏路線':'安排你的停靠順序',C.route==='custom'?'Your walking stops':'Walking proposals','散歩の立ち寄り順');}
-function routeHtml(){if(!C.route)return '';return `<section id="route-section" class="route-section"><div class="section-heading"><div><h2>${routeTitle()}</h2><p>${tx('近似位置的停靠順序與示意連線；非即時導航。','Stops and schematic lines using approximate positions; no live navigation.','近似位置による立ち寄り順とイメージ線です。リアルタイムナビではありません。')}</p></div><button id="clear-route" type="button">${tx('清空路線','Clear route','ルートを消去')}</button></div>${C.route==='five'||C.route==='teaching'?`<div id="proposals" class="proposals"></div>`:''}${C.route==='recommended'?`<div class="plan-controls"><button id="half-plan" type="button">半日草案</button><button id="day-plan" type="button">一日草案</button></div><p id="recommend-note"></p>`:''}${C.autoOrder?`<button id="auto-order" type="button">最近鄰排序</button>`:''}<p id="route-hint"></p><ol id="route-stops"></ol><div id="route-summary"></div><div id="route-link"></div></section>`;}
-function sourcesHtml(){return `<section id="sources" class="sources"><div class="section-heading"><h2>${tx('資料來源與方法','Sources & methods','出典と方法')}</h2><p>${tx('資料快照','Source snapshot','確認日')} 2026-10-02 · ${tx('網站整理','Website prepared','サイト整理日')} 2026-10-04</p></div><p>${link(D.originalSheet,tx('課程原始資料表：41 列來源、18 欄','Course source index: 41 rows, 18 fields','授業の出典表：41行・18列'))}。${tx('來源筆數不是景點數；本站採26處已證實銀杏地點，本鄉與駒場分開，北之丸不等於皇居外苑。','Source rows are not place counts. The 26 verified Tokyo locations keep Hongo and Komaba separate; Kitanomaru is not Kokyo Gaien.','出典数と場所数は異なります。確認済み26か所を使用し、本郷と駒場を分け、北の丸と皇居外苑を混同しません。')}</p>${C.theme==='botanical'?'<p class="honesty">原需求稱29個不同地點；目前核實銀杏集合為26處，未以重複子點或未證實樹種湊足29處。</p>':''}${C.theme==='japan'?`<p class="honesty">${link(D.specifiedSheet,'BRIEF指定資料表')}：CSV與XLSX唯讀匯出都回傳401，未能取得內容；本站完整保留可讀課程來源清冊41列18欄，另補北海道大學官方資料。全日本視野不代表完整全國覆蓋。</p><p>${link('https://www.visit-hokkaido.jp/en/spot/detail_10022.html','北海道官方觀光：銀杏並木、一般季節與官方地圖代表點')}；${link('https://www.global.hokudai.ac.jp/blog/gingko-avenue-illuminated-to-create-a-golden-tunnel-hokkaido-university-konyousai-2016/index.htm','北海道大學2016-10-29歷史季節介紹')}。補查日2026-10-04；不當作2026葉況。</p><p>推薦星數為本站整理：官方地點證實＋1、特定銀杏證據＋1、所選日有實測葉況＋1、2026當季資料＋1、兩種獨立來源佐證＋1；缺日期或葉況顯示推薦待確認，不作官方評分。</p>`:''}<p>${tx('座標全部來自已核實的近似代表點；來源等級只描述來源用途，不是葉況信心。資料原文保留於詳情與來源列；中文名稱為編輯譯名，不冒充官方名稱。','All coordinates are traceable approximate representative points. Grades describe source roles, not foliage confidence. Source-language quotations are preserved in details and source rows. Chinese names are editorial renderings.','座標は確認済みの近似代表点です。出典区分は葉の状態の信頼度ではありません。詳細には原文引用を残し、中国語名は編集上の訳名です。')}</p>${C.season?`<p>${tx('東京平年值（1991–2020）：黃葉11/23、落葉12/3。本站以黃葉日作見頃示意起點，並非官方見頃預報；其他階段採示意偏移−28、−14、0、+6、+10日，所有景點共用。','Tokyo 1991–2020 normals: yellowing 11/23 and leaf fall 12/3. The yellowing date anchors an illustrative peak, not an official peak forecast. Offsets −28, −14, 0, +6, +10 days apply equally to every place.','東京の平年値（1991–2020）は黄葉11/23、落葉12/3。黄葉日を見頃のイメージ基準とし、公式見頃予報ではありません。−28・−14・0・+6・+10日の仮定を全地点で共用します。')}${link(D.jma.yellowSource,tx('氣象廳黃葉平年值','JMA yellowing normals','気象庁黄葉平年値'))} ${link(D.jma.fallSource,tx('落葉平年值','Leaf-fall normals','落葉平年値'))}</p>`:''}${C.theme==='evidence'?'<p>本站用途分類：A 日期明確的銀杏觀察、B 官方地點、C 官方入口／觀光、O 標準觀測、T 第三方、X 失效；不同於原表S/A/B/C/O/T/X。歷史紀錄仍保留原等級，不因年份過去便改為X。</p><p>氣象廳標本木不代表每個公園；黃葉不一定等於見頃；歷史資料不等於今年現況；第三方平台不一定是管理單位。其他樹種的紅葉資訊不能套用到銀杏。</p>':''}<details class="source-index"><summary>${tx('展開41列原始來源清冊','Open the 41-row source index','41行の出典一覧を開く')}</summary><div class="source-rows">${D.sources.map(s=>`<article class="source-row"><h3>${esc(s.source_id)} · ${esc(s.name)}</h3><p>${tx('原表列號','Original row','元の行')} ${s.row_number} · ${esc(s.group_id)} · ${esc(s.grade)} · ${esc(s.species)}</p><p>${esc(s.finding)}</p><p>${esc(s.caveat)}</p>${link(s.url,tx('來源原頁','Original source','出典原ページ'))}${s.evidence_url?link(s.evidence_url,tx('證據原頁','Evidence source','証拠ページ')):''}<dl><dt>${tx('證據日期','Evidence date','証拠日')}</dt><dd>${esc(s.evidence_date||unknown())}</dd><dt>${tx('原表查核日期','Original audit date','元の確認日')}</dt><dd>${esc(s.audited_at||unknown())}</dd><dt>${tx('更新頻率（來源原文）','Update cadence (source text)','更新頻度（出典原文）')}</dt><dd>${esc(s.cadence||unknown())}</dd></dl>${/038|039/.test(s.source_id)?`<p class="honesty">${tx('排除／失效來源，保留作資料清冊，不列為景點。','Excluded/unavailable source retained in the index, not mapped.','除外・無効な出典。場所として地図に表示しません。')}</p>`:''}</article>`).join('')}</div></details></section>`;}
+// UI strings (zh, en). Placeholders {0}, {1}... Authored text only; data comes from data.js.
+const T = {
+  'skip': ['跳到地圖與清單', 'Skip to the map and list'],
+  'title': ['東京銀杏地圖與散步指南', 'Tokyo Ginkgo Map & Walking Guide'],
+  'brand.long': ['東京銀杏地圖與散步指南', 'Tokyo Ginkgo Map & Walking Guide'],
+  'brand.short': ['東京銀杏地圖', 'Tokyo Ginkgo Map'],
+  'meta.desc': ['給前往東京賞銀杏的旅客：有來源支持的 26 處銀杏景點、當季觀測與歷史資料的區分，以及 2 到 5 站的散步順序。', 'A bilingual guide to 26 sourced ginkgo spots in Tokyo, with a clear line between current-season observations and history, and a walking order of 2 to 5 stops.'],
+  'nav.aria': ['頁面導覽', 'Page navigation'],
+  'nav.explore': ['探索', 'Explore'],
+  'nav.foliage': ['葉況說明', 'Foliage guide'],
+  'nav.walk': ['散步', 'Walk'],
+  'nav.sources': ['資料來源', 'Sources'],
+  'ribbon.aria': ['散步清單：已選 {0} 站（最多 5 站），前往散步規劃', 'Walk list: {0} of 5 stops chosen, go to the walk planner'],
+  'hero.eyebrow': ['東京 · 2026 秋', 'Tokyo · Autumn 2026'],
+  'hero.lead': ['給前往東京賞銀杏的旅客：找到有資料支持的景點，分清楚「當季現場觀測」和「歷史或一般季節資訊」，再排出 2 到 5 站的散步順序。', 'For visitors heading to Tokyo for the ginkgo: find spots backed by sources, tell current-season on-site observations apart from history and general seasonal information, then set a walking order of 2 to 5 stops.'],
+  'hero.cta1': ['開始探索', 'Start exploring'],
+  'hero.cta2': ['安排散步順序', 'Plan the walk'],
+  'led.checked': ['資料查核日', 'Data checked'],
+  'led.checked.sub': ['來源表稽核日 {0}', 'Source sheet audited {0}'],
+  'led.spots': ['有來源支持的景點', 'Spots backed by sources'],
+  'led.spots.sub': ['每一處都有可追溯的銀杏證據', 'Each has traceable ginkgo evidence'],
+  'led.now': ['當季現場觀測', 'Current-season observations'],
+  'led.now.sub': ['待補證 {0} 處，其餘「尚無當季回報」', 'Evidence pending: {0}. The rest have no current-season report'],
+  'hero.status': ['目前沒有任何景點有可當作葉況階段的當季現場觀測，所以 {0} 處顯示「尚無當季回報」。{2}有 2026 年的資料線索，但官方沒有寫葉況，列為「待補證」。過去的紀錄一律標示日期，不當作現況。', 'No spot has an on-site observation that can serve as a foliage stage, so {0} spots show "No current-season report". {2} has 2026 material but no foliage wording, so it is listed as "Evidence pending". Past records always carry their dates and are never treated as current.'],
+  'hero.status.nopending': ['目前沒有任何景點有可當作葉況階段的當季現場觀測，所以 {0} 處都顯示「尚無當季回報」。過去的紀錄一律標示日期，不當作現況。', 'No spot has an on-site observation that can serve as a foliage stage, so all {0} spots show "No current-season report". Past records always carry their dates and are never treated as current.'],
+  'plate.cap': ['圖 1　季節參考流程（教學示意；不代表任何景點的現況）', 'Figure 1 — The seasonal reference flow (a teaching illustration; not the status of any spot)'],
 
-function refineReadingOrder(){
- const hero=$('.hero-copy'), kicker=document.createElement('p');
- kicker.className='hero-kicker';
- kicker.textContent=C.theme==='journal'?tx('東京・秋日散步手帖','TOKYO · WALKING JOURNAL','東京・秋の散歩帖'):C.theme==='index'?'東京銀杏・官方來源索引':C.theme==='japan'?'日本銀杏・日期與證據':'東京・銀杏季節示意';
- hero.prepend(kicker);
- const guide=$('.season-guide');
- if(guide){
-  if(C.theme==='index')$('#explore').after(guide);
-  else{
-   const disclosure=document.createElement('details'), summary=document.createElement('summary');
-   disclosure.className='season-reference';disclosure.open=matchMedia('(min-width:768px)').matches;
-   summary.textContent=tx('六階段季節參考・不是景點即時葉況','Six seasonal stages · not live site observations','六段階の目安・現地の最新観測ではありません');
-   disclosure.append(summary,guide);
-   ($('#route-section')||$('#explore')).after(disclosure);
+  'explore.h': ['探索景點', 'Explore the spots'],
+  'explore.sub': ['用名稱、區域、來源等級或葉況找景點；點清單或地圖標記，就能看證據、日期與注意事項。', 'Find spots by name, area, source grade or foliage status; choose one in the list or on the map to see its evidence, dates and cautions.'],
+  'f.search': ['搜尋景點', 'Search spots'],
+  'f.search.ph': ['例：新宿、Ueno', 'e.g. Shinjuku, Ueno'],
+  'f.search.clear': ['清除搜尋', 'Clear search'],
+  'f.toggle': ['篩選', 'Filters'],
+  'f.region': ['區域', 'Area'],
+  'f.grade': ['來源等級', 'Source grade'],
+  'f.status': ['葉況', 'Foliage status'],
+  'f.all': ['全部', 'All'],
+  'f.status.g1': ['目前能不能確認', 'Can this site confirm it?'],
+  'f.status.g2': ['六階段（教學參考，目前每項都是 0）', 'Six stages (teaching reference; every count is 0 for now)'],
+  'status.none': ['尚無當季回報', 'No current-season report'],
+  'status.pending': ['待補證', 'Evidence pending'],
+  'f.clear': ['清除條件', 'Clear filters'],
+  'result': ['顯示 {0} / {1} 處', 'Showing {0} of {1} spots'],
+  'result.zero': ['沒有符合的景點（共 {1} 處）', 'No matching spots (of {1})'],
+  'tabs.aria': ['清單與地圖切換', 'Switch between list and map'],
+  'tabs.list': ['清單', 'List'],
+  'tabs.map': ['地圖', 'Map'],
+  'pane.list': ['景點清單', 'Spot list'],
+  'pane.map': ['景點地圖', 'Spot map'],
+  'empty.h': ['沒有符合條件的景點', 'No spots match'],
+  'empty.p': ['試試少用幾個關鍵字，或清除篩選條件。名稱可以用日文、中文或羅馬拼音搜尋。', 'Try fewer keywords or clear the filters. You can search by Japanese or Chinese name, or by romanised name.'],
+  'empty.stage.h': ['目前沒有景點被指派到「{0}」', 'No spot is assigned to "{0}"'],
+  'empty.stage.p': ['六個階段只是教學參考。本站只在同時有「銀杏、特定地點、可辨識日期、現場狀況」四項證據時才標階段，目前沒有任何景點符合，所以這裡是空的才是正確的。', 'The six stages are a teaching reference. This site assigns a stage only when there is evidence for ginkgo, a specific place, an identifiable date and an on-site condition; no spot qualifies at present, so an empty result is the correct one.'],
+  'empty.btn.none': ['看「尚無當季回報」的景點', 'Show spots with no current-season report'],
+  'empty.btn.clear': ['清除所有條件', 'Clear all filters'],
+  'spot.grade': ['來源等級 {0}', 'Source grade {0}'],
+  'name.nv': ['英文譯名未提供／English name not verified', '英文譯名未提供／English name not verified'],
+  'name.nv.short': ['英文譯名未提供', 'English name not verified'],
+  'spot.add': ['加入', 'Add'],
+  'spot.stopn': ['第 {0} 站', 'Stop {0}'],
+  'spot.add.aria': ['加入散步：{0}', 'Add to walk: {0}'],
+  'spot.remove.aria': ['從散步移除：{0}（目前第 {1} 站）', 'Remove from walk: {0} (currently stop {1})'],
+  'spot.nocoord': ['沒有座標，不能加入散步', 'No coordinates, cannot join the walk'],
+  'map.aria': ['東京銀杏景點地圖', 'Map of Tokyo ginkgo spots'],
+  'map.note': ['標記是「園區近似位置」，不是銀杏樹的精確位置；方形菱形標記是「待補證」，圓形是「尚無當季回報」，有數字的是散步停靠順序。虛線只表示停靠順序，不是實際步行路線。', 'Markers show approximate park positions, not the exact position of any ginkgo tree. A diamond marker means "Evidence pending", a round one "No current-season report", and a number is the walking order. The dotted line only shows the order of stops, not a real walking route.'],
+  'map.fail.leaflet.h': ['地圖元件沒有載入', 'The map component did not load'],
+  'map.fail.leaflet.p': ['Leaflet 地圖程式庫無法從網路取得（可能離線，或被網路設定擋下）。搜尋、清單、詳情和散步規劃都還能使用；連上網路後重新整理頁面就能看到地圖。', 'The Leaflet map library could not be fetched (you may be offline, or the network blocked it). Search, the list, details and the walk planner still work; reload the page once you are online to see the map.'],
+  'map.fail.tiles.h': ['底圖暫時載入不了', 'The base map is not loading'],
+  'map.fail.tiles.p': ['OpenStreetMap 圖磚沒有回應，標記位置仍會顯示，但看不到街道。清單與散步規劃不受影響。', 'OpenStreetMap tiles are not responding. Markers still show, but streets do not. The list and the walk planner are unaffected.'],
+  'map.retry': ['再試一次', 'Try again'],
+  'map.marker.sel': ['已選取', 'selected'],
+
+  'd.close': ['關閉詳情', 'Close details'],
+  'd.status.h': ['當季現場觀測', 'Current-season on-site observation'],
+  'd.status.none.p': ['沒有找到同時符合「銀杏、特定地點、可辨識日期、現場狀況」的當季證據。這不代表是青葉，也不代表還沒變色，只是本站目前無法確認。', 'No current-season evidence was found that covers ginkgo, a specific place, an identifiable date and an on-site condition. That does not mean the leaves are green or have not turned; this site simply cannot confirm it.'],
+  'd.ev.h': ['銀杏證據與資料性質', 'Ginkgo evidence and kind of information'],
+  'd.ev.checked': ['每一則證據的日期分開列出；來源沒有寫的，就顯示「資料未提供」。', 'Each piece of evidence lists its dates separately; anything the source does not state is shown as "Not provided".'],
+  'd.link.src': ['開啟來源頁面 ↗', 'Open the source page ↗'],
+  'd.notes.h': ['注意事項', 'Cautions'],
+  'd.unv.h': ['尚未核實', 'Not verified'],
+  'd.src2.h': ['來源與管理單位', 'Source and operator'],
+  'd.operator': ['管理／提供單位', 'Operator or provider'],
+  'd.grade': ['來源等級（來源表原有分級）', 'Source grade (as in the source sheet)'],
+  'd.cadence': ['更新頻率', 'Update frequency'],
+  'd.unpublished': ['未公布', 'Not published'],
+  'd.audit': ['來源表稽核日', 'Source sheet audited'],
+  'd.sheetnote': ['來源表註記', 'Source-sheet note'],
+  'd.info.h': ['官方一般資訊', 'Official general information'],
+  'd.info.note': ['這些資訊來自 2026-10-02 讀取的官方頁面，可能已經變動；出發前請再查官方公告。', 'Taken from official pages read on 2026-10-02; they may have changed. Check the official announcements again before you go.'],
+  'd.hours': ['開放時間', 'Opening hours'],
+  'd.closed': ['休園日', 'Closing days'],
+  'd.fee': ['入園費', 'Admission'],
+  'd.access': ['交通', 'Getting there'],
+  'd.address': ['地址', 'Address'],
+  'd.tel': ['電話', 'Telephone'],
+  'd.na': ['資料未提供', 'Not provided'],
+  'd.coord.h': ['座標：園區近似位置', 'Coordinates: approximate park position'],
+  'd.coord.p': ['這是「園區近似位置」，不是銀杏樹的精確位置，只用來在地圖上標示範圍和計算直線距離。', 'This is an approximate park position, not the exact position of any ginkgo tree. It is used only to place the marker and to compute straight-line distances.'],
+  'd.coord.type': ['位置類型', 'Type of point'],
+  'd.coord.point': ['這個點在哪裡', 'Where the point is'],
+  'd.coord.basis': ['依據', 'Basis'],
+  'd.coord.conf': ['座標查核信心', 'Coordinate confidence'],
+  'd.coord.lat': ['緯度、經度（WGS84）', 'Latitude, longitude (WGS84)'],
+  'd.coord.srcs': ['座標來源', 'Coordinate sources'],
+  'd.coord.osm': ['在 OpenStreetMap 看這個點 ↗', 'See this point on OpenStreetMap ↗'],
+  'ct.park': ['園區代表點', 'Representative point of the park'],
+  'ct.inpark': ['園區內的參考點', 'A reference point inside the park'],
+  'ct.avenue': ['並木的中點或代表點', 'Midpoint or representative point of the avenue'],
+  'ct.site': ['地點本體的位置', 'Position of the place itself'],
+  'cf.low': ['低：大型園區內銀杏的確切位置不明，只有園區層級的概略點', 'Low: the exact ginkgo position inside a large park is unknown; only a park-level approximate point'],
+  'cf.medium': ['中：只有單一來源、來源相差較大，或屬於推定', 'Medium: a single source, sources far apart, or an estimate'],
+  'cf.high': ['高：兩種以上不同來源都在所選點 200 公尺內', 'High: two or more different sources lie within 200 m of the point'],
+  'd.src.h': ['來源表紀錄（原表欄位）', 'Source-sheet record (original columns)'],
+  'd.src.p': ['以下是老師來源表中這一列的欄位。英文版會附上譯文，原文（繁體中文或日文）保留在下方。', 'The columns of this spot\'s row in the teacher\'s source sheet. In English mode a translation is shown with the original (Traditional Chinese or Japanese) kept beneath it.'],
+  'd.src.orig': ['原文', 'Original'],
+  'd.add': ['加入散步', 'Add to walk'],
+  'd.remove': ['移出散步（第 {0} 站）', 'Remove from walk (stop {0})'],
+  'd.official': ['官方網頁 ↗', 'Official page ↗'],
+  'd.nocoord': ['這個景點沒有可追溯的座標，所以不在地圖上標示，也不能加入散步或計算距離。', 'This spot has no traceable coordinates, so it is not shown on the map and cannot join the walk or be measured.'],
+  'd.final': ['出發前請再查官方公告。', 'Check the official announcements again before you go.'],
+  'dt.article': ['文章／公告日期', 'Article or notice date'],
+  'dt.photo': ['照片日期', 'Photo date'],
+  'dt.observed': ['觀測日期', 'Observation date'],
+  'dt.forecast': ['預測期間', 'Forecast period'],
+  'dt.checked': ['查核日期', 'Checked on'],
+  'kind.intro': ['地點介紹', 'Place introduction'],
+  'kind.now': ['當季現場觀測', 'Current-season on-site observation'],
+  'kind.history': ['歷史觀測', 'Historical observation'],
+  'kind.season': ['季節參考／預測', 'Seasonal reference or forecast'],
+  'kind.official': ['官方一般資訊', 'Official general information'],
+  'kind.third': ['第三方資訊', 'Third-party information'],
+  'kind.intro.d': ['官方或管理單位對這個地點與銀杏的介紹，通常沒有日期，不代表今年的葉況。', 'An official or operator description of the place and its ginkgo; usually undated and not this year\'s foliage.'],
+  'kind.now.d': ['2026 年、有日期、指名銀杏與地點，並寫出現場狀況的紀錄。目前沒有任何景點達到。', 'A 2026 record that is dated, names the ginkgo and the place, and states the on-site condition. No spot meets this at present.'],
+  'kind.history.d': ['過去季節的有日期紀錄，只當歷史參考，不是現況。', 'A dated record from a past season: history only, never current status.'],
+  'kind.season.d': ['一般的季節說法或預測，例如「11 月下旬」，是歷年經驗，不是現場觀測。', 'A general seasonal statement or forecast, such as "late November": past experience, not an on-site observation.'],
+  'kind.official.d': ['開放時間、費用、交通與活動日期等，以官方公告為準。', 'Hours, fees, access and event dates; the official announcement prevails.'],
+  'kind.third.d': ['不是管理單位的網站，只能當線索，不用來判定葉況。', 'Sites that are not the operator: a lead only, never used to judge foliage.'],
+  'pending.badge': ['未達當季現場觀測條件', 'Does not meet the on-site observation rule'],
+
+  'fol.h': ['葉況怎麼讀', 'How to read the foliage status'],
+  'fol.sub': ['這裡把「教學用的六個階段」和「本站目前能不能確認」分開說明。除了顏色，每個階段都有編號、圖形和文字。', 'This page keeps "the six teaching stages" apart from "whether this site can confirm anything now". Besides colour, every stage has a number, a shape and a text label.'],
+  'fol.stages.h': ['六個季節階段（教學參考）', 'The six seasonal stages (teaching reference)'],
+  'fol.stages.note': ['這是教學用的參考流程，不代表任何一個景點的現況。沒有合格的當季證據時，本站不會把景點放進其中任何一個階段。', 'A teaching flow, not the status of any single spot. Without qualifying current-season evidence this site does not place a spot in any of the stages.'],
+  'fol.none.h': ['不屬於六階段的兩種狀態', 'Two statuses outside the six stages'],
+  'fol.none.t': ['尚無當季回報', 'No current-season report'],
+  'fol.none.p': ['沒有同時符合「銀杏、特定地點、可辨識日期、現場狀況」的當季證據。不代表是青葉，也不代表還沒變色。', 'There is no current-season evidence that covers ginkgo, a specific place, an identifiable date and an on-site condition. It does not mean green leaves, and it does not mean no colour yet.'],
+  'fol.pend.t': ['待補證', 'Evidence pending'],
+  'fol.pend.p': ['有一些 2026 年的資料線索（例如標著 2026 日期的照片說明），但來源沒有寫出葉況，本站也沒有判讀照片，所以不指派任何階段。', 'There is some 2026 material (for example photo captions dated 2026), but the source states no foliage condition and this site does not judge photos, so no stage is assigned.'],
+  'fol.kinds.h': ['資料性質', 'Kinds of information'],
+  'jma.h': ['東京全域的季節參考（氣象廳標本木）', 'Tokyo-wide seasonal reference (JMA specimen tree)'],
+  'jma.p': ['氣象廳在東京站的標本木上，記錄銀杏的「黃葉日」與「落葉日」。這是東京站的尺度，不是任何一個景點的觀測，「黃葉日」也不是官方的「見頃開始日」。', 'The Japan Meteorological Agency records a ginkgo "yellowing date" and "leaf-fall date" on a specimen tree for Tokyo station. That is a Tokyo-wide scale, not an observation of any spot, and the yellowing date is not an official start of peak viewing.'],
+  'jma.th.item': ['項目', 'Item'],
+  'jma.th.y': ['黃葉日', 'Yellowing date'],
+  'jma.th.f': ['落葉日', 'Leaf-fall date'],
+  'jma.normal': ['平年值（{0}）', 'Normal ({0})'],
+  'jma.obs25': ['2025 年觀測', '2025 observed'],
+  'jma.obs26': ['2026 年觀測', '2026 observed'],
+  'jma.notyet': ['尚未觀測', 'Not yet observed'],
+  'jma.def.h': ['定義', 'Definitions'],
+  'jma.def.y': ['黃葉日：標本木上大部分葉片轉黃的第一天。', 'Yellowing date: the first day on which most of the specimen tree\'s leaves have turned yellow.'],
+  'jma.def.f': ['落葉日：約 80% 的葉片掉落的第一天。', 'Leaf-fall date: the first day on which about 80% of the leaves have fallen.'],
+  'jma.recent': ['近十年東京的黃葉日', 'Tokyo yellowing dates, last ten years'],
+  'jma.vary': ['2023 與 2024 年是 12/1 與 12/3，比平年值晚；實際季節可能前後差約一週。', '2023 and 2024 were 1 Dec and 3 Dec, later than the normal; the real season can shift by about a week either way.'],
+  'jma.src': ['氣象廳：黃葉日 ↗', 'JMA: yellowing dates ↗'],
+  'jma.src2': ['氣象廳：落葉日 ↗', 'JMA: leaf-fall dates ↗'],
+  'jma.src3': ['氣象廳：累年值下載入口 ↗', 'JMA: multi-year data downloads ↗'],
+
+  'walk.h': ['安排散步順序', 'Plan the walking order'],
+  'walk.sub': ['選 2 到 5 個有座標的景點，手動調整順序。距離是依近似座標算出的直線估算，不是實際步行路線，也不是導航時間。', 'Pick 2 to 5 spots with coordinates and set the order by hand. Distances are straight-line estimates from approximate coordinates, not a real walking route and not a navigation time.'],
+  'walk.add.label': ['加入一個停靠景點', 'Add a stop'],
+  'walk.add.btn': ['加入', 'Add'],
+  'walk.select.ph': ['選擇景點…', 'Choose a spot…'],
+  'walk.hint.0': ['從上面的清單、地圖或這個選單選 2 到 5 個景點。', 'Pick 2 to 5 spots from the list, the map or this menu.'],
+  'walk.hint.1': ['已選 1 處；再加入至少 1 處，才會顯示距離。', 'One spot chosen; add at least one more to see distances.'],
+  'walk.hint.max': ['最多 5 站。要換景點的話，請先移除其中一站。', 'At most 5 stops. Remove one first if you want to swap.'],
+  'walk.hint.nocoord': ['這個景點沒有可信的座標，不能加入散步。', 'This spot has no reliable coordinates and cannot join the walk.'],
+  'walk.hint.pick': ['請先從選單選一個景點。', 'Choose a spot from the menu first.'],
+  'walk.empty.p': ['還沒有停靠景點。選 2 到 5 個景點後，停靠順序會出現在這裡，可以用上移、下移調整。', 'No stops yet. Choose 2 to 5 spots and their order appears here; use move up and move down to change it.'],
+  'stop.up': ['上移', 'Up'],
+  'stop.down': ['下移', 'Down'],
+  'stop.remove': ['移除', 'Remove'],
+  'stop.up.aria': ['把「{0}」往前移一站', 'Move "{0}" one stop earlier'],
+  'stop.down.aria': ['把「{0}」往後移一站', 'Move "{0}" one stop later'],
+  'stop.remove.aria': ['從散步移除「{0}」', 'Remove "{0}" from the walk'],
+  'stop.open.aria': ['查看「{0}」的詳情', 'Open details for "{0}"'],
+  'stop.sub': ['{0} · 園區近似位置', '{0} · approximate park position'],
+  'leg': ['到下一站：直線約 {0}（估算）；步行約 {1}（以每分鐘 80 公尺估算，不是導航時間）。', 'To the next stop: about {0} in a straight line (an estimate); about {1} on foot (estimated at 80 m per minute, not a navigation time).'],
+  'leg.far': ['距離較遠，實際移動多半要搭大眾運輸；本站不提供交通時間。', 'This is far enough that you would probably take public transport; this site gives no transit times.'],
+  'sum.h': ['這條散步', 'This walk'],
+  'sum.stops': ['停靠站數', 'Stops'],
+  'sum.dist': ['直線距離合計（估算）', 'Straight-line total (estimate)'],
+  'sum.time': ['步行時間（估算）', 'Walking time (estimate)'],
+  'sum.about': ['約 {0}', 'about {0}'],
+  'sum.note1': ['距離是「園區近似位置」之間的直線，所以只是估算；步行時間用每分鐘 80 公尺換算，不是導航時間，也不是實際路程。', 'Distances are straight lines between approximate park positions, so they are estimates; walking time is converted at 80 m per minute; it is not a navigation time and not a real route length.'],
+  'sum.note2': ['地圖上的虛線只表示停靠順序。本站沒有路網資料，也不提供即時導航或交通資訊。', 'The dotted line on the map only shows the order of stops. This site has no road-network data and gives no live navigation or transit information.'],
+  'sum.gmaps': ['在 Google 地圖開啟 ↗', 'Open in Google Maps ↗'],
+  'sum.gmaps.note': ['只有你按下按鈕才會開啟新分頁；路線與時間由 Google 計算，和本站的估算無關。座標是近似位置。', 'A new tab opens only when you press the button; Google computes its own route and time, independent of this site\'s estimates. The coordinates are approximate.'],
+  'sum.clear': ['清除整條散步', 'Clear the whole walk'],
+  'sum.empty': ['加入 2 處以上之後，這裡會顯示距離，以及開啟 Google 地圖的連結。', 'Add two or more spots and the distances, and a link to open Google Maps, appear here.'],
+  'u.m': ['公尺', 'm'], 'u.km': ['公里', 'km'], 'u.min': ['分鐘', 'min'], 'u.h': ['小時', 'h'], 'u.mm': ['分', 'min'],
+  'toast.added': ['已加入第 {0} 站：{1}', 'Added as stop {0}: {1}'],
+  'toast.removed': ['已移除：{0}', 'Removed: {0}'],
+  'toast.moved': ['「{0}」移到第 {1} 站', '"{0}" moved to stop {1}'],
+  'toast.cleared': ['已清除散步清單', 'Walk cleared'],
+  'toast.see': ['看順序', 'See the order'],
+  'toast.storage': ['這個瀏覽器無法儲存語言與散步清單；本次仍可正常使用，重新整理後會回到預設。', 'This browser cannot store your language and walk; everything still works, but a reload resets them.'],
+  'toast.max': ['最多 5 站，請先移除一站。', 'At most 5 stops; remove one first.'],
+
+  'src.h': ['資料來源與方法', 'Sources and method'],
+  'src.sub': ['每個景點都要有可追溯的證據才會列入。這裡列出用了哪些來源、各來源支持什麼，以及查核日期。', 'A spot is listed only with traceable evidence. This section lists the sources used, what each supports, and the dates checked.'],
+  'src.sheet.h': ['來源索引：老師提供的試算表', 'Source index: the teacher\'s spreadsheet'],
+  'src.sheet.p': ['景點與來源都從這份 {0} 列的試算表出發。本站保留各列原有的欄位與等級，不自行改成評分。{1} 以唯讀的 CSV 匯出讀取線上試算表（HTTP {2}），與資料檔內保存的 {0} 列逐格比對，沒有差異；來源表稽核日是 {3}，景點資料快照日是 {4}。試算表只是來源索引，不是完整的景點清單。', 'Spots and sources start from this {0}-row spreadsheet. The original columns and grades of each row are kept and never turned into scores. On {1} the online sheet was read through a read-only CSV export (HTTP {2}) and compared cell by cell with the {0} rows stored in this site\'s data, with no differences; the sheet was audited on {3} and the spot data snapshot is {4}. The sheet is a source index, not a complete list of spots.'],
+  'src.sheet.link': ['開啟試算表 ↗', 'Open the spreadsheet ↗'],
+  'src.method.h': ['方法', 'Method'],
+  'src.attr.h': ['外部資源與授權', 'External resources and licences'],
+  'src.lim.h': ['限制與尚未驗證的項目', 'Limits and unverified items'],
+  'src.groups.h': ['各來源支持什麼', 'What each source supports'],
+  'src.groups.p': ['來源表的 {0} 列依用途分組。每一列都列出它支持的內容、證據日期、稽核日與連結，原表欄位可展開查看。', 'The sheet\x27s {0} rows are grouped by use. Each row lists what it supports, its evidence date, its audit date and links; the original columns can be expanded.'],
+  'src.group.spot': ['景點證據來源', 'Spot evidence sources'],
+  'src.group.spot.n': ['支持 26 處景點的來源列。每一列都附上它支持的內容、證據日期與稽核日。', 'The source rows that support the 26 spots, each with what it supports, its evidence date and its audit date.'],
+  'src.group.entry': ['入口與名單', 'Entrances and lists'],
+  'src.group.entry.n': ['2025 年度官方名單的入口；2026 年度專頁尚未公布。', 'The entrance to the 2025 official list; no 2026 page has been published.'],
+  'src.group.season': ['季節參考：氣象廳', 'Seasonal reference: JMA'],
+  'src.group.season.n': ['東京站標本木的資料，只作為東京全域的季節參考，不套用到個別景點。', 'Specimen-tree data for Tokyo station, used only as a Tokyo-wide seasonal reference and never applied to individual spots.'],
+  'src.group.background': ['僅作背景，未列為景點', 'Background only, not listed as spots'],
+  'src.group.background.n': ['沒有證實銀杏，或只能用來發現候選地點。', 'Ginkgo is not evidenced, or the row is only a lead to candidate places.'],
+  'src.group.third': ['第三方資訊', 'Third-party information'],
+  'src.group.third.n': ['不是管理單位的網站，只能當線索，本站不用它判定任何景點的葉況。', 'Not the operator\'s sites: leads only, never used to judge any spot\'s foliage.'],
+  'src.group.excluded': ['已排除或失效', 'Excluded or dead'],
+  'src.group.excluded.n': ['保留作紀錄，不是可用的現況來源。', 'Kept as a record; not usable status sources.'],
+  'src.rows': ['{0} 列', '{0} rows'],
+  'src.supports': ['支持內容', 'Supports'],
+  'src.operator': ['管理／提供單位', 'Operator'],
+  'src.evdate': ['證據日期', 'Evidence date'],
+  'src.audit': ['稽核日', 'Audited'],
+  'src.dead': ['原網址已失效（回傳 404），只保留作紀錄', 'The original URL is dead (it returned 404); kept as a record only'],
+  'src.link.main': ['官方頁面 ↗', 'Official page ↗'],
+  'src.link.extra': ['補充頁面 ↗', 'Extra page ↗'],
+  'src.link.evid': ['證據頁面 ↗', 'Evidence page ↗'],
+  'src.more': ['展開來源表原欄位', 'Show the sheet\'s original columns'],
+  'src.extra.h': ['各景點另外用到的證據頁面', 'Other evidence pages used for each spot'],
+  'src.extra.p': ['這些頁面是景點詳情裡「銀杏證據」使用的來源，來自 2026-10-02 核實的共用資料。', 'These are the pages used as "Ginkgo evidence" in the spot details, from the shared data verified on 2026-10-02.'],
+  'foot.meta': ['資料查核日 {0}　·　來源表稽核日 {1}　·　本頁建立 {2}　·　地圖 © OpenStreetMap contributors、Leaflet', 'Data checked {0}  ·  source sheet audited {1}  ·  page built {2}  ·  map © OpenStreetMap contributors, Leaflet'],
+  'err.data.h': ['景點資料沒有載入', 'The spot data did not load'],
+  'err.data.p': ['data.js 沒有成功載入，所以暫時沒有景點可以顯示。請確認 index.html 與 data.js 放在同一個資料夾，再重新整理。 / data.js did not load, so there are no spots to show. Make sure index.html and data.js sit in the same folder, then reload.', 'data.js did not load, so there are no spots to show. Make sure index.html and data.js sit in the same folder, then reload. / data.js 沒有成功載入，所以暫時沒有景點可以顯示。'],
+};
+const STAGES = [
+  { ja: '青葉', zh: '青葉（綠葉）', en: 'Green leaves', dz: '葉片主要還是綠色。', de: 'The leaves are still mostly green.' },
+  { ja: '色づき始め', zh: '開始轉色', en: 'Starting to colour', dz: '少數葉片開始轉黃。', de: 'A few leaves begin to turn yellow.' },
+  { ja: '黄葉進行', zh: '黃葉增加', en: 'Yellowing spreads', dz: '黃葉的比例逐漸增加。', de: 'The share of yellow leaves keeps growing.' },
+  { ja: '見頃', zh: '最佳觀賞期', en: 'Peak viewing', dz: '整體轉為金黃。這是教學用語，實際的見頃要看管理單位的公告。', de: 'The whole tree turns golden. A teaching label; the real peak is whatever the site operator announces.' },
+  { ja: '落葉始め', zh: '開始落葉', en: 'Leaves begin to fall', dz: '葉片開始明顯掉落。', de: 'Leaves visibly start to fall.' },
+  { ja: '落葉', zh: '落葉', en: 'Leaves fallen', dz: '多數葉片已經掉落。', de: 'Most leaves have fallen.' },
+];
+const METHOD = [
+  ['逐筆確認銀杏', 'Check ginkgo, row by row', '只有來源明確寫到銀杏的地點才列為景點，不憑搜尋摘要或關鍵字判定。26 處景點來自 25 列來源（東京大學這一列對應本郷與駒場兩個不同的地點）。', 'Only places whose sources explicitly mention ginkgo are listed; search snippets and keywords are not enough. The 26 spots come from 25 source rows (the University of Tokyo row covers two different places, Hongo and Komaba).'],
+  ['分開資料性質', 'Keep the kinds of information apart', '每一則證據都標示為地點介紹、當季現場觀測、歷史觀測、季節參考／預測、官方一般資訊或第三方資訊，不互相替代。', 'Every piece of evidence is labelled as place introduction, current-season on-site observation, historical observation, seasonal reference or forecast, official general information, or third-party information; none stands in for another.'],
+  ['葉況只認當季證據', 'Foliage status needs current-season evidence', '要同時有「銀杏、特定地點、可辨識日期、現場狀況」才算當季現場觀測；否則顯示「尚無當季回報」或「待補證」。楓葉、其他樹種、區域狀況和氣象廳標本木都不套用到個別景點。', 'Only evidence covering ginkgo, a specific place, an identifiable date and an on-site condition counts as a current-season observation; otherwise the status is "No current-season report" or "Evidence pending". Maple colour, other species, regional conditions and the JMA specimen tree are never applied to a single spot.'],
+  ['日期分開記錄', 'Dates are recorded separately', '文章或公告日期、照片日期、觀測日期、預測期間與查核日期各自一欄；來源沒有寫的就顯示「資料未提供」。', 'Article or notice date, photo date, observation date, forecast period and checked date each have their own field; anything a source does not state shows as "Not provided".'],
+  ['座標與距離', 'Coordinates and distances', '座標沿用 2026-10-02 核實的資料，一律標示為「園區近似位置」並附上依據；沒有可追溯座標的景點只列在清單，不上地圖也不算距離。直線距離用 Haversine 公式計算，步行時間以每分鐘 80 公尺換算，兩者都是估算。', 'Coordinates come from the data verified on 2026-10-02 and are always labelled as approximate park positions with their basis; a spot without traceable coordinates would stay in the list only, off the map and out of distances. Straight-line distances use the haversine formula and walking time is converted at 80 m per minute; both are estimates.'],
+  ['名稱', 'Names', '日文原名一律保留。中文名稱是依台灣用字轉寫日文名稱，不是官方名稱；英文名稱只在官方英文頁面能核實時才顯示，否則標示「英文譯名未提供／English name not verified」。', 'Japanese names are always kept. Chinese names are Taiwan-usage renderings of the Japanese names, not official names; an English name is shown only when an official English page confirms it, otherwise the label reads "English name not verified".'],
+  ['不做的事', 'What this site does not do', '沒有即時葉況、即時天氣、街景、定位推薦、交通時間或自動更新。資料停在查核日，之後官方的變動不會自動反映。', 'There are no live foliage reports, live weather, street views, location-based recommendations, transit times or automatic updates. The data stops at the checked date and later official changes are not reflected automatically.'],
+];
+const ATTRIB = [
+  ['Leaflet 1.9.4（BSD 2-Clause），從 unpkg.com 載入；需要網路。', 'Leaflet 1.9.4 (BSD 2-Clause), loaded from unpkg.com; needs a network connection.', 'https://leafletjs.com/'],
+  ['地圖資料 © OpenStreetMap contributors（ODbL 1.0）；底圖圖磚來自 tile.openstreetmap.org，需要網路。', 'Map data © OpenStreetMap contributors (ODbL 1.0); base-map tiles come from tile.openstreetmap.org and need a network connection.', 'https://www.openstreetmap.org/copyright'],
+  ['字體：Noto Serif TC、Noto Sans TC、Shippori Mincho、Cormorant Garamond，經 Google Fonts 載入（SIL Open Font License 1.1）；載入失敗時改用系統字體。', 'Fonts: Noto Serif TC, Noto Sans TC, Shippori Mincho and Cormorant Garamond, loaded through Google Fonts (SIL Open Font License 1.1); system fonts take over if they fail.', 'https://fonts.google.com/'],
+  ['插圖：本站自製的內嵌 SVG 與 CSS。沒有使用照片、街景、天氣服務，也沒有仿製特定動畫工作室或藝術家的風格。', 'Illustrations: this site\'s own inline SVG and CSS. No photos, street views or weather services, and no imitation of any animation studio or artist.', null],
+  ['Google 地圖連結是外部服務，只有你按下按鈕才會開啟。', 'The Google Maps link is an external service and opens only when you press the button.', 'https://www.google.com/maps'],
+];
+
+/* ================= core ================= */
+const D = window.GINKGO_DATA;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const safeUrl = u => (typeof u === 'string' && /^https?:\/\//i.test(u.trim())) ? u.trim() : '';
+const MAX_STOPS = 5, WALK_SPEED = 80, FAR_M = 2500;
+const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
+const LEAFLET_PREFIX = '<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>';
+const mqDesktop = window.matchMedia ? window.matchMedia('(min-width: 1024px)') : { matches: true, addEventListener() {} };
+const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ---------- storage that may throw ---------- */
+const store = {
+  ok: true, warned: false,
+  get(k) { try { return window.localStorage.getItem('ginkgo-walk:' + k); } catch (e) { this.ok = false; return null; } },
+  set(k, v) { try { window.localStorage.setItem('ginkgo-walk:' + k, v); return true; } catch (e) { this.ok = false; return false; } },
+};
+function warnStorage() { if (!store.ok && !store.warned) { store.warned = true; toast(t('toast.storage')); } }
+
+/* ---------- language ---------- */
+let lang = 'zh';
+const savedLang = store.get('lang');
+if (savedLang === 'zh' || savedLang === 'en') lang = savedLang;
+const li = () => (lang === 'en' ? 1 : 0);
+function t(key, ...a) {
+  const e = T[key]; if (!e) return key;
+  return String(e[li()] != null ? e[li()] : e[0]).replace(/\{(\d+)\}/g, (m, i) => (a[i] !== undefined ? a[i] : ''));
+}
+const th = (key, ...a) => t(key, ...a.map(esc));
+const bi = o => (o && typeof o === 'object' && !Array.isArray(o)) ? (o[lang] != null && o[lang] !== '' ? o[lang] : (o.zh != null ? o.zh : (o.en != null ? o.en : ''))) : (o == null ? '' : o);
+const pair = p => Array.isArray(p) ? (p[li()] != null ? p[li()] : p[0]) : p;
+
+/* ---------- data guard and normalising ---------- */
+function showDataError() {
+  const sec = $('#explore .wrap') || document.body;
+  sec.innerHTML = '<div class="empty"><h4>' + esc(T['err.data.h'][0]) + ' / ' + esc(T['err.data.h'][1]) + '</h4><p>' + esc(T['err.data.p'][1]) + '</p><p lang="zh-Hant">' + esc(T['err.data.p'][0]).replace(/ \/ [\s\S]*$/, '') + '</p></div>';
+}
+const dataOk = !!(D && Array.isArray(D.spots) && D.spots.length);
+const hasCoord = s => !!s && Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng)) && s.lat !== null && s.lng !== null && s.lat !== '' && s.lng !== '';
+const SPOTS = dataOk ? D.spots.filter(s => s && s.id).map(s => {
+  const o = Object.assign({}, s);
+  o.name_ja = o.name_ja || o.name_zh || o.id;
+  o.name_zh = o.name_zh || '';
+  o.area = o.area || {}; o.intro = o.intro || {}; o.ginkgo = o.ginkgo || {}; o.info = o.info || {};
+  o.coord = o.coord || {}; o.evidence = Array.isArray(o.evidence) ? o.evidence : [];
+  o.notes = Array.isArray(o.notes) ? o.notes : []; o.unverified = Array.isArray(o.unverified) ? o.unverified : [];
+  o.aliases = Array.isArray(o.aliases) ? o.aliases : [];
+  o.lat = hasCoord(s) ? Number(s.lat) : null; o.lng = hasCoord(s) ? Number(s.lng) : null;
+  return o;
+}) : [];
+const SOURCES = (dataOk && Array.isArray(D.sources)) ? D.sources : [];
+const META = (dataOk && D.meta) || {};
+const spotById = new Map(SPOTS.map(s => [s.id, s]));
+const spotIndex = new Map(SPOTS.map((s, i) => [s.id, i + 1]));
+const rowById = new Map(SOURCES.map(r => [r.source_id, r]));
+const REGIONS = (dataOk && D.regions) || {};
+const GRADES = (dataOk && D.grades) || {};
+function statusKey(s) {
+  if (s.now === 'live' && Number.isInteger(s.stage) && s.stage >= 1 && s.stage <= 6) return 'stage' + s.stage;
+  return s.now === 'pending' ? 'pending' : 'none';
+}
+const statusLabel = k => k === 'none' ? t('status.none') : k === 'pending' ? t('status.pending') : lang === 'en' ? STAGES[+k.slice(5) - 1].en : STAGES[+k.slice(5) - 1].ja;
+const glyph = (id, cls) => '<svg' + (cls ? ' class="' + cls + '"' : '') + ' viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#' + id + '"/></svg>';
+const statusGlyph = k => glyph(k === 'none' ? 'st-none' : k === 'pending' ? 'st-pend' : 'st' + k.slice(5));
+const regionName = k => bi(REGIONS[k]) || k;
+
+/* ---------- state ---------- */
+const ST = { q: '', region: '', grade: '', status: '', selected: null, detail: null, route: [], tab: 'list', filtersOpen: false };
+(function loadRoute() {
+  let r = null;
+  try { r = JSON.parse(store.get('route') || 'null'); } catch (e) { r = null; }
+  if (Array.isArray(r)) {
+    const seen = new Set();
+    ST.route = r.filter(id => { const s = spotById.get(id); if (!s || !hasCoord(s) || seen.has(id)) return false; seen.add(id); return true; }).slice(0, MAX_STOPS);
   }
- }
- const legend=$('.japan-legend');
- if(legend)$('#filters').after(legend);
+})();
+
+/* ---------- search and filters ---------- */
+const norm = s => String(s == null ? '' : s).normalize('NFKC').toLowerCase().replace(/[\s　・･·\-_/()（）「」『』,，、。:：]+/g, '');
+function haystack(s) {
+  return norm([s.id, s.source_id, s.name_ja, s.name_zh, s.name_en, s.area.zh, s.area.en, s.aliases.join(' ')].join(' '));
 }
-function keepFocus(root){
- const active=document.activeElement;if(!root.contains(active))return null;
- for(const key of ['data-open','data-route','data-remove','data-up','data-down']){
-  if(active.hasAttribute(key))return {key,value:active.getAttribute(key)};
- }
- return null;
+const HAY = new Map(SPOTS.map(s => [s.id, haystack(s)]));
+function matches(s, skip) {
+  const f = ST;
+  if (skip !== 'region' && f.region && s.region !== f.region) return false;
+  if (skip !== 'grade' && f.grade && ((rowById.get(s.source_id) || {}).grade !== f.grade)) return false;
+  if (skip !== 'status' && f.status && statusKey(s) !== f.status) return false;
+  if (f.q) {
+    const terms = String(f.q).normalize('NFKC').toLowerCase().split(/\s+/).map(norm).filter(Boolean);
+    const h = HAY.get(s.id) || '';
+    if (!terms.every(x => h.includes(x))) return false;
+  }
+  return true;
 }
-function restoreFocus(root,token){
- if(!token)return;
- const next=[...root.querySelectorAll('['+token.key+']')].find(el=>el.getAttribute(token.key)===token.value);
- if(next)next.focus({preventScroll:true});
+const filtered = () => SPOTS.filter(s => matches(s));
+const activeFilterCount = () => (ST.region ? 1 : 0) + (ST.grade ? 1 : 0) + (ST.status ? 1 : 0);
+const anyFilter = () => !!(ST.q || ST.region || ST.grade || ST.status);
+
+/* ---------- geometry ---------- */
+function haversine(a, b) {
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+function fmtDist(m) {
+  if (m < 1000) return Math.max(50, Math.round(m / 50) * 50) + ' ' + t('u.m');
+  return (m / 1000).toFixed(1) + ' ' + t('u.km');
+}
+function fmtTime(m) {
+  const min = Math.max(1, Math.round(m / WALK_SPEED));
+  if (min < 60) return min + ' ' + t('u.min');
+  const h = Math.floor(min / 60), r = min % 60;
+  return h + ' ' + t('u.h') + (r ? ' ' + r + ' ' + t('u.mm') : '');
+}
+const routeSpots = () => ST.route.map(id => spotById.get(id)).filter(Boolean);
+function legs() {
+  const rs = routeSpots(), out = [];
+  for (let i = 0; i < rs.length - 1; i++) out.push(haversine(rs[i], rs[i + 1]));
+  return out;
 }
 
-function renderPage(){
- const modalOpen=$('#detail').open;
- if(map){map.remove();map=null;}if(mapObserver){mapObserver.disconnect();mapObserver=null;}
- markerLayer=null; routeLayer=null; mapUnavailable=false; tileFailures=0; lastMapSize=null; fitPending=true;
- document.documentElement.lang=State.lang==='en'?'en':State.lang==='ja'?'ja':'zh-Hant';document.title=titleText();
- $('.skip-link').textContent=tx('跳到地圖與清單','Skip to map and list','地図と一覧へ');
- $('#site-header').innerHTML=`<a class="brand" href="#app">${leaf()}<span>${titleText()}</span></a><nav aria-label="${tx('主要導覽','Main navigation','メインナビ')}"><a href="#explore">${tx('探索','Explore','探す')}</a>${C.route?`<a href="#route-section" data-route-jump>${tx('散步','Walk','散歩')}</a>`:''}<a href="#sources">${tx('來源','Sources','出典')}</a></nav>${C.language?`<div class="language"><button id="lang-zh" aria-pressed="${State.lang==='zh'}" type="button">繁體中文</button><button id="lang-other" aria-pressed="${State.lang!=='zh'}" type="button">${C.language==='en'?'English':'日本語'}</button></div>`:''}`;
- $('#app').innerHTML=`<section class="hero"><div class="hero-copy"><h1>${titleText()}</h1><p class="hero-subtitle">${tx(C.subtitle,'A walk through Tokyo starts with places and evidence you can trace.','確認できる場所と出典から、東京の秋の散歩を。')}</p><div class="hero-facts"><span>${P.length} ${tx('處可查證地點','verified locations','確認済みスポット')}</span><span>${tx('快照','Snapshot','確認日')} 2026-10-02${C.theme==='japan'?'／北海道補查10-04':''}</span><span>${tx('當季實測','Current-season observations','当季観測')} 0</span></div><p class="honesty">${noticeBox()}</p></div><div class="hero-art" aria-hidden="true">${leaf()}<span>${C.theme==='evidence'?'EVIDENCE / TOKYO':C.theme==='index'?'TOKYO / INDEX':C.theme==='japan'?'JAPAN / AUTUMN':'TOKYO / GINKGO'}</span></div></section>${dateControls()}${C.theme!=='japan'?seasonGuide():`<section class="japan-legend" aria-label="葉況圖例">${[0,1,3,4,5].map(i=>`<span>${leaf(C.stageColors[i])}${stageNames[i][0]}</span>`).join('')}<span>${leaf('#797c77')}未確認</span><p>有日期的觀測才顯示階段；一般時程與過去資料不當作今年葉況。</p></section>`}<section id="explore" aria-labelledby="explore-title"><div class="section-heading"><h2 id="explore-title">${tx('找到你的秋日地點','Find your autumn place','秋のスポットを探す')}</h2><p id="result-count" aria-live="polite"></p></div>${filtersHtml()}<div class="view-tabs" role="tablist" aria-label="${tx('瀏覽方式','View mode','表示切替')}"><button id="map-tab" role="tab" aria-selected="${State.tab==='map'}" aria-controls="map-panel" type="button">${tx('地圖','Map','地図')}</button><button id="list-tab" role="tab" aria-selected="${State.tab==='list'}" aria-controls="list-panel" type="button">${tx('清單','List','一覧')}</button></div><div class="explorer" data-tab="${State.tab}"><section id="map-panel" class="map-panel" aria-label="${tx('景點地圖','Place map','スポット地図')}"><div class="map-toolbar"><span>${tx('近似代表點・不是銀杏樹精確位置','Approximate points; not exact tree locations','近似代表点・樹木の正確な位置ではありません')}</span><button id="reset-map" type="button">${tx(C.theme==='japan'?'全日本視野':'顯示全部地點','Show all locations','全スポットを表示')}</button></div><div id="map" class="map" tabindex="0" aria-label="${tx('地圖：點選地點或群組','Map: select a place or group','地図：スポットまたはグループを選択')}"></div><div id="svg-map" class="svg-map" ${C.map==='leaflet'?'hidden':''}></div><p class="map-caption">${C.map==='svg'?tx('東京區域示意圖；按近似座標投影，並非道路或導航地圖。','Schematic projection of approximate Tokyo coordinates; no roads or navigation.','近似座標による東京の位置イメージ。道路・ナビ地図ではありません。'):tx('© OpenStreetMap contributors・Leaflet；地圖需要網路。','© OpenStreetMap contributors · Leaflet; maps require a network connection.','© OpenStreetMap contributors・Leaflet。地図は通信が必要です。')}</p><p id="map-error" class="honesty" hidden></p></section><section id="list-panel" class="list-panel" aria-label="${tx('景點清單','Place list','スポット一覧')}"><div id="place-list"></div></section></div></section>${C.timeline?'<section id="timeline" class="timeline-section"></section>':''}${C.pending?'<section id="pending" class="pending-section"></section>':''}${routeHtml()}${sourcesHtml()}`;
- const englishFooter='This website is for educational, non-profit use. Check each site operator’s official announcements for current foliage and opening information. This site does not provide live observations or navigation.';
- $('#site-footer').innerHTML=`${leaf()}<div><p>${tx(C.footer,C.theme==='journal'?englishFooter:'For educational, non-profit use. Check official announcements before travelling.','非営利の授業用サイトです。訪問前に各管理者の公式発表を確認してください。')}</p>${C.theme==='journal'?`<p lang="${State.lang==='en'?'zh-Hant':'en'}">${State.lang==='en'?C.footer:englishFooter}</p>`:''}<p>${tx('資料整理日期','Prepared on','整理日')} 2026-10-04 · ${link(D.originalSheet,tx('原始資料表','Original source sheet','元の資料表'))}</p>${C.map==='leaflet'?`<p>${link('https://leafletjs.com','Leaflet')} · ${link('https://www.openstreetmap.org/copyright','© OpenStreetMap contributors')}</p>`:''}</div>`;
- refineReadingOrder();bindControls();filterPlaces(false);initMap();renderRoute();renderTimeline();renderPending();updateDateOutput();
- if(State.selected&&modalOpen)fillDetail(P.find(p=>p.id===State.selected));
- document.querySelectorAll('[data-photo]').forEach(img=>img.addEventListener('error',()=>{img.hidden=true;}));
+/* ---------- toast ---------- */
+let toastTimer = 0;
+function toast(msg, action) {
+  const el = $('#toast'); if (!el) return;
+  el.textContent = '';
+  const sp = document.createElement('span'); sp.textContent = msg; el.appendChild(sp);
+  if (action) { const a = document.createElement('a'); a.href = action.href; a.textContent = action.label; a.addEventListener('click', () => { closeDetail({ restore: false }); el.hidden = true; }); el.appendChild(a); }
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, action ? 7000 : 4500);
 }
-function bindControls(){
- $('#filters').addEventListener('submit',e=>e.preventDefault());
- $('#query').addEventListener('input',e=>{State.query=e.target.value;filterPlaces();});
- C.filters.forEach(k=>$('#filter-'+k).addEventListener('change',e=>{State[k]=e.target.value;filterPlaces();}));
- $('#reset').addEventListener('click',()=>{State.query='';State.region='';State.grade='';State.status='';State.recommend='';State.peakOnly=false;$('#query').value='';C.filters.forEach(k=>$('#filter-'+k).value='');if($('#peak-only'))$('#peak-only').checked=false;filterPlaces();});
- $('#map-tab').addEventListener('click',()=>changeTab('map'));$('#list-tab').addEventListener('click',()=>changeTab('list'));
- document.querySelectorAll('[role=tab]').forEach(tab=>tab.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();let target=State.tab==='map'?'list':'map';changeTab(target);$('#'+target+'-tab').focus();}}));
- $('#reset-map').addEventListener('click',()=>{svgBounds=null;fitPending=true;resizeMap(true);renderSvg();});
- if(C.language){$('#lang-zh').addEventListener('click',()=>setLanguage('zh'));$('#lang-other').addEventListener('click',()=>setLanguage(C.language));}
- if(C.date)$('#date-slider').addEventListener('input',e=>setDate(new Date(Number(e.target.value)*86400000).toISOString().slice(0,10)));
- if(C.play){$('#play').addEventListener('click',togglePlayback);$('#motion').addEventListener('click',()=>{State.motion=!State.motion;document.body.classList.toggle('no-motion',!State.motion);$('#motion').textContent=State.motion?'暫停見頃動畫':'啟用見頃動畫';$('#motion').setAttribute('aria-pressed',String(State.motion));});$('#peak-only').addEventListener('change',e=>{State.peakOnly=e.target.checked;filterPlaces();});}
- if(C.geo)$('#nearby').addEventListener('click',nearby);
- if(C.route){$('#clear-route').addEventListener('click',()=>{State.route=[];saveRoute();renderRoute();renderList();updateMap();});if(C.autoOrder)$('#auto-order').addEventListener('click',autoOrder);if(C.route==='recommended'){$('#half-plan').addEventListener('click',()=>setPlan('half'));$('#day-plan').addEventListener('click',()=>setPlan('day'));}}
-}
-function changeTab(tab){State.tab=tab;$('.explorer').dataset.tab=tab;$('#map-tab').setAttribute('aria-selected',String(tab==='map'));$('#list-tab').setAttribute('aria-selected',String(tab==='list'));requestAnimationFrame(()=>{resizeMap();renderSvg();});}
-function setLanguage(lang){State.lang=lang;saveStore('-lang',lang);renderPage();$('#'+(lang==='zh'?'lang-zh':'lang-other'))?.focus({preventScroll:true});}
-function recommendation(p){if(C.date!=='observations'||!observation(p))return null;return 3+(State.date.startsWith('2026')?1:0);}
-function filterPlaces(refit=true){let query=State.query.trim().toLocaleLowerCase();filtered=P.filter(p=>{const s=statusOf(p),r=recommendation(p);return (!query||[p.name_ja,p.name_zh,p.area,p.proof_note].join(' ').toLocaleLowerCase().includes(query))&&(!State.region||State.region===p.region)&&(!State.grade||State.grade===p.source.grade)&&(!State.status||(State.status==='unknown'?s===null:(C.theme==='japan'&&State.status==='1'?(s===1||s===2):String(s)===State.status)))&&(!State.peakOnly||s===3)&&(!State.recommend||(State.recommend==='pending'?r===null:String(r)===State.recommend));});if(State.geo)filtered.sort((a,b)=>distance(State.geo,a)-distance(State.geo,b));$('#result-count').textContent=`${filtered.length} / ${P.length} ${tx('處地點','places','スポット')}`;renderList();if(refit)fitPending=true;updateMap();renderSvg();}
-function renderList(){
- const listFocus=keepFocus($('#place-list'));
- $('#place-list').innerHTML=filtered.length?filtered.map((p,i)=>{let stage=statusOf(p);return `<article class="spot-card ${State.selected===p.id?'selected':''}" data-id="${esc(p.id)}"><div class="spot-number" aria-hidden="true">${String(P.indexOf(p)+1).padStart(2,'0')}</div><div class="spot-main"><button type="button" class="place-open" data-open="${esc(p.id)}"><h3>${esc(nameOf(p))}</h3><span>${esc(p.name_ja)}</span><span class="state-line" style="--stage:${stage===null?'#797c77':C.stageColors[stage]}">${leaf()}${esc(statusLabel(p))}</span></button><p class="place-meta">${esc(regionName(p.region))} · ${esc(gradeLabel(p.source.grade))}</p>${C.theme==='season'?`<p>${esc(p.source.operator)}</p><p>${esc(p.source.finding)}</p><p>${tx('證據日期','Evidence date','証拠日')} ${esc(p.source.evidence_date||unknown())} · ${tx('來源原表查核','Original audit','出典表の確認')} ${esc(p.source.audited_at)}</p><p>${esc(p.source.cadence||unknown())}</p><p>${esc(p.source.caveat)}</p>`:''}${State.geo?`<p>${tx('距你的位置直線距離（估算）','Estimated straight-line distance from your location','現在地からの直線距離（推定）')} ${distLabel(distance(State.geo,p))}</p>`:''}${C.theme==='japan'?`<p>${recommendation(p)?'★'.repeat(recommendation(p))+'☆'.repeat(5-recommendation(p))+'（本站依歷史證據整理）':'推薦待確認'}</p>`:''}<div class="spot-actions">${link(p.source.url,tx(C.theme==='season'?'查看最新狀況':'官方來源','Official source','公式情報'))}${C.route==='custom'||C.route==='five'?`<button type="button" data-route="${esc(p.id)}" aria-pressed="${State.route.includes(p.id)}">${tx(State.route.includes(p.id)?'移除停靠':'加入停靠',State.route.includes(p.id)?'Remove stop':'Add stop',State.route.includes(p.id)?'立ち寄りを削除':'立ち寄りを追加')}</button>`:''}</div></div></article>`;}).join(''):`<div class="empty"><h3>${tx('沒有符合的地點','No matching places','条件に合うスポットはありません')}</h3><p>${tx('請調整搜尋或篩選；缺少觀測資料不是零處銀杏。','Try different filters. Missing observations do not mean there are no ginkgo trees.','検索条件を変更してください。観測がないことはイチョウがないことを意味しません。')}</p></div>`;
- $('#place-list').querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openPlace(b.dataset.open)));
- $('#place-list').querySelectorAll('[data-route]').forEach(b=>b.addEventListener('click',()=>toggleRoute(b.dataset.route)));
- $('#place-list').querySelectorAll('.spot-card').forEach(card=>card.addEventListener('click',e=>{if(!e.target.closest('a,button'))openPlace(card.dataset.id);}));
- restoreFocus($('#place-list'),listFocus);
-}
-function rawField(label,val){return `<dt>${label}</dt><dd>${esc(factText(val))}</dd>`;}
-function fillDetail(p){if(!p)return;
- const f=p.facts,s=p.source, obs=observation(p);
- let html=`<div class="dialog-top"><span>${esc(regionName(p.region))} · ${esc(p.id)}</span><button id="close-detail" type="button" aria-label="${tx('關閉詳情','Close details','詳細を閉じる')}">×</button></div><h2 id="detail-title">${esc(nameOf(p))}</h2><p class="name-original">${esc(p.name_ja)}</p>${State.lang==='en'?'<p>English name not verified. Evidence summary: the source supports this ginkgo location; a 2026 site-specific foliage stage remains unverified. The quotations below retain their original language.</p>':State.lang==='ja'?'<p>以下は出典の原文引用です。中国語名は編集上の訳名です。</p>':'<p>中文名稱為編輯譯名；來源原文另列，未冒充官方譯名。</p>'}<p class="detail-status">${esc(statusLabel(p))}</p><p>${noticeBox()}</p><dl class="detail-grid">${rawField(tx('樹種','Species','樹種'),tx('銀杏；其他樹種紅葉不套用','Ginkgo; other species do not determine its stage','イチョウ。他樹種の紅葉は適用しません。'))}${rawField(tx('觀測日期','Observation date','観測日'),C.season?tx('未有當季觀測；此為推估／示意','No site observation; seasonal estimate only','当季観測なし。季節イメージです。'):obs?obs.date:p.observation_date)}${rawField(tx('資料性質','Data type','資料の種類'),C.season?tx('全東京平年值季節示意','Tokyo-wide seasonal illustration','東京全域の平年値イメージ'):obs?tx('有日期歷史觀測','Dated historical observation','日付付き過去観測'):tx('官方一般資訊；當季葉況待補證','Official general information; current foliage pending','公式一般情報・当季状態は未確認'))}${rawField(tx('近似座標','Approximate coordinates','近似座標'),`${p.lat}, ${p.lng} — ${tx('近似值／園區代表點','approximate representative point','近似代表点')}`)}${rawField(tx('座標依據（原文）','Coordinate basis (source text)','座標の根拠（原文）'),p.coord.basis)}${rawField(tx('地址（來源原文）','Address (source text)','住所（出典原文）'),f.address_ja)}${rawField(tx('交通（來源原文）','Access (source text)','アクセス（出典原文）'),f.access)}${rawField(tx('最佳觀賞時節（一般資訊）','Usual viewing season (general information)','例年の観賞時期（一般情報）'),f.season_wording||f.ginkgo_general_note)}${rawField(tx('特色（來源原文）','Features (source text)','特徴（出典原文）'),f.ginkgo_note||p.proof_note)}${rawField(tx('入場費（來源原文）','Admission (source text)','料金（出典原文）'),f.fee)}${rawField(tx('開放時間（來源原文）','Opening hours (source text)','開園時間（出典原文）'),p.source_id==='TKG-002'?tx('官方來源時間衝突：未確認，請查官方公告。','Official hours conflict; verify with the operator.','公式情報の時間が異なります。管理者に確認してください。'):f.hours)}${rawField(tx('休園／入場限制（來源原文）','Closures / restrictions (source text)','休園・制限（出典原文）'),[f.closed_days,f.rules].filter(Boolean))}${rawField(tx('管理／提供單位','Operator (source text)','管理・提供者（原文）'),s.operator)}${rawField(tx('原表來源等級','Original source grade','元の出典区分'),gradeLabel(s.grade))}${rawField(tx('證據支持內容（原文）','Supported content (source text)','証拠の内容（原文）'),p.proof_note)}${rawField(tx('文章／公告或證據日期','Publication / evidence date','記事・発表・証拠日'),s.evidence_date)}${rawField(tx('文章日期','Article date','記事日'),p.history.at(-1)?.date||(p.source_id==='TKG-019'?'2025-11-08':null))}${rawField(tx('公告日期','Announcement date','発表日'),p.source.grade==='S'?p.source.evidence_date:null)}${rawField(tx('照片日期','Photo date','写真撮影日'),p.source_id==='TKG-016'?'2026-09-22':p.source_id==='TKG-019'?'2025-11-06':null)}${rawField(tx('預測期間','Forecast period','予測期間'),null)}${rawField(tx('資料查核日期','Snapshot verification date','資料確認日'),p.snapshot)}${rawField(tx('更新頻率（來源原文）','Update cadence (source text)','更新頻度（出典原文）'),s.cadence||tx('未公布','Not published','未公表'))}${rawField(tx('注意事項（原文）','Caveats (source text)','注意事項（原文）'),s.caveat)}${rawField(tx('原表列號與群組','Original row and group','元の行・グループ'),`${s.row_number||'—'} · ${s.source_id} · ${s.group_id}`)}</dl><div class="detail-links">${link(s.url,tx(C.theme==='season'?'查看最新狀況':'官方來源','Official source','公式情報'))}${link(p.proof_url,tx('銀杏證據原頁','Ginkgo evidence','イチョウの証拠'))}${link(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name_ja+' '+p.lat+','+p.lng)}`,tx('Google 地圖查詢','Search in Google Maps','Googleマップで検索'))}</div><p>${tx('前往前，實際開放、交通與景況以管理單位公告為準。','Check the operator for current access, transport and foliage conditions.','訪問前に開放・交通・葉の状態を管理者の発表で確認してください。')}</p>`;
- if(p.history.length)html+=`<section class="detail-history"><h3>${tx('有日期的過去紀錄','Dated historical records','日付付き過去の記録')}</h3>${p.history.map(h=>`<p><time>${h.date}</time> · ${esc(tx(h.note,h.stage===3?'Past official record: ginkgo at peak viewing.':'Past official ginkgo record; not current conditions.','過去の公式イチョウ記録。今年の状態ではありません。'))} ${link(h.url,tx('原文','Source','原文'))}</p>`).join('')}</section>`;
- if(C.nearest){const near=P.filter(o=>o.id!==p.id).map(o=>({p:o,d:distance(p,o)})).sort((a,b)=>a.d-b.d).slice(0,3);html+=`<section><h3>${tx('最近三個其他地點','Three nearest other places','最も近い他の3スポット')}</h3><p>${tx('依近似座標以 Haversine 計算直線距離（估算），非步行距離。','Haversine straight-line estimates from approximate coordinates, not walking distances.','近似座標からHaversine式で計算した直線距離（推定）。徒歩距離ではありません。')}</p>${near.map(n=>`<button type="button" class="nearest-place" data-nearest="${n.p.id}">${esc(nameOf(n.p))} · ${distLabel(n.d)}</button>`).join('')}</section>`;}
- if(C.route==='custom'||C.route==='five')html+=`<button id="detail-route" type="button">${tx(State.route.includes(p.id)?'移除停靠':'加入停靠',State.route.includes(p.id)?'Remove stop':'Add stop',State.route.includes(p.id)?'立ち寄りを削除':'立ち寄りを追加')}</button>`;
- $('#detail-content').innerHTML=html;$('#close-detail').addEventListener('click',()=>$('#detail').close());if($('#detail-route'))$('#detail-route').addEventListener('click',()=>{toggleRoute(p.id);fillDetail(p);});document.querySelectorAll('[data-nearest]').forEach(b=>b.addEventListener('click',()=>openPlace(b.dataset.nearest)));
-}
-function openPlace(id){const p=P.find(p=>p.id===id);if(!p)return;State.selected=id;renderList();updateMarkerHighlight();fillDetail(p);if(!$('#detail').open)$('#detail').showModal();}
-$('#detail').addEventListener('click',e=>{if(e.target===$('#detail')){const r=$('#detail').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('#detail').close();}});
 
-$('#detail').addEventListener('close',()=>{
- const active=document.activeElement;
- if(active&&active!==document.body&&active!==document.documentElement&&!$('#detail').contains(active))return;
- const item=[...document.querySelectorAll('[data-open]')].find(el=>el.dataset.open===State.selected);
- if(item&&item.getClientRects().length)item.focus({preventScroll:true});
- else if($('#map')?.getClientRects().length)$('#map').focus({preventScroll:true});
-});
+/* ---------- static i18n ---------- */
+function applyStatic() {
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
+  document.title = t('title');
+  const md = $('meta[name="description"]'); if (md) md.setAttribute('content', t('meta.desc'));
+  $$('[data-t]').forEach(el => { el.textContent = t(el.getAttribute('data-t')); });
+  $$('[data-t-ph]').forEach(el => el.setAttribute('placeholder', t(el.getAttribute('data-t-ph'))));
+  $$('[data-t-aria]').forEach(el => { if (el.id !== 'ribbon') el.setAttribute('aria-label', t(el.getAttribute('data-t-aria'))); });
+  $$('.lang-btn').forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)));
+  const br = $('.brand'); if (br) br.setAttribute('aria-label', t('title'));
+  $('#pane-list').setAttribute('aria-label', t('pane.list'));
+  $('#pane-map').setAttribute('aria-label', t('pane.map'));
+}
 
-function saveRoute(){if(C.store)saveStore('-route',State.route);}
-function toggleRoute(id){if(State.route.includes(id))State.route=State.route.filter(v=>v!==id);else {if(State.route.length>=(C.route==='five'?26:5)){showNotice(tx('最多選擇五個停靠點。','Choose up to five stops.','立ち寄りは5か所までです。'));return;}State.route.push(id);}saveRoute();renderRoute();renderList();drawRoute();renderSvg();}
-function directions(stops,mode='walking'){if(stops.length<2)return '';const pos=p=>p.lat+','+p.lng;let q=new URLSearchParams({api:'1',origin:pos(stops[0]),destination:pos(stops.at(-1)),travelmode:mode});if(stops.length>2)q.set('waypoints',stops.slice(1,-1).map(pos).join('|'));return 'https://www.google.com/maps/dir/?'+q.toString();}
-function proposalStops(regionKey,count){return routeGroups[regionKey].ids.map(id=>P.find(p=>p.id===id)).filter(Boolean).slice(0,count);}
-function renderRoute(){if(!C.route)return;
- const jump=$('[data-route-jump]');
- if(jump){let count=jump.querySelector('.route-count');if(!count){count=document.createElement('span');count.className='route-count';jump.append(count);}count.textContent=State.route.length+' / '+(C.route==='custom'?5:C.route==='recommended'?4:26);count.setAttribute('aria-label',tx('已選'+State.route.length+'個停靠點',State.route.length+' selected stops',State.route.length+'か所選択'));}
- const routeFocus=keepFocus($('#route-stops'));
- if(C.route==='five'||C.route==='teaching'){$('#proposals').innerHTML=['north','east','central','innerwest','west'].map(r=>{let count=C.route==='teaching'?3:2;let stops=proposalStops(r,count);return `<article><h3>${tx(...routeGroups[r].names)}</h3><p>${stops.map(p=>esc(nameOf(p))).join(' → ')}</p><button type="button" data-proposal="${r}">${tx('採用這個停靠提案','Use these stops','この立ち寄り順を使う')}</button>${link(directions(stops),tx('另開步行地圖核對','Check walking roads externally','徒歩経路を別の地図で確認'))}</article>`;}).join('');document.querySelectorAll('[data-proposal]').forEach(b=>b.addEventListener('click',()=>{State.route=proposalStops(b.dataset.proposal,C.route==='teaching'?3:2).map(p=>p.id);renderRoute();renderList();drawRoute();renderSvg();}));}
- const stops=State.route.map(id=>P.find(p=>p.id===id)).filter(Boolean),hasTime=C.routeTime||C.route==='recommended';
- $('#route-hint').textContent=tx(C.route==='custom'?'選擇 2–5 個地點；上下調整停靠順序。':'停靠提案需自行核對實際道路與開放。','Choose 2–5 places and adjust their order. Verify roads and access before travelling.','2～5か所を選び、順番を変更できます。実際の道路・開放を確認してください。');
- $('#route-stops').innerHTML=stops.map((p,i)=>`<li><span class="route-num">${i+1}</span><div><strong>${esc(nameOf(p))}</strong>${i&&['custom','recommended'].includes(C.route)?`<p>${tx('與前站直線距離（估算）','Straight-line estimate from previous stop','前の地点からの直線距離（推定）')} ${distLabel(distance(stops[i-1],p))}${hasTime?` · ${tx('約'+Math.ceil(distance(stops[i-1],p)/80)+'分鐘（80公尺／分示意）','About '+Math.ceil(distance(stops[i-1],p)/80)+' min (80 m/min estimate)')}`:''}</p>`:''}${C.route==='recommended'?`<p>${esc(statusLabel(p))} · ${recommendation(p)?'★'.repeat(recommendation(p)):'推薦待確認'}；建議停留${State.plan==='half'?30:45}分鐘（行程建議）</p>`:''}</div>${C.route==='custom'?`<div class="order-buttons"><button type="button" data-up="${i}" ${i===0?'disabled':''} aria-label="${tx('上移','Move up','上へ')} ${esc(nameOf(p))}">↑</button><button type="button" data-down="${i}" ${i===stops.length-1?'disabled':''} aria-label="${tx('下移','Move down','下へ')} ${esc(nameOf(p))}">↓</button><button type="button" data-remove="${p.id}" aria-label="${tx('移除','Remove','削除')} ${esc(nameOf(p))}">×</button></div>`:''}</li>`).join('');
- let total=stops.slice(1).reduce((sum,p,i)=>sum+distance(stops[i],p),0);
- $('#route-summary').innerHTML=stops.length>=2&&['custom','recommended'].includes(C.route)?`<p><strong>${tx('總直線距離（估算）','Estimated total straight-line distance','直線距離の合計（推定）')} ${distLabel(total)}</strong></p><p>${tx('依近似座標，以 Haversine 公式計算；非實際步行路程。','Haversine distances from approximate coordinates; not actual walking distances.','近似座標からHaversine式で計算。実際の徒歩距離ではありません。')}${hasTime?`${tx('約'+Math.ceil(total/80)+'分鐘（每分鐘80公尺估算），不含繞路與停留；實際以Google地圖為準。','About '+Math.ceil(total/80)+' min at 80 m/min; excludes detours and stops. Verify the actual route in Google Maps.')}`:''}</p>${C.route==='recommended'?`<p>步行示意＋建議停留，總計約${Math.ceil(total/80)+stops.length*(State.plan==='half'?30:45)}分鐘；僅為規劃估算。移動方式先以步行示意，實際道路／電車時間請查Google地圖，不提供即時班次。</p>`:''}`:'';
- $('#route-link').innerHTML=stops.length>=2?link(directions(stops),tx('在 Google 地圖核對步行路線','Verify walking route in Google Maps','Googleマップで徒歩ルートを確認')):'';
- $('#route-stops').querySelectorAll('[data-up],[data-down]').forEach(b=>b.addEventListener('click',()=>{let i=Number(b.dataset.up??b.dataset.down),j=b.dataset.up!==undefined?i-1:i+1;[State.route[i],State.route[j]]=[State.route[j],State.route[i]];saveRoute();renderRoute();drawRoute();renderSvg();}));
- $('#route-stops').querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>toggleRoute(b.dataset.remove)));
- restoreFocus($('#route-stops'),routeFocus);
- if(C.route==='recommended')$('#recommend-note').textContent=`${State.date}：${filtered.filter(p=>statusOf(p)===3).length?'含有日期的見頃歷史紀錄，不能當作今年狀況。':'沒有該日可核實的見頃與推薦資料；以下是一般地點規劃草案，不宣稱最佳賞銀杏行程。'}`;
- drawRoute();
+/* ---------- hero ---------- */
+function renderHero() {
+  const nPend = SPOTS.filter(s => statusKey(s) === 'pending').length;
+  const nNone = SPOTS.filter(s => statusKey(s) === 'none').length;
+  const nLive = SPOTS.filter(s => statusKey(s).startsWith('stage')).length;
+  $('#ledger').innerHTML =
+    '<div><dt>' + esc(t('led.checked')) + '</dt><dd>' + esc(META.snapshot || t('d.na')) + '</dd><dd class="sub">' + esc(t('led.checked.sub', META.sheetAudited || t('d.na'))) + '</dd></div>' +
+    '<div><dt>' + esc(t('led.spots')) + '</dt><dd>' + SPOTS.length + '</dd><dd class="sub">' + esc(t('led.spots.sub')) + '</dd></div>' +
+    '<div><dt>' + esc(t('led.now')) + '</dt><dd>' + nLive + '</dd><dd class="sub">' + esc(t('led.now.sub', nPend)) + '</dd></div>';
+  const pendNames = SPOTS.filter(s => statusKey(s) === 'pending').map(s => lang === 'en' ? (s.name_en || s.name_ja) : s.name_ja);
+  const namesHtml = pendNames.map(n => '<span lang="ja">' + esc(n) + '</span>').join(lang === 'en' ? ', ' : '、');
+  $('#hero-status').innerHTML = nPend ? esc(t('hero.status', nNone, nPend, '@@NAMES@@')).replace('@@NAMES@@', namesHtml) : esc(t('hero.status.nopending', nNone));
+  $('#foot-meta').textContent = t('foot.meta', META.snapshot || '', META.sheetAudited || '', META.built || '');
 }
-function autoOrder(){if(State.route.length<2)return;let remaining=State.route.slice(1).map(id=>P.find(p=>p.id===id)),sorted=[P.find(p=>p.id===State.route[0])];while(remaining.length){remaining.sort((a,b)=>distance(sorted.at(-1),a)-distance(sorted.at(-1),b));sorted.push(remaining.shift());}State.route=sorted.map(p=>p.id);saveRoute();renderRoute();drawRoute();}
-function setPlan(plan){State.plan=plan;let peaks=P.filter(p=>statusOf(p)===3);let center=peaks[0]||P.find(p=>p.source_id==='TKG-011');let nearby=P.filter(p=>p.id!==center.id&&p.region!=='hokkaido').sort((a,b)=>distance(center,a)-distance(center,b));State.route=[center,...nearby.slice(0,plan==='half'?1:3)].map(p=>p.id);renderRoute();drawRoute();}
-function updateDateOutput(){if(!C.date)return;$('#date-value').textContent=State.date;$('#season-value').textContent=C.date==='season'?`${stageNames[season(State.date)][0]}（推估／示意）`:'';$('#date-slider').value=dateNumber(State.date);}
-function setDate(date){State.date=date;updateDateOutput();filterPlaces();if(C.route==='recommended'&&State.route.length)setPlan(State.plan);else renderRoute();renderTimeline();if($('#detail').open)fillDetail(P.find(p=>p.id===State.selected));}
-function togglePlayback(){State.playing=!State.playing;$('#play').textContent=State.playing?'暫停':'播放';clearInterval(timer);if(State.playing)timer=setInterval(()=>{let next=dateNumber(State.date)+Number($('#speed').value);if(next>dateNumber(end)){next=dateNumber(start);}setDate(new Date(next*86400000).toISOString().slice(0,10));},1000);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&State.playing){State.playing=false;clearInterval(timer);if($('#play'))$('#play').textContent='播放';}});
-function nearby(){if(!navigator.geolocation){showNotice('瀏覽器未提供定位；可繼續搜尋與篩選。');return;}$('#nearby').disabled=true;navigator.geolocation.getCurrentPosition(pos=>{State.geo={lat:pos.coords.latitude,lng:pos.coords.longitude};$('#nearby').disabled=false;filterPlaces();showNotice('已依近似座標的直線距離排序（估算），不代表步行距離。');},()=>{$('#nearby').disabled=false;showNotice('定位未取得或已拒絕；可繼續搜尋、篩選及手動安排路線。');},{enableHighAccuracy:false,timeout:7000,maximumAge:60000});}
-function renderTimeline(){if(!C.timeline)return;const items=P.flatMap(p=>p.history.map(h=>({p,h}))).sort((a,b)=>a.h.date.localeCompare(b.h.date));$('#timeline').innerHTML=`<div class="section-heading"><h2>證據日期時間軸</h2><p>文章、觀測、照片與查核日期分開；過去紀錄不代表2026狀況。</p></div><div class="timeline-items">${items.map(({p,h})=>`<article><time>${h.date}</time><h3>${esc(p.name_ja)}</h3><p>${esc(h.note)}</p><button type="button" data-timeline="${p.id}" data-date="${h.date}">定位這個地點</button>${link(h.url,'歷史原文')}</article>`).join('')}</div><p>來源查核日期：2026-10-02；八王子照片日期：2026-09-22（未明示葉況階段）；其他照片／預測日期：資料未提供。</p>`;document.querySelectorAll('[data-timeline]').forEach(b=>b.addEventListener('click',()=>{if(C.date)setDate(b.dataset.date);State.query='';State.region='';State.status='';State.grade='';State.peakOnly=false;$('#query').value='';C.filters.forEach(k=>$('#filter-'+k).value='');if($('#peak-only'))$('#peak-only').checked=false;filterPlaces();State.selected=b.dataset.timeline;changeTab('map');const p=P.find(p=>p.id===State.selected);if(map)map.setView([p.lat,p.lng],14);else{svgBounds=null;renderSvg();}openPlace(p.id);}));}
-function renderPending(){if(!C.pending)return;$('#pending').innerHTML=`<div class="section-heading"><h2>待補證清單</h2><p>不是葉況不佳，而是當季證據不足。</p></div><div class="pending-list">${P.map(p=>`<p><strong>${esc(p.name_ja)}</strong>：缺2026銀杏現場階段與觀測日期${['B','C'].includes(p.source.grade)?'；官方銀杏專項內容待補證':''}${p.source_id==='TKG-016'?'；當季僅有照片與一般轉色公告，無法指派階段':''}。${link(p.source.url,'官方來源')}</p>`).join('')}<p>僅第三方：TKG-033～037，不作當季官方實測。失效／排除：TKG-038、039，僅保留來源列。物種未證實：TKG-032；神代植物公園來源只有楓類，不能當銀杏。</p></div>`;}
-function mapFallback(){mapUnavailable=true;$('#map-error').hidden=false;$('#map-error').textContent=tx('外部地圖無法使用；下方近似位置示意圖與清單仍可操作，請用官方連結查資料。','External maps are unavailable. The schematic map and list still work; use official links for evidence.','外部地図が利用できません。位置イメージと一覧は操作できます。公式情報を確認してください。');$('#map').hidden=true;$('#svg-map').hidden=false;renderSvg();}
-function initMap(){if(C.map==='svg'){$('#map').hidden=true;$('#svg-map').hidden=false;renderSvg();return;}if(typeof window.L==='undefined'){mapFallback();return;}
- map=L.map('map',{trackResize:false,zoomControl:true,scrollWheelZoom:false});markerLayer=L.layerGroup().addTo(map);routeLayer=L.layerGroup().addTo(map);
- map.setView(C.theme==='japan'?[37,137]:[35.69,139.6],C.theme==='japan'?4:10);
- L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',maxZoom:19}).on('tileerror',()=>{tileFailures++;if(tileFailures>=3)mapFallback();}).addTo(map);
- map.on('zoomend',()=>drawMarkers());map.on('moveend',()=>updateMarkerHighlight());
- mapObserver=new ResizeObserver(()=>resizeMap());mapObserver.observe($('#map'));
- fitPending=true;requestAnimationFrame(()=>{resizeMap(true);updateMap();});
+
+/* ---------- filter controls ---------- */
+function optHtml(v, label, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(label) + '</option>'; }
+function renderFilters() {
+  const regions = Object.keys(REGIONS);
+  const rc = {}; SPOTS.forEach(s => { rc[s.region] = (rc[s.region] || 0) + 1; });
+  $('#f-region').innerHTML = optHtml('', t('f.all') + '（' + SPOTS.length + '）', !ST.region) + regions.filter(k => rc[k]).map(k => optHtml(k, regionName(k) + '（' + rc[k] + '）', ST.region === k)).join('');
+  const gc = {}; SPOTS.forEach(s => { const g = (rowById.get(s.source_id) || {}).grade; if (g) gc[g] = (gc[g] || 0) + 1; });
+  $('#f-grade').innerHTML = optHtml('', t('f.all') + '（' + SPOTS.length + '）', !ST.grade) + Object.keys(gc).sort().map(g => optHtml(g, g + ' · ' + bi(GRADES[g] || {}) + '（' + gc[g] + '）', ST.grade === g)).join('');
+  const cnt = k => SPOTS.filter(s => statusKey(s) === k).length;
+  const tok = (value, label, glyphId, n, extra) => '<label class="tok' + (n === 0 && value ? ' zero' : '') + (extra || '') + '"><input type="radio" name="status" value="' + esc(value) + '"' + (ST.status === value ? ' checked' : '') + '><span class="tok-body">' + (glyphId ? glyph(glyphId) : '') + '<span>' + esc(label) + '</span>' + (n != null ? '<span class="tok-n">' + n + '</span>' : '') + '<svg class="tok-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5L10 17.5L19 7"/></svg></span></label>';
+  let g2 = '';
+  for (let i = 1; i <= 6; i++) g2 += tok('stage' + i, lang === 'en' ? STAGES[i - 1].en : STAGES[i - 1].ja, 'st' + i, cnt('stage' + i));
+  $('#status-groups').innerHTML =
+    '<div class="sg"><p class="sg-h">' + esc(t('f.status.g1')) + '</p><div class="sg-list">' + tok('', t('f.all'), '', SPOTS.length, ' tok-all') + tok('none', t('status.none'), 'st-none', cnt('none')) + tok('pending', t('status.pending'), 'st-pend', cnt('pending')) + '</div></div>' +
+    '<div class="sg"><p class="sg-h">' + esc(t('f.status.g2')) + '</p><div class="sg-list">' + g2 + '</div></div>';
+  syncFilterUi();
 }
-function resizeMap(force=false){if(!map||mapUnavailable)return;let el=$('#map'),r=el.getBoundingClientRect();if(r.width<1||r.height<1)return;
- const significant=lastMapSize&&(Math.abs(r.width-lastMapSize.w)/lastMapSize.w>.25||Math.abs(r.height-lastMapSize.h)/lastMapSize.h>.25||(r.width>r.height)!==(lastMapSize.w>lastMapSize.h));
- map.invalidateSize({pan:false,animate:false});lastMapSize={w:r.width,h:r.height};if(force||fitPending||significant){fitPending=false;fitView();}drawMarkers();drawRoute();
+function syncFilterUi() {
+  const q = $('#q'); if (q.value !== ST.q) q.value = ST.q;
+  $('#q-clear').hidden = !ST.q;
+  const n = activeFilterCount();
+  const b = $('#filter-badge'); b.hidden = n === 0; b.textContent = n;
+  $('#f-clear').disabled = !anyFilter();
+  const open = ST.filtersOpen;
+  $('#filter-panel').classList.toggle('open', open);
+  $('#filter-toggle').setAttribute('aria-expanded', String(open));
 }
-window.addEventListener('resize',()=>{let w=innerWidth,h=innerHeight;if(Math.abs(w-previousWindow.w)/previousWindow.w>.25||Math.abs(h-previousWindow.h)/previousWindow.h>.25||(w>h)!==(previousWindow.w>previousWindow.h))fitPending=true;previousWindow={w,h};requestAnimationFrame(()=>{resizeMap();renderSvg();});});
-function fitView(){if(!map||mapUnavailable)return;let pts=filtered.length?filtered:P;if(C.theme==='japan'&&!State.query&&!State.region&&!State.status&&!State.recommend&&!State.peakOnly){map.fitBounds([[24,122],[46,146]],{padding:[48,48],animate:false});return;}map.fitBounds(L.latLngBounds(pts.map(p=>[p.lat,p.lng])),{padding:[48,48],maxZoom:pts.length===1?14:13,animate:false});}
-function groupPoints(points,project){let groups=points.map(p=>({ps:[p],x:project(p).x,y:project(p).y}));let changed=true;while(changed){changed=false;outer:for(let i=0;i<groups.length;i++){for(let j=i+1;j<groups.length;j++){if(Math.hypot(groups[i].x-groups[j].x,groups[i].y-groups[j].y)<55){let a=groups[i],b=groups[j],n=a.ps.length+b.ps.length;a.x=(a.x*a.ps.length+b.x*b.ps.length)/n;a.y=(a.y*a.ps.length+b.y*b.ps.length)/n;a.ps.push(...b.ps);groups.splice(j,1);changed=true;break outer;}}}}return groups;}
-function drawMarkers(){if(!map||mapUnavailable||!markerLayer)return;markerLayer.clearLayers();if($('#map').getBoundingClientRect().width<1)return;let groups=groupPoints(filtered,p=>map.latLngToContainerPoint([p.lat,p.lng]));groups.forEach(g=>{let p=g.ps[0],cluster=g.ps.length>1,lat=g.ps.reduce((s,p)=>s+p.lat,0)/g.ps.length,lng=g.ps.reduce((s,p)=>s+p.lng,0)/g.ps.length,stage=statusOf(p),color=stage===null?'#797c77':C.stageColors[stage],label=cluster?tx(`${g.ps.length}處地點，點選放大`,`${g.ps.length} places; zoom in`,`${g.ps.length}か所・拡大`):`${nameOf(p)} · ${statusLabel(p)}`;
- let icon=L.divIcon({className:`map-marker ${cluster?'cluster':''} ${State.selected&&g.ps.some(p=>p.id===State.selected)?'focused':''} ${stage===3&&C.play?'peak':''}`,html:`<span style="--marker:${color}">${cluster?g.ps.length:leaf(color)}</span><small class="marker-status">${C.season?stageNames[stage][0].split('（')[0]+tx('・示意',' · estimate','・推定'):cluster&&new Set(g.ps.map(statusOf)).size>1?tx('混合證據','Mixed evidence','証拠混在'):stage===null?tx(C.status,'Not verified','未確認'):stageNames[stage][0]}</small>`,iconSize:[44,44],iconAnchor:[22,22]});let m=L.marker([lat,lng],{icon,keyboard:true,title:label,alt:label}).addTo(markerLayer);m.on('click',()=>{if(cluster){map.fitBounds(L.latLngBounds(g.ps.map(p=>[p.lat,p.lng])),{padding:[60,60],maxZoom:18,animate:false});}else openPlace(p.id);});m._placeIds=g.ps.map(p=>p.id);});updateMarkerHighlight();}
-function updateMarkerHighlight(){if(markerLayer)markerLayer.eachLayer(m=>{let el=m.getElement();if(el)el.classList.toggle('focused',m._placeIds?.includes(State.selected));});renderSvg();}
-function updateMap(){if(!map||mapUnavailable){renderSvg();return;}resizeMap();drawMarkers();drawRoute();}
-function drawRoute(){if(!map||mapUnavailable||!routeLayer)return;routeLayer.clearLayers();let stops=State.route.map(id=>P.find(p=>p.id===id)).filter(Boolean);if(stops.length>=2)L.polyline(stops.map(p=>[p.lat,p.lng]),{color:'#86641e',weight:3,dashArray:'7 8',interactive:false}).addTo(routeLayer);}
-function renderSvg(){let root=$('#svg-map');if(!root||root.hidden)return;let bounds=svgBounds||{west:Math.min(...P.map(p=>p.lng))-.045,east:Math.max(...P.map(p=>p.lng))+.045,south:Math.min(...P.map(p=>p.lat))-.025,north:Math.max(...P.map(p=>p.lat))+.025};let rect=root.getBoundingClientRect(),w=Math.max(rect.width||320,250),h=420;let project=p=>({x:28+(p.lng-bounds.west)/(bounds.east-bounds.west)*(w-56),y:28+(bounds.north-p.lat)/(bounds.north-bounds.south)*(h-56)});let visible=filtered.filter(p=>p.lng>=bounds.west&&p.lng<=bounds.east&&p.lat>=bounds.south&&p.lat<=bounds.north),groups=groupPoints(visible,project);let routePoints=State.route.map(id=>P.find(p=>p.id===id)).filter(Boolean).map(project);root.innerHTML=`<svg class="schematic" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#cdd4c7" stroke-width=".6"/></pattern></defs><rect width="${w}" height="${h}" fill="url(#grid)"/><path d="M${w*.25} 0Q${w*.85} 100 ${w*.65} 230T${w*.8} ${h}" stroke="#b7cdce" stroke-width="18" fill="none" opacity=".55"/><text x="20" y="400" fill="#365740" font-size="12">${tx('近似座標區域示意・非道路地圖','Approximate schematic, not a road map','近似位置イメージ・道路地図ではありません')}</text>${routePoints.length>=2?`<polyline points="${routePoints.map(p=>p.x+','+p.y).join(' ')}" stroke="#86641e" stroke-width="3" stroke-dasharray="7 8" fill="none"/>`:''}</svg>${groups.map((g,i)=>{let p=g.ps[0],stage=statusOf(p),cluster=g.ps.length>1,label=cluster?`${g.ps.length}${tx('處地點：點選放大',' places: zoom in','か所・拡大')}`:`${nameOf(p)} · ${statusLabel(p)}`;return `<button type="button" class="svg-marker ${g.ps.some(p=>p.id===State.selected)?'focused':''}" data-group="${i}" style="left:${g.x}px;top:${g.y}px;--marker:${stage===null?'#797c77':C.stageColors[stage]}" aria-label="${esc(label)}" title="${esc(label)}">${cluster?g.ps.length:leaf()}<small class="marker-status">${C.season?stageNames[stage][0].split('（')[0]+tx('・示意',' · estimate','・推定'):stage===null?tx(C.status,'Not verified','未確認'):stageNames[stage][0]}</small></button>`;}).join('')}${!visible.length?`<div class="map-empty">${tx('此範圍沒有符合地點，可顯示全部地點。','No matching places in this view. Reset the map.','この範囲に該当スポットはありません。全表示に戻せます。')}</div>`:''}`;
- root.querySelectorAll('[data-group]').forEach(b=>b.addEventListener('click',()=>{let g=groups[Number(b.dataset.group)];if(g.ps.length>1){let lng=g.ps.map(p=>p.lng),lat=g.ps.map(p=>p.lat);svgBounds={west:Math.min(...lng)-.004,east:Math.max(...lng)+.004,south:Math.min(...lat)-.004,north:Math.max(...lat)+.004};renderSvg();}else openPlace(g.ps[0].id);}));
+
+/* ---------- list ---------- */
+function rowHtml(s) {
+  const idx = String(spotIndex.get(s.id)).padStart(2, '0');
+  const pos = ST.route.indexOf(s.id);
+  const key = statusKey(s);
+  const row = rowById.get(s.source_id) || {};
+  const nameZh = (lang === 'zh' && s.name_zh && s.name_zh !== s.name_ja) ? esc(s.name_zh) : '';
+  const nameEn = s.name_en ? '<i>' + esc(s.name_en) + '</i>' : '<span class="nv">' + esc(t('name.nv.short')) + '</span>';
+  const alt = (nameZh ? nameZh + ' · ' : '') + nameEn;
+  const coordOk = hasCoord(s);
+  const addLabel = pos >= 0 ? t('spot.remove.aria', s.name_ja, pos + 1) : coordOk ? t('spot.add.aria', s.name_ja) : t('spot.nocoord');
+  const addInner = pos >= 0
+    ? '<span class="stop-n">' + (pos + 1) + '</span><span class="t-label">' + esc(t('spot.stopn', pos + 1)) + '</span>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V19M5 12H19"/></svg><span class="t-label">' + esc(t('spot.add')) + '</span>';
+  return '<li class="spot' + (ST.selected === s.id ? ' is-selected' : '') + '" data-id="' + esc(s.id) + '">' +
+    '<button type="button" class="spot-open" data-act="open"' + (ST.selected === s.id ? ' aria-current="true"' : '') + '>' +
+    '<span class="spot-no" aria-hidden="true">' + idx + '</span><span class="spot-body">' +
+    '<span class="spot-name" lang="ja">' + esc(s.name_ja) + '</span>' +
+    '<span class="spot-alt">' + alt + '</span>' +
+    '<span class="spot-meta">' + esc(bi(s.area)) + ' · ' + esc(t('spot.grade', row.grade || '-')) + '</span>' +
+    '<span class="spot-status">' + statusGlyph(key) + esc(statusLabel(key)) + '</span></span></button>' +
+    '<button type="button" class="spot-add' + (pos >= 0 ? ' is-on' : '') + '" data-act="toggle" aria-label="' + esc(addLabel) + '" title="' + esc(addLabel) + '"' + (!coordOk && pos < 0 ? ' aria-disabled="true"' : '') + '>' + addInner + '</button></li>';
 }
-renderPage();
+function renderList() {
+  const items = filtered();
+  const ol = $('#spot-list'), empty = $('#empty');
+  ol.innerHTML = items.map(rowHtml).join('');
+  ol.hidden = items.length === 0;
+  const rc = $('#result-count');
+  rc.textContent = items.length ? t('result', items.length, SPOTS.length) : t('result.zero', 0, SPOTS.length);
+  $('#tab-count').textContent = items.length;
+  if (!items.length) {
+    const stageSel = /^stage\d$/.test(ST.status);
+    const stageName = stageSel ? statusLabel(ST.status) : '';
+    empty.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#st-none"/></svg>' +
+      '<h4>' + (stageSel ? th('empty.stage.h', stageName) : esc(t('empty.h'))) + '</h4>' +
+      '<p>' + esc(stageSel ? t('empty.stage.p') : t('empty.p')) + '</p>' +
+      '<div class="btn-row">' + (stageSel ? '<button type="button" class="btn" data-act="show-none">' + esc(t('empty.btn.none')) + '</button>' : '') + '<button type="button" class="btn btn-primary" data-act="clear">' + esc(t('empty.btn.clear')) + '</button></div>';
+  }
+  empty.hidden = items.length !== 0;
+}
+function updateListSelection() {
+  $$('#spot-list .spot').forEach(li => {
+    const on = li.getAttribute('data-id') === ST.selected;
+    li.classList.toggle('is-selected', on);
+    const b = li.querySelector('.spot-open');
+    if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+  });
+}
+function scrollNow(fn) { try { fn('instant'); } catch (e) { fn('auto'); } }
+function scrollListTo(id, behavior) {
+  const li = $('#spot-list .spot[data-id="' + CSS.escape(id) + '"]'); if (!li) return;
+  const pane = $('#pane-list');
+  const mode = b => (behavior && behavior !== 'instant' ? behavior : b);
+  if (mqDesktop.matches) {
+    const top = li.offsetTop - pane.offsetTop, bottom = top + li.offsetHeight;
+    if (top < pane.scrollTop + 8) scrollNow(b => pane.scrollTo({ top: Math.max(0, top - 12), behavior: mode(b) }));
+    else if (bottom > pane.scrollTop + pane.clientHeight - 8) scrollNow(b => pane.scrollTo({ top: bottom - pane.clientHeight + 12, behavior: mode(b) }));
+  } else scrollNow(b => li.scrollIntoView({ block: 'center', behavior: mode(b) }));
+}
+
+/* ---------- selection and detail ---------- */
+let lastTrigger = null;
+function select(id, opts) {
+  opts = opts || {};
+  const s = spotById.get(id); if (!s) return;
+  ST.selected = id;
+  updateListSelection();
+  refreshMarkers();
+  if (opts.open) openDetail(id, opts.trigger);
+  if (opts.fromMap && isListVisible()) scrollListTo(id, reduceMotion() ? 'instant' : 'smooth');
+  focusOnMap(id);
+}
+const isListVisible = () => mqDesktop.matches || ST.tab === 'list';
+const isMapVisible = () => mqDesktop.matches || ST.tab === 'map';
+function setBackgroundInert(on) {
+  const sel = ['#top', '#hero', '#filters', '#tabs', '.panes', '#foliage', '#walk', '#sources', '#foot'];
+  sel.forEach(q => { const el = $(q); if (el) { if (on) el.setAttribute('inert', ''); else el.removeAttribute('inert'); } });
+}
+function applyDetailMode() {
+  const det = $('#detail'); if (det.hidden) { $('#scrim').hidden = true; setBackgroundInert(false); document.documentElement.style.overflow = ''; return; }
+  const modal = !mqDesktop.matches;
+  det.setAttribute('aria-modal', String(modal));
+  $('#scrim').hidden = !modal;
+  setBackgroundInert(modal);
+  document.documentElement.style.overflow = modal ? 'hidden' : '';
+}
+function openDetail(id, trigger) {
+  const s = spotById.get(id); if (!s) return;
+  const det = $('#detail');
+  const wasOpen = !det.hidden;
+  ST.detail = id;
+  if (!wasOpen) lastTrigger = trigger || document.activeElement;
+  renderDetail();
+  det.hidden = false;
+  if (!wasOpen && !reduceMotion()) { det.classList.remove('anim-in'); void det.offsetWidth; det.classList.add('anim-in'); }
+  applyDetailMode();
+  $('#detail-body').scrollTop = 0;
+  try { det.focus({ preventScroll: true }); } catch (e) { det.focus(); }
+  focusOnMap(id);
+}
+function closeDetail(opts) {
+  opts = opts || { restore: true };
+  const det = $('#detail'); if (det.hidden) return;
+  det.hidden = true; ST.detail = null;
+  applyDetailMode();
+  if (opts.restore !== false) {
+    let tgt = lastTrigger;
+    if (!tgt || !document.contains(tgt) || (tgt.offsetParent === null && !(tgt.getBoundingClientRect && tgt.getBoundingClientRect().width))) {
+      tgt = ST.selected ? $('#spot-list .spot[data-id="' + CSS.escape(ST.selected) + '"] .spot-open') : null;
+    }
+    if (tgt && tgt.focus) { try { tgt.focus({ preventScroll: true }); } catch (e) { tgt.focus(); } }
+  }
+  lastTrigger = null;
+}
+function dateCell(v) {
+  const x = pair(v);
+  return x ? '<dd>' + esc(x) + '</dd>' : '<dd class="na">' + esc(t('d.na')) + '</dd>';
+}
+function telText(v) { if (!v) return ''; if (typeof v === 'string') return v; const lb = lang === 'en' ? v.en : v.zh; return v.num + (lb ? (lang === 'en' ? ' (' + lb + ')' : '（' + lb + '）') : ''); }
+function infoRow(label, v, isJa) {
+  const x = (v && typeof v === 'object') ? bi(v) : v;
+  return '<div><dt>' + esc(label) + '</dt>' + (x ? '<dd' + (isJa ? ' lang="ja"' : '') + '>' + esc(x) + '</dd>' : '<dd class="na">' + esc(t('d.na')) + '</dd>') + '</div>';
+}
+const JA_RUN = /[぀-ヿ㐀-鿿][぀-ヿ㐀-鿿ー・s]*[぀-ヿ㐀-鿿]|[぀-ヿ㐀-鿿]/g;
+const jaWrap = h => (lang === 'en' ? h.replace(JA_RUN, m => '<span lang="ja">' + m + '</span>') : h);
+const SRC_FIELDS = ['source_id', 'group_id', 'name', 'area', 'grade', 'operator', 'role', 'url', 'extra_url', 'evidence_url', 'evidence_date', 'finding', 'cadence', 'suggested_poll', 'caveat', 'access', 'species', 'audited_at'];
+const SRC_TR = new Set(['area', 'name', 'operator', 'role', 'finding', 'cadence', 'suggested_poll', 'caveat', 'access', 'species', 'evidence_date']);
+const isDead = r => r.use === 'excluded' && /404/.test(r.access || '');
+function srcFieldHtml(r, k) {
+  const raw = r[k];
+  let body;
+  if (!raw && raw !== 0) body = '<dd class="na">' + esc(t('d.na')) + '</dd>';
+  else if (k === 'url' && isDead(r)) body = '<dd>' + esc(raw) + '<span class="orig">' + esc(t('src.dead')) + '</span></dd>';
+  else if (k === 'url' || k === 'extra_url' || k === 'evidence_url') { const u = safeUrl(raw); body = '<dd>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(u) + '</a>' : esc(raw)) + '</dd>'; }
+  else if (k === 'grade') { const g = GRADES[raw]; body = '<dd><b>' + esc(raw) + '</b>' + (g ? ' · ' + esc(bi(g)) : '') + (g ? '<span class="orig">' + esc(lang === 'en' ? g.noteEn : g.noteZh) + '</span>' : '') + '</dd>'; }
+  else if (lang === 'en' && SRC_TR.has(k) && r.en && r.en[k] != null && r.en[k] !== raw) body = '<dd>' + jaWrap(esc(r.en[k])) + '<span class="orig"><span class="d-tag">' + esc(t('d.src.orig')) + ':</span> <span lang="zh-Hant">' + esc(raw) + '</span></span></dd>';
+  else body = '<dd>' + jaWrap(esc(raw)) + '</dd>';
+  return '<div><dt>' + esc(k) + '</dt>' + body + '</div>';
+}
+function coordHtml(s) {
+  if (!hasCoord(s)) return '<section class="d-sec"><h4 class="d-h">' + esc(t('d.coord.h')) + '</h4><p class="d-p">' + esc(t('d.nocoord')) + '</p></section>';
+  const c = s.coord;
+  const srcs = (c.sources || []).map(u => safeUrl(u)).filter(Boolean).map(u => { let h = u; try { h = new URL(u).hostname.replace(/^www\./, ''); } catch (e) { /* keep */ } return '<li><a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(h) + '</a></li>'; }).join('');
+  const osm = 'https://www.openstreetmap.org/?mlat=' + s.lat + '&mlon=' + s.lng + '#map=16/' + s.lat + '/' + s.lng;
+  return '<section class="d-sec"><h4 class="d-h">' + esc(t('d.coord.h')) + '</h4><p class="d-p">' + esc(t('d.coord.p')) + '</p>' +
+    '<dl class="kv">' +
+    infoRow(t('d.coord.type'), t('ct.' + (c.kind || 'park'))) +
+    infoRow(t('d.coord.point'), c.label) +
+    infoRow(t('d.coord.basis'), c.basis) +
+    infoRow(t('d.coord.conf'), c.confidence ? t('cf.' + c.confidence) : '') +
+    infoRow(t('d.coord.lat'), s.lat.toFixed(4) + ', ' + s.lng.toFixed(4)) +
+    (srcs ? '<div><dt>' + esc(t('d.coord.srcs')) + '</dt><dd><ul class="srcs">' + srcs + '</ul></dd></div>' : '') +
+    '</dl><p class="d-p"><a href="' + esc(osm) + '" target="_blank" rel="noopener noreferrer">' + esc(t('d.coord.osm')) + '</a></p></section>';
+}
+function renderDetail() {
+  const s = spotById.get(ST.detail); if (!s) return;
+  const row = rowById.get(s.source_id) || {};
+  const key = statusKey(s);
+  $('#detail-kicker').textContent = spotIndex.get(s.id) + ' / ' + SPOTS.length + ' · ' + s.source_id + ' · ' + bi(s.area);
+  $('#detail-title').textContent = s.name_ja;
+  const zh = (lang === 'zh' && s.name_zh && s.name_zh !== s.name_ja) ? esc(s.name_zh) + ' · ' : '';
+  $('#detail-names').innerHTML = zh + (s.name_en ? '<i>' + esc(s.name_en) + '</i>' : esc(t('name.nv')));
+  const pending = key === 'pending';
+  let h = '<section class="d-sec"><h4 class="d-h">' + esc(t('d.status.h')) + '</h4><div class="d-status">' + statusGlyph(key) + '<p class="st">' + esc(statusLabel(key)) + '</p><p>' + esc(pending ? bi(s.nowNote) : t('d.status.none.p')) + '</p></div></section>';
+  h += '<section class="d-sec"><h4 class="d-h">' + esc(t('d.ev.h')) + '</h4><p class="d-p">' + esc(bi(s.intro)) + '</p><p class="d-p" style="margin-top:8px">' + esc(bi(s.ginkgo)) + '</p><ul class="ev-list" style="margin-top:12px">' +
+    s.evidence.map(e => {
+      const u = safeUrl(e.url), d = e.dates || {};
+      return '<li><span class="kind kind-' + esc(e.kind) + '">' + esc(t('kind.' + e.kind)) + '</span><p class="ev-text">' + esc(bi(e)) + '</p>' +
+        (u ? '<a class="ev-link" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(t('d.link.src')) + '</a>' : '') +
+        '<dl class="dates"><div><dt>' + esc(t('dt.article')) + '</dt>' + dateCell(d.article) + '</div><div><dt>' + esc(t('dt.photo')) + '</dt>' + dateCell(d.photo) + '</div><div><dt>' + esc(t('dt.observed')) + '</dt>' + dateCell(d.observed) + '</div><div><dt>' + esc(t('dt.forecast')) + '</dt>' + dateCell(d.forecast) + '</div><div><dt>' + esc(t('dt.checked')) + '</dt>' + dateCell(d.checked) + '</div></dl>' +
+        (e.note ? '<p class="ev-note">' + esc(bi(e.note)) + '</p>' : '') + '</li>';
+    }).join('') + '</ul><p class="note" style="margin-top:8px;font-size:13.5px">' + esc(t('d.ev.checked')) + '</p></section>';
+  h += sourceBlock(s, row);
+  const sheetNote = row.caveat ? '<li><b>' + esc(t('d.sheetnote')) + '：</b>' + esc(lang === 'en' && row.en && row.en.caveat ? row.en.caveat : row.caveat) + (lang === 'en' && row.en && row.en.caveat && row.en.caveat !== row.caveat ? '<span class="orig" lang="zh-Hant">' + esc(row.caveat) + '</span>' : '') + '</li>' : '';
+  if (s.notes.length || s.unverified.length || sheetNote) {
+    h += '<section class="d-sec">' + (s.notes.length || sheetNote ? '<h4 class="d-h">' + esc(t('d.notes.h')) + '</h4><ul class="bul">' + sheetNote + s.notes.map(n => '<li>' + esc(bi(n)) + '</li>').join('') + '</ul>' : '') +
+      (s.unverified.length ? '<h4 class="d-h" style="margin-top:' + (s.notes.length ? 16 : 0) + 'px">' + esc(t('d.unv.h')) + '</h4><ul class="bul">' + s.unverified.map(n => '<li>' + esc(bi(n)) + '</li>').join('') + '</ul>' : '') + '</section>';
+  }
+  const inf = s.info || {};
+  h += '<section class="d-sec"><h4 class="d-h">' + esc(t('d.info.h')) + '</h4><dl class="kv">' +
+    infoRow(t('d.hours'), inf.hours) + infoRow(t('d.closed'), inf.closed) + infoRow(t('d.fee'), inf.fee) + infoRow(t('d.access'), inf.access) +
+    infoRow(t('d.address'), inf.address, true) + infoRow(t('d.tel'), telText(inf.tel)) + '</dl><p class="note" style="margin-top:8px;font-size:13.5px">' + esc(t('d.info.note')) + '</p></section>';
+  h += coordHtml(s);
+  if (row.source_id) h += '<section class="d-sec"><details class="d-det"><summary>' + esc(t('d.src.h')) + '</summary><p class="note" style="font-size:13.5px;margin-bottom:6px">' + esc(t('d.src.p')) + '</p><dl class="kv src-more-kv">' + SRC_FIELDS.map(k => srcFieldHtml(row, k)).join('') + '</dl></details></section>';
+  h += '<p class="d-p" style="padding:6px 0 2px;font-weight:700;color:var(--green)">' + esc(t('d.final')) + '</p>';
+  $('#detail-body').innerHTML = h;
+  updateDetailFoot();
+}
+function sourceBlock(s, row) {
+  if (!row || !row.source_id) return '';
+  const en = row.en || {};
+  const g = GRADES[row.grade];
+  const op = lang === 'en' ? (en.operator || row.operator) : row.operator;
+  const cadRaw = row.cadence || '', cadTr = lang === 'en' ? (en.cadence || cadRaw) : cadRaw;
+  const unpub = !cadRaw || /未確認|尚未確認|待查|未承諾/.test(cadRaw);
+  const cad = !cadRaw ? t('d.unpublished') : (unpub ? t('d.unpublished') + '（' + (lang === 'en' ? 'source sheet: ' : '來源表：') + cadTr + '）' : cadTr);
+  const gradeDd = g ? '<dd><b>' + esc(row.grade) + '</b> · ' + esc(bi(g)) + '<span class="orig">' + esc(lang === 'en' ? g.noteEn : g.noteZh) + '</span></dd>' : '<dd class="na">' + esc(t('d.na')) + '</dd>';
+  return '<section class="d-sec"><h4 class="d-h">' + esc(t('d.src2.h')) + '</h4><dl class="kv">' +
+    '<div><dt>' + esc(t('d.operator')) + '</dt><dd>' + esc(op || t('d.na')) + '</dd></div>' +
+    '<div><dt>' + esc(t('d.grade')) + '</dt>' + gradeDd + '</div>' +
+    '<div><dt>' + esc(t('d.cadence')) + '</dt><dd>' + esc(cad) + '</dd></div>' +
+    '<div><dt>' + esc(t('d.audit')) + '</dt><dd>' + esc(row.audited_at || t('d.na')) + '</dd></div></dl></section>';
+}
+function updateDetailFoot() {
+  const s = spotById.get(ST.detail); if (!s) return;
+  const add = $('#detail-add'), pos = ST.route.indexOf(s.id);
+  add.textContent = pos >= 0 ? t('d.remove', pos + 1) : t('d.add');
+  if (!hasCoord(s) && pos < 0) add.setAttribute('aria-disabled', 'true'); else add.removeAttribute('aria-disabled');
+  add.classList.toggle('is-on', pos >= 0);
+  const row = rowById.get(s.source_id) || {};
+  const a = $('#detail-official'), u = safeUrl(row.url);
+  a.textContent = t('d.official');
+  if (u) { a.href = u; a.removeAttribute('aria-disabled'); } else { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); }
+}
+
+/* ---------- route ---------- */
+function saveRoute() { store.set('route', JSON.stringify(ST.route)); warnStorage(); }
+function addStop(id, opts) {
+  const s = spotById.get(id); if (!s) return false;
+  if (ST.route.includes(id)) return false;
+  if (!hasCoord(s)) { setHint('walk.hint.nocoord'); toast(t('walk.hint.nocoord')); return false; }
+  if (ST.route.length >= MAX_STOPS) { setHint('walk.hint.max'); toast(t('toast.max')); return false; }
+  ST.route.push(id); saveRoute();
+  afterRouteChange();
+  toast(t('toast.added', ST.route.length, s.name_ja), { href: '#walk', label: t('toast.see') });
+  return true;
+}
+function removeStop(id) {
+  const i = ST.route.indexOf(id); if (i < 0) return;
+  ST.route.splice(i, 1); saveRoute();
+  const s = spotById.get(id);
+  afterRouteChange();
+  toast(t('toast.removed', s ? s.name_ja : id));
+}
+function moveStop(id, dir) {
+  const i = ST.route.indexOf(id), j = i + dir;
+  if (i < 0 || j < 0 || j >= ST.route.length) return;
+  const x = ST.route[i]; ST.route[i] = ST.route[j]; ST.route[j] = x; saveRoute();
+  afterRouteChange();
+  const s = spotById.get(id);
+  $('#walk-hint').textContent = t('toast.moved', s ? s.name_ja : id, j + 1);
+}
+function clearRoute() { ST.route = []; saveRoute(); afterRouteChange(); $('#walk-hint').textContent = t('toast.cleared'); }
+function toggleStop(id) { if (ST.route.includes(id)) removeStop(id); else addStop(id); }
+function afterRouteChange() {
+  hintKey = null;
+  renderList(); renderWalk(); updateRibbon(); updateDetailFoot(); refreshMarkers(); drawRoute();
+  if (map && isMapVisible() && ST.route.length >= 2) { const b = mapBox(); if (b.w && b.h) fitAll(b); }
+}
+let hintKey = null;
+function setHint(k) { hintKey = k; $('#walk-hint').textContent = k ? t(k) : ''; }
+function updateRibbon() {
+  const n = ST.route.length;
+  $('#ribbon-n').textContent = n + '/' + MAX_STOPS;
+  $('#ribbon').setAttribute('aria-label', t('ribbon.aria', n));
+}
+function gmapsUrl() {
+  const pts = routeSpots().map(s => s.lat + ',' + s.lng);
+  if (pts.length < 2) return '';
+  let u = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pts[0]) + '&destination=' + encodeURIComponent(pts[pts.length - 1]);
+  if (pts.length > 2) u += '&waypoints=' + encodeURIComponent(pts.slice(1, -1).join('|'));
+  return u;
+}
+function stopSvgLine() {
+  return '<svg viewBox="0 0 360 80" aria-hidden="true" focusable="false"><g fill="none" stroke="#23251f" stroke-width="1.6"><circle cx="40" cy="40" r="19" stroke-opacity=".55"/><circle cx="180" cy="40" r="19" stroke-opacity=".55"/><circle cx="320" cy="40" r="19" stroke-opacity=".3" stroke-dasharray="2 4"/><path d="M62 40H158M202 40H298" stroke-dasharray="1 7" stroke-linecap="round" stroke-opacity=".6"/></g><g font-family="Cormorant Garamond, Georgia, serif" font-style="italic" font-weight="700" font-size="22" fill="#44463c" text-anchor="middle"><text x="40" y="48">1</text><text x="180" y="48">2</text><text x="320" y="48" fill-opacity=".5">3</text></g></svg>';
+}
+function renderWalk() {
+  const rs = routeSpots(), n = rs.length, lg = legs();
+  // select
+  const sel = $('#walk-select'), prev = sel.value;
+  sel.innerHTML = '<option value="">' + esc(t('walk.select.ph')) + '</option>' + SPOTS.filter(s => hasCoord(s) && !ST.route.includes(s.id)).map(s => '<option value="' + esc(s.id) + '">' + esc(s.name_ja + (lang === 'zh' && s.name_zh && s.name_zh !== s.name_ja ? '（' + s.name_zh + '）' : '')) + '</option>').join('');
+  if (prev && ST.route.indexOf(prev) < 0) sel.value = prev;
+  $('#walk-add-btn').disabled = n >= MAX_STOPS;
+  sel.disabled = n >= MAX_STOPS;
+  // hint
+  const hk = n >= MAX_STOPS ? 'walk.hint.max' : n === 0 ? 'walk.hint.0' : n === 1 ? 'walk.hint.1' : null;
+  if (hintKey === null || /^walk\.hint\.(0|1|max)$/.test(hintKey)) { hintKey = hk; $('#walk-hint').textContent = hk ? t(hk) : ''; }
+  // itinerary
+  const it = $('#itinerary');
+  it.hidden = n === 0;
+  it.innerHTML = rs.map((s, i) => {
+    const sub = t('stop.sub', bi(s.area));
+    const leg = i < n - 1 ? '<div class="leg-wrap"><p class="leg">' + esc(t('leg', fmtDist(lg[i]), fmtTime(lg[i]))) + (lg[i] > FAR_M ? '<small>' + esc(t('leg.far')) + '</small>' : '') + '</p></div>' : '';
+    const ico = p => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' + p + '"/></svg>';
+    return '<li class="stop" data-id="' + esc(s.id) + '"><span class="stop-no" aria-hidden="true">' + (i + 1) + '</span>' +
+      '<div class="stop-main"><button type="button" class="stop-name" lang="ja" data-act="open" aria-label="' + esc(t('stop.open.aria', s.name_ja)) + '">' + esc(s.name_ja) + '</button><span class="stop-sub">' + esc(sub) + '</span></div>' +
+      '<div class="stop-tools">' +
+      '<button type="button" class="tool" data-act="up" aria-label="' + esc(t('stop.up.aria', s.name_ja)) + '"' + (i === 0 ? ' disabled' : '') + '>' + ico('M12 19V5M6 11L12 5L18 11') + '<span>' + esc(t('stop.up')) + '</span></button>' +
+      '<button type="button" class="tool" data-act="down" aria-label="' + esc(t('stop.down.aria', s.name_ja)) + '"' + (i === n - 1 ? ' disabled' : '') + '>' + ico('M12 5V19M6 13L12 19L18 13') + '<span>' + esc(t('stop.down')) + '</span></button>' +
+      '<button type="button" class="tool" data-act="remove" aria-label="' + esc(t('stop.remove.aria', s.name_ja)) + '">' + ico('M6 6L18 18M18 6L6 18') + '<span>' + esc(t('stop.remove')) + '</span></button></div>' + leg + '</li>';
+  }).join('');
+  $('#walk-empty').hidden = n > 0;
+  $('#walk-empty').innerHTML = n === 0 ? stopSvgLine() + '<p>' + esc(t('walk.empty.p')) + '</p>' : '';
+  // summary
+  const total = lg.reduce((a, b) => a + b, 0), url = gmapsUrl();
+  let sum = '<h3 id="walk-sum-h">' + esc(t('sum.h')) + '</h3>';
+  if (n >= 2) {
+    sum += '<dl class="sum-grid"><div><dt>' + esc(t('sum.stops')) + '</dt><dd>' + n + '</dd></div><div><dt>' + esc(t('sum.dist')) + '</dt><dd>' + esc(t('sum.about', fmtDist(total))) + '</dd></div><div><dt>' + esc(t('sum.time')) + '</dt><dd>' + esc(t('sum.about', fmtTime(total))) + '</dd></div></dl>' +
+      '<p class="sum-note">' + esc(t('sum.note1')) + '</p><p class="sum-note">' + esc(t('sum.note2')) + '</p>' +
+      '<div class="sum-actions"><a class="btn btn-primary" id="gmaps" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(t('sum.gmaps')) + '</a><p class="sum-note" style="margin:0">' + esc(t('sum.gmaps.note')) + '</p><button type="button" class="btn" data-act="clear-route">' + esc(t('sum.clear')) + '</button></div>';
+  } else {
+    sum += '<p class="sum-note">' + esc(t('sum.empty')) + '</p>' + (n === 1 ? '<div class="sum-actions"><button type="button" class="btn" data-act="clear-route">' + esc(t('sum.clear')) + '</button></div>' : '');
+  }
+  $('#walk-sum').innerHTML = sum;
+}
+
+/* ---------- foliage, kinds, JMA ---------- */
+function renderFoliage() {
+  $('#stage-list').innerHTML = STAGES.map((st, i) => '<li class="stage"><div class="stage-top">' + glyph('st' + (i + 1), 'stage-leaf') + '<span class="stage-no" aria-hidden="true">' + (i + 1) + '</span></div><span class="stage-ja" lang="ja">' + esc(st.ja) + '</span><span class="stage-name">' + esc(lang === 'en' ? st.en : st.zh) + '</span><span class="stage-desc">' + esc(lang === 'en' ? st.de : st.dz) + '</span></li>').join('');
+  $('#nostage-list').innerHTML =
+    '<div>' + glyph('st-none') + '<dt>' + esc(t('fol.none.t')) + '</dt><dd>' + esc(t('fol.none.p')) + '</dd></div>' +
+    '<div>' + glyph('st-pend') + '<dt>' + esc(t('fol.pend.t')) + '</dt><dd>' + esc(t('fol.pend.p')) + '</dd></div>';
+  $('#kind-list').innerHTML = ['intro', 'now', 'history', 'season', 'official', 'third'].map(k => '<div><dt><span class="kind kind-' + k + '">' + esc(t('kind.' + k)) + '</span></dt><dd>' + esc(t('kind.' + k + '.d')) + '</dd></div>').join('');
+  const j = D && D.jma;
+  if (j) {
+    const recent = Object.keys(j.yellowRecent || {}).map(y => y + ' ' + j.yellowRecent[y]).join('　');
+    const link = (u, k) => '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(t(k)) + '</a>';
+    $('#jma-body').innerHTML =
+      '<div><p class="callout">' + esc(t('jma.p')) + '</p><div class="jma-scroll"><table class="jma-table"><thead><tr><th scope="col">' + esc(t('jma.th.item')) + '</th><th scope="col">' + esc(t('jma.th.y')) + '</th><th scope="col">' + esc(t('jma.th.f')) + '</th></tr></thead><tbody>' +
+      '<tr><th scope="row">' + esc(t('jma.normal', j.normalPeriod)) + '</th><td>' + esc(j.yellowNormal) + '</td><td>' + esc(j.fallNormal) + '</td></tr>' +
+      '<tr><th scope="row">' + esc(t('jma.obs25')) + '</th><td>' + esc(j.yellow2025) + '</td><td>' + esc(j.fall2025) + '</td></tr>' +
+      '<tr><th scope="row">' + esc(t('jma.obs26')) + '</th><td>' + esc(j.yellow2026 || t('jma.notyet')) + '</td><td>' + esc(j.fall2026 || t('jma.notyet')) + '</td></tr></tbody></table></div></div>' +
+      '<div><h3>' + esc(t('jma.def.h')) + '</h3><ul class="bul"><li>' + esc(t('jma.def.y')) + '</li><li>' + esc(t('jma.def.f')) + '</li></ul><h3 style="margin-top:18px">' + esc(t('jma.recent')) + '</h3><p class="d-p" style="font-variant-numeric:tabular-nums">' + esc(recent) + '</p><p class="note">' + esc(t('jma.vary')) + '</p>' +
+      '<p class="d-p" style="margin-top:10px">' + link(j.urls.yellow, 'jma.src') + '　' + link(j.urls.fall, 'jma.src2') + '　' + link(j.urls.csv, 'jma.src3') + '</p></div>';
+  }
+}
+
+/* ---------- sources ---------- */
+const GROUPS = ['spot', 'entry', 'season', 'background', 'third', 'excluded'];
+function srcRowHtml(r) {
+  const en = r.en || {};
+  const name = lang === 'en' ? (en.name || r.name) : r.name;
+  const op = lang === 'en' ? (en.operator || r.operator) : r.operator;
+  const evd = lang === 'en' ? (en.evidence_date || r.evidence_date) : r.evidence_date;
+  const g = GRADES[r.grade];
+  const l = (u, k) => { if (k === 'src.link.main' && isDead(r)) return '<span class="dead-link">' + esc(t('src.dead')) + '</span>'; const x = safeUrl(u); return x ? '<a href="' + esc(x) + '" target="_blank" rel="noopener noreferrer">' + esc(t(k)) + '</a>' : ''; };
+  const nameJa = lang === 'en' && /[぀-ヿ一-鿿]/.test(name);
+  return '<li class="src"><div class="src-top"><span class="src-id">' + esc(r.source_id) + '</span><span class="src-name"' + (nameJa ? ' lang="ja"' : '') + '>' + esc(name) + '</span><span class="src-grade">' + esc(t('spot.grade', r.grade)) + (g ? ' · ' + esc(bi(g)) : '') + '</span></div>' +
+    '<p class="src-sup"><b>' + esc(t('src.supports')) + '：</b>' + esc(bi(r.supports)) + '</p>' +
+    '<div class="src-meta"><span>' + esc(t('src.operator')) + '：' + jaWrap(esc(op)) + '</span><span>' + esc(t('src.evdate')) + '：' + esc(evd || t('d.na')) + '</span><span>' + esc(t('src.audit')) + '：' + esc(r.audited_at || t('d.na')) + '</span></div>' +
+    '<div class="src-links">' + l(r.url, 'src.link.main') + l(r.extra_url, 'src.link.extra') + l(r.evidence_url, 'src.link.evid') + '</div>' +
+    '<details class="src-more"><summary>' + esc(t('src.more')) + '</summary><dl class="kv">' + SRC_FIELDS.map(k => srcFieldHtml(r, k)).join('') + '</dl></details></li>';
+}
+function renderSources() {
+  const rows = SOURCES;
+  const sr = META.sheetRead || {};
+  const ev = new Map();
+  SPOTS.forEach(s => s.evidence.forEach(e => { const u = safeUrl(e.url); if (u) { if (!ev.has(u)) ev.set(u, []); ev.get(u).push({ s, e }); } }));
+  const grp = k => rows.filter(r => r.use === k);
+  const openGroups = new Set(['spot', 'season']);
+  const prevOpen = new Set($$('#src-body .src-group[open]').map(d => d.getAttribute('data-g')));
+  const keepOpen = prevOpen.size ? prevOpen : openGroups;
+  let h = '<div class="src-block"><h3>' + esc(t('src.sheet.h')) + '</h3><p class="d-p" style="margin-top:6px">' + esc(t('src.sheet.p', rows.length, sr.date || '', sr.http || '', META.sheetAudited || '', META.snapshot || '')) + '</p><p class="d-p"><a class="btn" href="' + esc(safeUrl(META.sheetUrl) || '#') + '" target="_blank" rel="noopener noreferrer">' + esc(t('src.sheet.link')) + '</a></p></div>';
+  h += '<div class="src-cols"><div class="src-block"><h3>' + esc(t('src.method.h')) + '</h3><ol class="src-steps">' + METHOD.map(m => '<li><b>' + esc(m[li()]) + '</b>' + esc(m[2 + li()]) + '</li>').join('') + '</ol></div>' +
+    '<div><div class="src-block"><h3>' + esc(t('src.attr.h')) + '</h3><ul class="attrib">' + ATTRIB.map(a => '<li>' + esc(a[li()]) + (a[2] ? ' <a href="' + esc(a[2]) + '" target="_blank" rel="noopener noreferrer">' + esc(a[2].replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + '</a>' : '') + '</li>').join('') + '</ul></div>' +
+    '<div class="src-block"><h3>' + esc(t('src.lim.h')) + '</h3><ul class="lim">' + limits().map(x => '<li>' + esc(x).replace(/(.*?)/g, (m, n) => '<span lang="ja">' + n + '</span>') + '</li>').join('') + '</ul></div></div></div>';
+  h += '<div class="src-block" style="margin-bottom:12px"><h3>' + esc(t('src.groups.h')) + '</h3><p class="d-p">' + esc(t('src.groups.p', rows.length)) + '</p></div>';
+  h += GROUPS.map(k => { const g = grp(k); if (!g.length) return ''; return '<details class="src-group" data-g="' + k + '"' + (keepOpen.has(k) ? ' open' : '') + '><summary><span>' + esc(t('src.group.' + k)) + '</span><span class="cnt">' + esc(t('src.rows', g.length)) + '</span></summary><p class="gnote">' + esc(t('src.group.' + k + '.n')) + '</p><ul>' + g.map(srcRowHtml).join('') + '</ul></details>'; }).join('');
+  h += '<details class="src-group" data-g="extra" style="margin-top:28px"' + (keepOpen.has('extra') ? ' open' : '') + '><summary><span>' + esc(t('src.extra.h')) + '</span><span class="cnt">' + ev.size + '</span></summary><p class="gnote">' + esc(t('src.extra.p')) + '</p><ul>' + Array.from(ev.entries()).map(([u, list]) => {
+    const names = list.map(x => lang === 'en' ? (x.s.name_en || x.s.name_ja) : x.s.name_ja);
+    const e0 = list[0].e;
+    return '<li class="src"><div class="src-top"><span class="src-name" lang="ja">' + esc(names.join('、')) + '</span><span class="src-grade">' + esc(t('kind.' + e0.kind)) + '</span></div><p class="src-sup">' + esc(bi(e0)) + '</p><div class="src-meta"><span>' + esc(t('dt.checked')) + '：' + esc(pair((e0.dates || {}).checked) || t('d.na')) + '</span></div><div class="src-links"><a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(u.replace(/^https?:\/\/(www\.)?/, '')) + '</a></div></li>';
+  }).join('') + '</ul></details>';
+  $('#src-body').innerHTML = h;
+}
+function limits() {
+  const nEn = SPOTS.filter(s => s.name_en).length;
+  const pend = SPOTS.filter(s => statusKey(s) === 'pending').map(s => '' + s.name_ja + '');
+  return lang === 'en' ? [
+    'No official source had published a 2026 foliage stage for any of the ' + SPOTS.length + ' spots when the data was checked on ' + (META.snapshot || '') + '. The only 2026 material is photo captions for ' + (pend.join(', ') || 'none') + ', with no foliage wording.',
+    'The 2025 Tokyo Park Association list is a PDF whose text this site could not read itself; its content for the twelve park spots follows the teacher\'s source sheet. Ueno Park\'s and Kiba Park\'s own pages do not mention ginkgo.',
+    'Ueno Park\'s opening hours are given differently by two official pages and are marked as to be confirmed.',
+    'Only ' + nEn + ' of the ' + SPOTS.length + ' English names are shown, because only those could be confirmed on official English pages; the rest are marked "English name not verified".',
+    'All coordinates are approximate park positions, not the position of a tree. Distances are straight-line estimates and walking times use 80 m per minute; they are not navigation times.',
+    'The data is a snapshot. Opening hours, fees, closures and events can change, so check the official announcement before you go.',
+  ] : [
+    '資料查核日（' + (META.snapshot || '') + '）時，沒有任何官方來源為這 ' + SPOTS.length + ' 處景點發布 2026 年的葉況階段。唯一的 2026 年資料是' + (pend.join('、') || '（無）') + '的照片說明，並沒有葉況文字。',
+    '東京都公園協會 2025 年度名單是 PDF，本站無法自行讀取其文字；12 處公園景點的內容依老師的來源表記載。上野恩賜公園與木場公園的園區頁本身沒有提到銀杏。',
+    '上野恩賜公園的開放時間，兩個官方頁面寫法不同，標示為「待確認」。',
+    '26 處景點中只有 ' + nEn + ' 處顯示英文名稱，因為只有這些能在官方英文頁面核實；其餘標示「英文譯名未提供／English name not verified」。',
+    '所有座標都是園區近似位置，不是銀杏樹的位置。距離是直線估算，步行時間以每分鐘 80 公尺換算，都不是導航時間。',
+    '資料是某一天的快照。開放時間、費用、休園與活動都可能變動，出發前請再查官方公告。',
+  ];
+}
+
+/* ---------- map ---------- */
+let map = null, tileLayer = null, markerLayer = null, routeLayer = null, selTip = null;
+const markers = new Map();
+const MS = { fitSize: null, tileErr: 0, tileOk: 0, raf: 0, pendingFocus: null, failed: null, hasFit: false, ro: null };
+const mapEl = () => $('#map');
+function mapBox() { const r = mapEl().getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; }
+function showMapMsg(kind, full) {
+  const m = $('#map-msg'); MS.failed = kind;
+  m.className = 'map-msg' + (full ? ' is-full' : '');
+  m.innerHTML = '<strong>' + esc(t('map.fail.' + kind + '.h')) + '</strong>' + esc(t('map.fail.' + kind + '.p')) + (kind === 'tiles' ? '<br><button type="button" class="btn" data-act="map-retry">' + esc(t('map.retry')) + '</button>' : '');
+  m.hidden = false;
+}
+function hideMapMsg() { const m = $('#map-msg'); if (!m.hidden && MS.failed === 'tiles') { m.hidden = true; MS.failed = null; } }
+function markerHtml(s) {
+  const pos = ST.route.indexOf(s.id), key = statusKey(s);
+  const cls = 'mk' + (key === 'pending' ? ' pending' : '') + (pos >= 0 ? ' in-route' : '') + (ST.selected === s.id ? ' is-selected' : '');
+  return '<div class="' + cls + '"><span class="mk-ring"></span><span class="mk-dot">' + (pos >= 0 ? pos + 1 : '') + '</span></div>';
+}
+function markerLabel(s) {
+  const pos = ST.route.indexOf(s.id);
+  return s.name_ja + '（' + statusLabel(statusKey(s)) + (pos >= 0 ? '，' + t('spot.stopn', pos + 1) : '') + (ST.selected === s.id ? '，' + t('map.marker.sel') : '') + '）';
+}
+function iconFor(s) { return L.divIcon({ className: 'mk-wrap', html: markerHtml(s), iconSize: [44, 44], iconAnchor: [22, 22] }); }
+function labelMarker(m, s) { const el = m.getElement(); if (el) { el.setAttribute('aria-label', markerLabel(s)); el.setAttribute('title', s.name_ja); } }
+function syncMarkers() {
+  if (!map) return;
+  const shown = new Set(filtered().filter(hasCoord).map(s => s.id));
+  markers.forEach((m, id) => { if (!shown.has(id)) { markerLayer.removeLayer(m); markers.delete(id); } });
+  shown.forEach(id => {
+    if (markers.has(id)) return;
+    const s = spotById.get(id);
+    const m = L.marker([s.lat, s.lng], { icon: iconFor(s), keyboard: true, title: s.name_ja, riseOnHover: true });
+    m.bindTooltip(esc(s.name_ja), { direction: 'top', offset: [0, -14], className: 'mk-tip', opacity: 1 });
+    let lastAct = 0;
+    const act = () => { const n = Date.now(); if (n - lastAct < 400) return; lastAct = n; select(id, { open: true, fromMap: true, trigger: m.getElement() }); };
+    m.on('click', act);
+    m.on('add', () => { labelMarker(m, s); const el = m.getElement(); if (el && !el._gk) { el._gk = 1; el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); act(); } }); } });
+    m.addTo(markerLayer); markers.set(id, m); labelMarker(m, s);
+  });
+}
+function refreshMarkers() {
+  if (!map) return;
+  markers.forEach((m, id) => { const s = spotById.get(id); m.setIcon(iconFor(s)); labelMarker(m, s); m.setZIndexOffset(ST.selected === id ? 1000 : ST.route.includes(id) ? 500 : 0); });
+  if (selTip) { map.removeLayer(selTip); selTip = null; }
+  const s = ST.selected && spotById.get(ST.selected);
+  if (s && hasCoord(s) && markers.has(s.id)) { selTip = L.tooltip({ permanent: true, direction: 'top', offset: [0, -24], className: 'mk-tip', opacity: 1 }).setLatLng([s.lat, s.lng]).setContent(esc(s.name_ja)); selTip.addTo(map); }
+}
+function drawRoute() {
+  if (!map) return;
+  routeLayer.clearLayers();
+  const rs = routeSpots();
+  if (rs.length >= 2) {
+    const pts = rs.map(s => [s.lat, s.lng]);
+    L.polyline(pts, { color: '#fcf9f0', weight: 7, opacity: .85, lineCap: 'round', interactive: false }).addTo(routeLayer);
+    L.polyline(pts, { color: '#1f3a2b', weight: 3, opacity: .95, dashArray: '1 9', lineCap: 'round', interactive: false }).addTo(routeLayer);
+  }
+}
+function insets() {
+  const det = $('#detail');
+  if (det.hidden) return { right: 0, bottom: 0 };
+  if (mqDesktop.matches) return { right: det.offsetWidth || 0, bottom: 0 };
+  return { right: 0, bottom: Math.min(det.offsetHeight || 0, Math.round(mapEl().clientHeight * 0.6)) };
+}
+function fitAll(b) {
+  const items = filtered().filter(hasCoord);
+  const ins = insets();
+  const opt = { paddingTopLeft: [56, 56], paddingBottomRight: [56 + ins.right, 56 + ins.bottom], animate: false, maxZoom: 15 };
+  const rs = routeSpots();
+  const pts = rs.length >= 2 ? rs : items;
+  if (pts.length >= 2) map.fitBounds(L.latLngBounds(pts.map(s => [s.lat, s.lng])), opt);
+  else if (pts.length === 1) map.setView([pts[0].lat, pts[0].lng], 14, { animate: false });
+  else map.setView([35.69, 139.62], 10, { animate: false });
+}
+function createMap(b) {
+  const calm = reduceMotion();
+  map = L.map(mapEl(), { trackResize: false, zoomControl: true, attributionControl: true, minZoom: 8, maxZoom: 18, zoomSnap: 0.5, preferCanvas: false, zoomAnimation: !calm, fadeAnimation: !calm, markerZoomAnimation: !calm, inertia: !calm });
+  map.attributionControl.setPrefix(LEAFLET_PREFIX);
+  map.setView([35.69, 139.62], 10, { animate: false });
+  tileLayer = L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTR });
+  tileLayer.on('tileerror', () => { MS.tileErr++; if (MS.tileOk === 0 && MS.tileErr >= 3) showMapMsg('tiles', false); });
+  tileLayer.on('tileload', () => { MS.tileOk++; hideMapMsg(); });
+  tileLayer.addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+  routeLayer = L.layerGroup().addTo(map);
+  syncMarkers(); drawRoute();
+  map.invalidateSize({ animate: false });
+  fitAll(b);
+  MS.fitSize = b; MS.hasFit = true;
+  refreshMarkers();
+  if (MS.pendingFocus) { const id = MS.pendingFocus; MS.pendingFocus = null; focusOnMap(id); }
+}
+function refit() {
+  if (!map) return;
+  const b = mapBox(); if (!b.w || !b.h) return;
+  map.invalidateSize({ animate: false, pan: false });
+  const s = ST.selected && spotById.get(ST.selected);
+  if (s && hasCoord(s) && markers.has(s.id) && ST.route.length < 2) {
+    // 1. keep the focused marker in view (zoom unchanged)
+    const sz = map.getSize(); const pt = map.latLngToContainerPoint([s.lat, s.lng]);
+    if (pt.x < 40 || pt.y < 40 || pt.x > sz.x - 40 || pt.y > sz.y - 40) focusOnMap(s.id, true);
+    else if (!map.getBounds().contains([s.lat, s.lng])) fitAll(b);
+  } else fitAll(b);
+  MS.fitSize = b;
+}
+function checkMap() {
+  if (typeof L === 'undefined' || MS.failed === 'leaflet') return;
+  const b = mapBox(); if (!b.w || !b.h) return; // never act on a 0x0 container
+  if (!map) { createMap(b); return; }
+  const last = MS.fitSize;
+  if (!last) { refit(); return; }
+  const dw = Math.abs(b.w - last.w) / Math.max(1, last.w), dh = Math.abs(b.h - last.h) / Math.max(1, last.h);
+  const flip = (b.w > b.h) !== (last.w > last.h);
+  if (dw > 0.25 || dh > 0.25 || flip) { refit(); return; }
+  if (b.w !== map.getSize().x || b.h !== map.getSize().y) map.invalidateSize({ animate: false, pan: true });
+  if (MS.pendingFocus) { const id = MS.pendingFocus; MS.pendingFocus = null; focusOnMap(id); }
+}
+function scheduleMapCheck() { if (MS.raf) return; MS.raf = requestAnimationFrame(() => { MS.raf = 0; checkMap(); }); }
+function focusOnMap(id, keepZoom) {
+  const s = spotById.get(id);
+  if (!s || !hasCoord(s)) return;
+  const b = mapBox();
+  if (!map || !b.w || !b.h) { MS.pendingFocus = id; return; }
+  const ll = L.latLng(s.lat, s.lng), ins = insets(), anim = !reduceMotion();
+  if (!markers.has(id)) return;
+  if (!keepZoom && map.getZoom() < 12) { map.setView(ll, 13, { animate: false }); map.panBy([ins.right / 2, ins.bottom / 2], { animate: false }); return; }
+  map.panInside(ll, { paddingTopLeft: [70, 70], paddingBottomRight: [70 + ins.right, 70 + ins.bottom], animate: anim });
+}
+function initMap() {
+  if (typeof L === 'undefined') { showMapMsg('leaflet', true); $('#map').hidden = true; return; }
+  if ('ResizeObserver' in window) { MS.ro = new ResizeObserver(scheduleMapCheck); MS.ro.observe(mapEl()); }
+  window.addEventListener('resize', scheduleMapCheck);
+  window.addEventListener('orientationchange', scheduleMapCheck);
+  scheduleMapCheck();
+}
+function retryTiles() { if (!tileLayer) return; MS.tileErr = 0; MS.tileOk = 0; $('#map-msg').hidden = true; MS.failed = null; tileLayer.redraw(); }
+
+/* ---------- tabs and layout mode ---------- */
+function setTab(name, focus) {
+  ST.tab = name === 'map' ? 'map' : 'list';
+  const tl = $('#tab-list'), tm = $('#tab-map');
+  tl.setAttribute('aria-selected', String(ST.tab === 'list')); tm.setAttribute('aria-selected', String(ST.tab === 'map'));
+  tl.tabIndex = ST.tab === 'list' ? 0 : -1; tm.tabIndex = ST.tab === 'map' ? 0 : -1;
+  if (!mqDesktop.matches) { $('#pane-list').classList.toggle('is-off', ST.tab !== 'list'); $('#pane-map').classList.toggle('is-off', ST.tab !== 'map'); }
+  if (focus) (ST.tab === 'map' ? tm : tl).focus();
+  if (ST.tab === 'map') { scheduleMapCheck(); requestAnimationFrame(() => { scheduleMapCheck(); if (ST.selected) focusOnMap(ST.selected, true); }); }
+  else if (ST.selected) requestAnimationFrame(() => scrollListTo(ST.selected, 'instant'));
+}
+function applyLayoutMode() {
+  const tabMode = !mqDesktop.matches;
+  const pl = $('#pane-list'), pm = $('#pane-map');
+  if (tabMode) {
+    pl.setAttribute('role', 'tabpanel'); pm.setAttribute('role', 'tabpanel');
+    pl.setAttribute('aria-labelledby', 'tab-list'); pm.setAttribute('aria-labelledby', 'tab-map');
+    pl.removeAttribute('aria-label'); pm.removeAttribute('aria-label');
+    pl.classList.toggle('is-off', ST.tab !== 'list'); pm.classList.toggle('is-off', ST.tab !== 'map');
+  } else {
+    pl.setAttribute('role', 'region'); pm.setAttribute('role', 'region');
+    pl.removeAttribute('aria-labelledby'); pm.removeAttribute('aria-labelledby');
+    pl.setAttribute('aria-label', t('pane.list')); pm.setAttribute('aria-label', t('pane.map'));
+    pl.classList.remove('is-off'); pm.classList.remove('is-off');
+  }
+  applyDetailMode();
+  scheduleMapCheck();
+}
+
+/* ---------- language switch ---------- */
+function setLang(l, persist) {
+  if (l !== 'zh' && l !== 'en') return;
+  lang = l;
+  if (persist !== false) { store.set('lang', l); warnStorage(); }
+  applyStatic(); renderAll();
+}
+function renderAll() {
+  renderHero(); renderFilters(); renderList(); renderWalk(); renderFoliage(); renderSources(); updateRibbon();
+  if (ST.detail) renderDetail();
+  refreshMarkers();
+  if (MS.failed) showMapMsg(MS.failed, MS.failed === 'leaflet');
+  $('#map-note').textContent = t('map.note'); $('#map-note').hidden = MS.failed === 'leaflet';
+  applyLayoutMode();
+}
+
+/* ---------- events ---------- */
+function bind() {
+  $$('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.getAttribute('data-lang'))));
+  $('#filters').addEventListener('submit', e => e.preventDefault());
+  $('#q').addEventListener('input', e => { ST.q = e.target.value; $('#q-clear').hidden = !ST.q; applyFilters(); });
+  $('#q-clear').addEventListener('click', () => { ST.q = ''; $('#q').value = ''; $('#q').focus(); applyFilters(); });
+  $('#f-region').addEventListener('change', e => { ST.region = e.target.value; applyFilters(); });
+  $('#f-grade').addEventListener('change', e => { ST.grade = e.target.value; applyFilters(); });
+  $('#status-groups').addEventListener('change', e => { if (e.target && e.target.name === 'status') { ST.status = e.target.value; applyFilters(); } });
+  $('#f-clear').addEventListener('click', clearFilters);
+  $('#filter-toggle').addEventListener('click', () => { ST.filtersOpen = !ST.filtersOpen; syncFilterUi(); });
+  $('#tab-list').addEventListener('click', () => setTab('list'));
+  $('#tab-map').addEventListener('click', () => setTab('map'));
+  $('#tabs').addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Home' || e.key === 'End') { e.preventDefault(); setTab(e.key === 'ArrowLeft' || e.key === 'Home' ? 'list' : 'map', true); } });
+  $('#spot-list').addEventListener('click', e => {
+    const li = e.target.closest('.spot'); if (!li) return;
+    const id = li.getAttribute('data-id');
+    const act = e.target.closest('[data-act]');
+    if (!act) return;
+    if (act.getAttribute('data-act') === 'toggle') { toggleStop(id); const nb = $('#spot-list .spot[data-id="' + CSS.escape(id) + '"] .spot-add'); if (nb && document.activeElement === document.body) nb.focus(); }
+    else select(id, { open: true, trigger: act });
+  });
+  $('#empty').addEventListener('click', e => {
+    const a = e.target.closest('[data-act]'); if (!a) return;
+    if (a.getAttribute('data-act') === 'clear') clearFilters();
+    if (a.getAttribute('data-act') === 'show-none') { ST.status = 'none'; applyFilters(); }
+  });
+  $('#itinerary').addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); const li = e.target.closest('.stop'); if (!b || !li) return;
+    const id = li.getAttribute('data-id'), act = b.getAttribute('data-act');
+    if (act === 'open') select(id, { open: true, trigger: b });
+    else if (act === 'remove') { removeStop(id); const n = $('#walk-select'); if (n) n.focus(); }
+    else {
+      moveStop(id, act === 'up' ? -1 : 1);
+      const same = $('#itinerary .stop[data-id="' + CSS.escape(id) + '"] [data-act="' + act + '"]');
+      const any = $('#itinerary .stop[data-id="' + CSS.escape(id) + '"] .tool:not(:disabled)');
+      const f = same && !same.disabled ? same : any; if (f) f.focus();
+    }
+  });
+  $('#walk-add-btn').addEventListener('click', () => {
+    const v = $('#walk-select').value; if (!v) { setHint('walk.hint.pick'); return; }
+    hintKey = null; if (addStop(v)) { hintKey = null; renderWalk(); }
+  });
+  $('#walk-select').addEventListener('change', () => { if (/pick/.test(hintKey || '')) setHint(null); });
+  $('#walk-sum').addEventListener('click', e => { const b = e.target.closest('[data-act="clear-route"]'); if (b) { clearRoute(); $('#walk-select').focus(); } });
+  $('#detail-close').addEventListener('click', () => closeDetail());
+  $('#scrim').addEventListener('click', () => closeDetail());
+  $('#detail-add').addEventListener('click', () => { if (ST.detail) toggleStop(ST.detail); });
+  $('#map-msg').addEventListener('click', e => { if (e.target.closest('[data-act="map-retry"]')) retryTiles(); });
+  document.addEventListener('keydown', e => {
+    const det = $('#detail');
+    if (e.key === 'Escape' && !det.hidden) { e.preventDefault(); closeDetail(); return; }
+    if (e.key === 'Tab' && !det.hidden && det.getAttribute('aria-modal') === 'true') {
+      const f = $$('button:not([disabled]), a[href], input, select, summary', det).filter(x => x.getClientRects().length && !(x.closest('details') && !x.closest('details').open && x.tagName !== 'SUMMARY'));
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1], cur = document.activeElement;
+      if (!det.contains(cur)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && (cur === first || cur === det)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && cur === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  const onMq = () => applyLayoutMode();
+  if (mqDesktop.addEventListener) mqDesktop.addEventListener('change', onMq); else if (mqDesktop.addListener) mqDesktop.addListener(onMq);
+}
+function applyFilters() {
+  renderList(); renderFilters(); syncMarkers(); refreshMarkers();
+  if (map && isMapVisible()) { const b = mapBox(); if (b.w && b.h) fitAll(b); }
+}
+function clearFilters() { ST.q = ''; ST.region = ''; ST.grade = ''; ST.status = ''; $('#q').value = ''; applyFilters(); $('#q').focus(); }
+
+/* ---------- section highlight in the header ---------- */
+function initScrollSpy() {
+  if (!('IntersectionObserver' in window)) return;
+  const links = $$('#nav a'); const map = new Map();
+  links.forEach(l => { const id = (l.getAttribute('href') || '').slice(1); const sec = id && document.getElementById(id); if (sec) map.set(sec, l); });
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) { links.forEach(l => l.removeAttribute('aria-current')); const l = map.get(en.target); if (l) l.setAttribute('aria-current', 'location'); } });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+  map.forEach((l, sec) => io.observe(sec));
+}
+
+/* ---------- boot ---------- */
+function boot() {
+  if (!dataOk) { showDataError(); return; }
+  bind();
+  applyStatic();
+  renderAll();
+  setTab('list');
+  initMap();
+  initScrollSpy();
+  warnStorage();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+
 })();
