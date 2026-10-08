@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFC61A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10161D" media="(prefers-color-scheme: dark)">
+<title>東京銀杏地圖</title>
+<meta name="description" content="東京 17 處賞銀杏名所的狀態地圖與散步路線規劃。目前尚無 2026 官方銀杏資料，全部標為待確認；示意模式的資料為示意，非實況。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 14.5C7.5 14 4 10.5 3.4 5.2 6.6 3.6 9.6 4.6 12 7.2 14.4 4.6 17.4 3.6 20.6 5.2 20 10.5 16.5 14 12 14.5Z' fill='%23FFC61A' stroke='%2319202C' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M12 14.5V21' stroke='%2319202C' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#EDF0F3; --panel:#FFFFFF; --panel-2:#F5F7F9;
+  --ink:#19202C; --ink-2:#434E5F; --ink-3:#586374;
+  --line:#CFD6DF; --line-2:#E3E8EE;
+  --gold:#FFC61A; --gold-soft:#FFF1BE; --gold-deep:#7A5600;
+  --focus:#1747C8;
+  --head:#FFC61A; --head-ink:#19202C; --head-sub:#3A3417;
+  --strip:#19202C; --strip-ink:#FFC61A;
+  --land:#E8ECEF; --urban:#E1E6EB; --sea:#B7D4EA; --coast:#8FB4D0; --river:#9CC3E1; --park:#CBE0C0; --ward:#8F9CAE; --rail:#7D8A9D;
+  --geo:#46536A; --geo-sea:#2F4B66; --halo:#FFFFFF; --mk-edge:#19202C;
+  --route-core:#FFC61A; --route-case:#19202C;
+  --shadow:0 -6px 24px rgba(25,32,44,.16);
+  --sans:"Noto Sans TC","PingFang TC","Hiragino Sans","Microsoft JhengHei","Yu Gothic UI","Meiryo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --tab-h:56px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1218; --panel:#151C26; --panel-2:#1A2230;
+    --ink:#EEF1F5; --ink-2:#BAC3D0; --ink-3:#9CA7B8;
+    --line:#2D3848; --line-2:#222B38;
+    --gold:#FFCB2E; --gold-soft:#3B3010; --gold-deep:#FFD978;
+    --focus:#FFD866;
+    --head:#10161D; --head-ink:#FFCB2E; --head-sub:#B9C2CF;
+    --strip:#2B2309; --strip-ink:#FFD54A;
+    --land:#19212C; --urban:#1E2733; --sea:#0B2033; --coast:#1F4A6E; --river:#184065; --park:#1F3828; --ward:#52647C; --rail:#6F8099;
+    --geo:#B3C0D2; --geo-sea:#8FB7DA; --halo:#0F151D; --mk-edge:#F3F5F8;
+    --route-core:#FFCB2E; --route-case:#F3F5F8;
+    --shadow:0 -6px 24px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+h1,h2,h3,p,ul,ol,dl,dd,fieldset{margin:0;padding:0}
+ul,ol{list-style:none}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- 版面 ---------- */
+.shell{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom))}
+.mainc,.toolbar,.side{display:contents}
+
+/* ---------- 頂欄 ---------- */
+.top{background:var(--head);color:var(--head-ink);display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:54px;padding:5px max(14px,env(safe-area-inset-right)) 5px max(14px,env(safe-area-inset-left));border-bottom:2px solid var(--ink)}
+@media (prefers-color-scheme:dark){.top{border-bottom-color:var(--gold)}}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .ic{width:30px;height:30px;stroke-width:1.7}
+.brand h1{font-size:20px;line-height:1.15;font-weight:800;letter-spacing:.03em;white-space:nowrap}
+.brand p{font-size:12px;line-height:1.3;font-weight:600;color:var(--head-sub);white-space:nowrap}
+.switch{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 13px 0 9px;border:2px solid var(--head-ink);border-radius:999px;background:transparent;color:var(--head-ink);font-weight:800;font-size:14px;white-space:nowrap}
+.switch .trk{position:relative;width:38px;height:22px;border-radius:999px;background:var(--head-ink);opacity:.4;transition:opacity .18s}
+.switch .trk::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--head);transition:transform .18s}
+.switch[aria-checked=true] .trk{opacity:1}
+.switch[aria-checked=true] .trk::after{transform:translateX(16px)}
+.top :focus-visible{outline-color:var(--ink)}
+@media (prefers-color-scheme:dark){.top :focus-visible{outline-color:var(--focus)}}
+
+/* ---------- 示意條 ---------- */
+.strip{display:none;align-items:center;gap:10px;background:var(--strip);color:var(--strip-ink);padding:6px 14px 6px;font-size:13px;line-height:1.4;position:relative}
+.strip::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:repeating-linear-gradient(135deg,var(--gold) 0 7px,var(--strip) 7px 14px)}
+.strip b{font-size:15px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.strip span{color:#EDE6CE}
+@media (prefers-color-scheme:dark){.strip span{color:#E8DFC0}}
+.strip{padding-bottom:11px}
+[data-demo=on] .strip{display:flex;flex-wrap:wrap;column-gap:12px}
+
+/* ---------- 狀態時間軸（圖例）---------- */
+.board{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 12px 10px}
+.board-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;margin-bottom:6px}
+.board-head h2{font-size:13px;font-weight:800;letter-spacing:.1em;color:var(--ink-2);flex:none}
+.board-head .sum{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:4px;flex:none;white-space:nowrap}
+.linkbtn{border:0;background:none;text-decoration:underline;text-underline-offset:3px;font-weight:700;font-size:13px;min-height:44px;padding:0 6px;color:var(--ink)}
+.board-note{font-size:12.5px;line-height:1.4;color:var(--ink-2);flex:1;min-width:0}
+.legend{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.legend button{width:100%;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:1px;padding:9px 1px 4px;background:var(--panel);border:1.5px solid var(--line);border-radius:7px;position:relative;line-height:1.2}
+.legend button::before{content:"";position:absolute;left:5px;right:5px;top:-1.5px;height:4px;border-radius:0 0 3px 3px;background:var(--c,var(--line))}
+.legend button[aria-pressed=true]{background:var(--gold-soft);border-color:var(--ink)}
+.legend .sh{width:19px;height:19px}
+.legend .nm{display:block;font-size:12px;font-weight:700;line-height:1.25;text-align:center}
+.legend .nm i{display:block;font-style:normal;white-space:nowrap}
+.legend .cn{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.legend .dt{display:none;font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.hide-sm{display:none}
+.sh{width:20px;height:20px;flex:none;display:block;overflow:visible}
+.shp{fill:var(--c);stroke:var(--mk-edge);stroke-width:1.5;stroke-linejoin:round}
+.shp-u{fill:var(--halo);fill-opacity:.75;stroke:var(--ink-3);stroke-width:1.7;stroke-dasharray:3.2 2.4}
+.shq{font-size:10px;font-weight:800;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.st-u{--c:#8C95A1}.st-0{--c:#2F9E44}.st-1{--c:#A6CB3A}.st-2{--c:#F28C1B}.st-3{--c:#FFC21A}.st-4{--c:#8A5A32}.st-5{--c:#7B8591}
+
+/* 日期滑桿 */
+.slider{display:none;margin-top:9px;padding-top:8px;border-top:1px dashed var(--line)}
+[data-demo=on] .slider{display:block}
+.s-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:13px}
+.s-top b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.s-top span{color:var(--ink-2);font-size:12.5px;text-align:right}
+.slider input[type=range]{display:block;width:100%;height:44px;margin:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+.slider input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:6px;background:var(--bands);border:1.5px solid var(--ink)}
+.slider input[type=range]::-moz-range-track{height:9px;border-radius:6px;background:var(--bands);border:1.5px solid var(--ink)}
+.slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-10px;border-radius:50%;background:var(--ink);border:4px solid var(--gold);box-shadow:0 0 0 1.5px var(--ink)}
+.slider input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--ink);border:4px solid var(--gold);box-shadow:0 0 0 1.5px var(--ink)}
+.s-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-top:-6px;font-variant-numeric:tabular-nums}
+
+/* ---------- 工具列（區域篩選）---------- */
+.chips{display:flex;gap:6px;border:0;min-width:0;margin:0;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--line)}
+.chip{position:relative;flex:1 1 0;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line);border-radius:999px;background:var(--panel);font-size:13.5px;font-weight:700;white-space:nowrap;padding:0 6px;cursor:pointer}
+.chip input{position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px);margin:0;opacity:0;cursor:pointer}
+.chip small{font-size:12px;font-weight:600;color:var(--ink-2);margin-left:4px;font-variant-numeric:tabular-nums}
+.chip.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.chip.on small{color:var(--panel);opacity:.85}
+.chip:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+
+/* 地圖／清單／路線 分頁 */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr)}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:44px;border:0;background:none;font-size:12.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.tab input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.tab.on,.tab[aria-expanded=true]{color:var(--ink);box-shadow:inset 0 3px 0 var(--gold)}
+.tab:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:-4px}
+.tab .cnt{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;height:20px;border-radius:10px;background:#19202C;color:#FFC61A;box-shadow:0 0 0 2px #FFC61A;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 5px;font-variant-numeric:tabular-nums}
+.tab-route{display:flex}
+
+/* ---------- 舞台：地圖與清單 ---------- */
+.stage{position:relative;flex:1 1 auto;min-height:330px;background:var(--land)}
+.mapview{position:absolute;inset:0}
+.mapwrap{position:absolute;inset:0;overflow:hidden;background:var(--land);touch-action:none;cursor:grab;outline-offset:-3px;user-select:none;-webkit-user-select:none}
+.mapwrap.panning{cursor:grabbing}
+.map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sea{fill:var(--sea);stroke:var(--coast);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.urban{fill:var(--urban);stroke:var(--ward);stroke-width:1.2;stroke-dasharray:6 4;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.park{fill:var(--park);stroke:none}
+.riv{fill:none;stroke:var(--river);stroke-linecap:round;stroke-linejoin:round}
+.riv-s{vector-effect:non-scaling-stroke;stroke-width:1.4px}
+.rail{fill:none;stroke:var(--rail);stroke-width:2px;stroke-dasharray:7 4;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.rail-c{fill:none;stroke:var(--rail);stroke-width:1.6px;stroke-dasharray:2 4;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.moat{fill:var(--park);stroke:var(--river);stroke-width:1.4px;vector-effect:non-scaling-stroke}
+.rt-case{fill:none;stroke:var(--route-case);stroke-width:8px;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.rt-core{fill:none;stroke:var(--route-core);stroke-width:4px;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.rt-far{stroke-dasharray:1 9}
+.rt-farcore{stroke-dasharray:9 8;stroke-linecap:butt}
+.lbl{font-family:var(--sans);font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--halo);stroke-width:3.4px;stroke-linejoin:round;pointer-events:none}
+.lbl.ward{font-weight:600;fill:var(--geo);stroke-width:3px;letter-spacing:.06em}
+.lbl.pref{font-weight:700;fill:var(--geo);letter-spacing:.3em;stroke-width:3px}
+.lbl.seat{font-weight:700;font-style:italic;fill:var(--geo-sea);letter-spacing:.35em;stroke:var(--sea);stroke-width:3px}
+.lbl.stn{font-weight:600;fill:var(--geo);stroke-width:3px}
+.stn-dot{fill:var(--panel);stroke:var(--geo);stroke-width:2;pointer-events:none}
+.lbl.lmk{font-weight:600;fill:var(--geo);stroke-width:3px}
+.lmk-dot{fill:var(--geo);stroke:var(--halo);stroke-width:1.5;pointer-events:none}
+.pond{fill:var(--river);stroke:none}
+.mk,.cl{cursor:pointer;outline:none}
+.mk-hit{fill:transparent}
+.mk-pick,.mk-sel,.mk-focus{fill:none;display:none}
+.mk-pick{stroke:var(--gold);stroke-width:5}
+.mk.picked .mk-pick{display:block}
+.mk-sel{stroke:var(--ink);stroke-width:2.4;stroke-dasharray:none}
+.mk.sel .mk-sel{display:block}
+.mk-focus,.cl-focus{stroke:var(--focus);stroke-width:3.2}
+.mk:focus-visible .mk-focus{display:block}
+.cl-ring{fill:none;stroke:var(--rc,#8C95A1);stroke-width:5}
+.cl-bg{fill:#19202C;stroke:var(--mk-edge);stroke-width:1.4}
+.cl-n{fill:#FFC61A;font-size:14px;font-weight:800;text-anchor:middle;dominant-baseline:central;pointer-events:none;font-family:var(--sans)}
+.cl-focus{fill:none;display:none}
+.cl:focus-visible .cl-focus{display:block}
+.bdg-c{fill:#19202C;stroke:#FFC61A;stroke-width:2}
+.bdg-t{fill:#FFC61A;font-size:12.5px;font-weight:800;text-anchor:middle;dominant-baseline:central;font-family:var(--sans)}
+.mapctl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
+.mapctl button{width:46px;height:46px;display:grid;place-items:center;border:1.5px solid var(--ink);border-radius:10px;background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.maptag{position:absolute;left:10px;top:10px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:calc(100% - 76px);pointer-events:none}
+.maptag p{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:12.5px;font-weight:700;color:var(--ink-2);line-height:1.4}
+.maptag .demo-stamp{display:none;background:var(--strip);border-color:var(--gold);color:var(--strip-ink);letter-spacing:.04em}
+[data-demo=on] .maptag .demo-stamp{display:block}
+.mapfoot{position:absolute;left:10px;bottom:10px;z-index:3;display:flex;align-items:flex-end;gap:10px;pointer-events:none;font-size:12px;color:var(--ink-2);font-weight:600}
+.scale{display:flex;flex-direction:column;gap:2px;background:var(--panel);background:color-mix(in srgb,var(--panel) 82%,transparent);padding:3px 7px;border-radius:5px}
+.scale i{display:block;height:6px;border:2px solid var(--ink);border-top:0}
+.srcjump{position:absolute;right:10px;bottom:10px;z-index:3;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 13px;border:1.5px solid var(--ink);border-radius:999px;background:var(--panel);color:var(--ink);font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.empty-map{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:4;width:min(88%,360px);background:var(--panel);border:1.5px solid var(--ink);border-radius:12px;padding:16px;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.empty-map p,.empty p{font-weight:700;margin-bottom:4px}
+.empty-map small,.empty small{display:block;color:var(--ink-2);font-size:13px;margin-bottom:8px}
+
+/* 按鈕 */
+.btn{min-height:46px;padding:0 18px;border:2px solid var(--ink);border-radius:10px;background:var(--panel);color:var(--ink);font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;line-height:1.2}
+.btn.pri{background:var(--gold);color:#19202C}
+.btn[aria-pressed=true],.btn.pri[aria-pressed=true]{background:#19202C;color:#FFC61A;border-color:#FFC61A}
+
+/* ---------- 清單 ---------- */
+.listview{position:relative;background:var(--bg);padding-bottom:18px;min-height:330px}
+.demo-sticky{display:none;position:sticky;top:0;z-index:2;background:var(--strip);color:var(--strip-ink);padding:6px 14px;font-weight:800;font-size:13.5px;letter-spacing:.04em}
+[data-demo=on] .demo-sticky{display:block}
+.grp h3{display:flex;align-items:baseline;justify-content:space-between;padding:14px 14px 6px;font-size:13px;letter-spacing:.1em;font-weight:800;color:var(--ink-2)}
+.grp h3 span{font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums}
+.rows{background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.row{display:flex;align-items:stretch;border-top:1px solid var(--line-2)}
+.row:first-child{border-top:0}
+.row-main{flex:1;min-width:0;display:grid;grid-template-columns:26px minmax(0,1fr);column-gap:10px;row-gap:1px;align-items:center;text-align:left;background:none;border:0;padding:9px 6px 9px 14px;min-height:62px;color:var(--ink)}
+.row-main .sh{grid-row:1/5;align-self:center;width:24px;height:24px}
+.row-main>span{grid-column:2}
+.row-main .nm{font-weight:800;font-size:15.5px;line-height:1.3}
+.row-main .nm small{font-weight:600;font-size:12.5px;color:var(--ink-2);margin-left:6px}
+.row-main .sub{font-size:12.5px;color:var(--ink-2);line-height:1.35}
+.row-main .st{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.35}
+.row-main .mx{font-size:12.5px;font-weight:700;color:var(--gold-deep)}
+.row-main[aria-current=true]{background:var(--gold-soft)}
+.pick{position:relative;flex:none;width:66px;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.pick input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.pick .bx{width:24px;height:24px;border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center;background:var(--panel);color:#19202C}
+.pick .bx .ic{width:16px;height:16px;stroke-width:3;opacity:0}
+.pick input:checked ~ .bx{background:var(--gold)}
+.pick input:checked ~ .bx .ic{opacity:1}
+.pick input:focus-visible ~ .bx{outline:3px solid var(--focus);outline-offset:2px}
+.empty{padding:28px 20px;text-align:center}
+#listBody{max-width:880px;margin:0 auto}
+
+/* ---------- 卡片與路線（手機為底部抽屜）---------- */
+.sheet{position:fixed;left:0;right:0;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));z-index:30;max-height:54vh;max-height:54dvh;overflow:auto;overscroll-behavior:contain;background:var(--panel);border-top:2px solid var(--ink);border-radius:16px 16px 0 0;box-shadow:var(--shadow);padding:10px 16px 14px;visibility:hidden;opacity:0;transform:translateY(22px);transition:transform .22s ease,opacity .22s ease,visibility 0s linear .22s}
+.sheet.open{visibility:visible;opacity:1;transform:none;transition:transform .22s ease,opacity .22s ease,visibility 0s}
+.sh-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;position:sticky;top:-10px;z-index:3;background:var(--panel);padding:10px 0 2px;margin-top:-10px}
+.route .sh-head{align-items:center;min-height:48px}
+.x{flex:none;width:46px;height:46px;margin:-6px -10px -4px 0;display:grid;place-items:center;border:0;background:none;color:var(--ink);border-radius:50%}
+.stline{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;min-height:30px;font-weight:800;font-size:14.5px}
+.stline .sh{width:22px;height:22px}
+.tagdemo{display:none;background:var(--strip);color:var(--strip-ink);padding:1px 8px;border-radius:4px;font-size:12.5px;letter-spacing:.04em}
+[data-demo=on] .tagdemo{display:inline-block}
+.card h2{font-size:21px;line-height:1.3;font-weight:800;margin:2px 0 6px;letter-spacing:.01em}
+.card h2:focus{outline:none}
+.facts{display:flex;flex-wrap:wrap;gap:1px 16px;font-size:13.5px;line-height:1.5}
+.facts div{display:flex;gap:6px;min-width:0}
+.facts dt{color:var(--ink-2);font-weight:600;flex:none}
+.facts dd{min-width:0;overflow-wrap:anywhere}
+.cnote{margin-top:8px;font-size:13.5px;line-height:1.45;padding:6px 10px;border-left:4px solid var(--gold);background:var(--gold-soft)}
+.cnote b{font-weight:800}
+.cact{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cact .btn{padding:0 10px;font-size:14.5px;min-width:0;min-height:50px}
+.cact .btn.link{flex-direction:column;gap:0;line-height:1.25}
+.cact .btn.link small{display:block;font-size:11.5px;font-weight:600;color:var(--ink-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cact .btn.link span.row{display:flex;align-items:center;gap:6px}
+.card-empty{padding:6px 0 4px;color:var(--ink-2);font-size:14px}
+.card-empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+
+.route h2{font-size:18px;font-weight:800;letter-spacing:.02em}
+.route .hint{font-size:13px;color:var(--ink-2);margin:2px 0 10px;line-height:1.45}
+.presets{display:grid;gap:7px;margin-bottom:12px}
+.presets button{text-align:left;min-height:52px;padding:7px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);display:flex;flex-direction:column;gap:1px;line-height:1.35}
+.presets b{font-size:12.5px;letter-spacing:.06em;color:var(--ink-2)}
+.presets span{font-size:14px;font-weight:700}
+.rb-empty{font-size:14px;color:var(--ink-2);padding:10px 12px;border:1.5px dashed var(--line);border-radius:10px;margin-bottom:12px}
+.stops{counter-reset:s;margin-bottom:8px}
+.stop{display:grid;grid-template-columns:30px minmax(0,1fr) 44px;column-gap:10px;align-items:center;min-height:46px}
+.stop .no{width:28px;height:28px;border-radius:50%;background:#19202C;color:#FFC61A;box-shadow:0 0 0 2px #FFC61A;font-weight:800;font-size:14px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.stop .nm{font-weight:800;line-height:1.3}
+.stop .nm small{display:block;font-weight:500;font-size:12.5px;color:var(--ink-2)}
+.stop .rm{width:44px;height:44px;border:0;background:none;color:var(--ink-2);display:grid;place-items:center;border-radius:50%}
+.leg{display:grid;grid-template-columns:30px 1fr;column-gap:10px;min-height:38px;font-size:13px;color:var(--ink-2)}
+.leg i{display:block;width:3px;margin:0 auto;background:var(--ink);border-radius:2px}
+.leg i.far{background:repeating-linear-gradient(var(--ink) 0 5px,transparent 5px 9px)}
+.leg div{padding:5px 0}
+.leg b{color:var(--ink);font-variant-numeric:tabular-nums}
+.leg .far-hint{display:block;margin-top:2px;font-weight:800;color:var(--ink);background:var(--gold-soft);border-left:4px solid var(--gold);padding:3px 8px}
+.total{font-size:14px;padding:8px 0;border-top:1px solid var(--line);margin-top:2px}
+.total b{font-variant-numeric:tabular-nums}
+.disc{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-bottom:8px}
+.ract{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;position:sticky;bottom:-14px;background:var(--panel);padding:8px 0 4px}
+.rmsg{min-height:22px;font-size:13.5px;font-weight:700;margin-top:4px}
+.fallback{width:100%;min-height:120px;margin-top:6px;padding:8px;border:2px solid var(--ink);border-radius:8px;background:var(--panel-2);font:13px/1.5 var(--sans)}
+
+/* ---------- 頁尾 ---------- */
+.foot{background:var(--panel);border-top:2px solid var(--ink);padding:22px 16px calc(28px + var(--tab-h) + env(safe-area-inset-bottom))}
+.foot-grid{display:grid;gap:22px;max-width:1180px;margin:0 auto}
+.foot h2{font-size:13px;letter-spacing:.12em;font-weight:800;color:var(--ink-2);margin-bottom:6px}
+.foot p{font-size:14px;line-height:1.65;margin-bottom:6px}
+.foot .big{font-size:16px;font-weight:800}
+.foot ul{display:grid}
+@media (min-width:640px){.foot ul.two{grid-template-columns:1fr 1fr;column-gap:24px}}
+.foot li a{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 0;font-weight:700;font-size:14px;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:4px;overflow-wrap:anywhere}
+.foot li a .ic{width:16px;height:16px;stroke-width:2.2}
+.foot small{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.55;font-weight:500}
+.foot small.url{overflow-wrap:anywhere;margin:-2px 0 8px;font-variant-numeric:tabular-nums}
+.card a.link{display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+/* ---------- 桌面版 ---------- */
+@media (min-width:980px){
+  .shell{display:grid;grid-template-columns:minmax(0,1fr) 410px;grid-template-rows:auto minmax(0,1fr);height:max(100vh,700px);height:max(100dvh,700px);min-height:0;padding-bottom:0}
+  .mainc{display:flex;flex-direction:column;min-width:0;min-height:0}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 18px;background:var(--bg);border-bottom:1px solid var(--line)}
+  .chips{flex:1;max-width:480px;padding:0;background:none;border:0}
+  .top{grid-column:1/-1;padding-left:22px;padding-right:22px;min-height:60px}
+  .brand h1{font-size:23px}
+  .brand p{font-size:12.5px}
+  .side{display:flex;flex-direction:column;gap:14px;min-height:0;overflow:auto;padding:14px;background:var(--bg);border-left:1px solid var(--line)}
+  .sheet{position:static;visibility:visible;opacity:1;transform:none;max-height:none;overflow:visible;border:1.5px solid var(--line);border-radius:14px;box-shadow:none;padding:14px 16px 16px;transition:none;flex:none}
+  .card .x{display:none}
+  .card.has .x{display:grid}
+  .route .x{display:none}
+  .board{padding:10px 18px 12px}
+  .legend{grid-template-columns:1.2fr repeat(6,1fr);gap:0;border-top:2px solid var(--ink)}
+  .legend button{border:0;border-radius:0;background:none;min-height:84px;padding:12px 4px 6px;border-right:1px solid var(--line-2)}
+  .legend .nm{font-size:13px}
+  .legend .nm i{display:inline}
+  .hide-sm{display:inline}
+  .legend li:last-child button{border-right:0}
+  .legend button::before{left:0;right:0;top:0;height:5px;border-radius:0}
+  .legend button[aria-pressed=true]{background:var(--gold-soft);outline:2px solid var(--ink);outline-offset:-2px}
+  .legend .dt{display:block}
+  .tabbar{position:static;height:auto;padding:0;border:2px solid var(--ink);border-radius:10px;overflow:hidden;display:flex;background:var(--panel);z-index:auto}
+  .tab{flex-direction:row;gap:7px;min-width:96px;padding:0 14px;min-height:44px;font-size:14px}
+  .tab.on{background:var(--ink);color:var(--panel);box-shadow:none}
+  .tab-route{display:none}
+  .stage{min-height:0}
+  .listview{position:absolute;inset:0;overflow:auto;min-height:0}
+  .foot{padding:26px 22px 34px}
+  .foot-grid{grid-template-columns:1.1fr 1.5fr 1fr;gap:34px}
+  .foot-wide{grid-column:1/-1}
+}
+@media (max-width:979px){
+  .listview{min-height:330px}
+}
+@media (min-width:640px) and (max-width:979px){
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .hide-sm{display:inline}
+  .legend{gap:6px}
+  .legend button{min-height:78px}
+  .legend .nm i{display:inline}
+}
+@media (max-width:339px){
+  .legend{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (max-width:979px){
+  [data-sheet=open] .board,[data-sheet=open] .chips{display:none}
+  [data-demo=on]:not([data-filt="1"]) .board-head{position:absolute;width:1px;height:1px;margin:0;min-height:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+@media (max-width:979px) and (max-height:520px){
+  .stage{min-height:240px}
+  .top{min-height:46px;padding-top:2px;padding-bottom:2px}
+  .brand p{display:none}
+}
+@media (max-width:559px){
+  .strip span{display:none}
+  .strip{padding-top:5px;padding-bottom:10px}
+  .s-ends{display:none}
+  .slider{margin-top:6px;padding-top:4px}
+}
+@media (max-width:380px){
+  .brand h1{font-size:18px}
+  .brand .ic{width:26px;height:26px}
+  .switch{padding:0 10px 0 7px;gap:7px;font-size:13px}
+  .switch .trk{width:34px}
+  .switch[aria-checked=true] .trk::after{transform:translateX(12px)}
+  .chip{font-size:13px;padding:0 3px}
+  .chip small{margin-left:3px}
+}
+@media (hover:hover){
+  .btn:not([aria-pressed=true]):hover{background:var(--panel-2)}
+  .btn.pri:not([aria-pressed=true]):hover{background:#FFD24D;color:#19202C}
+  .legend button:hover,.chip:hover,.presets button:hover{border-color:var(--ink)}
+  .row-main:not([aria-current=true]):hover{background:var(--panel-2)}
+  .mapctl button:hover,.srcjump:hover{background:var(--gold-soft)}
+  .tab:not(.on):hover{color:var(--ink)}
+  .x:hover,.stop .rm:hover{background:var(--panel-2)}
+  .foot li a:hover{text-decoration-color:var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">這個網站需要啟用 JavaScript 才能顯示地圖與路線規劃。</p></noscript>
+<p id="liveMsg" class="sr" role="status" aria-live="polite"></p>
+
+<!-- 標記形狀（每個階段一種形狀，不只靠顏色） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="sh-u"><circle class="shp-u" r="8"/><text class="shq">?</text></g>
+    <g id="sh-0"><circle class="shp" r="8"/></g>
+    <g id="sh-1"><path class="shp" d="M0-10.5 9.5 0 0 10.5-9.5 0Z"/></g>
+    <g id="sh-2"><path class="shp" d="M0-9.5 10.5 8H-10.5Z"/></g>
+    <g id="sh-3"><path class="shp" d="M0-11.5 2.9-4 11-3.6 4.7 1.5 6.8 9.4 0 5 -6.8 9.4-4.7 1.5-11-3.6-2.9-4Z"/></g>
+    <g id="sh-4"><path class="shp" d="M0 9.5 10.5-8H-10.5Z"/></g>
+    <g id="sh-5"><path class="shp" d="M-9.5-4.8-4.8-9.5 0-4.8 4.8-9.5 9.5-4.8 4.8 0 9.5 4.8 4.8 9.5 0 4.8-4.8 9.5-9.5 4.8-4.8 0Z"/></g>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M9 7h8v8M17 7 7 17"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6.5 6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5ZM9 4v13.5M15 6.5V20"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h11M9 12h11M9 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H14a3 3 0 0 0 3-3v-1.5a3 3 0 0 0-3-3h-4a3 3 0 0 1-3-3V8.2"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M12 14.5C7.5 14 4 10.5 3.4 5.2 6.6 3.6 9.6 4.6 12 7.2 14.4 4.6 17.4 3.6 20.6 5.2 20 10.5 16.5 14 12 14.5ZM12 14.5V21"/></symbol>
+  </defs>
+</svg>
+
+<div class="shell" id="app" data-demo="off">
+  <header class="top">
+    <div class="brand">
+      <svg class="ic" aria-hidden="true"><use href="#i-leaf"/></svg>
+      <div>
+        <h1>東京銀杏地圖</h1>
+        <p class="num">資料整理日 2026-09-29</p>
+      </div>
+    </div>
+    <button class="switch" id="demoToggle" type="button" role="switch" aria-checked="false" aria-label="示意模式（用示意資料展示六個階段的推進）"><span class="trk" aria-hidden="true"></span><span>示意模式</span></button>
+  </header>
+
+  <div class="mainc">
+    <div class="strip" id="strip" role="note">
+      <b>示意資料，非實況</b>
+      <span>依氣象廳東京平年值（黃葉日 11/23、落葉日 12/3）推估，所有地點套用同一組日期，並非各園觀測。</span>
+    </div>
+
+    <section class="board" aria-label="銀杏狀態時間軸，點選可依狀態篩選">
+      <div class="board-head">
+        <h2 id="boardTitle" class="hide-sm">銀杏狀態時間軸</h2>
+        <p class="board-note" id="boardNote">尚無 2026 官方銀杏資料，全部標為「待確認」</p>
+        <p class="sum" id="sum" role="status" aria-live="polite"><span class="num"><span class="hide-sm">顯示 </span><span id="sumTxt">17／17</span> 處</span><button class="linkbtn" id="clearF" type="button" hidden>清除篩選</button></p>
+      </div>
+      <ol class="legend" id="legend" aria-label="狀態圖例，可點選篩選"></ol>
+      <div class="slider" id="sliderRow">
+        <div class="s-top"><span id="dayLab">示意日期 <b id="dayOut">11/23</b></span><span id="dayStage">見頃（示意）</span></div>
+        <input id="day" type="range" min="0" max="65" step="1" value="33" aria-label="示意日期，10 月 21 日到 12 月 25 日" aria-describedby="dayStage">
+        <div class="s-ends"><span>10/21</span><span>12/25</span></div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <fieldset class="chips" id="areaChips">
+        <legend class="sr">依區域篩選</legend>
+      </fieldset>
+      <div class="tabbar" id="tabbar" role="group" aria-label="切換顯示">
+        <label class="tab on"><input type="radio" name="view" value="map" checked aria-label="地圖"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span>地圖</span></label>
+        <label class="tab"><input type="radio" name="view" value="list" aria-label="清單"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>清單</span></label>
+        <button class="tab tab-route" id="routeTab" type="button" aria-expanded="false" aria-controls="route"><svg class="ic" aria-hidden="true"><use href="#i-route"/></svg><span>路線</span><span class="cnt" id="routeCnt" hidden>0</span></button>
+      </div>
+    </div>
+
+    <main class="stage" id="stage">
+      <div class="mapview" id="mapView">
+        <div class="mapwrap" id="mapWrap" tabindex="0" role="group" aria-label="東京銀杏地圖，可縮放。方向鍵移動，加號與減號縮放，0 回到全圖，Tab 逐一切換地點標記。位置為示意。">
+          <svg class="map" id="map" xmlns="http://www.w3.org/2000/svg">
+            <g id="gWorld" aria-hidden="true">
+              <g id="gBase"></g>
+              <g id="gRoute"></g>
+            </g>
+            <g id="gLabels" aria-hidden="true"></g>
+            <g id="gMarkers"></g>
+            <g id="gBadges"></g>
+          </svg>
+          <div class="maptag">
+            <p>位置示意：標記依經緯度概略放置</p>
+            <p class="demo-stamp">示意資料，非實況</p>
+          </div>
+          <div class="mapctl">
+            <button type="button" id="zin" aria-label="放大地圖"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            <button type="button" id="zout" aria-label="縮小地圖"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></button>
+            <button type="button" id="zfit" aria-label="回到全圖"><svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg></button>
+          </div>
+          <div class="mapfoot"><div class="scale" id="scale"><i id="scaleBar"></i><span id="scaleTxt">約 5 km</span></div></div>
+          <a class="srcjump mapctl2" href="#foot">來源與聲明<svg class="ic" aria-hidden="true" style="width:16px;height:16px"><use href="#i-down"/></svg></a>
+          <div class="empty-map" id="mapEmpty" hidden>
+            <p>沒有符合條件的地點</p>
+            <small>目前的區域或狀態篩選下沒有任何地點。</small>
+            <button class="btn pri" type="button" data-clear>清除篩選</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="listview" id="listView" hidden>
+        <div class="demo-sticky">示意資料，非實況</div>
+        <div id="listBody"></div>
+        <div class="empty" id="listEmpty" hidden>
+          <p>沒有符合條件的地點</p>
+          <small>目前的區域或狀態篩選下沒有任何地點。</small>
+          <button class="btn pri" type="button" data-clear>清除篩選</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <aside class="side" aria-label="地點卡片與路線規劃">
+    <section class="sheet card" id="card" aria-labelledby="cardTitle">
+      <div class="card-empty" id="cardEmpty">
+        <b>地點卡片</b>
+        點選地圖上的標記或清單中的地點，這裡會顯示名稱、狀態、區域與官網。
+      </div>
+      <div id="cardBody" hidden>
+        <div class="sh-head">
+          <p class="stline" id="cStatus"><svg class="sh" viewBox="-12 -12 24 24" aria-hidden="true"><use id="cUse" href="#sh-u" class="st-u"/></svg><span id="cStName">待確認</span><span class="tagdemo">示意資料，非實況</span></p>
+          <button class="x" id="cardClose" type="button" aria-label="關閉卡片"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <h2 id="cardTitle" tabindex="-1"></h2>
+        <dl class="facts">
+          <div><dt>日文名</dt><dd id="cJa" lang="ja"></dd></div>
+          <div><dt>區域</dt><dd id="cArea"></dd></div>
+          <div><dt>位置</dt><dd id="cPos"></dd></div>
+        </dl>
+        <p class="cnote" id="cNote" hidden></p>
+        <div class="cact">
+          <a class="btn link" id="cLink" target="_blank" rel="noopener noreferrer"><span class="row"><span>官網</span><svg class="ic" style="width:18px;height:18px" aria-hidden="true"><use href="#i-ext"/></svg></span><small id="cHost"></small></a>
+          <button class="btn pri" id="cPick" type="button" aria-pressed="false">加入路線</button>
+        </div>
+        <p class="disc hide-sm" id="cLinkTxt" style="margin-top:8px;word-break:break-all"></p>
+      </div>
+          </section>
+
+    <section class="sheet route" id="route" aria-labelledby="routeTitle">
+      <div class="sh-head">
+        <h2 id="routeTitle">散步路線規劃</h2>
+        <button class="x" id="routeClose" type="button" aria-label="收合路線規劃"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <p class="hint">勾選 2–5 處，依最近鄰排序，起點為最先勾選的地點。</p>
+      <div class="presets" role="group" aria-label="預設路線">
+        <button type="button" data-preset="0"><b>預設路線 A</b><span lang="ja">日比谷公園 → 皇居東御苑 → 明治神宮外苑</span></button>
+        <button type="button" data-preset="1"><b>預設路線 B</b><span lang="ja">上野恩賜公園 → 旧岩崎邸庭園 → 小石川植物園</span></button>
+      </div>
+      <div id="routeBody"></div>
+      <div class="ract">
+        <button class="btn pri" id="copyBtn" type="button">複製路線</button>
+        <button class="btn" id="clearBtn" type="button">清除重選</button>
+      </div>
+      <p class="rmsg" id="rmsg" role="status" aria-live="polite"></p>
+      <textarea class="fallback" id="fallback" readonly hidden aria-label="路線文字，請手動全選複製"></textarea>
+    </section>
+  </aside>
+</div>
+
+<footer class="foot" id="foot">
+    <div class="foot-grid">
+      <section aria-labelledby="f1">
+        <h2 id="f1">資料來源</h2>
+        <p>資料來源為「東京銀杏官方資料來源整理表」、各園官網與 2025 年東京都公園協會紅葉情報公告。</p>
+        <ul>
+          <li><a href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0" target="_blank" rel="noopener noreferrer"><span>東京銀杏官方資料來源整理表</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a><small class="url">docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0</small></li>
+          <li><a href="https://www.tokyo-park.or.jp/association/assets/20251104_2025autumnleaves_pressrelease.pdf" target="_blank" rel="noopener noreferrer"><span>2025 年東京都公園協會紅葉情報公告（PDF）</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+        </ul>
+      </section>
+      <section aria-labelledby="f2">
+        <h2 id="f2">各園官網</h2>
+        <ul class="two">
+          <li><a href="https://www.tokyo-park.or.jp/" target="_blank" rel="noopener noreferrer"><span>東京都公園協會（12 處）</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+          <li><a href="https://www.showakinen-koen.jp/" target="_blank" rel="noopener noreferrer"><span lang="ja">昭和記念公園</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+          <li><a href="https://fng.or.jp/shinjuku/" target="_blank" rel="noopener noreferrer"><span lang="ja">新宿御苑</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+          <li><a href="https://www.kunaicho.go.jp/visit/higashigyoen/index.html" target="_blank" rel="noopener noreferrer"><span lang="ja">皇居東御苑（宮內廳）</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+          <li><a href="https://koishikawa-bg.jp/" target="_blank" rel="noopener noreferrer"><span lang="ja">小石川植物園</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+          <li><a href="https://www.meijijingugaien.jp/" target="_blank" rel="noopener noreferrer"><span lang="ja">明治神宮外苑</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+        </ul>
+      </section>
+      <section aria-labelledby="f3">
+        <h2 id="f3">聲明</h2>
+        <p class="big">本網站為教學使用，非營利。</p>
+        <p class="big">狀態以官方公告為準。</p>
+        <p>目前沒有 2026 年的即時銀杏資料，所有地點預設為「待確認」。資料整理日 2026-09-29。</p>
+      </section>
+      <section class="foot-wide" aria-labelledby="f4">
+        <h2 id="f4">示意模式與估算說明</h2>
+        <small>示意模式的日期參數：以氣象廳東京「いちょう黄葉日」平年值 11/23 為見頃起點，「いちょう落葉日」平年值 12/3（1991–2020）為落葉起點；色づき始め（10/26）、黃葉進行（11/9）、落葉始め（11/29）的界線為示意參數。近年東京黃葉日差異可達一週以上（2023 年 12/1、2024 年 12/3、2025 年 11/22）。所有地點套用同一組日期，不是各園觀測。</small>
+        <ul>
+          <li><a href="https://www.data.jma.go.jp/sakura/data/phn_012.html" target="_blank" rel="noopener noreferrer"><span>氣象廳：いちょうの黄葉日</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+          <li><a href="https://www.data.jma.go.jp/sakura/data/phn_013.html" target="_blank" rel="noopener noreferrer"><span>氣象廳：いちょうの落葉日</span><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg></a></li>
+        </ul>
+        <small>地圖為自繪的東京簡圖，地點位置依近似經緯度概略放置（位置示意）。路線距離為兩地之間的直線距離，步行時間以 80 公尺／分估算，皆為估算，不是實際步行路徑。中文名稱為編輯譯寫，非官方名稱；區域（都心、東部、西部、北部）為依所在行政區的編輯分類。本頁不載入任何外部資源，離線也能使用。</small>
+      </section>
+    </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   資料（寫死在這裡；不抓取任何即時資料）
+   座標為近似值（園區代表點），僅用於示意位置與直線距離估算。
+   ===================================================================== */
+var DATA_DATE='2026-09-29';
+var AREAS=['都心','東部','西部','北部'];
+var SPOTS=[
+ {id:'ueno',zh:'上野恩賜公園',ja:'上野恩賜公園',area:'東部',loc:'台東區',lat:35.7130,lng:139.7724,url:'https://www.tokyo-park.or.jp/park/ueno/'},
+ {id:'kiba',zh:'木場公園',ja:'木場公園',area:'東部',loc:'江東區',lat:35.6752,lng:139.8085,url:'https://www.tokyo-park.or.jp/park/kiba/'},
+ {id:'koganei',zh:'小金井公園',ja:'小金井公園',area:'西部',loc:'小金井市等',lat:35.7155,lng:139.5189,url:'https://www.tokyo-park.or.jp/park/koganei/'},
+ {id:'siba',zh:'芝公園',ja:'芝公園',area:'都心',loc:'港區',lat:35.6555,lng:139.7480,url:'https://www.tokyo-park.or.jp/park/siba/',mixed:true},
+ {id:'johoku',zh:'城北中央公園',ja:'城北中央公園',area:'北部',loc:'板橋區、練馬區',lat:35.7564,lng:139.6730,url:'https://www.tokyo-park.or.jp/park/johoku-chuo/',mixed:true},
+ {id:'zempuku',zh:'善福寺川綠地',ja:'善福寺川緑地',area:'西部',loc:'杉並區',lat:35.6920,lng:139.6305,url:'https://www.tokyo-park.or.jp/park/zempukujigawa-ryokuchi/',note:'2025 年官方名單與和田堀公園合併為一列。'},
+ {id:'wadabori',zh:'和田堀公園',ja:'和田堀公園',area:'西部',loc:'杉並區',lat:35.6855,lng:139.6395,url:'https://www.tokyo-park.or.jp/park/wadabori/',note:'2025 年官方名單與善福寺川綠地合併為一列。'},
+ {id:'toyama',zh:'戶山公園',ja:'戸山公園',area:'都心',loc:'新宿區',lat:35.7037,lng:139.7135,url:'https://www.tokyo-park.or.jp/park/toyama/',mixed:true},
+ {id:'hikari',zh:'光之丘公園',ja:'光が丘公園',area:'北部',loc:'練馬區、板橋區',lat:35.7662,lng:139.6295,url:'https://www.tokyo-park.or.jp/park/hikarigaoka/'},
+ {id:'hibiya',zh:'日比谷公園',ja:'日比谷公園',area:'都心',loc:'千代田區',lat:35.6732,lng:139.7555,url:'https://www.tokyo-park.or.jp/park/hibiya/'},
+ {id:'yoyogi',zh:'代代木公園',ja:'代々木公園',area:'都心',loc:'澀谷區',lat:35.6717,lng:139.6965,url:'https://www.tokyo-park.or.jp/park/yoyogi/'},
+ {id:'iwasaki',zh:'舊岩崎邸庭園',ja:'旧岩崎邸庭園',area:'東部',loc:'台東區（入口）',lat:35.7092,lng:139.7683,url:'https://www.tokyo-park.or.jp/park/kyu-iwasaki-tei/'},
+ {id:'showa',zh:'昭和紀念公園',ja:'昭和記念公園',area:'西部',loc:'立川市、昭島市',lat:35.7095,lng:139.3948,url:'https://www.showakinen-koen.jp/'},
+ {id:'gyoen',zh:'新宿御苑',ja:'新宿御苑',area:'都心',loc:'新宿區、澀谷區',lat:35.6852,lng:139.7097,url:'https://fng.or.jp/shinjuku/'},
+ {id:'kokyo',zh:'皇居東御苑',ja:'皇居東御苑',area:'都心',loc:'千代田區',lat:35.6870,lng:139.7574,url:'https://www.kunaicho.go.jp/visit/higashigyoen/index.html',note:'不是皇居外苑，也不是北之丸公園。'},
+ {id:'koishikawa',zh:'小石川植物園',ja:'小石川植物園',area:'都心',loc:'文京區',lat:35.7189,lng:139.7454,url:'https://koishikawa-bg.jp/',note:'與小石川後樂園是不同地點。'},
+ {id:'gaien',zh:'明治神宮外苑',ja:'明治神宮外苑',area:'都心',loc:'新宿區（外苑所在地）',lat:35.6739,lng:139.7199,url:'https://www.meijijingugaien.jp/',note:'指外苑的銀杏並木，不是明治神宮內苑。'}
+];
+var BY={};SPOTS.forEach(function(s){BY[s.id]=s;s.host=s.url.replace(/^https?:\/\/(www\.)?/,'');});
+var PRESETS=[['hibiya','kokyo','gaien'],['ueno','iwasaki','koishikawa']];
+
+/* 六階段（固定顏色＋形狀＋文字），另加「待確認」 */
+var STAGES=[
+ {n:'青葉',c:'#2F9E44',d:'～10/25'},
+ {n:'色づき始め',c:'#A6CB3A',d:'10/26–11/8'},
+ {n:'黃葉進行',c:'#F28C1B',d:'11/9–11/22'},
+ {n:'見頃',c:'#FFC21A',d:'11/23–11/28'},
+ {n:'落葉始め',c:'#8A5A32',d:'11/29–12/2'},
+ {n:'落葉',c:'#7B8591',d:'12/3～'}
+];
+var UNK={n:'待確認',c:'#8C95A1'};
+var DAY0=Date.UTC(2026,9,21), DAYS=66; /* 10/21 – 12/25 */
+function dateOf(i){var d=new Date(DAY0+i*864e5);return {m:d.getUTCMonth()+1,d:d.getUTCDate()};}
+function fmtDay(i){var x=dateOf(i);return x.m+'/'+x.d;}
+function stageOfDay(i){var x=dateOf(i),k=x.m*100+x.d;return k<=1025?0:k<=1108?1:k<=1122?2:k<=1128?3:k<=1202?4:5;}
+
+/* =====================================================================
+   小工具
+   ===================================================================== */
+var NS='http://www.w3.org/2000/svg';
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function S_(tag,attrs,parent){var e=document.createElementNS(NS,tag);if(attrs)for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function H_(tag,attrs,parent,text){var e=document.createElement(tag);if(attrs)for(var k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function f1(n){return (Math.round(n*10)/10).toString();}
+function rad(x){return x*Math.PI/180;}
+function haversine(a,b){var R=6371008.8,dLa=rad(b.lat-a.lat),dLo=rad(b.lng-a.lng),la1=rad(a.lat),la2=rad(b.lat);var h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLo/2)*Math.sin(dLo/2);return 2*R*Math.asin(Math.sqrt(h));}
+function fmtDist(m){return m<1000?'約 '+(Math.round(m/10)*10)+' m':'約 '+f1(m/1000)+' km';}
+function walkMin(m){return Math.max(1,Math.round(m/80));}
+var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)');
+function noMotion(){return reduced&&reduced.matches;}
+var mqPhone=window.matchMedia('(max-width: 979px)');
+function isPhone(){return mqPhone.matches;}
+
+/* =====================================================================
+   狀態
+   ===================================================================== */
+var S={demo:false,day:33,area:'all',stage:null,view:'map',sel:null,sheet:null,picked:[]};
+var app=$('#app');
+
+function stageIdx(){return S.demo?stageOfDay(S.day):-1;}
+function stInfo(){var i=stageIdx();return i<0?UNK:STAGES[i];}
+function stUse(i){return i<0?'#sh-u':'#sh-'+i;}
+function stCls(i){return i<0?'st-u':'st-'+i;}
+function passArea(s){return S.area==='all'||s.area===S.area;}
+function passStage(){return S.stage===null||S.stage===stageIdx();}
+function passes(s){return passArea(s)&&passStage();}
+function visibleSpots(){return SPOTS.filter(passes);}
+
+/* =====================================================================
+   簡圖幾何（lng,lat → 世界座標；1 單位 = 50 m）
+   ===================================================================== */
+var LNG0=139.12,LAT1=36.0,KX=90.44,KY=111.0,U=20;
+function wx(lng){return (lng-LNG0)*KX*U;}
+function wy(lat){return (LAT1-lat)*KY*U;}
+function fx(n){return (Math.round(n*10)/10);}
+function curve(pts,closed){
+  var P=pts.map(function(p){return [wx(p[0]),wy(p[1])];}),n=P.length;
+  var d='M'+fx(P[0][0])+' '+fx(P[0][1]);
+  var segs=closed?n:n-1;
+  for(var i=0;i<segs;i++){
+    var p0=P[closed?(i-1+n)%n:Math.max(i-1,0)],p1=P[i],p2=P[(i+1)%n],p3=P[closed?(i+2)%n:Math.min(i+2,n-1)];
+    d+='C'+fx(p1[0]+(p2[0]-p0[0])/6)+' '+fx(p1[1]+(p2[1]-p0[1])/6)+' '+fx(p2[0]-(p3[0]-p1[0])/6)+' '+fx(p2[1]-(p3[1]-p1[1])/6)+' '+fx(p2[0])+' '+fx(p2[1]);
+  }
+  return d+(closed?'Z':'');
+}
+function poly(pts,closed){return 'M'+pts.map(function(p){return fx(wx(p[0]))+' '+fx(wy(p[1]));}).join('L')+(closed?'Z':'');}
+
+var COAST=[[139.600,35.330],[139.640,35.390],[139.668,35.430],[139.693,35.462],[139.712,35.485],[139.725,35.500],[139.738,35.515],[139.760,35.528],[139.778,35.538],[139.800,35.538],[139.835,35.545],[139.846,35.558],[139.822,35.571],[139.792,35.580],[139.775,35.592],[139.764,35.606],[139.762,35.625],[139.761,35.640],[139.760,35.650],[139.766,35.660],[139.776,35.664],[139.790,35.654],[139.808,35.646],[139.832,35.642],[139.860,35.643],[139.884,35.640],[139.900,35.636],[139.912,35.622],[139.930,35.625],[139.965,35.645],[140.000,35.668],[140.060,35.640],[140.100,35.560]];
+var SEA_CLOSE=[[140.12,35.45],[140.10,35.20],[139.60,35.20]];
+var WARDS=[[139.572,35.770],[139.600,35.776],[139.640,35.787],[139.665,35.795],[139.690,35.805],[139.715,35.800],[139.745,35.797],[139.770,35.815],[139.800,35.826],[139.835,35.815],[139.862,35.795],[139.869,35.760],[139.872,35.720],[139.868,35.680],[139.880,35.642],[139.860,35.643],[139.832,35.642],[139.808,35.646],[139.790,35.654],[139.776,35.664],[139.766,35.660],[139.760,35.650],[139.761,35.640],[139.762,35.625],[139.764,35.606],[139.775,35.592],[139.792,35.580],[139.822,35.571],[139.846,35.558],[139.835,35.545],[139.800,35.538],[139.778,35.538],[139.750,35.552],[139.715,35.572],[139.690,35.585],[139.665,35.600],[139.625,35.608],[139.592,35.630],[139.575,35.650],[139.572,35.690],[139.568,35.730]];
+var TAMA=[[139.100,35.800],[139.180,35.790],[139.250,35.785],[139.290,35.770],[139.325,35.745],[139.360,35.715],[139.395,35.690],[139.415,35.665],[139.445,35.655],[139.480,35.652],[139.520,35.648],[139.560,35.640],[139.592,35.630],[139.625,35.608],[139.665,35.600],[139.690,35.585],[139.715,35.572],[139.750,35.552],[139.778,35.538]];
+var ARAKAWA=[[139.600,35.850],[139.640,35.830],[139.680,35.812],[139.705,35.795],[139.726,35.784],[139.760,35.783],[139.800,35.775],[139.830,35.755],[139.845,35.730],[139.845,35.700],[139.840,35.680],[139.835,35.660],[139.838,35.642]];
+var SUMIDA=[[139.726,35.784],[139.745,35.770],[139.765,35.752],[139.786,35.741],[139.794,35.736],[139.797,35.725],[139.797,35.711],[139.795,35.695],[139.795,35.680],[139.789,35.668],[139.784,35.656]];
+var EDOGAWA=[[139.865,35.900],[139.862,35.830],[139.860,35.800],[139.870,35.750],[139.868,35.700],[139.873,35.665],[139.882,35.640]];
+var KANDA=[[139.575,35.700],[139.600,35.703],[139.640,35.705],[139.670,35.703],[139.700,35.708],[139.720,35.707],[139.740,35.702],[139.760,35.699],[139.775,35.698],[139.795,35.695]];
+var ZENPUKU=[[139.585,35.722],[139.600,35.715],[139.620,35.700],[139.635,35.690],[139.652,35.689]];
+var YAMA=[[139.7671,35.6812],[139.7710,35.6918],[139.7741,35.6984],[139.7745,35.7075],[139.7774,35.7141],[139.7782,35.7206],[139.7708,35.7281],[139.7608,35.7381],[139.7468,35.7366],[139.7393,35.7334],[139.7288,35.7316],[139.7109,35.7295],[139.7063,35.7210],[139.7038,35.7127],[139.7003,35.7011],[139.7005,35.6896],[139.7022,35.6830],[139.7026,35.6702],[139.7016,35.6580],[139.7101,35.6467],[139.7158,35.6340],[139.7237,35.6263],[139.7285,35.6197],[139.7387,35.6285],[139.7476,35.6455],[139.7575,35.6555],[139.7583,35.6665],[139.7634,35.6750]];
+var CHUO=[[139.7005,35.6896],[139.6860,35.7000],[139.6660,35.7058],[139.6200,35.7040],[139.5800,35.7030],[139.5077,35.7016],[139.4800,35.7000],[139.4140,35.6980],[139.3800,35.6950]];
+var PARKS=[
+ [[139.7440,35.6795],[139.7500,35.6765],[139.7610,35.6775],[139.7640,35.6850],[139.7625,35.6935],[139.7540,35.6975],[139.7470,35.6940],[139.7435,35.6870]],
+ [[139.6900,35.6700],[139.7030,35.6690],[139.7050,35.6770],[139.7005,35.6830],[139.6920,35.6800]],
+ [[139.7040,35.6830],[139.7130,35.6820],[139.7135,35.6890],[139.7060,35.6900]],
+ [[139.7690,35.7110],[139.7750,35.7090],[139.7775,35.7180],[139.7715,35.7190]],
+ [[139.3800,35.7050],[139.4080,35.7030],[139.4120,35.7130],[139.3880,35.7160]],
+ [[139.5040,35.7120],[139.5300,35.7110],[139.5320,35.7200],[139.5060,35.7210]],
+ [[139.6220,35.7620],[139.6360,35.7620],[139.6360,35.7710],[139.6220,35.7700]],
+ [[139.7510,35.6540],[139.7570,35.6535],[139.7580,35.6590],[139.7520,35.6595]],
+ [[139.8040,35.6700],[139.8130,35.6690],[139.8140,35.6790],[139.8050,35.6800]]
+];
+var GEOLBL=[
+ {t:'東京灣',lng:139.868,lat:35.545,k:'seat',min:0,fs:15},
+ {t:'埼玉県',lng:139.600,lat:35.905,k:'pref',min:0,fs:15},
+ {t:'神奈川県',lng:139.560,lat:35.545,k:'pref',min:0,fs:15},
+ {t:'千葉県',lng:139.940,lat:35.760,k:'pref',min:0,fs:15},
+ {t:'多摩',lng:139.300,lat:35.700,k:'pref',min:0,fs:15},
+ {t:'東京23區',lng:139.775,lat:35.768,k:'pref',min:0.3,fs:13},
+ {t:'千代田區',lng:139.7535,lat:35.6945,k:'ward',min:.8,fs:12.5},
+ {t:'中央區',lng:139.7745,lat:35.6690,k:'ward',min:.8,fs:12.5},
+ {t:'港區',lng:139.7360,lat:35.6560,k:'ward',min:.8,fs:12.5},
+ {t:'新宿區',lng:139.7220,lat:35.6985,k:'ward',min:.8,fs:12.5},
+ {t:'文京區',lng:139.7520,lat:35.7120,k:'ward',min:.8,fs:12.5},
+ {t:'台東區',lng:139.7870,lat:35.7160,k:'ward',min:.8,fs:12.5},
+ {t:'墨田區',lng:139.8200,lat:35.7100,k:'ward',min:.8,fs:12.5},
+ {t:'江東區',lng:139.8240,lat:35.6680,k:'ward',min:.8,fs:12.5},
+ {t:'品川區',lng:139.7300,lat:35.6080,k:'ward',min:.8,fs:12.5},
+ {t:'目黑區',lng:139.6900,lat:35.6330,k:'ward',min:.8,fs:12.5},
+ {t:'大田區',lng:139.7000,lat:35.5600,k:'ward',min:.8,fs:12.5},
+ {t:'世田谷區',lng:139.6450,lat:35.6420,k:'ward',min:.8,fs:12.5},
+ {t:'澀谷區',lng:139.6850,lat:35.6600,k:'ward',min:.8,fs:12.5},
+ {t:'中野區',lng:139.6650,lat:35.7080,k:'ward',min:.8,fs:12.5},
+ {t:'杉並區',lng:139.6300,lat:35.6990,k:'ward',min:.8,fs:12.5},
+ {t:'豐島區',lng:139.7200,lat:35.7340,k:'ward',min:.8,fs:12.5},
+ {t:'北區',lng:139.7380,lat:35.7600,k:'ward',min:.8,fs:12.5},
+ {t:'荒川區',lng:139.7830,lat:35.7360,k:'ward',min:.8,fs:12.5},
+ {t:'板橋區',lng:139.6900,lat:35.7640,k:'ward',min:.8,fs:12.5},
+ {t:'練馬區',lng:139.6150,lat:35.7450,k:'ward',min:.8,fs:12.5},
+ {t:'足立區',lng:139.8000,lat:35.7720,k:'ward',min:.8,fs:12.5},
+ {t:'葛飾區',lng:139.8450,lat:35.7480,k:'ward',min:.8,fs:12.5},
+ {t:'江戶川區',lng:139.8500,lat:35.6950,k:'ward',min:.8,fs:12.5},
+ {t:'東京',lng:139.7671,lat:35.6812,k:'stn',min:1.5,fs:12},
+ {t:'上野',lng:139.7774,lat:35.7141,k:'stn',min:1.5,fs:12},
+ {t:'池袋',lng:139.7109,lat:35.7295,k:'stn',min:1.2,fs:12},
+ {t:'新宿',lng:139.7005,lat:35.6896,k:'stn',min:1.2,fs:12},
+ {t:'澀谷',lng:139.7016,lat:35.6580,k:'stn',min:1.2,fs:12},
+ {t:'品川',lng:139.7387,lat:35.6285,k:'stn',min:1.2,fs:12},
+ {t:'立川',lng:139.4140,lat:35.6980,k:'stn',min:.9,fs:12},
+ {t:'吉祥寺',lng:139.5800,lat:35.7030,k:'stn',min:.9,fs:12},
+ {t:'秋葉原',lng:139.7741,lat:35.6984,k:'stn',min:2.6,fs:12},
+ {t:'日暮里',lng:139.7708,lat:35.7281,k:'stn',min:2.2,fs:12},
+ {t:'高田馬場',lng:139.7038,lat:35.7127,k:'stn',min:2.2,fs:12},
+ {t:'原宿',lng:139.7026,lat:35.6702,k:'stn',min:2.6,fs:12},
+ {t:'新橋',lng:139.7583,lat:35.6665,k:'stn',min:2.6,fs:12},
+ {t:'濱松町',lng:139.7575,lat:35.6555,k:'stn',min:2.6,fs:12},
+ {t:'目黑',lng:139.7158,lat:35.6340,k:'stn',min:2.2,fs:12},
+ {t:'東京鐵塔',lng:139.7454,lat:35.6586,k:'lmk',min:2.2,fs:12},
+ {t:'國會議事堂',lng:139.7450,lat:35.6759,k:'lmk',min:2.6,fs:12},
+ {t:'東京巨蛋',lng:139.7519,lat:35.7056,k:'lmk',min:2.2,fs:12},
+ {t:'國立競技場',lng:139.7146,lat:35.6778,k:'lmk',min:2.6,fs:12},
+ {t:'晴空塔',lng:139.8107,lat:35.7101,k:'lmk',min:1.6,fs:12},
+ {t:'不忍池',lng:139.7680,lat:35.7120,k:'lmk',min:3.2,fs:12}
+];
+
+/* 建立底圖 */
+var gBase=$('#gBase'),gRoute=$('#gRoute'),gLabels=$('#gLabels'),gMarkers=$('#gMarkers'),gBadges=$('#gBadges'),gWorld=$('#gWorld');
+(function buildBase(){
+  var d=curve(COAST,false)+poly(SEA_CLOSE,false).replace(/^M/,'L')+'Z';
+  S_('path',{class:'sea',d:d},gBase);
+  S_('path',{class:'urban',d:poly(WARDS,true)},gBase);
+  PARKS.forEach(function(p,i){S_('path',{class:i===0?'moat':'park',d:curve(p,true)},gBase);});
+  S_('path',{class:'pond',d:curve([[139.7655,35.7112],[139.7672,35.7101],[139.7700,35.7106],[139.7708,35.7122],[139.7688,35.7134],[139.7664,35.7128]],true)},gBase);
+  var rv=function(pts,w,small){S_('path',{class:'riv'+(small?' riv-s':''),d:curve(pts,false),style:small?'':'stroke-width:'+w},gBase);};
+  rv(TAMA,6);rv(ARAKAWA,7);rv(SUMIDA,4);rv(EDOGAWA,5);rv(KANDA,0,true);rv(ZENPUKU,0,true);
+  S_('path',{class:'rail-c',d:poly(CHUO,false)},gBase);
+  S_('path',{class:'rail',d:poly(YAMA,true)},gBase);
+})();
+
+/* =====================================================================
+   視圖：縮放、平移
+   ===================================================================== */
+var wrap=$('#mapWrap');
+var W=0,H=0,SC_MIN=.2,SC_MAX=7,SC_FIT=.4;
+var view={sc:.4,tx:0,ty:0};
+var CENTER_LIM={x0:wx(139.30),x1:wx(139.90),y0:wy(35.80),y1:wy(35.58)};
+function clampView(v){
+  v.sc=Math.min(SC_MAX,Math.max(SC_MIN,v.sc));
+  var cx=(W/2-v.tx)/v.sc,cy=(H/2-v.ty)/v.sc;
+  cx=Math.min(CENTER_LIM.x1,Math.max(CENTER_LIM.x0,cx));
+  cy=Math.min(CENTER_LIM.y1,Math.max(CENTER_LIM.y0,cy));
+  v.tx=W/2-cx*v.sc;v.ty=H/2-cy*v.sc;
+  return v;
+}
+function toScreen(lng,lat){return {x:wx(lng)*view.sc+view.tx,y:wy(lat)*view.sc+view.ty};}
+function visRect(){
+  var r=wrap.getBoundingClientRect(),h=r.height;
+  if(isPhone()&&S.sheet){
+    var sh=S.sheet==='card'?$('#card'):$('#route');
+    if(sh&&sh.classList.contains('open')){
+      var tb=$('#tabbar').getBoundingClientRect();
+      var top=tb.top-sh.offsetHeight;
+      h=Math.max(150,Math.min(h,top-r.top));
+    }
+  }
+  return {w:r.width,h:h};
+}
+function boundsOf(pts){
+  var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  pts.forEach(function(p){var x=wx(p.lng),y=wy(p.lat);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);});
+  return {x0:x0,x1:x1,y0:y0,y1:y1};
+}
+/* 取景：左側留邊、右側多留一些給縮放按鈕，上方留給「位置示意」標籤 */
+function fitRect(b,R,pad,minSc,maxSc,single){
+  var padL=pad,padR=pad+46,padT=Math.max(pad,56),padB=pad;
+  var bw=Math.max(b.x1-b.x0,1),bh=Math.max(b.y1-b.y0,1);
+  var sc=Math.min((R.w-padL-padR)/bw,(R.h-padT-padB)/bh);
+  if(single)sc=single;
+  sc=Math.min(maxSc,Math.max(minSc,sc));
+  var cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2;
+  return {sc:sc,tx:(padL+(R.w-padL-padR)/2)-cx*sc,ty:(padT+(R.h-padT-padB)/2)-cy*sc};
+}
+function fitTarget(pts,opt){
+  opt=opt||{};
+  return fitRect(boundsOf(pts),visRect(),opt.pad||34,opt.minSc||SC_MIN,opt.maxSc||SC_MAX,pts.length===1?(opt.single||Math.max(view.sc,2.2)):0);
+}
+function calcFitAll(){
+  var t=fitRect(boundsOf(SPOTS),{w:W,h:H},30,.01,SC_MAX,0);
+  SC_FIT=t.sc;SC_MIN=t.sc*.72;
+  return t;
+}
+var anim=null;
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function setView(v,animate,done){
+  if(anim){cancelAnimationFrame(anim.raf);anim=null;}
+  var to=clampView({sc:v.sc,tx:v.tx,ty:v.ty});
+  if(!animate||noMotion()||!W){view=to;render();if(done)done();return;}
+  var from={sc:view.sc,tx:view.tx,ty:view.ty},t0=performance.now(),dur=320;
+  anim={raf:0};
+  (function step(now){
+    var t=Math.min(1,(now-t0)/dur),e=ease(t);
+    /* 以對數方式內插縮放，平移同步，畫面不會忽快忽慢 */
+    var sc=from.sc*Math.pow(to.sc/from.sc,e);
+    var k=(to.sc===from.sc)?e:(sc-from.sc)/(to.sc-from.sc);
+    view={sc:sc,tx:from.tx+(to.tx-from.tx)*k,ty:from.ty+(to.ty-from.ty)*k};
+    render();
+    if(t<1){anim.raf=requestAnimationFrame(step);}else{anim=null;view=to;render();if(done)done();}
+  })(t0);
+}
+function stopAnim(){if(anim){cancelAnimationFrame(anim.raf);anim=null;}}
+function zoomAt(cx,cy,factor,animate){
+  var sc=Math.min(SC_MAX,Math.max(SC_MIN,view.sc*factor));
+  var k=sc/view.sc;
+  setView({sc:sc,tx:cx-(cx-view.tx)*k,ty:cy-(cy-view.ty)*k},animate);
+}
+function centerOfVisible(){var R=visRect();return {x:R.w/2,y:R.h/2};}
+function fitSpots(list,animate,opt){
+  if(!W)return;
+  if(!list||!list.length){setView(calcFitAll(),animate);return;}
+  setView(fitTarget(list,opt),animate);
+}
+function fitAll(animate){setView(calcFitAll(),animate);}
+
+/* =====================================================================
+   標記與標籤
+   ===================================================================== */
+var mk={},clusters={};
+SPOTS.forEach(function(s){
+  var g=S_('g',{class:'mk',tabindex:'0',role:'button','data-id':s.id},gMarkers);
+  S_('circle',{class:'mk-hit',r:22.5},g);
+  S_('circle',{class:'mk-pick',r:17},g);
+  S_('circle',{class:'mk-sel',r:19.5},g);
+  S_('circle',{class:'mk-focus',r:21},g);
+  var u=S_('use',{href:'#sh-u',class:'st-u'},g);
+  g.addEventListener('click',function(){if(wrap._suppress)return;onMarker(s.id,false);});
+  g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onMarker(s.id,true);}});
+  g.addEventListener('focus',function(){ensureVisible(s);});
+  mk[s.id]={g:g,use:u};
+});
+var spotLbl={};
+SPOTS.forEach(function(s){spotLbl[s.id]=S_('text',{class:'lbl','font-size':'12.5'},gLabels);spotLbl[s.id].textContent=s.zh;});
+var geoLbl=GEOLBL.map(function(g){
+  var t=S_('text',{class:'lbl '+g.k,'font-size':g.fs},gLabels);t.textContent=g.t;
+  var dot=(g.k==='stn'||g.k==='lmk')?S_('circle',{class:g.k==='stn'?'stn-dot':'lmk-dot',r:g.k==='stn'?3.6:3},gLabels):null;
+  return {def:g,el:t,dot:dot};
+});
+function textW(t,fs){var w=0;for(var i=0;i<t.length;i++){w+=t.charCodeAt(i)>0x2E7F?fs:fs*.58;}return w;}
+function hit(a,b){return a.x0<b.x1&&a.x1>b.x0&&a.y0<b.y1&&a.y1>b.y0;}
+function free(r,occ){for(var i=0;i<occ.length;i++)if(hit(r,occ[i]))return false;return true;}
+function inView(r,m){return r.x0>=m&&r.y0>=m&&r.x1<=W-m&&r.y1<=H-m;}
+function placeText(el,txt,fs,x,y,occ,modes,pad,spread){
+  var w=textW(txt,fs)+(spread||0),h=fs*1.25;
+  for(var i=0;i<modes.length;i++){
+    var m=modes[i],r,ax,tx,ty;
+    if(m==='r'){tx=x+pad;ty=y+fs*.36;r={x0:tx,x1:tx+w,y0:y-h/2,y1:y+h/2};ax='start';}
+    else if(m==='l'){tx=x-pad;ty=y+fs*.36;r={x0:tx-w,x1:tx,y0:y-h/2,y1:y+h/2};ax='end';}
+    else if(m==='t'){tx=x;ty=y-pad-3;r={x0:tx-w/2,x1:tx+w/2,y0:ty-h+3,y1:ty+3};ax='middle';}
+    else if(m==='b'){tx=x;ty=y+pad+fs*.9;r={x0:tx-w/2,x1:tx+w/2,y0:ty-fs,y1:ty+4};ax='middle';}
+    else {tx=x;ty=y+fs*.36;r={x0:tx-w/2,x1:tx+w/2,y0:y-h/2,y1:y+h/2};ax='middle';}
+    if(m!=='r'&&m!=='l'){ /* 置中的標籤靠近邊緣時往內側推一點 */
+      var dx=r.x0<4?4-r.x0:(r.x1>W-4?W-4-r.x1:0);
+      if(dx){tx+=dx;r.x0+=dx;r.x1+=dx;}
+    }
+    if(inView(r,1)&&free(r,occ)){
+      el.setAttribute('x',tx.toFixed(1));el.setAttribute('y',ty.toFixed(1));el.setAttribute('text-anchor',ax);el.style.display='';
+      occ.push(r);return true;
+    }
+  }
+  el.style.display='none';return false;
+}
+function clusterize(list){
+  var order=list.slice().sort(function(a,b){
+    function p(s){return (S.sel===s.id?0:S.picked.indexOf(s.id)>=0?1:2);}
+    return p(a)-p(b);
+  });
+  var groups=[],used={};
+  order.forEach(function(s){
+    if(used[s.id])return;
+    var g={x:s._x,y:s._y,items:[s]};used[s.id]=1;
+    order.forEach(function(t){
+      if(used[t.id])return;
+      if(Math.hypot(t._x-s._x,t._y-s._y)<46){g.items.push(t);used[t.id]=1;}
+    });
+    if(g.items.length>1){var sx=0,sy=0;g.items.forEach(function(i){sx+=i._x;sy+=i._y;});g.x=sx/g.items.length;g.y=sy/g.items.length;}
+    groups.push(g);
+  });
+  return groups;
+}
+function getCluster(key,count,ids){
+  var c=clusters[key];
+  if(!c){
+    var g=S_('g',{class:'cl',tabindex:'0',role:'button'},gMarkers);
+    S_('circle',{class:'mk-hit',r:22.5},g);
+    S_('circle',{class:'cl-focus',r:23},g);
+    var ring=S_('circle',{class:'cl-ring',r:19.5},g);
+    S_('circle',{class:'cl-bg',r:16.5},g);
+    var t=S_('text',{class:'cl-n'},g);t.textContent=count;
+    var sb=S_('g',{transform:'translate(-15 -15) scale(.66)'},g);
+    S_('circle',{r:12.5,fill:'#19202C',stroke:'#FFC61A','stroke-width':1.5},sb);
+    var su=S_('use',{href:'#sh-u',class:'st-u',transform:'scale(.8)'},sb);
+    g.addEventListener('click',function(){if(wrap._suppress)return;zoomCluster(ids,false);});
+    g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();zoomCluster(ids,true);}});
+    c=clusters[key]={g:g,ids:ids,ring:ring,su:su,n:count};
+  }
+  return c;
+}
+var scaleSteps=[.1,.2,.5,1,2,5,10,20];
+function render(){
+  if(!W)return;
+  gWorld.setAttribute('transform','translate('+view.tx.toFixed(2)+' '+view.ty.toFixed(2)+') scale('+view.sc.toFixed(5)+')');
+  var vis=visibleSpots();
+  vis.forEach(function(s){var p=toScreen(s.lng,s.lat);s._x=p.x;s._y=p.y;});
+  var groups=clusterize(vis),shown={},usedCl={},occ=[];
+  /* 地圖上的控制項與標籤區塊不放文字 */
+  occ.push({x0:0,y0:0,x1:Math.min(210,W-60),y1:62});
+  occ.push({x0:W-64,y0:0,x1:W,y1:170});
+  occ.push({x0:0,y0:H-44,x1:130,y1:H});occ.push({x0:W-150,y0:H-56,x1:W,y1:H});
+  groups.forEach(function(g){
+    if(g.items.length===1){
+      var s=g.items[0];shown[s.id]=1;
+      mk[s.id].g.setAttribute('transform','translate('+g.x.toFixed(1)+' '+g.y.toFixed(1)+')');
+      mk[s.id].g.style.display='';
+    }else{
+      var ids=g.items.map(function(i){return i.id;}),key=ids.slice().sort().join('+');
+      var c=getCluster(key,ids.length,ids);usedCl[key]=1;
+      c.g.setAttribute('transform','translate('+g.x.toFixed(1)+' '+g.y.toFixed(1)+')');c.g.style.display='';
+      var si=stageIdx();
+      if(c.si!==si){c.si=si;c.ring.style.setProperty('--rc',stInfo().c);c.su.setAttribute('href',stUse(si));c.su.setAttribute('class',stCls(si));
+        c.g.setAttribute('aria-label',c.n+' 處地點聚集在這裡，狀態皆為'+statusText()+(S.demo?'（示意資料，非實況）':'')+'，按 Enter 放大查看');}
+    }
+    var rr=g.items.length>1?24:16;
+    occ.push({x0:g.x-rr,y0:g.y-rr,x1:g.x+rr,y1:g.y+rr});
+  });
+  SPOTS.forEach(function(s){if(!shown[s.id]){mk[s.id].g.style.display='none';spotLbl[s.id].style.display='none';}});
+  for(var k in clusters){if(!usedCl[k]){var cc=clusters[k];if(cc.g.parentNode)cc.g.parentNode.removeChild(cc.g);delete clusters[k];}}
+  /* 地點名稱標籤（先放，避開彼此） */
+  groups.forEach(function(g){
+    if(g.items.length!==1)return;
+    var s=g.items[0];
+    placeText(spotLbl[s.id],s.zh,12.5,g.x,g.y,occ,['r','l','t','b'],19,0);
+  });
+  /* 地理標籤（行政區、車站、縣名） */
+  geoLbl.forEach(function(o){
+    var d=o.def;
+    if(view.sc<d.min){o.el.style.display='none';if(o.dot)o.dot.style.display='none';return;}
+    var p=toScreen(d.lng,d.lat);
+    if(p.x<-40||p.x>W+40||p.y<-40||p.y>H+40){o.el.style.display='none';if(o.dot)o.dot.style.display='none';return;}
+    if(d.k==='stn'||d.k==='lmk'){
+      var ok=placeText(o.el,d.t,d.fs,p.x,p.y,occ,['r','l'],8,0);
+      if(ok&&o.dot){o.dot.setAttribute('cx',p.x.toFixed(1));o.dot.setAttribute('cy',p.y.toFixed(1));o.dot.style.display='';}else if(o.dot){o.dot.style.display='none';}
+    }else{
+      placeText(o.el,d.t,d.fs,p.x,p.y,occ,['c'],0,d.k==='pref'||d.k==='seat'?d.t.length*d.fs*.3:d.t.length*d.fs*.06);
+    }
+  });
+  renderBadges();
+  /* 比例尺 */
+  var pxkm=view.sc*U,len=scaleSteps[0];
+  for(var i=0;i<scaleSteps.length;i++){if(scaleSteps[i]*pxkm<=104)len=scaleSteps[i];}
+  $('#scaleBar').style.width=Math.round(len*pxkm)+'px';
+  $('#scaleTxt').textContent='約 '+(len<1?(len*1000)+' m':len+' km')+'（概略）';
+}
+
+/* 路線的編號徽章與距離標籤 */
+var badgeEls={},legEls=[];
+function renderBadges(){
+  var n=RT.order.length,keep={};
+  if(n>=2){
+    RT.order.forEach(function(id,i){
+      var s=BY[id];if(!s||!passes(s)){return;}
+      var p=toScreen(s.lng,s.lat);keep[id]=1;
+      var b=badgeEls[id];
+      if(!b){b=S_('g',{},gBadges);S_('circle',{class:'bdg-c',r:10.5},b);var t=S_('text',{class:'bdg-t'},b);b.t=t;badgeEls[id]=b;}
+      b.t.textContent=i+1;
+      b.setAttribute('transform','translate('+(p.x+14).toFixed(1)+' '+(p.y-14).toFixed(1)+')');
+    });
+  }
+  for(var id in badgeEls){if(!keep[id]){gBadges.removeChild(badgeEls[id]);delete badgeEls[id];}}
+  /* 距離標籤 */
+  legEls.forEach(function(e){if(e.parentNode)e.parentNode.removeChild(e);});legEls=[];
+  if(n>=2){
+    RT.legs.forEach(function(l){
+      var a=toScreen(BY[l.a].lng,BY[l.a].lat),b=toScreen(BY[l.b].lng,BY[l.b].lat);
+      var len=Math.hypot(b.x-a.x,b.y-a.y);if(len<86)return;
+      var t=S_('text',{class:'lbl','font-size':'12',x:((a.x+b.x)/2).toFixed(1),y:((a.y+b.y)/2-9).toFixed(1),'text-anchor':'middle'},gBadges);
+      t.textContent=f1(l.d/1000)+' km'+(l.far?' 改搭電車':'');
+      legEls.push(t);
+    });
+  }
+}
+
+/* =====================================================================
+   互動：拖曳、雙指縮放、滾輪、鍵盤
+   ===================================================================== */
+var ptrs={},drag=null,pinch=null;
+wrap.addEventListener('pointerdown',function(e){
+  if(e.target.closest('.mapctl')||e.target.closest('.mapctl2')||e.target.closest('.empty-map'))return;
+  stopAnim();
+  ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ids=Object.keys(ptrs);
+  if(ids.length===1){drag={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty,on:false,id:e.pointerId};}
+  else if(ids.length===2){
+    var a=ptrs[ids[0]],b=ptrs[ids[1]],r=wrap.getBoundingClientRect();
+    pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,sc:view.sc,tx:view.tx,ty:view.ty,mx:(a.x+b.x)/2-r.left,my:(a.y+b.y)/2-r.top};
+    drag=null;
+  }
+});
+wrap.addEventListener('pointermove',function(e){
+  if(!ptrs[e.pointerId])return;
+  ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ids=Object.keys(ptrs);
+  if(pinch&&ids.length>=2){
+    var a=ptrs[ids[0]],b=ptrs[ids[1]],r=wrap.getBoundingClientRect();
+    var d=Math.hypot(a.x-b.x,a.y-b.y)||1,sc=Math.min(SC_MAX,Math.max(SC_MIN,pinch.sc*d/pinch.d)),k=sc/pinch.sc;
+    var mx=(a.x+b.x)/2-r.left,my=(a.y+b.y)/2-r.top;
+    view=clampView({sc:sc,tx:mx-(pinch.mx-pinch.tx)*k,ty:my-(pinch.my-pinch.ty)*k});
+    wrap._suppress=true;render();return;
+  }
+  if(drag&&e.pointerId===drag.id){
+    var dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    if(!drag.on&&Math.hypot(dx,dy)>6){drag.on=true;try{wrap.setPointerCapture(e.pointerId);}catch(_){}wrap.classList.add('panning');}
+    if(drag.on){view=clampView({sc:view.sc,tx:drag.tx+dx,ty:drag.ty+dy});render();}
+  }
+});
+function endPtr(e){
+  if(!ptrs[e.pointerId])return;
+  delete ptrs[e.pointerId];
+  var wasMove=drag&&drag.on;
+  if(Object.keys(ptrs).length<2)pinch=null;
+  if(Object.keys(ptrs).length===0){drag=null;wrap.classList.remove('panning');
+    if(wasMove||wrap._suppress){setTimeout(function(){wrap._suppress=false;},60);}}
+  else if(Object.keys(ptrs).length===1&&!drag){var id=Object.keys(ptrs)[0];drag={x:ptrs[id].x,y:ptrs[id].y,tx:view.tx,ty:view.ty,on:true,id:+id};}
+}
+wrap.addEventListener('pointerup',endPtr);
+wrap.addEventListener('pointercancel',endPtr);
+wrap.addEventListener('wheel',function(e){
+  e.preventDefault();stopAnim();
+  var r=wrap.getBoundingClientRect(),dy=e.deltaY*(e.deltaMode===1?33:1);
+  zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-dy*(e.ctrlKey?.012:.0017)),false);
+},{passive:false});
+wrap.addEventListener('dblclick',function(e){
+  if(e.target.closest('.mk')||e.target.closest('.cl')||e.target.closest('.mapctl')||e.target.closest('.mapctl2'))return;
+  var r=wrap.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,1.9,true);
+});
+wrap.addEventListener('keydown',function(e){
+  if(e.target.closest('.mapctl')||e.target.closest('.mapctl2'))return;
+  var step=90,c=centerOfVisible(),h=true;
+  switch(e.key){
+    case 'ArrowLeft':setView({sc:view.sc,tx:view.tx+step,ty:view.ty},true);break;
+    case 'ArrowRight':setView({sc:view.sc,tx:view.tx-step,ty:view.ty},true);break;
+    case 'ArrowUp':setView({sc:view.sc,tx:view.tx,ty:view.ty+step},true);break;
+    case 'ArrowDown':setView({sc:view.sc,tx:view.tx,ty:view.ty-step},true);break;
+    case '+':case '=':zoomAt(c.x,c.y,1.6,true);break;
+    case '-':case '_':zoomAt(c.x,c.y,1/1.6,true);break;
+    case '0':case 'Home':fitAll(true);break;
+    default:h=false;
+  }
+  if(h)e.preventDefault();
+});
+$('#zin').addEventListener('click',function(){var c=centerOfVisible();zoomAt(c.x,c.y,1.7,true);});
+$('#zout').addEventListener('click',function(){var c=centerOfVisible();zoomAt(c.x,c.y,1/1.7,true);});
+$('#zfit').addEventListener('click',function(){fitSpots(visibleSpots(),true);});
+
+function ensureVisible(s){
+  if(!W)return;
+  var p=toScreen(s.lng,s.lat),R=visRect(),m=40;
+  if(p.x<m||p.x>R.w-m||p.y<m||p.y>R.h-m){
+    var cx=R.w/2,cy=R.h/2;
+    setView({sc:view.sc,tx:view.tx+(cx-p.x),ty:view.ty+(cy-p.y)},true);
+  }
+}
+function zoomCluster(ids,fromKey){
+  var list=ids.map(function(i){return BY[i];});
+  var t=fitTarget(list,{pad:60,minSc:view.sc*1.7,maxSc:Math.min(SC_MAX,view.sc*5)});
+  S.focusAfter=fromKey?ids[0]:null;
+  setView(t,true,function(){
+    if(S.focusAfter){
+      var m=mk[S.focusAfter];
+      if(m&&m.g.style.display!=='none'){m.g.focus();}
+      else{for(var k in clusters){if(clusters[k].ids.indexOf(S.focusAfter)>=0){clusters[k].g.focus();break;}}}
+      S.focusAfter=null;
+    }
+  });
+}
+function neededScale(s){
+  var dmin=1e9;
+  visibleSpots().forEach(function(t){if(t!==s){dmin=Math.min(dmin,haversine(s,t));}});
+  return dmin>=1e9?view.sc:50/((dmin/1000)*U);
+}
+function focusOn(id,keepZoom){
+  var s=BY[id];if(!s||!W)return;
+  var need=keepZoom?view.sc:Math.min(SC_MAX,Math.max(view.sc,neededScale(s)));
+  var R=visRect(),cx=wx(s.lng),cy=wy(s.lat);
+  setView({sc:need,tx:R.w/2-cx*need,ty:R.h*0.5-cy*need},true);
+}
+
+/* =====================================================================
+   路線
+   ===================================================================== */
+var RT={order:[],legs:[],total:0,min:0};
+function nearestOrder(ids){
+  var rest=ids.slice(1),order=[ids[0]];
+  while(rest.length){
+    var last=BY[order[order.length-1]],bi=0,bd=1e18;
+    rest.forEach(function(id,i){var d=haversine(last,BY[id]);if(d<bd){bd=d;bi=i;}});
+    order.push(rest.splice(bi,1)[0]);
+  }
+  return order;
+}
+function recomputeRoute(){
+  if(S.picked.length<2){RT={order:S.picked.slice(),legs:[],total:0,min:0};drawRouteLines();return;}
+  var order=nearestOrder(S.picked),legs=[],total=0,mins=0;
+  for(var i=0;i<order.length-1;i++){
+    var d=haversine(BY[order[i]],BY[order[i+1]]),m=walkMin(d);
+    legs.push({a:order[i],b:order[i+1],d:d,m:m,far:d>3000});total+=d;mins+=m;
+  }
+  RT={order:order,legs:legs,total:total,min:mins};
+  drawRouteLines();
+}
+function drawRouteLines(){
+  while(gRoute.firstChild)gRoute.removeChild(gRoute.firstChild);
+  if(RT.legs.length===0)return;
+  var casing=S_('g',{},gRoute),core=S_('g',{},gRoute);
+  RT.legs.forEach(function(l){
+    var a=BY[l.a],b=BY[l.b],at={x1:fx(wx(a.lng)),y1:fx(wy(a.lat)),x2:fx(wx(b.lng)),y2:fx(wy(b.lat))};
+    var c1=S_('line',at,casing);c1.setAttribute('class','rt-case'+(l.far?' rt-far':''));
+    var c2=S_('line',at,core);c2.setAttribute('class','rt-core'+(l.far?' rt-farcore':''));
+  });
+}
+function routeText(){
+  var L=[];
+  L.push('東京銀杏散步路線（直線距離估算，非實際步行路徑）');
+  RT.order.forEach(function(id,i){
+    var s=BY[id];
+    L.push((i+1)+'. '+s.zh+(s.ja!==s.zh?'（'+s.ja+'）':''));
+    if(i<RT.legs.length){
+      var l=RT.legs[i];
+      L.push('   ↓ 直線'+fmtDist(l.d)+'，步行約 '+l.m+' 分（80 m/分估算）'+(l.far?'；單段超過 3 公里，建議改搭電車':''));
+    }
+  });
+  L.push('合計：直線'+fmtDist(RT.total)+'，步行約 '+RT.min+' 分（估算）');
+  L.push('※ 地點位置為示意，距離由近似經緯度概算。');
+  L.push(S.demo?'※ 目前為示意模式（'+fmtDay(S.day)+'）：示意資料，非實況。':'※ 尚無 2026 官方銀杏資料，所有地點狀態為待確認；狀態以官方公告為準。');
+  L.push('資料整理日 '+DATA_DATE+'；本網站為教學使用，非營利。');
+  return L.join('\n');
+}
+function setMsg(t){$('#rmsg').textContent=t||'';}
+function copyRoute(){
+  if(RT.order.length<2){setMsg('請先選 2–5 處地點再複製路線。');return;}
+  var text=routeText(),fb=$('#fallback');
+  fb.hidden=true;
+  function showFallback(){
+    fb.value=text;fb.hidden=false;
+    try{fb.focus();fb.select();fb.setSelectionRange(0,text.length);}catch(_){}
+    setMsg('瀏覽器不允許自動複製。路線文字已選取，請按 Ctrl／⌘ + C 複製。');
+  }
+  function legacy(){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    var ok=false;try{ok=document.execCommand('copy');}catch(_){ok=false;}
+    document.body.removeChild(ta);
+    return ok;
+  }
+  var done=function(){setMsg('已複製路線文字（共 '+RT.order.length+' 站）。');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done,function(){if(legacy())done();else showFallback();});
+  }else{if(legacy())done();else showFallback();}
+}
+function togglePick(id){
+  var i=S.picked.indexOf(id);
+  if(i>=0){S.picked.splice(i,1);setMsg('');}
+  else{
+    if(S.picked.length>=5){setMsg('最多只能選 5 處，請先移除一處。');syncPicks();return false;}
+    S.picked.push(id);setMsg('');
+  }
+  routeChanged(true);
+  return true;
+}
+function routeChanged(fit){
+  recomputeRoute();
+  syncPicks();
+  renderRoutePanel();
+  render();
+  if(fit&&RT.order.length>=2){
+    if(S.view==='map'){fitSpots(RT.order.map(function(i){return BY[i];}),true,{pad:48,maxSc:7});}
+    else S.needFit='route';
+  }
+}
+function applyPreset(i){
+  S.picked=PRESETS[i].slice();
+  setMsg('');
+  if(S.area!=='all'||S.stage!==null){S.area='all';S.stage=null;syncFilters();updateAll(true);}
+  routeChanged(true);
+}
+function clearRoute(){S.picked=[];setMsg('');$('#fallback').hidden=true;routeChanged(false);
+  if(S.view==='map')fitSpots(visibleSpots(),true);}
+function renderRoutePanel(){
+  var b=$('#routeBody');b.textContent='';
+  var n=S.picked.length;
+  $('#routeCnt').hidden=n===0;$('#routeCnt').textContent=n;
+  $('#routeTab').setAttribute('aria-label','路線規劃，已選 '+n+' 處');
+  if(n<2){
+    var p=H_('p',{class:'rb-empty'},b);
+    p.textContent=n===0?'尚未選擇地點。在地圖卡片或清單勾選 2–5 處，或使用上方的預設路線。':'已選 1 處（'+BY[S.picked[0]].zh+'）。再選至少 1 處才能排路線。';
+    return;
+  }
+  var ol=H_('ol',{class:'stops'},b);
+  RT.order.forEach(function(id,i){
+    var s=BY[id],li=H_('li',{},ol);
+    var row=H_('div',{class:'stop'},li);
+    H_('span',{class:'no'},row,String(i+1));
+    var nm=H_('span',{class:'nm'},row,s.zh);
+    if(s.ja!==s.zh)H_('small',{lang:'ja'},nm,s.ja);
+    var rm=H_('button',{type:'button',class:'rm','aria-label':'從路線移除 '+s.zh},row);
+    rm.innerHTML='<svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>';
+    rm.addEventListener('click',function(){togglePick(id);var nb=$('#routeBody button.rm');if(nb)nb.focus();else $('#copyBtn').focus();});
+    if(i<RT.legs.length){
+      var l=RT.legs[i],lg=H_('div',{class:'leg'},li);
+      H_('i',{class:l.far?'far':''},lg);
+      var dv=H_('div',{},lg);
+      dv.innerHTML='直線 <b>'+esc(fmtDist(l.d))+'</b>・步行 <b>約 '+l.m+' 分</b>（估算）';
+      if(l.far){H_('span',{class:'far-hint'},dv,'單段超過 3 公里，建議改搭電車');}
+    }
+  });
+  var t=H_('p',{class:'total'},b);
+  t.innerHTML='合計：直線 <b>'+esc(fmtDist(RT.total))+'</b>，步行 <b>約 '+RT.min+' 分</b>（估算）';
+  H_('p',{class:'disc'},b,'距離是依近似座標算出的直線距離，步行時間以 80 公尺／分估算，不是實際步行路徑；地點位置為示意。');
+  if(S.sheet==='route')scrollRouteBody();
+}
+function scrollRouteBody(){
+  if(!isPhone())return;
+  var sh=$('#route'),b=$('#routeBody');
+  if(!sh||!b)return;
+  requestAnimationFrame(function(){sh.scrollTop=Math.max(0,b.offsetTop-56);});
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+/* =====================================================================
+   圖例、篩選、清單、卡片
+   ===================================================================== */
+var legendBtns=[];
+(function buildLegend(){
+  var ol=$('#legend');
+  var items=[{key:'u',n:UNK.n,use:-1}].concat(STAGES.map(function(s,i){return {key:i,n:s.n,use:i,d:s.d};}));
+  var BR={'色づき始め':['色づき','始め'],'黃葉進行':['黃葉','進行'],'落葉始め':['落葉','始め']};
+  items.forEach(function(it){
+    var li=H_('li',{},ol),b=H_('button',{type:'button','aria-pressed':'false','data-k':String(it.key)},li);
+    if(it.use!==null){b.style.setProperty('--c',it.use<0?UNK.c:STAGES[it.use].c);}
+    b.innerHTML='<svg class="sh '+stCls(it.use)+'" viewBox="-12 -12 24 24" aria-hidden="true"><use href="'+stUse(it.use)+'"/></svg>';
+    var cn=H_('span',{class:'cn'},b,'0');
+    var nmEl=H_('span',{class:'nm',lang:it.key==='u'?'zh-Hant':'ja'},b);
+    (BR[it.n]||[it.n]).forEach(function(part){H_('i',{},nmEl,part);});
+    var dt=H_('span',{class:'dt'},b,'');
+    legendBtns.push({k:it.key,b:b,cn:cn,dt:dt,d:it.d||''});
+    b.addEventListener('click',function(){
+      var v=it.key==='u'?-1:it.key;S.stage=(S.stage===v)?null:v;
+      afterFilter();
+    });
+  });
+})();
+var chipsEl=$('#areaChips');
+(function buildChips(){
+  [['all','全部']].concat(AREAS.map(function(a){return [a,a];})).forEach(function(p){
+    var lb=H_('label',{class:'chip'},chipsEl),inp=H_('input',{type:'radio',name:'area',value:p[0]},lb);
+    if(p[0]==='all')inp.checked=true;
+    H_('span',{},lb,p[1]);var sm=H_('small',{},lb,'');lb._cnt=sm;
+    inp.addEventListener('change',function(){S.area=p[0];syncFilters();afterFilter();});
+  });
+})();
+function syncFilters(){
+  $$('input',chipsEl).forEach(function(i){i.checked=(i.value===S.area);i.closest('.chip').classList.toggle('on',i.checked);});
+}
+function afterFilter(){
+  updateAll(true);
+  if(S.view==='map'){fitSpots(visibleSpots(),true);}else S.needFit='all';
+}
+function clearFilters(){S.area='all';S.stage=null;syncFilters();afterFilter();}
+$$('[data-clear]').forEach(function(b){b.addEventListener('click',clearFilters);});
+$('#clearF').addEventListener('click',clearFilters);
+
+/* 清單（建一次，之後只更新狀態與顯示） */
+var rowEls={};
+(function buildList(){
+  var body=$('#listBody');
+  AREAS.forEach(function(a){
+    var members=SPOTS.filter(function(s){return s.area===a;});
+    var grp=H_('section',{class:'grp','aria-label':a+'區域'},body);
+    var h=H_('h3',{},grp,a);var cnt=H_('span',{},h,'');
+    var ul=H_('ul',{class:'rows'},grp);
+    grp._cnt=cnt;grp._area=a;grp._ul=ul;
+    members.forEach(function(s){
+      var li=H_('li',{class:'row','data-id':s.id},ul);
+      var btn=H_('button',{type:'button',class:'row-main'},li);
+      btn.innerHTML='<svg class="sh st-u" viewBox="-12 -12 24 24" aria-hidden="true"><use href="#sh-u"/></svg>';
+      var nm=H_('span',{class:'nm'},btn,s.zh);if(s.ja!==s.zh)H_('small',{lang:'ja'},nm,s.ja);
+      H_('span',{class:'sub'},btn,s.area+'・'+s.loc);
+      var st=H_('span',{class:'st'},btn,'待確認');
+      if(s.mixed){H_('span',{class:'mx'},btn,'混合樹種，以銀杏為準');}
+      var pk=H_('label',{class:'pick'},li);
+      var inp=H_('input',{type:'checkbox','aria-label':'加入路線：'+s.zh},pk);
+      var bx=H_('span',{class:'bx','aria-hidden':'true'},pk);bx.innerHTML='<svg class="ic"><use href="#i-check"/></svg>';
+      H_('span',{},pk,'路線');
+      btn.addEventListener('click',function(){onRow(s.id);});
+      inp.addEventListener('change',function(){if(togglePick(s.id)===false){inp.checked=false;}});
+      rowEls[s.id]={li:li,btn:btn,use:$('use',btn),svg:$('svg',btn),st:st,inp:inp};
+    });
+  });
+})();
+
+/* 卡片 */
+function statusText(){var i=stageIdx();return i<0?'待確認':STAGES[i].n+'（示意）';}
+function ariaFor(s){
+  return s.zh+'，'+statusText()+'，區域'+s.area+(S.demo?'，示意資料，非實況':'')+'，按 Enter 開啟卡片';
+}
+function renderCard(){
+  var s=BY[S.sel];
+  $('#cardEmpty').hidden=!!s;$('#cardBody').hidden=!s;
+  $('#card').classList.toggle('has',!!s);
+  if(!s)return;
+  $('#cardTitle').textContent=s.zh;
+  $('#cJa').textContent=s.ja;
+  $('#cArea').textContent=s.area+'（'+s.loc+'）';
+  $('#cPos').textContent=s.lat.toFixed(4)+'°N '+s.lng.toFixed(4)+'°E（位置示意）';
+  var note=$('#cNote');note.textContent='';
+  var parts=[];
+  if(s.mixed)parts.push('<b>混合樹種，以銀杏為準</b>');
+  if(s.note)parts.push(esc(s.note));
+  if(parts.length){note.innerHTML=parts.join('　');note.hidden=false;}else note.hidden=true;
+  var a=$('#cLink');a.href=s.url;a.setAttribute('aria-label',s.zh+'官網（'+s.host+'，另開新分頁）');
+  $('#cLinkTxt').textContent=s.host;$('#cHost').textContent=s.host.split('/')[0];
+  updateCardDyn();
+}
+function updateCardDyn(){
+  var s=BY[S.sel];if(!s)return;
+  var i=stageIdx();
+  $('#cStName').textContent=statusText();
+  var u=$('#cUse');u.setAttribute('href',stUse(i));u.setAttribute('class',stCls(i));
+  var p=$('#cPick'),on=S.picked.indexOf(s.id)>=0;
+  p.setAttribute('aria-pressed',on?'true':'false');
+  p.textContent=on?'已加入路線':'加入路線';
+  p.setAttribute('aria-label',on?s.zh+'已加入路線，按一下移除':'把 '+s.zh+' 加入路線');
+}
+function setSheet(name){
+  S.sheet=name;
+  $('#card').classList.toggle('open',name==='card'&&!!S.sel);
+  $('#route').classList.toggle('open',name==='route');
+  $('#routeTab').setAttribute('aria-expanded',name==='route'?'true':'false');
+  /* 手機：抽屜打開時收起圖例與區域篩選，把空間還給地圖 */
+  var openNow=(name==='card'&&!!S.sel)||name==='route',wasOpen=app.dataset.sheet==='open';
+  app.dataset.sheet=openNow?'open':'';
+  if(openNow!==wasOpen&&isPhone()){S.keepUntil=performance.now()+700;if(S.view==='map')measure();}
+}
+function onMarker(id,fromKey){
+  select(id,{center:true,focusCard:fromKey});
+}
+function onRow(id){select(id,{center:false,focusCard:false});}
+function select(id,o){
+  o=o||{};
+  S.sel=id;S.lastFocus=document.activeElement;
+  renderCard();setSheet('card');
+  syncMarkers();syncRows();render();
+  if(o.center&&S.view==='map'){measure();focusOn(id,true);}
+  if(o.focusCard){setTimeout(function(){var h=$('#cardTitle');if(h)h.focus({preventScroll:true});},30);}
+}
+function closeCard(returnFocus){
+  S.sel=null;renderCard();
+  if(S.sheet==='card')setSheet(null);
+  syncMarkers();syncRows();render();
+  if(returnFocus&&S.lastFocus&&document.contains(S.lastFocus)){try{S.lastFocus.focus();}catch(_){}}
+}
+$('#cardClose').addEventListener('click',function(){closeCard(true);});
+$('#routeClose').addEventListener('click',function(){setSheet(null);$('#routeTab').focus();});
+$('#routeTab').addEventListener('click',function(){
+  var open=S.sheet==='route';
+  setSheet(open?null:'route');
+  if(!open){
+    if(S.view==='map'&&RT.order.length>=2){fitSpots(RT.order.map(function(i){return BY[i];}),true,{pad:48,maxSc:7});}
+    scrollRouteBody();
+  }
+});
+$('#cPick').addEventListener('click',function(){togglePick(S.sel);});
+$('#copyBtn').addEventListener('click',copyRoute);
+$('#clearBtn').addEventListener('click',clearRoute);
+$$('[data-preset]').forEach(function(b){b.addEventListener('click',function(){applyPreset(+b.getAttribute('data-preset'));});});
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  if(isPhone()){
+    if(S.sheet==='card'){closeCard(true);}else if(S.sheet==='route'){setSheet(null);$('#routeTab').focus();}
+  }else if(S.sel&&$('#card').contains(document.activeElement)){closeCard(true);}
+});
+
+/* 同步各處 UI */
+function syncMarkers(){
+  var i=stageIdx();
+  SPOTS.forEach(function(s){
+    var m=mk[s.id];
+    m.use.setAttribute('href',stUse(i));m.use.setAttribute('class',stCls(i));
+    m.g.classList.toggle('sel',S.sel===s.id);
+    m.g.classList.toggle('picked',S.picked.indexOf(s.id)>=0);
+    m.g.setAttribute('aria-label',ariaFor(s)+(S.picked.indexOf(s.id)>=0?'，已加入路線':''));
+  });
+}
+function syncRows(){
+  var i=stageIdx(),t=statusText();
+  SPOTS.forEach(function(s){
+    var r=rowEls[s.id];
+    r.use.setAttribute('href',stUse(i));r.svg.setAttribute('class','sh '+stCls(i));
+    r.st.textContent=t+(S.demo?'・示意資料，非實況':'');
+    r.btn.setAttribute('aria-label',s.zh+'，'+s.area+'，'+t+(S.demo?'，示意資料，非實況':'')+(s.mixed?'，混合樹種，以銀杏為準':''));
+    if(S.sel===s.id)r.btn.setAttribute('aria-current','true');else r.btn.removeAttribute('aria-current');
+  });
+}
+function syncPicks(){
+  SPOTS.forEach(function(s){
+    var on=S.picked.indexOf(s.id)>=0;
+    rowEls[s.id].inp.checked=on;
+    mk[s.id].g.classList.toggle('picked',on);
+  });
+  syncMarkers();
+  updateCardDyn();
+}
+function updateAll(){
+  app.dataset.demo=S.demo?'on':'off';
+  app.dataset.filt=(S.area!=='all'||S.stage!==null)?'1':'0';
+  var vis=visibleSpots(),si=stageIdx();
+  /* 圖例計數（依目前區域篩選） */
+  var inArea=SPOTS.filter(passArea),cnt={};
+  inArea.forEach(function(s){cnt[si]=(cnt[si]||0)+1;});
+  legendBtns.forEach(function(L){
+    var n=L.k==='u'?(cnt[-1]||0):(cnt[L.k]||0);
+    L.cn.textContent=n;
+    var pressed=(L.k==='u'&&S.stage===-1)||(typeof L.k==='number'&&S.stage===L.k);
+    L.b.setAttribute('aria-pressed',pressed?'true':'false');
+    L.dt.textContent=(S.demo&&typeof L.k==='number')?L.d:'';
+    var nm=L.k==='u'?UNK.n:STAGES[L.k].n;
+    L.b.setAttribute('aria-label',nm+'，'+n+' 處，點選篩選'+(S.demo&&typeof L.k==='number'?'，示意日期範圍 '+L.d:''));
+  });
+  /* 區域籌碼計數 */
+  $$('.chip',chipsEl).forEach(function(lb){
+    var v=$('input',lb).value,n=SPOTS.filter(function(s){return (v==='all'||s.area===v)&&passStage();}).length;
+    lb._cnt.textContent=n;
+  });
+  $('#sumTxt').textContent=vis.length+'／'+SPOTS.length;
+  var filt=S.area!=='all'||S.stage!==null;
+  $('#clearF').hidden=!filt;
+  $('#boardNote').hidden=S.demo;
+  /* 清單 */
+  var anyShown=false;
+  $$('.grp',$('#listBody')).forEach(function(g){
+    var n=0;
+    SPOTS.forEach(function(s){
+      if(s.area!==g._area)return;
+      var ok=passes(s);rowEls[s.id].li.hidden=!ok;if(ok)n++;
+    });
+    g.hidden=n===0;g._cnt.textContent=n+' 處';if(n)anyShown=true;
+  });
+  $('#listEmpty').hidden=anyShown;
+  $('#mapEmpty').hidden=vis.length>0;
+  /* 滑桿 */
+  $('#dayOut').textContent=fmtDay(S.day);
+  var st=STAGES[stageOfDay(S.day)];
+  $('#dayStage').textContent=st.n+'（示意）・'+st.d;
+  $('#day').setAttribute('aria-valuetext',fmtDay(S.day).replace('/','月')+'日，'+st.n+'，示意資料，非實況');
+  $('#demoToggle').setAttribute('aria-checked',S.demo?'true':'false');
+  syncMarkers();syncRows();updateCardDyn();
+  if(W)render();
+}
+/* 滑桿底色：依六階段日期畫出色帶 */
+(function bands(){
+  var seg=[],prev=0,last=0;
+  for(var i=0;i<DAYS;i++){var s=stageOfDay(i);if(i===0)last=s;if(s!==last){seg.push([last,prev,i]);prev=i;last=s;}}
+  seg.push([last,prev,DAYS]);
+  var g=seg.map(function(x){var a=(x[1]/DAYS*100).toFixed(2),b=(x[2]/DAYS*100).toFixed(2);return STAGES[x[0]].c+' '+a+'% '+b+'%';});
+  $('#day').style.setProperty('--bands','linear-gradient(90deg,'+g.join(',')+')');
+})();
+$('#day').addEventListener('input',function(){S.day=+this.value;updateAll();});
+$('#demoToggle').addEventListener('click',function(){
+  S.demo=!S.demo;
+  S.stage=null; /* 狀態篩選在切換模式時一併清掉，避免出現空結果 */
+  updateAll();
+  var live=$('#liveMsg');live.textContent=S.demo?'示意模式已開啟：示意資料，非實況。':'示意模式已關閉：所有地點為待確認。';
+});
+
+/* 地圖／清單切換 */
+function setView_(v){
+  S.view=v;
+  $('#mapView').hidden=v!=='map';$('#listView').hidden=v!=='list';
+  if(v==='map'&&isPhone())window.scrollTo({top:0,left:0,behavior:'instant'});
+  $$('#tabbar label.tab').forEach(function(l){l.classList.toggle('on',$('input',l).value===v);});
+  if(v==='map'){
+    requestAnimationFrame(function(){
+      measure();
+      if(S.needFit){var k=S.needFit;S.needFit=null;
+        if(k==='route'&&RT.order.length>=2)fitSpots(RT.order.map(function(i){return BY[i];}),false,{pad:48,maxSc:7});
+        else fitSpots(visibleSpots(),false);}
+      else if(S.sel){focusOn(S.sel,false);}
+      render();
+    });
+  }
+}
+$$('input[name=view]').forEach(function(r){r.addEventListener('change',function(){if(r.checked)setView_(r.value);});});
+
+/* 尺寸變動：保持畫面中心；大幅變動才重新取景 */
+function measure(){
+  var r=wrap.getBoundingClientRect();
+  onSize(r.width,r.height);
+}
+function onSize(w,h){
+  if(w<2||h<2)return;
+  if(!W){W=w;H=h;setView(calcFitAll(),false);return;}
+  if(Math.abs(w-W)<1&&Math.abs(h-H)<1)return;
+  var dw=Math.abs(w-W)/W,dh=Math.abs(h-H)/H,flip=(w>=h)!==(W>=H),ow=W,oh=H;
+  W=w;H=h;
+  calcFitAll();
+  var shift=performance.now()<(S.keepUntil||0)&&!flip&&dw<.05;
+  if(!shift&&(dw>.25||dh>.25||flip)){
+    if(S.sel&&BY[S.sel]&&passes(BY[S.sel])){focusOn(S.sel,false);}
+    else if(RT.order.length>=2){fitSpots(RT.order.map(function(i){return BY[i];}),false,{pad:48,maxSc:7});}
+    else fitSpots(visibleSpots(),false);
+  }else{
+    view=clampView({sc:view.sc,tx:view.tx+(w-ow)/2,ty:view.ty+(h-oh)/2});
+    render();
+  }
+}
+if(window.ResizeObserver){new ResizeObserver(function(es){var c=es[0].contentRect;onSize(c.width,c.height);}).observe(wrap);}
+window.addEventListener('resize',function(){if(!window.ResizeObserver)measure();});
+if(mqPhone.addEventListener)mqPhone.addEventListener('change',function(){setSheet(S.sheet);});
+
+/* 初始化 */
+renderCard();syncFilters();recomputeRoute();renderRoutePanel();updateAll();
+measure();
+})();
+</script>
+</body>
+</html>

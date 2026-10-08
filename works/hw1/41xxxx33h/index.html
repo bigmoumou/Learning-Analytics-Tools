@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京銀杏散步地圖</title>
+<meta name="description" content="東京都公園協會 2025 年公告確認有銀杏的 12 處園區。在地圖與清單上查看特色與官方來源，用六階段示範了解銀杏的變化，並自選順序排出散步路線。教學使用、非營利。">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#fbf2e1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap"></noscript>
+<link rel="stylesheet" href="style.css">
+<script src="script.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要內容</a>
+
+<!-- 共用圖形：銀杏葉的漸層（各階段）與楓葉符號。楓葉只用在飄落的背景，不代表銀杏。 -->
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gk-n" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e0a00c"/><stop offset="1" stop-color="#f6c52e"/></linearGradient>
+    <linearGradient id="gk-0" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4f7d2c"/><stop offset="1" stop-color="#8db04a"/></linearGradient>
+    <linearGradient id="gk-1" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6f9a3a"/><stop offset="1" stop-color="#cdc548"/></linearGradient>
+    <linearGradient id="gk-2" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a3b53f"/><stop offset="1" stop-color="#ecc92d"/></linearGradient>
+    <linearGradient id="gk-3" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e8a20c"/><stop offset="1" stop-color="#f8c61e"/></linearGradient>
+    <linearGradient id="gk-4" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#cc7b0c"/><stop offset="1" stop-color="#e9a516"/></linearGradient>
+    <linearGradient id="gk-5" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a77638"/><stop offset="1" stop-color="#cba25c"/></linearGradient>
+    <symbol id="maple" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 1.2 13.9 5.6 16.7 4 16.1 9 21.6 7.2 19.4 12.4 23 13.4 18.2 16.6 19 19.6 13.6 18.4 12.7 22.8H11.3L10.4 18.4 5 19.6 5.8 16.6 1 13.4 4.6 12.4 2.4 7.2 7.9 9 7.3 4 10.1 5.6Z"/>
+      <path fill="none" stroke="#fff" stroke-opacity=".38" stroke-width=".6" stroke-linecap="round" d="M12 21.5V4M12 15.5 6.2 11.4M12 15.5 17.8 11.4M12 11 8 7.4M12 11 16 7.4"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 背景飄落的楓葉：純裝飾、不擋內容、遵守「減少動態效果」設定 -->
+<div class="leaves" aria-hidden="true">
+  <span class="lf" style="--x:4vw;--s:40px;--d:34s;--dl:-6s;--dr:90px;--c:#b3261e;--y:14vh;--r:-24deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:15vw;--s:30px;--d:41s;--dl:-27s;--dr:-60px;--c:#d9631f;--y:62vh;--r:30deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:27vw;--s:46px;--d:37s;--dl:-15s;--dr:70px;--c:#9e2a1f;--y:36vh;--r:12deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:39vw;--s:27px;--d:46s;--dl:-33s;--dr:-80px;--c:#e08a1e;--y:80vh;--r:-40deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:52vw;--s:38px;--d:39s;--dl:-9s;--dr:60px;--c:#c8461f;--y:22vh;--r:50deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:63vw;--s:32px;--d:44s;--dl:-38s;--dr:-70px;--c:#b3261e;--y:70vh;--r:-10deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:74vw;--s:43px;--d:36s;--dl:-21s;--dr:80px;--c:#d9631f;--y:46vh;--r:28deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:84vw;--s:28px;--d:43s;--dl:-2s;--dr:-50px;--c:#e08a1e;--y:10vh;--r:-32deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:92vw;--s:39px;--d:35s;--dl:-30s;--dr:-90px;--c:#9e2a1f;--y:56vh;--r:18deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+  <span class="lf" style="--x:46vw;--s:24px;--d:48s;--dl:-42s;--dr:50px;--c:#c8461f;--y:90vh;--r:-18deg"><svg viewBox="0 0 24 24"><use href="#maple"/></svg></span>
+</div>
+
+<header class="masthead">
+  <div class="wrap masthead__in">
+    <p class="eyebrow">東京都公園協會 2025 年公告確認有銀杏的 12 處園區</p>
+    <h1>東京銀杏散步地圖</h1>
+    <p class="lede">在地圖上看看這 12 處園區，挑幾處排成自己的散步順序。</p>
+    <ul class="notice" aria-label="使用前請先知道">
+      <li><strong>歷史資料：</strong>資料表的 2025 年公告是去年的紀錄，不代表 2026 年的即時葉況；本站沒有任何地點的 2026 年當季葉況。</li>
+      <li><strong>示範階段：</strong>六階段只是示範，<span class="demo-label">示範資料，非即時葉況或預測</span>。</li>
+      <li><strong>資料來源：</strong>課程提供的東京銀杏官方資料表與東京都公園協會官方頁面。教學使用、非營利。
+        <a class="linkrow linkrow--wide" href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?usp=sharing" target="_blank" rel="noopener noreferrer">東京銀杏官方資料表（Google 試算表）</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main">
+  <noscript><p class="wrap noscript">這個頁面需要開啟 JavaScript 才能顯示地圖、清單與路線。</p></noscript>
+
+  <section class="controls" id="controls" aria-label="示範階段與區域篩選">
+    <div class="wrap">
+      <button class="controls__toggle" id="controls-toggle" type="button" aria-expanded="false" aria-controls="controls-body">
+        <span class="controls__toggle-t">六階段示範與區域篩選</span>
+        <span class="controls__toggle-s" id="controls-summary">全部區域．未套用示範階段</span>
+      </button>
+      <div class="controls__body" id="controls-body">
+        <div class="stages">
+          <div class="stages__head">
+            <h2 id="stages-h"><span class="sec-no">01</span>六階段示範</h2>
+            <p class="demo-label">示範資料，非即時葉況或預測</p>
+            <button class="textbtn" id="stage-clear" type="button" hidden>清除示範階段</button>
+          </div>
+          <div class="stages__row" id="stage-row" role="group" aria-labelledby="stages-h"></div>
+          <p class="stages__desc" id="stage-desc"></p>
+        </div>
+        <div class="filters">
+          <h2 class="filters__h"><span class="sec-no">02</span>篩選地點</h2>
+          <label class="filters__field"><span class="filters__label">所在區域</span><span class="select"><select id="area"></select></span></label>
+          <p class="filters__count" id="count" role="status"></p>
+          <button class="textbtn" id="filter-clear" type="button" hidden>清除篩選</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="workspace" id="workspace" data-tab="map" aria-label="地圖、地點清單與自選路線">
+      <div class="tabs" id="tabs" role="tablist" aria-label="檢視方式">
+        <button class="tab tab--map" id="tab-map" role="tab" type="button" aria-selected="true" aria-controls="pane-map" data-tab="map"><span>地圖</span></button>
+        <button class="tab" id="tab-list" role="tab" type="button" aria-selected="false" aria-controls="pane-list" data-tab="list" tabindex="-1"><span>景點清單</span><b class="tab__n" id="tab-list-n">12</b></button>
+        <button class="tab" id="tab-route" role="tab" type="button" aria-selected="false" aria-controls="pane-route" data-tab="route" tabindex="-1"><span>我的路線</span><b class="tab__n" id="tab-route-n">0</b></button>
+      </div>
+
+      <div class="pane pane--map" id="pane-map" role="tabpanel" aria-labelledby="tab-map">
+        <div class="map-box">
+          <div id="map" aria-label="東京銀杏園區地圖"></div>
+          <div class="map-msg" id="map-msg" hidden></div>
+        </div>
+        <p class="map-cap">標記是「園區近似位置」，不是銀杏樹的位置。有路線時，虛線只是依你選的順序連起來的示意線，不是步行路線。</p>
+      </div>
+
+      <div class="pane pane--list" id="pane-list" role="tabpanel" aria-labelledby="tab-list" tabindex="-1">
+        <div class="pane__head">
+          <h2><span class="sec-no">03</span>地點清單</h2>
+          <p class="pane__sub">點選地點看特色與官方來源，再按「加入路線」。</p>
+        </div>
+        <ol class="spots" id="spot-list"></ol>
+        <p class="empty" id="list-empty" hidden>這個條件下沒有符合的地點。<button class="textbtn" id="empty-clear" type="button">清除篩選</button></p>
+      </div>
+
+      <div class="pane pane--route" id="pane-route" role="tabpanel" aria-labelledby="tab-route" tabindex="-1">
+        <div class="pane__head">
+          <h2><span class="sec-no">04</span>自選景點順序</h2>
+          <p class="pane__sub">依你選的順序排列。本站沒有計算實際步行路線，不提供距離或所需時間。</p>
+        </div>
+        <p class="empty" id="route-empty">還沒有選任何地點。在地點清單或介紹卡按「加入路線」，就會出現在這裡。</p>
+        <ol class="route" id="route-list"></ol>
+        <div class="route__actions" id="route-actions" hidden>
+          <div id="gmaps-links"></div>
+          <p class="route__fine">按下後會到 Google 地圖，由 Google 依自己的資料另外計算路線與時間，本站不提供。</p>
+          <button class="textbtn" id="route-clear" type="button">清空路線</button>
+        </div>
+      </div>
+
+      <aside class="detail" id="detail" role="region" aria-label="景點介紹" tabindex="-1" hidden></aside>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <h2 class="foot__h">資料來源與說明</h2>
+    <div class="foot__grid">
+      <section aria-labelledby="f-src">
+        <h3 id="f-src">資料來源</h3>
+        <ul class="srcs">
+          <li><a class="linkrow" href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?usp=sharing" target="_blank" rel="noopener noreferrer">東京銀杏官方資料表（Google 試算表）</a>課程提供，12 處園區的區域與官方頁面連結。</li>
+          <li>東京都公園協會各園區官方頁面（tokyo-park.or.jp）：地點特色與銀杏說明，2026-10-02 核對。每個地點的介紹卡都附有連結。</li>
+          <li><a class="linkrow" href="https://www.tokyo-park.or.jp/association/assets/20251104_2025autumnleaves_pressrelease.pdf" target="_blank" rel="noopener noreferrer">2025 年度紅葉情報公告（PDF，2025-11-04）</a>東京都公園協會發布，確認有銀杏的名單，屬於歷史公告。</li>
+          <li><a class="linkrow" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>地圖底圖。</li>
+          <li><a class="linkrow" href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">Leaflet</a>地圖程式。</li>
+          <li>標記位置為「園區近似位置」，整理自 OpenStreetMap、日文維基百科等公開資料並互相核對，只用來在地圖上標示園區。</li>
+        </ul>
+      </section>
+      <section aria-labelledby="f-note">
+        <h3 id="f-note">請留意</h3>
+        <ul>
+          <li>2025 年的公告是歷史資料，不代表 2026 年即時葉況；本站沒有任何地點的 2026 年當季葉況。</li>
+          <li>六階段與「示範分組」都是示範資料，非即時葉況或預測。</li>
+          <li>只呈現銀杏。芝公園「もみじ谷」是楓樹區，城北中央公園的櫸樹、戶山公園與芝公園的楓樹都不是銀杏，本站不把它們的葉況套用在銀杏上。</li>
+          <li>自選路線只是你選的順序；距離與所需時間請看 Google 地圖。出發前請再看官方頁面確認開放情況。</li>
+        </ul>
+      </section>
+      <section aria-labelledby="f-use">
+        <h3 id="f-use">使用說明</h3>
+        <p><strong>教學使用、非營利。</strong>本站是課程作業，沒有後端、帳號或自動更新資料。</p>
+      </section>
+    </div>
+  </div>
+</footer>
+
+<div class="sr-only" id="live" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>金色散策｜東京銀杏地圖</title>
+<meta name="description" content="整理東京 26 處銀杏景點的來源、日期與位置，在地圖上查看，再交給 Google 地圖規劃步行路線。教學使用、非營利。">
+<meta name="theme-color" content="#F3EDDD">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'%3E%3Cpath d='M50 84C47 74 28 62 10 42C2 33 4 26 12 26C20 22 30 20 38 24C44 27 47 30 50 36C53 30 56 27 62 24C70 20 80 22 88 26C96 26 98 33 90 42C72 62 53 74 50 84Z' fill='%23E3A92B' stroke='%232E2518' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M50 84v22' stroke='%232E2518' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+
+<!-- 共用圖示：同一組線條粗細（1.6） -->
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="leaf" viewBox="0 0 100 110">
+      <path d="M50 84C47 74 28 62 10 42C2 33 4 26 12 26C20 22 30 20 38 24C44 27 47 30 50 36C53 30 56 27 62 24C70 20 80 22 88 26C96 26 98 33 90 42C72 62 53 74 50 84Z" style="fill:var(--leaf-fill,none);stroke:var(--leaf-stroke,currentColor);stroke-width:var(--leaf-sw,2.6px)" stroke-linejoin="round"/>
+      <path d="M50 84v22M50 84 16 38M50 84 29 29M50 84 40 31M50 84 60 31M50 84 71 29M50 84 84 38" style="fill:none;stroke:var(--leaf-stroke,currentColor);stroke-width:calc(var(--leaf-sw,2.6px) * .75)" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 5H5.5A1.5 1.5 0 0 0 4 6.5v12A1.5 1.5 0 0 0 5.5 20h12a1.5 1.5 0 0 0 1.5-1.5V15M14 4h6v6M20 4l-9 9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H14a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h5.8"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">跳到主要內容</a>
+
+<header class="site-head">
+  <div class="wrap head-row">
+    <a class="brand" href="#top" aria-label="金色散策，回到頁首">
+      <svg class="brand-leaf" viewBox="0 0 100 110" aria-hidden="true" style="--leaf-fill:var(--gold);--leaf-stroke:var(--ink);--leaf-sw:4px"><use href="#leaf"/></svg>
+      <span class="brand-name">金色散策</span>
+      <span class="brand-sub">東京銀杏地圖</span>
+    </a>
+    <nav class="site-nav" aria-label="頁面章節">
+      <ul>
+        <li><a href="#stages">銀杏階段</a></li>
+        <li><a href="#explore">地點探索</a></li>
+        <li><a href="#tools">地圖與路線</a></li>
+        <li><a href="#sources">資料來源</a></li>
+        <li><a href="#guide">使用說明</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 網站主題 -->
+  <section class="hero" aria-labelledby="h-title">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="kicker">東京銀杏地圖｜秋季散步指南</p>
+        <h1 id="h-title">金色散策</h1>
+        <p class="lead">把東京 26 處銀杏景點的來源與日期攤開來看：哪些是官方公告，哪些只是往年紀錄，一目了然。選好景點，再交給 Google 地圖規劃步行路線。</p>
+        <dl class="figures">
+          <div><dt>景點</dt><dd><b id="figSpots">26</b> 處</dd></div>
+          <div><dt>已確認本季階段</dt><dd><b id="figStage">0</b> 處</dd></div>
+          <div><dt>附本季官方日期的景點</dt><dd><b id="figCurrent">1</b> 處</dd></div>
+          <div><dt>資料盤點日</dt><dd><b id="figInv">2026-10-02</b> <span class="age" id="figAge"></span></dd></div>
+        </dl>
+        <p class="hero-cta">
+          <a class="btn btn-primary" href="#explore">開始找景點</a>
+          <a class="btn btn-ghost" href="#sources">看資料來源</a>
+        </p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 460 400" focusable="false">
+          <circle cx="262" cy="186" r="168" fill="var(--gold-wash)"/>
+          <circle cx="262" cy="186" r="186" fill="none" stroke="var(--line-strong)" stroke-width="1" stroke-dasharray="1 7" stroke-linecap="round"/>
+          <g class="drift d1"><svg x="118" y="40" width="270" height="297" viewBox="0 0 100 110" style="--leaf-fill:var(--gold);--leaf-stroke:var(--ink);--leaf-sw:2.2px;color:var(--ink)"><use href="#leaf"/></svg></g>
+          <g class="drift d2"><svg x="22" y="64" width="104" height="114" viewBox="0 0 100 110" style="--leaf-fill:var(--moss-wash);--leaf-stroke:var(--moss);--leaf-sw:3px;color:var(--moss)"><use href="#leaf" transform="rotate(-18 50 55)"/></svg></g>
+          <g class="drift d3"><svg x="352" y="262" width="84" height="92" viewBox="0 0 100 110" style="--leaf-fill:none;--leaf-stroke:var(--ink-2);--leaf-sw:3px;color:var(--ink-2)"><use href="#leaf" transform="rotate(24 50 55)"/></svg></g>
+          <path d="M20 356C108 334 140 282 212 302S334 276 362 204 410 104 440 70" fill="none" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="2 9" stroke-linecap="round"/>
+          <circle cx="62" cy="346" r="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+          <circle cx="214" cy="302" r="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+          <circle cx="362" cy="204" r="8" fill="var(--moss)" stroke="var(--ink)" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <aside class="notice-strip" aria-label="使用前請先看">
+        <p><strong>目前還沒有任何景點取得可確認的 2026 年銀杏階段</strong>，所有景點都標為「當季現況待核對」。</p>
+        <ul>
+          <li>景點開放情況及當季銀杏葉況仍以管理單位最新公告為準。</li>
+          <li>本網站為教學使用、非營利，且不是被參考服務、景點管理單位或地圖服務的官方網站。</li>
+          <li>地圖：OpenStreetMap／Leaflet；路線與步行時間：Google 地圖。</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 銀杏階段 -->
+  <section id="stages" class="sec wrap" aria-labelledby="h-stages">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">01</span>
+      <div>
+        <h2 id="h-stages">銀杏階段</h2>
+        <p class="sec-sub">六個觀察用詞，先認識它們，再去看各景點的資料。</p>
+      </div>
+    </header>
+    <ol class="stages">
+      <li class="stage">
+        <svg class="glyph g1" viewBox="0 0 100 110" aria-hidden="true"><use href="#leaf"/></svg>
+        <span class="stage-n">1</span>
+        <span class="stage-ja" lang="ja">青葉</span>
+        <span class="stage-zh">葉子仍是綠色，還沒轉色。</span>
+      </li>
+      <li class="stage">
+        <svg class="glyph g2" viewBox="0 0 100 110" aria-hidden="true"><use href="#leaf"/></svg>
+        <span class="stage-n">2</span>
+        <span class="stage-ja" lang="ja">色づき始め</span>
+        <span class="stage-zh">開始轉黃，綠色還佔多數。</span>
+      </li>
+      <li class="stage">
+        <svg class="glyph g3" viewBox="0 0 100 110" aria-hidden="true"><use href="#leaf"/></svg>
+        <span class="stage-n">3</span>
+        <span class="stage-ja" lang="ja">黃葉進行</span>
+        <span class="stage-zh">黃葉逐漸增加，樹冠愈來愈黃。</span>
+      </li>
+      <li class="stage">
+        <svg class="glyph g4" viewBox="0 0 100 110" aria-hidden="true"><use href="#leaf"/></svg>
+        <span class="stage-n">4</span>
+        <span class="stage-ja" lang="ja">見頃</span>
+        <span class="stage-zh">整體轉黃，最適合觀賞的時期。</span>
+      </li>
+      <li class="stage">
+        <svg class="glyph g5" viewBox="0 0 100 110" aria-hidden="true"><use href="#leaf"/><use class="fall" href="#leaf"/></svg>
+        <span class="stage-n">5</span>
+        <span class="stage-ja" lang="ja">落葉始め</span>
+        <span class="stage-zh">葉子開始零星掉落。</span>
+      </li>
+      <li class="stage">
+        <svg class="glyph g6" viewBox="0 0 100 110" aria-hidden="true"><use href="#leaf"/></svg>
+        <span class="stage-n">6</span>
+        <span class="stage-ja" lang="ja">落葉</span>
+        <span class="stage-zh">大量落葉，樹冠變得稀疏。</span>
+      </li>
+    </ol>
+    <p class="stage-note">
+      <svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>
+      <span>這是觀察用詞的說明，<strong>不是各景點現在的狀態</strong>。只有找到與景點、樹種及日期相符的可靠資料，才會把某個階段指派給該景點；目前 <b id="stageAssigned">0</b> / <b id="stageTotal">26</b> 處。本站也不用過去年份或氣象平均推算日期。</span>
+    </p>
+  </section>
+
+  <!-- 地點探索 + 地圖與路線工具 -->
+  <div class="workspace" id="workspace" data-view="list">
+
+    <div class="ws-tabs-bar">
+      <div class="wrap">
+        <div class="ws-tabs" role="tablist" aria-label="切換檢視" id="wsTabs">
+          <button type="button" role="tab" id="tab-list" aria-selected="true" aria-controls="explore" data-view="list">景點清單<span class="tab-n" id="tabListN">26</span></button>
+          <button type="button" role="tab" id="tab-map" aria-selected="false" aria-controls="panel-map" data-view="map" tabindex="-1">地圖</button>
+          <button type="button" role="tab" id="tab-route" aria-selected="false" aria-controls="panel-route" data-view="route" tabindex="-1">我的路線<span class="tab-n" id="tabRouteN">0</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap ws-grid">
+
+      <section id="explore" class="ws-pane ws-list" aria-labelledby="h-explore">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">02</span>
+          <div>
+            <h2 id="h-explore">地點探索</h2>
+            <p class="sec-sub">搜尋或篩選景點；點景點卡片，地圖會定位並標示。</p>
+          </div>
+        </header>
+
+        <form class="filters" role="search" aria-label="搜尋與篩選景點" id="filterForm" autocomplete="off">
+          <div class="field">
+            <label>
+              <span class="field-label">搜尋景點</span>
+              <span class="search">
+                <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+                <input id="q" name="q" type="search" placeholder="名稱、日文原名、區域或地標，例如「並木」「新宿」" enterkeyhint="search">
+              </span>
+            </label>
+          </div>
+          <fieldset class="chips">
+            <legend>資料類別</legend>
+            <div class="chip-row" id="catChips"></div>
+          </fieldset>
+          <fieldset class="chips">
+            <legend>區域</legend>
+            <div class="chip-row" id="areaChips"></div>
+          </fieldset>
+          <div class="filter-foot">
+            <p class="count" id="resultCount" role="status" aria-live="polite"></p>
+            <button type="button" class="btn btn-quiet" id="clearBtn" disabled>清除篩選</button>
+          </div>
+        </form>
+
+        <details class="legend">
+          <summary><span>資料類別與日期怎麼讀</span><svg class="ico chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="legend-body">
+            <h3>資料類別</h3>
+            <dl id="legendCats"></dl>
+            <h3>四種日期，彼此不能互相代替</h3>
+            <dl id="legendDates"></dl>
+          </div>
+        </details>
+
+        <div id="emptyState" class="empty" hidden>
+          <h3>沒有符合條件的景點</h3>
+          <p id="emptyMsg">換個關鍵字，或放寬資料類別與區域的條件試試。</p>
+          <button type="button" class="btn btn-primary" id="emptyClear">清除篩選</button>
+        </div>
+
+        <div id="spotList" class="spot-groups"></div>
+      </section>
+
+      <section id="tools" class="ws-pane ws-tools" aria-labelledby="h-tools">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">03</span>
+          <div>
+            <h2 id="h-tools">地圖與路線工具</h2>
+            <p class="sec-sub provider"><strong>地圖：OpenStreetMap／Leaflet；路線與步行時間：Google 地圖</strong></p>
+          </div>
+        </header>
+
+        <div class="tools-stack">
+          <div id="panel-map" class="map-panel">
+            <h3 class="vh">地圖</h3>
+            <ul class="map-key" aria-label="地圖圖例">
+              <li><span class="key key-pin" aria-hidden="true"></span>實線圓點：子地點、入口或並木</li>
+              <li><span class="key key-route" aria-hidden="true"></span>綠方塊：路線順序</li>
+              <li><span class="key key-approx" aria-hidden="true"></span>虛線圓點：園區代表點（近似位置）</li>
+            </ul>
+            <div class="map-wrap">
+              <div id="map" role="region" aria-label="東京銀杏景點地圖"></div>
+              <div id="mapFallback" class="map-fallback" hidden>
+                <p class="fb-msg" id="fbMsg" role="status"></p>
+                <ul class="fb-list" id="fbList"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="panel-route" class="route-panel" aria-labelledby="h-route">
+            <h3 id="h-route">散步路線</h3>
+            <p class="route-help">加入想走的景點，再交給 Google 地圖算步行路線與時間；本站不計算路線、距離或時間。</p>
+            <div class="route-left">
+              <div class="field">
+                <label>
+                  <span class="field-label">起點</span>
+                  <input id="origin" name="origin" type="text" placeholder="例：東京站、新宿站，或你住的飯店名稱" enterkeyhint="go" aria-describedby="originHint">
+                </label>
+                <p class="hint" id="originHint">留白時，Google 地圖會請你自己輸入起點。</p>
+              </div>
+              <a id="routeGo" class="btn btn-primary btn-block" target="_blank" rel="noopener noreferrer" aria-disabled="true">在 Google 地圖規劃步行路線<svg class="ico" aria-hidden="true"><use href="#i-out"/></svg></a>
+              <p class="route-note" id="routeNote"></p>
+              <p class="route-status" id="routeStatus" role="status" aria-live="polite"></p>
+            </div>
+            <div class="route-right">
+              <div class="route-head">
+                <h4>已加入的景點 <span class="route-n" id="routeN">0</span></h4>
+                <button type="button" class="btn btn-quiet btn-sm" id="routeClear" disabled>全部移除</button>
+              </div>
+              <ol id="routeList" class="route-list"></ol>
+              <p id="routeEmpty" class="route-empty">還沒有加入景點。在景點卡片按「加入路線」，加入的順序就是走訪的順序。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- 資料來源 -->
+  <section id="sources" class="sec wrap" aria-labelledby="h-sources">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">04</span>
+      <div>
+        <h2 id="h-sources">資料來源</h2>
+        <p class="sec-sub">每筆景點資料都保留可追溯的來源連結與日期。</p>
+      </div>
+    </header>
+    <div class="src-top">
+      <p>本網站整理所依據的來源表、景點管理單位資料及各筆資料日期，都列在這裡與各景點卡片的「詳細資料」中。</p>
+      <dl class="src-dates">
+        <div><dt>來源整理表</dt><dd><a class="link-out" href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?usp=sharing" target="_blank" rel="noopener noreferrer">開啟 Google 試算表<svg class="ico" aria-hidden="true"><use href="#i-out"/></svg></a></dd></div>
+        <div><dt>來源整理表盤點日</dt><dd id="srcSheetDate">2026-09-29</dd></div>
+        <div><dt>官方頁面查核日</dt><dd id="srcInvDate">2026-10-02</dd></div>
+        <div><dt>網站建置日</dt><dd id="srcBuiltDate">2026-10-08</dd></div>
+      </dl>
+    </div>
+    <h3 class="sub-h">景點管理單位與官方資料</h3>
+    <ul class="src-list" id="srcOfficial"></ul>
+    <h3 class="sub-h">其他來源（不是景點管理單位）</h3>
+    <ul class="src-list" id="srcOther"></ul>
+    <h3 class="sub-h">網路依賴</h3>
+    <p class="src-net">本網站是靜態網站，沒有伺服器、資料庫或登入。要顯示完整畫面，需要連線載入下列外部服務：</p>
+    <ul class="net-list">
+      <li><strong>Leaflet 1.9.4</strong>（unpkg.com）：地圖程式庫。</li>
+      <li><strong>OpenStreetMap 圖磚</strong>（tile.openstreetmap.org）：地圖底圖，© OpenStreetMap contributors。</li>
+      <li><strong>Google Fonts</strong>（fonts.googleapis.com）：Noto Sans TC 與 Noto Serif TC 字體。</li>
+      <li><strong>Google 地圖</strong>（google.com/maps）：只有在你按下路線或「在 Google 地圖開啟」時才會前往。</li>
+    </ul>
+  </section>
+
+  <!-- 使用說明 -->
+  <section id="guide" class="sec wrap" aria-labelledby="h-guide">
+    <header class="sec-head">
+      <span class="sec-no" aria-hidden="true">05</span>
+      <div>
+        <h2 id="h-guide">使用說明</h2>
+        <p class="sec-sub">直接雙擊 index.html 就能開啟；需要連線才看得到地圖底圖與字體。</p>
+      </div>
+    </header>
+    <ol class="guide-steps">
+      <li><strong>先看階段。</strong>「銀杏階段」只是觀察用詞的說明，不代表哪個景點現在是哪個階段。</li>
+      <li><strong>找景點。</strong>在「地點探索」用搜尋、資料類別與區域縮小範圍；點景點卡片，地圖會定位並標示該景點。</li>
+      <li><strong>看資料與日期。</strong>卡片上的標籤說明這筆資料是哪一類，日期分成發布日、拍攝日、觀測日與資料盤點日。展開「詳細資料」可看每筆來源，出發前請自行開來源連結確認。</li>
+      <li><strong>排路線。</strong>按「加入路線」收集景點，在「起點」填出發地，再按「在 Google 地圖規劃步行路線」。路線與步行時間由 Google 地圖提供。</li>
+      <li><strong>地圖載入不了？</strong>每個景點都有「在 Google 地圖開啟」的連結，可以直接前往 Google 地圖查看位置。</li>
+      <li><strong>鍵盤操作。</strong>用 Tab 移動、Enter 或空白鍵按下按鈕；地圖上的標記請改用清單裡的「在地圖上看」。</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <h2 class="foot-h">本站說明</h2>
+    <ul class="disclosures">
+      <li>本網站整理所依據的來源表、景點管理單位資料及各筆資料日期，列於上方「資料來源」與各景點的「詳細資料」。</li>
+      <li>地圖：OpenStreetMap／Leaflet；路線與步行時間：Google 地圖。</li>
+      <li>本網站為教學使用、非營利，且不是被參考服務、景點管理單位或地圖服務的官方網站。</li>
+      <li>景點開放情況及當季銀杏葉況仍以管理單位最新公告為準。</li>
+    </ul>
+    <p class="foot-line">金色散策｜東京銀杏地圖　教學用靜態網站</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript><p class="noscript">此網站需要啟用 JavaScript 才能顯示景點清單與地圖。景點資料的來源整理表：<a href="https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?usp=sharing">Google 試算表</a>。</p></noscript>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

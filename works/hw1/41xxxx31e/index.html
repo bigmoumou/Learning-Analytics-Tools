@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京銀杏黃葉散步地圖</title>
+<meta name="description" content="給台灣旅客的東京銀杏黃葉散步地圖：比較 26 處有官方資料的銀杏景點，讀懂黃葉的六個階段，再安排半日散步路線。">
+<meta name="theme-color" content="#f4eedc">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232d5a3d' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21v-6'/%3E%3Cpath d='M12 15C6 15 3 10.500 3.500 6.500 6 5 9 5 12 7.500 15 5 18 5 20.500 6.500 21 10.500 18 15 12 15Z' fill='%23e0a21b'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要內容</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="#top" aria-label="東京銀杏黃葉散步地圖，回到頁首">
+      <svg class="leaf-mark" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M12 21v-6"/><path d="M12 15C6 15 3 10.5 3.5 6.5 6 5 9 5 12 7.5 15 5 18 5 20.5 6.5 21 10.5 18 15 12 15Z"/><path d="M12 15V9.5M12 15 8.2 9.8M12 15l3.8-5.2"/></svg>
+      <span class="brand-name">東京銀杏黃葉散步地圖</span>
+    </a>
+    <nav class="site-nav" aria-label="頁面章節">
+      <ol>
+        <li><a href="#season"><span class="nav-no">01</span>季節</a></li>
+        <li><a href="#explore"><span class="nav-no">02</span>地圖</a></li>
+        <li><a href="#route"><span class="nav-no">03</span>路線</a></li>
+        <li><a href="#proposals"><span class="nav-no">04</span>提案</a></li>
+        <li><a href="#sources"><span class="nav-no">05</span>來源</a></li>
+      </ol>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="masthead" id="top" aria-labelledby="h-title">
+  <div class="wrap masthead-grid">
+    <div class="masthead-text">
+      <p class="kicker"><span lang="la">Ginkgo biloba L.</span><span class="kicker-sep" aria-hidden="true"></span>秋日植物誌</p>
+      <h1 id="h-title"><span class="nb">東京銀杏</span><span class="nb">黃葉散步地圖</span></h1>
+      <p class="lede">給來東京賞銀杏的台灣旅客：比較 26 處有官方資料的銀杏景點，讀懂黃葉的六個階段，再把鄰近的幾處排成半日散步。</p>
+      <p class="honest">這裡沒有任何景點的 2026 年即時葉況。六階段只是物候指引，26 處景點的本季狀態全部標示「待查核」，請以各景點的官方連結與公告為準。</p>
+      <p class="masthead-actions"><a class="btn btn-primary" href="#explore">開始看地圖</a><a class="btn btn-ghost" href="#season">先讀黃葉進程</a></p>
+    </div>
+    <div class="specimen" role="group" aria-label="資料概要">
+      <p class="specimen-head"><span>採集簿</span><span>2026 秋</span></p>
+      <dl>
+        <div><dt>種名</dt><dd><i lang="la">Ginkgo biloba</i> L.（銀杏）</dd></div>
+        <div><dt>採集地</dt><dd>東京都，共 26 處園區與並木</dd></div>
+        <div><dt>資料查核</dt><dd>2026-09-29，2026-10-02 複核</dd></div>
+        <div><dt>本季狀態</dt><dd><b>26 處全部「待查核」</b></dd></div>
+        <div><dt>位置</dt><dd>園區近似位置；地圖為示意、非比例</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="season" aria-labelledby="h-season">
+  <div class="wrap">
+    <header class="sec-head">
+      <p class="sec-no" aria-hidden="true">01</p>
+      <h2 id="h-season">黃葉進程：六階段物候指引</h2>
+    </header>
+    <p class="sec-intro">銀杏每年大致依序走過下面六個階段。這是用來安排行程的物候指引，<strong>不是任何景點此刻的即時狀態</strong>：本站沒有取得 2026 年各景點的銀杏現況，所以不會替任何景點標上階段。</p>
+    <figure class="calendar" id="calendar" aria-labelledby="cal-cap"></figure>
+    <ol class="stage-list" id="stage-list"></ol>
+    <div class="season-note" id="season-note"></div>
+  </div>
+</section>
+
+<section class="band" id="explore" aria-labelledby="h-explore">
+  <div class="wrap">
+    <header class="sec-head">
+      <p class="sec-no" aria-hidden="true">02</p>
+      <h2 id="h-explore">地圖與景點名單</h2>
+    </header>
+    <p class="sec-intro">用地區、證據等級或關鍵字縮小範圍。點地圖上的標記或名單中的景點，兩邊會一起標示並自動捲到對應位置。</p>
+
+    <div class="filters" id="filters" role="search" aria-label="篩選景點">
+      <label class="field"><span class="field-name">地區</span>
+        <select id="f-area"></select></label>
+      <label class="field"><span class="field-name">證據等級</span>
+        <select id="f-grade"></select></label>
+      <label class="field field-q"><span class="field-name">關鍵字搜尋</span>
+        <input id="f-q" type="search" autocomplete="off" placeholder="例如：並木、新宿、公園協會" enterkeyhint="search"></label>
+      <label class="switch"><input id="f-official" type="checkbox"><span class="switch-box" aria-hidden="true"></span><span class="switch-text">只看官方證據</span></label>
+      <button type="button" id="f-clear" class="btn btn-ghost">清除篩選</button>
+    </div>
+    <p id="result-count" class="result-count" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p id="official-note" class="official-note" hidden></p>
+
+    <details class="legend" id="legend">
+      <summary>證據等級說明與地圖圖例</summary>
+      <div class="legend-body" id="legend-body"></div>
+    </details>
+
+    <div class="explore-grid" id="explore-grid">
+      <figure class="map-pane" id="map-pane">
+        <div class="map-frame" id="map-frame">
+          <svg id="map" class="map-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet" role="group" aria-label="東京銀杏景點示意地圖（示意地圖、非比例）。每個標記是一處景點，可用 Tab 與方向鍵選取。">
+            <defs>
+              <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M0 4.5H9" class="m-hatch"/></pattern>
+            </defs>
+            <g id="basemap" aria-hidden="true" focusable="false">
+              <rect class="m-land" x="-4000" y="-4000" width="9600" height="9400"/>
+              <path class="m-grid" d="M-1000 -1000V2000M-900 -1000V2000M-800 -1000V2000M-700 -1000V2000M-600 -1000V2000M-500 -1000V2000M-400 -1000V2000M-300 -1000V2000M-200 -1000V2000M-100 -1000V2000M0 -1000V2000M100 -1000V2000M200 -1000V2000M300 -1000V2000M400 -1000V2000M500 -1000V2000M600 -1000V2000M700 -1000V2000M800 -1000V2000M900 -1000V2000M1000 -1000V2000M1100 -1000V2000M1200 -1000V2000M1300 -1000V2000M1400 -1000V2000M1500 -1000V2000M1600 -1000V2000M1700 -1000V2000M1800 -1000V2000M1900 -1000V2000M2000 -1000V2000M2100 -1000V2000M2200 -1000V2000M2300 -1000V2000M2400 -1000V2000M-1000 -1000H2400M-1000 -900H2400M-1000 -800H2400M-1000 -700H2400M-1000 -600H2400M-1000 -500H2400M-1000 -400H2400M-1000 -300H2400M-1000 -200H2400M-1000 -100H2400M-1000 0H2400M-1000 100H2400M-1000 200H2400M-1000 300H2400M-1000 400H2400M-1000 500H2400M-1000 600H2400M-1000 700H2400M-1000 800H2400M-1000 900H2400M-1000 1000H2400M-1000 1100H2400M-1000 1200H2400M-1000 1300H2400M-1000 1400H2400M-1000 1500H2400M-1000 1600H2400M-1000 1700H2400M-1000 1800H2400M-1000 1900H2400" vector-effect="non-scaling-stroke"/>
+              <path class="m-water" d="M854.4 944.7C857.4 923.3 867.3 853 872.3 816.3C877.3 779.6 881.7 749.7 884.2 724.6C886.7 699.5 887.7 682.3 887.2 665.8C886.7 649.3 881.2 638.3 881.2 625.5C881.2 612.7 882.7 600.4 887.2 588.8C891.7 577.2 901.1 566.2 908 555.8C915 545.4 922.4 535.6 928.9 526.4C935.4 517.2 940.4 508 946.8 500.7C953.3 493.4 958.7 482.4 967.6 482.4C976.5 482.4 990.5 492.8 1000.4 500.7C1010.3 508.7 1014.8 522.2 1027.2 530.1C1039.6 538.1 1057 542.9 1074.9 548.4C1092.8 553.9 1112.7 558.2 1134.5 563.1C1156.4 568 1174.2 574.1 1206 577.8C1237.8 581.5 1280.5 582.7 1325.2 585.1C1369.9 587.6 1449.4 591.3 1474.2 592.5L4074.2 592.5L4074.2 3600L854.4 3600Z"/>
+              <path class="m-water-hatch" d="M854.4 944.7C857.4 923.3 867.3 853 872.3 816.3C877.3 779.6 881.7 749.7 884.2 724.6C886.7 699.5 887.7 682.3 887.2 665.8C886.7 649.3 881.2 638.3 881.2 625.5C881.2 612.7 882.7 600.4 887.2 588.8C891.7 577.2 901.1 566.2 908 555.8C915 545.4 922.4 535.6 928.9 526.4C935.4 517.2 940.4 508 946.8 500.7C953.3 493.4 958.7 482.4 967.6 482.4C976.5 482.4 990.5 492.8 1000.4 500.7C1010.3 508.7 1014.8 522.2 1027.2 530.1C1039.6 538.1 1057 542.9 1074.9 548.4C1092.8 553.9 1112.7 558.2 1134.5 563.1C1156.4 568 1174.2 574.1 1206 577.8C1237.8 581.5 1280.5 582.7 1325.2 585.1C1369.9 587.6 1449.4 591.3 1474.2 592.5L4074.2 592.5L4074.2 3600L854.4 3600Z" fill="url(#hatch)"/>
+              <path class="m-coast" d="M854.4 944.7C857.4 923.3 867.3 853 872.3 816.3C877.3 779.6 881.7 749.7 884.2 724.6C886.7 699.5 887.7 682.3 887.2 665.8C886.7 649.3 881.2 638.3 881.2 625.5C881.2 612.7 882.7 600.4 887.2 588.8C891.7 577.2 901.1 566.2 908 555.8C915 545.4 922.4 535.6 928.9 526.4C935.4 517.2 940.4 508 946.8 500.7C953.3 493.4 958.7 482.4 967.6 482.4C976.5 482.4 990.5 492.8 1000.4 500.7C1010.3 508.7 1014.8 522.2 1027.2 530.1C1039.6 538.1 1057 542.9 1074.9 548.4C1092.8 553.9 1112.7 558.2 1134.5 563.1C1156.4 568 1174.2 574.1 1206 577.8C1237.8 581.5 1280.5 582.7 1325.2 585.1C1369.9 587.6 1449.4 591.3 1474.2 592.5" vector-effect="non-scaling-stroke"/>
+              <path class="m-island" d="M920 629.2C922 625.5 923.5 612 931.9 607.1C940.3 602.2 960.2 598 970.6 599.8C981 601.6 992.5 610.2 994.5 618.1C996.5 626.1 991.5 641.4 982.5 647.5C973.6 653.6 951.2 657.8 940.8 654.8C930.4 651.8 923.5 633.5 920 629.2Z" vector-effect="non-scaling-stroke"/>
+              <path class="m-river m-river-lg" d="M33.9 -119.4C41.3 -101.1 60.7 -51 78.6 -9.4C96.5 32.2 125.1 90.3 141.2 130.1C157.3 169.9 165.1 198.6 175 229.2C184.9 259.8 191.7 286.1 200.8 313.6C209.9 341.1 219.8 369.8 229.6 394.3C239.4 418.8 248.1 442.1 259.4 460.4C270.7 478.8 283.8 488.5 297.2 504.4C310.6 520.3 326.7 539.9 339.9 555.8C353.1 571.7 363.9 587 376.6 599.8C389.4 612.6 394.9 620.6 416.4 632.8C437.9 645 473.5 657.9 505.8 673.2C538.1 688.5 571.3 700.8 610 724.6C648.7 748.5 698.5 779.6 738.2 816.3C777.9 853 830 923.3 848.4 944.7" vector-effect="non-scaling-stroke"/>
+              <path class="m-river m-river-lg" d="M550.4 -156.1C568.3 -139 621.9 -80.9 657.7 -53.4C693.5 -25.9 729.2 -6.9 765 9C800.8 24.9 833.6 27.9 872.3 42C911 56.1 963.6 74.4 997.4 93.4C1031.2 112.4 1053.5 133.2 1074.9 155.8C1096.3 178.4 1110.7 201.7 1125.6 229.2C1140.5 256.7 1152.9 292.2 1164.3 320.9C1175.7 349.6 1184.2 372.3 1194.1 401.6C1204 431 1216 467.6 1223.9 497C1231.9 526.4 1238.8 564.3 1241.8 577.8" vector-effect="non-scaling-stroke"/>
+              <path class="m-river" d="M815.7 53C823.2 61 836.1 84.2 860.4 100.7C884.7 117.2 935.4 139.3 961.7 152.1C988 165 1007.9 163.7 1018.3 177.8C1028.7 191.9 1024.8 212.7 1024.3 236.5C1023.8 260.4 1018.3 298.3 1015.3 320.9C1012.3 343.5 1008.9 354 1006.4 372.3C1003.9 390.7 1003.4 417.6 1000.4 431C997.4 444.5 994 445.1 988.5 453C983 461 971.1 474.4 967.6 478.7" vector-effect="non-scaling-stroke"/>
+              <rect class="m-moat" x="851.8" y="380.3" width="69.6" height="63.2" rx="18" vector-effect="non-scaling-stroke"/>
+              <rect class="m-palace" x="856.8" y="385.3" width="59.6" height="53.2" rx="14" vector-effect="non-scaling-stroke"/>
+              <path class="m-rail m-rail-loop" d="M929.2 426.6L947.1 363.5L959.9 305.9L940.8 254.5L910.4 217.8L869 222.9L846.1 235L814.2 242.7L761.7 249.4L748.9 279.4L740.6 311L729.8 353.2L731 395.8L735.2 418.9L737.3 467L734 511.7L759.3 553.2L776.3 600.2L799.9 628.4L844.6 620L899.1 521.3L903 481.3L929.2 426.6Z" vector-effect="non-scaling-stroke"/>
+              <path class="m-rail m-rail-line" d="M731 395.8L627.6 337.1L579.4 338.2L537.9 340.4L490.9 340.7L411.2 346.2L392.3 347.7L342.8 357.6L312.1 357.2L273.3 371.5L246.2 363.8L227.3 417.1L209.6 507L171.8 520.9L115.6 570.8" vector-effect="non-scaling-stroke"/>
+              <path class="m-band" d="M419.3 -400L429.3 -386L419.3 -372L429.3 -358L419.3 -344L429.3 -330L419.3 -316L429.3 -302L419.3 -288L429.3 -274L419.3 -260L429.3 -246L419.3 -232L429.3 -218L419.3 -204L429.3 -190L419.3 -176L429.3 -162L419.3 -148L429.3 -134L419.3 -120L429.3 -106L419.3 -92L429.3 -78L419.3 -64L429.3 -50L419.3 -36L429.3 -22L419.3 -8L429.3 6L419.3 20L429.3 34L419.3 48L429.3 62L419.3 76L429.3 90L419.3 104L429.3 118L419.3 132L429.3 146L419.3 160L429.3 174L419.3 188L429.3 202L419.3 216L429.3 230L419.3 244L429.3 258L419.3 272L429.3 286L419.3 300L429.3 314L419.3 328L429.3 342L419.3 356L429.3 370L419.3 384L429.3 398L419.3 412L429.3 426L419.3 440L429.3 454L419.3 468L429.3 482L419.3 496L429.3 510L419.3 524L429.3 538L419.3 552L429.3 566L419.3 580L429.3 594L419.3 608L429.3 622L419.3 636L429.3 650L419.3 664L429.3 678L419.3 692L429.3 706L419.3 720L429.3 734L419.3 748L429.3 762L419.3 776L429.3 790L419.3 804L429.3 818L419.3 832L429.3 846L419.3 860L429.3 874L419.3 888L429.3 902L419.3 916L429.3 930L419.3 944L429.3 958L419.3 972L429.3 986L419.3 1000L429.3 1014L419.3 1028L429.3 1042L419.3 1056L429.3 1070L419.3 1084L429.3 1098L419.3 1112L429.3 1126L419.3 1140L429.3 1154L419.3 1168L429.3 1182L419.3 1196L433.3 1200L443.3 1186L433.3 1172L443.3 1158L433.3 1144L443.3 1130L433.3 1116L443.3 1102L433.3 1088L443.3 1074L433.3 1060L443.3 1046L433.3 1032L443.3 1018L433.3 1004L443.3 990L433.3 976L443.3 962L433.3 948L443.3 934L433.3 920L443.3 906L433.3 892L443.3 878L433.3 864L443.3 850L433.3 836L443.3 822L433.3 808L443.3 794L433.3 780L443.3 766L433.3 752L443.3 738L433.3 724L443.3 710L433.3 696L443.3 682L433.3 668L443.3 654L433.3 640L443.3 626L433.3 612L443.3 598L433.3 584L443.3 570L433.3 556L443.3 542L433.3 528L443.3 514L433.3 500L443.3 486L433.3 472L443.3 458L433.3 444L443.3 430L433.3 416L443.3 402L433.3 388L443.3 374L433.3 360L443.3 346L433.3 332L443.3 318L433.3 304L443.3 290L433.3 276L443.3 262L433.3 248L443.3 234L433.3 220L443.3 206L433.3 192L443.3 178L433.3 164L443.3 150L433.3 136L443.3 122L433.3 108L443.3 94L433.3 80L443.3 66L433.3 52L443.3 38L433.3 24L443.3 10L433.3 -4L443.3 -18L433.3 -32L443.3 -46L433.3 -60L443.3 -74L433.3 -88L443.3 -102L433.3 -116L443.3 -130L433.3 -144L443.3 -158L433.3 -172L443.3 -186L433.3 -200L443.3 -214L433.3 -228L443.3 -242L433.3 -256L443.3 -270L433.3 -284L443.3 -298L433.3 -312L443.3 -326L433.3 -340L443.3 -354L433.3 -368L443.3 -382L433.3 -396Z"/>
+              <path class="m-band-line" d="M419.3 -400L429.3 -386L419.3 -372L429.3 -358L419.3 -344L429.3 -330L419.3 -316L429.3 -302L419.3 -288L429.3 -274L419.3 -260L429.3 -246L419.3 -232L429.3 -218L419.3 -204L429.3 -190L419.3 -176L429.3 -162L419.3 -148L429.3 -134L419.3 -120L429.3 -106L419.3 -92L429.3 -78L419.3 -64L429.3 -50L419.3 -36L429.3 -22L419.3 -8L429.3 6L419.3 20L429.3 34L419.3 48L429.3 62L419.3 76L429.3 90L419.3 104L429.3 118L419.3 132L429.3 146L419.3 160L429.3 174L419.3 188L429.3 202L419.3 216L429.3 230L419.3 244L429.3 258L419.3 272L429.3 286L419.3 300L429.3 314L419.3 328L429.3 342L419.3 356L429.3 370L419.3 384L429.3 398L419.3 412L429.3 426L419.3 440L429.3 454L419.3 468L429.3 482L419.3 496L429.3 510L419.3 524L429.3 538L419.3 552L429.3 566L419.3 580L429.3 594L419.3 608L429.3 622L419.3 636L429.3 650L419.3 664L429.3 678L419.3 692L429.3 706L419.3 720L429.3 734L419.3 748L429.3 762L419.3 776L429.3 790L419.3 804L429.3 818L419.3 832L429.3 846L419.3 860L429.3 874L419.3 888L429.3 902L419.3 916L429.3 930L419.3 944L429.3 958L419.3 972L429.3 986L419.3 1000L429.3 1014L419.3 1028L429.3 1042L419.3 1056L429.3 1070L419.3 1084L429.3 1098L419.3 1112L429.3 1126L419.3 1140L429.3 1154L419.3 1168L429.3 1182L419.3 1196" vector-effect="non-scaling-stroke"/>
+              <path class="m-band-line" d="M433.3 1200L443.3 1186L433.3 1172L443.3 1158L433.3 1144L443.3 1130L433.3 1116L443.3 1102L433.3 1088L443.3 1074L433.3 1060L443.3 1046L433.3 1032L443.3 1018L433.3 1004L443.3 990L433.3 976L443.3 962L433.3 948L443.3 934L433.3 920L443.3 906L433.3 892L443.3 878L433.3 864L443.3 850L433.3 836L443.3 822L433.3 808L443.3 794L433.3 780L443.3 766L433.3 752L443.3 738L433.3 724L443.3 710L433.3 696L443.3 682L433.3 668L443.3 654L433.3 640L443.3 626L433.3 612L443.3 598L433.3 584L443.3 570L433.3 556L443.3 542L433.3 528L443.3 514L433.3 500L443.3 486L433.3 472L443.3 458L433.3 444L443.3 430L433.3 416L443.3 402L433.3 388L443.3 374L433.3 360L443.3 346L433.3 332L443.3 318L433.3 304L443.3 290L433.3 276L443.3 262L433.3 248L443.3 234L433.3 220L443.3 206L433.3 192L443.3 178L433.3 164L443.3 150L433.3 136L443.3 122L433.3 108L443.3 94L433.3 80L443.3 66L433.3 52L443.3 38L433.3 24L443.3 10L433.3 -4L443.3 -18L433.3 -32L443.3 -46L433.3 -60L443.3 -74L433.3 -88L443.3 -102L433.3 -116L443.3 -130L433.3 -144L443.3 -158L433.3 -172L443.3 -186L433.3 -200L443.3 -214L433.3 -228L443.3 -242L433.3 -256L443.3 -270L433.3 -284L443.3 -298L433.3 -312L443.3 -326L433.3 -340L443.3 -354L433.3 -368L443.3 -382L433.3 -396" vector-effect="non-scaling-stroke"/>
+            </g>
+            <g id="layer-labels" aria-hidden="true">
+              <text class="lbl lbl-water" data-x="1104.7" data-y="618.1" data-z="0" x="0" y="0" text-anchor="middle" transform="translate(1104.7 618.1) scale(3.3)">東京灣</text>
+              <text class="lbl lbl-water" data-x="1028.7" data-y="253" data-z="0" x="8" y="4" text-anchor="start" transform="translate(1028.7 253) scale(3.3)">隅田川</text>
+              <text class="lbl lbl-water" data-x="1153.9" data-y="278.7" data-z="0" x="6" y="4" text-anchor="start" transform="translate(1153.9 278.7) scale(3.3)">荒川</text>
+              <text class="lbl lbl-water" data-x="359.2" data-y="568.6" data-z="0" x="6" y="14" text-anchor="start" transform="translate(359.2 568.6) scale(3.3)">多摩川</text>
+              <text class="lbl lbl-pref" data-x="331.9" data-y="-31.4" data-z="0" x="0" y="0" text-anchor="middle" transform="translate(331.9 -31.4) scale(3.3)">埼玉縣</text>
+              <text class="lbl lbl-pref" data-x="292.2" data-y="731.9" data-z="0" x="0" y="0" text-anchor="middle" transform="translate(292.2 731.9) scale(3.3)">神奈川縣</text>
+              <text class="lbl lbl-brk" data-x="431.3" data-y="47.5" data-z="0" x="-12" y="4" text-anchor="end" transform="translate(431.3 47.5) scale(3.3)">← 多摩（壓縮）</text>
+              <text class="lbl lbl-brk" data-x="431.3" data-y="47.5" data-z="0" x="12" y="4" text-anchor="start" transform="translate(431.3 47.5) scale(3.3)">23 區 →</text>
+              <text class="lbl lbl-stn" data-x="929.2" data-y="426.6" data-z="2.3" x="7" y="16" text-anchor="start" transform="translate(929.2 426.6) scale(3.3)">東京站</text>
+              <text class="lbl lbl-stn" data-x="959.9" data-y="305.9" data-z="2.3" x="7" y="-7" text-anchor="start" transform="translate(959.9 305.9) scale(3.3)">上野站</text>
+              <text class="lbl lbl-stn" data-x="761.7" data-y="249.4" data-z="2" x="7" y="-6" text-anchor="start" transform="translate(761.7 249.4) scale(3.3)">池袋站</text>
+              <text class="lbl lbl-stn" data-x="731" data-y="395.8" data-z="2" x="-7" y="4" text-anchor="end" transform="translate(731 395.8) scale(3.3)">新宿站</text>
+              <text class="lbl lbl-stn" data-x="734" data-y="511.7" data-z="2" x="-7" y="4" text-anchor="end" transform="translate(734 511.7) scale(3.3)">澀谷站</text>
+              <text class="lbl lbl-stn" data-x="844.6" data-y="620" data-z="2" x="7" y="4" text-anchor="start" transform="translate(844.6 620) scale(3.3)">品川站</text>
+              <text class="lbl lbl-stn" data-x="886.6" data-y="411.9" data-z="3.2" x="-4" y="4" text-anchor="end" transform="translate(886.6 411.9) scale(3.3)">皇居</text>
+              <text class="lbl lbl-stn" data-x="490.9" data-y="340.7" data-z="2" x="0" y="16" text-anchor="middle" transform="translate(490.9 340.7) scale(3.3)">荻窪站</text>
+              <text class="lbl lbl-stn" data-x="411.2" data-y="346.2" data-z="2.2" x="0" y="-9" text-anchor="middle" transform="translate(411.2 346.2) scale(3.3)">吉祥寺站</text>
+              <text class="lbl lbl-stn" data-x="342.8" data-y="357.6" data-z="2.2" x="0" y="17" text-anchor="middle" transform="translate(342.8 357.6) scale(3.3)">武藏小金井站</text>
+              <text class="lbl lbl-stn" data-x="273.3" data-y="371.5" data-z="2.2" x="0" y="-9" text-anchor="middle" transform="translate(273.3 371.5) scale(3.3)">國立站</text>
+              <text class="lbl lbl-stn" data-x="246.2" data-y="363.8" data-z="2" x="0" y="-9" text-anchor="middle" transform="translate(246.2 363.8) scale(3.3)">立川站</text>
+              <text class="lbl lbl-stn" data-x="171.8" data-y="520.9" data-z="2" x="0" y="-9" text-anchor="middle" transform="translate(171.8 520.9) scale(3.3)">八王子站</text>
+              <text class="lbl lbl-stn" data-x="115.6" data-y="570.8" data-z="2" x="0" y="-9" text-anchor="middle" transform="translate(115.6 570.8) scale(3.3)">高尾站</text>
+              <text class="lbl lbl-line" data-x="910.4" data-y="217.8" data-z="2.6" x="8" y="-6" text-anchor="start" transform="translate(910.4 217.8) scale(3.3)">山手線（示意）</text>
+              <text class="lbl lbl-line" data-x="627.6" data-y="337.1" data-z="2.6" x="4" y="-9" text-anchor="start" transform="translate(627.6 337.1) scale(3.3)">中央線（示意）</text>
+            </g>
+            <g id="layer-route" aria-hidden="true"></g>
+            <g id="layer-spots"></g>
+            <g id="layer-callout" aria-hidden="true"></g>
+          </svg>
+          <div class="map-compass" aria-hidden="true"><svg viewBox="0 0 20 28" width="18" height="26"><path d="M10 2 15 17 10 14 5 17Z"/></svg><span>N</span></div>
+          <div class="map-tools" role="group" aria-label="地圖縮放">
+            <button type="button" id="z-in" class="map-btn" aria-label="放大地圖">＋</button>
+            <button type="button" id="z-out" class="map-btn" aria-label="縮小地圖">－</button>
+            <button type="button" id="z-fit" class="map-btn map-btn-text" aria-label="回到全景">全景</button>
+          </div>
+          <a class="route-pill" id="route-pill" href="#route">路線 0／5</a>
+          <p class="map-flash" id="map-flash" role="status" aria-live="polite" hidden></p>
+          <div class="map-empty" id="map-empty" hidden><p>目前沒有符合條件的標記。</p></div>
+        </div>
+        <figcaption class="map-cap">
+          <span class="cap-main"><b>示意地圖、非比例</b>（多摩側已壓縮）</span>
+          <span class="cap-key" aria-hidden="true"><svg viewBox="0 0 14 14" width="14" height="14"><circle cx="7" cy="7" r="5" class="key-solid"/></svg>S・A　<svg viewBox="0 0 14 14" width="14" height="14"><circle cx="7" cy="7" r="4.2" class="key-ring"/></svg>B・C</span>
+        </figcaption>
+      </figure>
+      <div class="list-pane" id="list-pane">
+        <ol class="entries" id="spot-list"></ol>
+        <div class="empty-state" id="empty-state" hidden>
+          <h3>找不到符合的景點</h3>
+          <p id="empty-text">換個關鍵字，或放寬地區與證據等級試試看。</p>
+          <button type="button" class="btn btn-primary" id="empty-clear">清除篩選，看全部景點</button>
+        </div>
+      </div>
+    </div>
+    <p class="map-hint" id="map-hint">地圖操作：拖曳平移；按住 Ctrl 滾動滾輪、或用雙指開合縮放；也可以用右上角的按鈕。鍵盤：Tab 進入標記後，用方向鍵換標記、Enter 選取，＋／－ 縮放，Shift＋方向鍵平移。</p>
+  </div>
+</section>
+
+<section class="band" id="route" aria-labelledby="h-route">
+  <div class="wrap">
+    <header class="sec-head">
+      <p class="sec-no" aria-hidden="true">03</p>
+      <h2 id="h-route">我的散步路線</h2>
+    </header>
+    <p class="sec-intro">在名單的景點上按「加入路線」，選 2 到 5 處。系統先依鄰近程度排好順序，你再用 ↑↓ 微調。路線會存在這個瀏覽器裡，重新整理也還在。</p>
+    <div class="route-grid">
+      <div class="route-main">
+        <p class="route-count" id="route-count" role="status" aria-live="polite"></p>
+        <ol class="route-list" id="route-list"></ol>
+        <p class="route-empty" id="route-empty"></p>
+      </div>
+      <aside class="route-side" aria-label="路線摘要">
+        <dl class="route-sum" id="route-sum"></dl>
+        <div class="route-actions">
+          <a class="btn btn-primary" id="gmaps-link" href="#route" target="_blank" rel="noopener noreferrer" aria-disabled="true">在 Google 地圖開啟步行路線</a>
+          <button type="button" class="btn btn-ghost" id="route-resort">依鄰近程度重新排序</button>
+          <button type="button" class="btn btn-ghost" id="route-clear">清空路線</button>
+        </div>
+        <p class="fine">距離是兩個「園區近似位置」之間的直線距離，只是估算；步行時間以每分鐘 80 公尺推估，實際路徑會更長，也不含停留與等紅燈的時間。請以 Google 地圖與現場指標為準。</p>
+        <p class="fine warn" id="storage-note" hidden>這個瀏覽器目前不允許保存資料，所以重新整理後路線會清空。</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="proposals" aria-labelledby="h-prop">
+  <div class="wrap">
+    <header class="sec-head">
+      <p class="sec-no" aria-hidden="true">04</p>
+      <h2 id="h-prop">五條同區域散步提案</h2>
+    </header>
+    <p class="sec-intro">東京的銀杏景點分散在很大的範圍，所以每一條提案都只在同一個區域內，相鄰兩處的直線距離最多約 2 公里；不會把八王子和上野硬串成一路。</p>
+    <ol class="prop-list" id="prop-list"></ol>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot" id="sources">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-no" aria-hidden="true">05</p>
+      <h2 id="h-sources">資料來源與引用</h2>
+    </div>
+    <div id="foot-body" class="foot-body"></div>
+    <p class="disclaimer">本網站僅供課程教學及非營利使用，資訊以官方公告為準</p>
+  </div>
+</footer>
+
+<noscript><p class="noscript">這個網站需要啟用 JavaScript 才能顯示地圖、名單與路線。</p></noscript>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

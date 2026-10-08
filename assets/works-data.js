@@ -22,12 +22,20 @@ window.WORKS = [
     },
     "items": [
       {
+        "code": "41xxxx25o",
+        "label": "41••••25O"
+      },
+      {
         "code": "41xxxx25h",
         "label": "41••••25H",
         "stars": 1,
         "was": [
           "41xxxxx5h"
         ]
+      },
+      {
+        "code": "41xxxx37l",
+        "label": "41••••37L"
       },
       {
         "code": "41xxxx35l",
@@ -57,9 +65,17 @@ window.WORKS = [
         "label": "41••••05H"
       },
       {
+        "code": "41xxxx10h",
+        "label": "41••••10H"
+      },
+      {
         "code": "41xxxx44h",
         "label": "41••••44H",
         "stars": 1
+      },
+      {
+        "code": "41xxxx31e",
+        "label": "41••••31E"
       },
       {
         "code": "41xxx002e",
@@ -131,6 +147,10 @@ window.WORKS = [
       {
         "code": "41xxxx02h",
         "label": "41••••02H"
+      },
+      {
+        "code": "41xxxx33h",
+        "label": "41••••33H"
       }
     ]
   }
