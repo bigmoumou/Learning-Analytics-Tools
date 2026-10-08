@@ -47,7 +47,7 @@ window.WORKS = [
       {
         "code": "41xxxx33l",
         "label": "41••••33L",
-        "stars": 2,
+        "stars": 1,
         "was": [
           "41xxxxx3l"
         ]
@@ -58,7 +58,8 @@ window.WORKS = [
       },
       {
         "code": "41xxxx44h",
-        "label": "41••••44H"
+        "label": "41••••44H",
+        "stars": 1
       },
       {
         "code": "41xxx002e",
@@ -66,11 +67,13 @@ window.WORKS = [
       },
       {
         "code": "41xxxx06e",
-        "label": "41••••06E"
+        "label": "41••••06E",
+        "stars": 1
       },
       {
         "code": "41xxxx09e",
-        "label": "41••••09E"
+        "label": "41••••09E",
+        "stars": 1
       },
       {
         "code": "41xxxx04e",
@@ -78,11 +81,13 @@ window.WORKS = [
       },
       {
         "code": "41xxxx16l",
-        "label": "41••••16L"
+        "label": "41••••16L",
+        "stars": 1
       },
       {
         "code": "41xxxx13h",
-        "label": "41••••13H"
+        "label": "41••••13H",
+        "stars": 1
       },
       {
         "code": "41xxxx38h",
@@ -90,7 +95,8 @@ window.WORKS = [
       },
       {
         "code": "41xxxx40h",
-        "label": "41••••40H"
+        "label": "41••••40H",
+        "stars": 1
       },
       {
         "code": "41xxxx30h",
@@ -99,6 +105,7 @@ window.WORKS = [
       {
         "code": "41xxxx02e",
         "label": "41••••02E",
+        "stars": 1,
         "was": [
           "41xxxxx2e"
         ]
@@ -114,7 +121,7 @@ window.WORKS = [
       {
         "code": "41xxxx15h",
         "label": "41••••15H",
-        "stars": 2
+        "stars": 1
       },
       {
         "code": "41xxxx29h",
