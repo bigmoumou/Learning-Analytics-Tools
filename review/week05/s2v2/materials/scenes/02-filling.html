@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>02 越來越滿</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  L.mount();
+  const D = 6;
+  // 第 2 版：一次快轉帶過（舊版 18 秒）。14:04 → 17:30，紙條 14 → 42 張，面板 40% → 95%，一句字幕
+  const T0 = 0.4, STEP = 0.155;
+  const ADDS = L.S2.map((_, j) => [T0 + j * STEP, L.N1 + j + 1]);
+  const T_END = T0 + (L.S2.length - 1) * STEP;
+  const items = L.hist(L.H01()).concat(L.S2ITEMS(T0, STEP));
+  const CAPS = [[0.3, 5.9, "同一段對話裡，一直做下去", "時間快轉：14:00 → 17:30", 1.2]];
+  function render(t) {
+    L.cam(t, [[0, ...L.WIDE]]); L.scrims(0); L.dim(0);
+    L.sec(t, "02", "越來越滿", 0.1);
+    L.clock(14 * 60 + 4 + (17 * 60 + 30 - (14 * 60 + 4)) * E(C((t - 0.3) / (T_END - 0.1))));
+    L.thread(t, { title: "分析成績", items });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1], ["survey.csv", -1], ["analyze.py", -1], ["report.md", -1], ["plot.py", -1], ["scatter.png", -1], ["merge.py", T0 + 14 * STEP]]);
+    L.stack(t, L.N1, ADDS);
+    L.panel(t, -1, lerp(40, 95, E(C((t - T0) / (T_END - T0 + 0.3)))));
+    L.caps2(t, CAPS);
+    L.illus(t, [[-1, D + 1, L.ILLUS]]);
+  }
+  L.start("02 越來越滿", D, render);
+})();
+</script>
+</body>
+</html>

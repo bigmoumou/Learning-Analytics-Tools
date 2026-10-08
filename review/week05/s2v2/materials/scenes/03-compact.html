@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>03 自動壓縮</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  L.mount();
+  const D = 18;
+  // 整支最重要的畫面。第 2 版：收攏、壓平、留下三張、新訊息放上去的動作和老師聽過的測試片一樣（9 秒），
+  // 砍掉前後的停頓：打字縮短、推近看那一列縮短、壓縮完只停一下就推近精簡版。秒數也是聲音的時間表（audio/paper.py、tools/gen_sfx.py）
+  const T = {
+    type0: 0.3, send: 1.2, push0: 1.3, push1: 2.1, row: 1.9, pull0: 4.3, pull1: 5.1,
+    n0: 5.1, n1: 6.6, g1: 9.6, p1: 11.6, s0: 11.6, sStep: 0.25, sDur: 1.1, new0: 13.2, new1: 14.1, done: 13.6,
+    pan0: 9.6, pan1: 13.6, bars0: 11.7, bars1: 12.7, in0: 15.4, in1: 18.0,
+  };
+  window.T3 = T;
+  const END = [1000, 555, 1.25];                 // 第 4 段從這裡接著推近精簡版
+  const CAM = [[0, ...L.WIDE], [T.push0, ...L.WIDE], [T.push1, ...L.PUSH], [T.pull0, ...L.PUSH], [T.pull1, ...L.WIDE], [T.in0, ...L.WIDE], [T.in1, ...END]];
+  const CAPS = [
+    [1.9, 4.9, "快滿了，Codex 會自動壓縮", "Week 3 看過：滿了會壓縮", 2.9],
+    [5.3, 11.9, "前面的對話，換成一份比較短的精簡版", "那則決定的小標籤，在收攏時淡掉了", 7.4],
+    [12.1, 17.2, "換成精簡版，再繼續", "最上面幾則還在。精簡版寫了什麼，app 裡看不到。", 13.4],
+  ];
+  function render(t) {
+    const cam = L.cam(t, CAM), k = t < T.in0 ? L.pushK(cam.z) : 0;
+    // 最後推近紙條堆時也加上下遮罩（段落標壓在乾淨的底上），第 4 段開頭照同一條規則
+    L.scrims(t < T.in0 ? k : 0.35 * C((cam.z - 1) / 0.25)); L.dim(k);
+    if (t >= T.in0) L.panelByZoom(cam.z);
+    L.sec(t, "03", "自動壓縮", 0.1);
+    L.clock(17 * 60 + 30);
+    // Codex：送出後 Working…；活動紀錄一列「Compacting context」（app 程式裡的字串）→「Context automatically compacted」（老師的截圖）
+    L.thread(t, {
+      title: "分析成績",
+      items: L.hist(L.H01(), L.S2ITEMS()).concat([["u4", L.user(L.NEW[1]), T.send], ["w3", L.work(false), T.send + 0.3],
+        ["row", L.tr("compact", t < T.done ? "Compacting context" : "Context automatically compacted"), T.row]]),
+      input: (tt) => (tt < T.send ? K.typed(L.NEW[1], tt, T.type0, 14) : ""),
+    });
+    L.folder(t, [["AGENTS.md", -1], ["grades.csv", -1], ["survey.csv", -1], ["analyze.py", -1], ["report.md", -1], ["plot.py", -1], ["scatter.png", -1], ["merge.py", -1]]);
+    L.panel(t, -1, lerp(95, 33, L.seg(t, T.pan0, T.pan1)));
+    const s = L.compactState(t, T);
+    L.draw(s.items); L.count(s.n, 1 - C((t - T.in0) / 0.6));
+    L.label("foundL", t, T.n0, T.in0 + 0.6, "說明書、AGENTS.md", 1262, L.P.stack.y + s.foundTop - 6);
+    L.caps2(t, CAPS);
+    L.illus(t, [[-1, T.in0 + 0.6, L.ILLUS]]);
+  }
+  L.start("03 自動壓縮", D, render);
+})();
+</script>
+</body>
+</html>

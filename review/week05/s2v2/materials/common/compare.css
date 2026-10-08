@@ -1,0 +1,26 @@
+/* 第 5、8 段的並排比較：左邊 report.md（下午兩點寫的），右邊新畫的 class_avg.png（藍色系，因為小安要它換成藍色系） */
+#cmp { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+.card { position: absolute; top: 172px; height: 530px; background: #161b22; border: 1px solid #3a4556; border-radius: 10px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+.card .hd { height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid #2b3646; font-size: 28px; font-weight: 700; color: #e6e6e6; white-space: nowrap; }
+.card .hd svg { width: 26px; height: 26px; fill: none; stroke: #aeb8c6; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card .hd small { font-size: 24px; font-weight: 500; color: #8a95a6; }
+#cmpL { left: 80px; width: 600px; }
+#cmpR { left: 740px; width: 720px; }
+.md { padding: 26px 32px; font-family: "Cascadia Mono", "Noto Sans TC", monospace; font-size: 30px; line-height: 1.75; color: #d4d4d4; white-space: pre; }
+.md .c { color: #6f7a8c; }
+.md .v { color: #fff; font-weight: 700; }
+.chart { position: absolute; left: 0; right: 0; top: 64px; bottom: 0; }
+.chart .ax { position: absolute; left: 70px; right: 50px; bottom: 82px; height: 2px; background: #3a4556; }
+.chart .bar { position: absolute; bottom: 84px; width: 120px; background: #5b9dff; border-radius: 3px 3px 0 0; transform-origin: 50% 100%; }
+.chart .val { position: absolute; width: 170px; text-align: center; font-family: "Cascadia Mono", monospace; font-size: 34px; font-weight: 700; color: #fff; }
+.chart .lb { position: absolute; bottom: 34px; width: 170px; text-align: center; font-size: 28px; color: #aeb8c6; }
+.chart svg.ring { position: absolute; overflow: visible; }
+.chart svg.ring rect { fill: none; stroke: #f0b545; stroke-width: 4; }
+.chart .ok { position: absolute; font-size: 34px; font-weight: 900; color: #f0b545; }
+.md .note { font-family: "Noto Sans TC", sans-serif; font-size: 26px; color: #aeb8c6; opacity: 0;
+  background: linear-gradient(#f0b545, #f0b545) 0 100% / calc(100% * var(--ul, 0)) 3px no-repeat; padding-bottom: 3px; }
+/* 第 5 段：那則決定（紙條），慢慢淡掉 */
+.ghost { position: absolute; left: 1490px; top: 236px; width: 380px; }
+.ghost .lb { font-size: 24px; color: #8a95a6; white-space: nowrap; margin-bottom: 12px; }
+.ghost .slip { position: relative; width: 380px; }
+.ghost .tab { left: 378px; top: 18px; }

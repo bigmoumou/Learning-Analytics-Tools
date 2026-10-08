@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>00 紙條疊到頂了</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/s2.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/s2.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, lerp = K.lerp;
+  L.mount();
+  const D = 10;
+  // 預告（17:30）：只看紙條和面板的外框。最後幾張疊上去，整疊頂到面板的上緣。面板不顯示百分比（第 1 段回到 14:00 從低的開始）
+  const ADDS = []; for (let n = 35, a = 0.5; n <= L.NFULL; n++, a += 0.62) ADDS.push([a, n]);
+  const CAM = [[0, 1190, 478, 1.12], [D, 1150, 470, 1.06]];   // 整疊的底停在字幕上面
+  const CAPS = [[0.6, 5.2, "做了一整個下午，紙條疊到頂了", ""], [5.6, 9.6, "接下來會怎樣？", ""]];
+  function render(t) {
+    L.cam(t, CAM); L.scrims(0); L.dim(0);
+    ["app", "folder", "zMac"].forEach((id) => K.vis($(id), 0));
+    L.clock(17 * 60 + lerp(24, 30, E(C((t - 0.4) / 5))));
+    L.stack(t, 34, ADDS, { countOn: 0 });
+    L.panel(t, -1, null);
+    L.caps(t, CAPS);
+    L.fadeOut(t);
+  }
+  L.start("00 紙條疊到頂了", D, render);
+})();
+</script>
+</body>
+</html>
