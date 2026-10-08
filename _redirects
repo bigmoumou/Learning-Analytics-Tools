@@ -18,3 +18,5 @@
 /works/hw1/41xxxxx3l    /works/hw1/41xxxx33l/        301
 /works/hw1/41xxxxx2e/*  /works/hw1/41xxxx02e/:splat  301
 /works/hw1/41xxxxx2e    /works/hw1/41xxxx02e/        301
+# Week 5 加了新的影片 01（驗證清單），「不要一直換模型」從 01 改成 02（2026-10-08）：舊的影片檔網址還讀得到
+/weeks/week05/video/01-model-switch/*  /weeks/week05/video/02-model-switch/:splat  301

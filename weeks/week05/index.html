@@ -13,10 +13,10 @@
   data-zh-hans="Week 5｜模型与 context window"
   data-en="Week 5 | Models and the Context Window"
   data-vi="Tuần 5 | Mô hình và context window">Week 5｜模型與 context window</title>
-<meta name="description" content="Week 5：每個模型有自己的 context window，中途換模型為什麼比較耗用量，以及怎麼做比較好；補充教材講按下 Enter 之後 Codex 在背後做了什麼，以及對話滿了會怎樣。一支影片、兩支補充教材。" data-i18n-attr="content"
-  data-zh-hans="Week 5：每个模型有自己的 context window，中途换模型为什么比较耗用量，以及怎么做比较好；补充教材讲按下 Enter 之后 Codex 在背后做了什么，以及对话满了会怎样。一个视频、两个补充教材。"
-  data-en="Week 5: each model has its own context window, why switching models mid-chat uses more, and what to do instead; the extras show what Codex does after you press Enter and what happens when the conversation fills up. One video and two extras."
-  data-vi="Tuần 5: mỗi mô hình có context window riêng, vì sao đổi mô hình giữa chừng tốn hơn, và nên làm thế nào; phần bổ sung cho thấy Codex làm gì sau khi bạn bấm Enter và điều gì xảy ra khi cuộc trò chuyện đầy. Một video và hai phần bổ sung.">
+<meta name="description" content="Week 5：怎麼寫驗證清單讓 Codex 知道怎樣才算做好；每個模型有自己的 context window，中途換模型為什麼比較耗用量，以及怎麼做比較好；補充教材講按下 Enter 之後 Codex 在背後做了什麼，以及對話滿了會怎樣。兩支影片、兩支補充教材。" data-i18n-attr="content"
+  data-zh-hans="Week 5：怎么写验证清单让 Codex 知道怎样才算做好；每个模型有自己的 context window，中途换模型为什么比较耗用量，以及怎么做比较好；补充教材讲按下 Enter 之后 Codex 在背后做了什么，以及对话满了会怎样。两个视频、两个补充教材。"
+  data-en="Week 5: writing a verification checklist so Codex knows what counts as done; each model has its own context window, why switching models mid-chat uses more, and what to do instead; the extras show what Codex does after you press Enter and what happens when the conversation fills up. Two videos and two extras."
+  data-vi="Tuần 5: viết danh sách kiểm tra để Codex biết thế nào là xong; mỗi mô hình có context window riêng, vì sao đổi mô hình giữa chừng tốn hơn, và nên làm thế nào; phần bổ sung cho thấy Codex làm gì sau khi bạn bấm Enter và điều gì xảy ra khi cuộc trò chuyện đầy. Hai video và hai phần bổ sung.">
 <meta name="author" content="JUNHAO CHEN">
 <meta name="copyright" content="© 2026 JUNHAO CHEN">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,24 +48,75 @@
         data-en="Models and the Context Window"
         data-vi="Mô hình và context window">模型與 context window</h1>
       <p class="lede" data-i18n
-        data-zh-hans="Codex 可以在对话中途换模型，但每个模型都有自己的 context window。这周看换模型时发生什么事、用量为什么会一下子跳高，以及开工前怎么选、真的要换时怎么换。"
-        data-en="Codex lets you switch models in the middle of a chat, but each model has its own context window. This week shows what happens when you switch, why usage suddenly jumps, and how to choose before you start, or switch properly when you must."
-        data-vi="Codex cho phép đổi mô hình giữa cuộc hội thoại, nhưng mỗi mô hình có context window riêng. Tuần này xem chuyện gì xảy ra khi đổi mô hình, vì sao mức sử dụng tăng vọt, cách chọn trước khi bắt đầu và cách đổi đúng khi thật sự cần.">Codex 可以在對話中途換模型，但每個模型都有自己的 context window。這週看換模型時發生什麼事、用量為什麼會一次跳高，以及開工前怎麼選、真的要換時怎麼換。</p>
+        data-zh-hans="这周先看怎么写一份验证清单，让 Codex 知道怎样才算做好、做完自己检查。Codex 可以在对话中途换模型，但每个模型都有自己的 context window。再看换模型时发生什么事、用量为什么会一下子跳高，以及开工前怎么选、真的要换时怎么换。"
+        data-en="This week starts with writing a verification checklist, so Codex knows what counts as done and checks its own work. Codex lets you switch models in the middle of a chat, but each model has its own context window. Then it shows what happens when you switch, why usage suddenly jumps, and how to choose before you start, or switch properly when you must."
+        data-vi="Tuần này trước hết xem cách viết một danh sách kiểm tra, để Codex biết thế nào là xong và tự kiểm tra sau khi làm. Codex cho phép đổi mô hình giữa cuộc hội thoại, nhưng mỗi mô hình có context window riêng. Sau đó xem chuyện gì xảy ra khi đổi mô hình, vì sao mức sử dụng tăng vọt, cách chọn trước khi bắt đầu và cách đổi đúng khi thật sự cần.">這週先看怎麼寫一份驗證清單，讓 Codex 知道怎樣才算做好、做完自己檢查。Codex 可以在對話中途換模型，但每個模型都有自己的 context window。再看換模型時發生什麼事、用量為什麼會一次跳高，以及開工前怎麼選、真的要換時怎麼換。</p>
       <p class="lang-note" data-ui="video.note"></p>
     </div>
 
     <!-- 一支影片一個 section：id 和 video/ 裡的資料夾同名；影片、片段、重點都由 assets/video.js 接起來。
          翻譯寫在 data-zh-hans、data-en、data-vi（assets/i18n.js），三種都要有 -->
 
-    <section class="unit" id="01-model-switch" aria-labelledby="u01-title">
+    <section class="unit" id="01-verify-md" aria-labelledby="u01-title">
       <h2 class="unit-title" id="u01-title"><span class="unit-num" data-ui="video.n" data-n="01">影片 01</span><span data-i18n
+        data-zh-hans="怎样才算做好：写一份验证清单"
+        data-en="What Counts as Done: Writing a Verification Checklist"
+        data-vi="Thế nào mới là xong: viết một danh sách kiểm tra">怎樣才算做好：寫一份驗證清單</span></h2>
+
+      <div class="film">
+        <div class="player">
+          <video controls preload="metadata" playsinline data-hls="video/01-verify-md/hls/index.m3u8" poster="video/01-verify-md/poster.jpg" width="1920" height="1080">
+            你的瀏覽器無法播放這支影片。
+          </video>
+        </div>
+      </div>
+
+      <ol class="chapters" aria-label="影片片段（點了直接跳到那一段）" data-ui-attr="aria-label:video.chapters">
+        <li><button type="button" data-t="0"><span class="k">00:00</span><span class="t" data-i18n data-zh-hans="开场" data-en="Opening" data-vi="Mở đầu">開場</span></button></li>
+        <li><button type="button" data-t="18"><span class="k">00:18</span><span class="t" data-i18n data-zh-hans="谁说了算" data-en="Who decides" data-vi="Ai quyết định">誰說了算</span></button></li>
+        <li><button type="button" data-t="32"><span class="k">00:32</span><span class="t" data-i18n data-zh-hans="家规和验收单" data-en="House rules and the acceptance checklist" data-vi="Nội quy và phiếu nghiệm thu">家規和驗收單</span></button></li>
+        <li><button type="button" data-t="52"><span class="k">00:52</span><span class="t" data-i18n data-zh-hans="坏的写法和好的写法" data-en="Bad and good wording" data-vi="Cách viết chưa tốt và cách viết tốt">壞的寫法和好的寫法</span></button></li>
+        <li><button type="button" data-t="78"><span class="k">01:18</span><span class="t" data-i18n data-zh-hans="一份 VERIFY.md" data-en="A VERIFY.md file" data-vi="Một tệp VERIFY.md">一份 VERIFY.md</span></button></li>
+        <li><button type="button" data-t="100"><span class="k">01:40</span><span class="t" data-i18n data-zh-hans="接上 AGENTS.md" data-en="Linking it from AGENTS.md" data-vi="Nối vào AGENTS.md">接上 AGENTS.md</span></button></li>
+        <li><button type="button" data-t="116"><span class="k">01:56</span><span class="t" data-i18n data-zh-hans="再做一次" data-en="Doing it again" data-vi="Làm lại một lần">再做一次</span></button></li>
+        <li><button type="button" data-t="156"><span class="k">02:36</span><span class="t" data-i18n data-zh-hans="汇报表" data-en="The report table" data-vi="Bảng báo cáo">回報表</span></button></li>
+        <li><button type="button" data-t="172"><span class="k">02:52</span><span class="t" data-i18n data-zh-hans="你要做的" data-en="Your part" data-vi="Phần việc của bạn">你要做的</span></button></li>
+        <li><button type="button" data-t="196"><span class="k">03:16</span><span class="t" data-i18n data-zh-hans="结尾" data-en="Wrap-up" data-vi="Kết">結尾</span></button></li>
+      </ol>
+
+      <ol class="points">
+        <li><p data-i18n
+          data-zh-hans="<strong>“做好了”是 Codex 自己判断的。</strong>它不知道你心里的“做好”是什么样子。小安的地图在 Codex 说“做好了”之后，放到网上用手机打开，还要左右滚动，也有两张照片显示不出来。所以“怎样算做好”要写下来。"
+          data-en="<strong>“Done” is Codex’s own judgement.</strong> It does not know what “done” looks like in your head. After Codex said Xiao An’s map was done, she put it online and opened it on her phone: the page scrolled sideways and two photos were broken. So write down what counts as done."
+          data-vi="<strong>“Xong rồi” là do Codex tự đánh giá.</strong> Nó không biết “xong” trong đầu bạn trông như thế nào. Sau khi Codex nói bản đồ của Tiểu An đã xong, cô đưa lên mạng và mở bằng điện thoại: trang phải cuộn ngang và có hai ảnh bị lỗi. Vì vậy, “thế nào là xong” cần được viết ra."><strong>「做好了」是 Codex 自己判斷的。</strong>它不知道你心裡的「做好」長什麼樣。小安的地圖在 Codex 說「做好了」之後，放上網路用手機打開，還要左右捲動，也有兩張照片是破圖。所以「怎樣算做好」要寫下來。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong><code>AGENTS.md</code> 是家规，<code>VERIFY.md</code> 是验收单。</strong>家规写“怎么做”：繁体中文、文件放在哪里、不要改什么，这是 Week 3 学过的。验收单写“怎样算做好、怎么检查”。<code>VERIFY.md</code> 这个文件名是我们的习惯，不是官方规定；OpenAI 的《Codex Best practices》建议把“做好是什么、怎么验证”写给 Codex。"
+          data-en="<strong><code>AGENTS.md</code> is the house rules; <code>VERIFY.md</code> is the acceptance checklist.</strong> The house rules say how to work: reply in Traditional Chinese, where files go, what not to change, as covered in Week 3. The checklist says what counts as done and how to check it. The name <code>VERIFY.md</code> is our habit, not an official rule; OpenAI’s “Codex Best practices” recommends telling Codex what done means and how to verify the work."
+          data-vi="<strong><code>AGENTS.md</code> là nội quy, <code>VERIFY.md</code> là phiếu nghiệm thu.</strong> Nội quy ghi “làm thế nào”: trả lời bằng tiếng Trung phồn thể, tệp để ở đâu, không được sửa gì, như đã học ở Week 3. Phiếu nghiệm thu ghi “thế nào là xong, kiểm tra ra sao”. Tên tệp <code>VERIFY.md</code> là thói quen của chúng tôi, không phải quy định chính thức; “Codex Best practices” của OpenAI khuyên nên viết cho Codex biết thế nào là xong và cách kiểm chứng."><strong><code>AGENTS.md</code> 是家規，<code>VERIFY.md</code> 是驗收單。</strong>家規寫「怎麼做」：繁中、檔案放哪、不要改什麼，這是 Week 3 學過的。驗收單寫「怎樣算做好、怎麼檢查」。<code>VERIFY.md</code> 這個檔名是我們的習慣，不是官方規定；OpenAI 的〈Codex Best practices〉建議把「做好是什麼、怎麼驗證」寫給 Codex。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>好的验证是“可以检查”的。</strong>每一条都写清楚：看什么、怎么看、应该看到什么。“要好看”“不要有错”都不算，有数字就写数字。像“标记点得到”没有数字，就没办法检查；改成“宽 390 px 时，每个标记至少 44 px”才检查得了。"
+          data-en="<strong>Good verification is something you can check.</strong> Each item says what to look at, how to look and what you should see. “Make it look nice” and “no errors” do not count; if there is a number, write the number. “The markers can be tapped” has no number, so it cannot be checked; “at 390 px wide, every marker is at least 44 px” can."
+          data-vi="<strong>Kiểm chứng tốt là thứ “kiểm tra được”.</strong> Mỗi mục ghi rõ: xem cái gì, xem thế nào, phải thấy gì. “Phải đẹp”, “không được lỗi” đều không tính; có con số thì ghi con số. “Bấm được vào điểm đánh dấu” không có con số nên không kiểm tra được; đổi thành “khi rộng 390 px, mỗi điểm đánh dấu ít nhất 44 px” mới kiểm tra được."><strong>好的驗證是「可以檢查」的。</strong>每一條都寫清楚：看什麼、怎麼看、應該看到什麼。「要好看」「不要有錯」都不算，有數字就寫數字。像「標記點得到」沒有數字，就沒辦法檢查；改成「寬 390 px 時，每個標記至少 44 px」才檢查得了。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>在 <code>AGENTS.md</code> 加一句：“做完任何修改之后，按照 <code>VERIFY.md</code> 逐条检查，汇报每一条的结果。”</strong>Codex 每段对话一开始会读 <code>AGENTS.md</code>，但不会自己去找 <code>VERIFY.md</code>。清单让它更可能自己发现问题，例如照片文件名的大小写不一样（Mac 不区分文件名大小写，网站会区分），但不保证能找到所有问题。"
+          data-en="<strong>Add one line to <code>AGENTS.md</code>: “After any change, check every item in <code>VERIFY.md</code> and report the result of each.”</strong> Codex reads <code>AGENTS.md</code> at the start of every chat, but it does not go looking for <code>VERIFY.md</code> on its own. The checklist makes it more likely to catch problems itself, such as photo filenames whose upper and lower case differ (a Mac ignores case in filenames, a website does not), but it cannot promise to find every problem."
+          data-vi="<strong>Thêm một câu vào <code>AGENTS.md</code>: “Sau mỗi lần sửa, hãy kiểm tra từng mục trong <code>VERIFY.md</code> và báo cáo kết quả từng mục.”</strong> Mỗi cuộc trò chuyện, Codex đọc <code>AGENTS.md</code> ngay từ đầu, nhưng không tự đi tìm <code>VERIFY.md</code>. Danh sách giúp nó dễ tự phát hiện vấn đề hơn, chẳng hạn tên tệp ảnh khác nhau về chữ hoa chữ thường (Mac không phân biệt chữ hoa chữ thường trong tên tệp, còn trang web thì có), nhưng không bảo đảm tìm ra mọi vấn đề."><strong>在 <code>AGENTS.md</code> 加一句：「做完任何修改之後，照 <code>VERIFY.md</code> 逐條檢查，回報每一條的結果。」</strong>Codex 每段對話一開始會讀 <code>AGENTS.md</code>，但不會自己去找 <code>VERIFY.md</code>。清單讓它比較可能自己發現問題，例如照片檔名的大小寫不一樣（Mac 不分檔名大小寫，網站會分），但不保證找得到所有問題。</p></li>
+        <li><p data-i18n
+          data-zh-hans="<strong>你还是要抽查，清单会越写越好。</strong>看它最后的汇报表，自己点开一两条确认；没办法检查的，它应该如实说明。发现新的问题，就在验收单里加一条。视频里的对话顺序、展开的命令输出和内置浏览器画面是示意，<code>check_data.py</code> 的输出是真的运行出来的。"
+          data-en="<strong>You still need to spot-check, and the checklist gets better over time.</strong> Read its final report table and open one or two items yourself; anything it could not check, it should say so honestly. When you find a new problem, add an item to the checklist. The order of the chat, the expanded command output and the built-in browser screens in the video are illustrations; the output of <code>check_data.py</code> really came from running it."
+          data-vi="<strong>Bạn vẫn phải tự kiểm tra ngẫu nhiên, và danh sách sẽ ngày càng tốt hơn.</strong> Xem bảng báo cáo cuối cùng, tự mở một hai mục để xác nhận; mục nào không kiểm tra được thì nó phải nói thật. Phát hiện vấn đề mới thì thêm một mục vào phiếu nghiệm thu. Thứ tự cuộc trò chuyện, phần lệnh được mở rộng và màn hình trình duyệt tích hợp trong video chỉ là minh hoạ; kết quả của <code>check_data.py</code> là chạy thật."><strong>你還是要抽查，清單會越寫越好。</strong>看它最後的回報表，自己點開一兩條確認；沒辦法檢查的，它應該照實說。發現新的問題，就加一條進驗收單。影片裡的對話順序、展開的指令輸出和內建瀏覽器畫面是示意，<code>check_data.py</code> 的輸出是真的跑出來的。</p></li>
+      </ol>
+    </section>
+
+    <section class="unit" id="02-model-switch" aria-labelledby="u02-title">
+      <h2 class="unit-title" id="u02-title"><span class="unit-num" data-ui="video.n" data-n="02">影片 02</span><span data-i18n
         data-zh-hans="不要一直换模型"
         data-en="Don't Keep Switching Models"
         data-vi="Đừng đổi mô hình liên tục">不要一直換模型</span></h2>
 
       <div class="film">
         <div class="player">
-          <video controls preload="metadata" playsinline data-hls="video/01-model-switch/hls/index.m3u8" poster="video/01-model-switch/poster.jpg" width="1920" height="1080">
+          <video controls preload="metadata" playsinline data-hls="video/02-model-switch/hls/index.m3u8" poster="video/02-model-switch/poster.jpg" width="1920" height="1080">
             你的瀏覽器無法播放這支影片。
           </video>
         </div>
