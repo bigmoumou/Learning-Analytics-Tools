@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京銀杏一年生長階段情報</title>
+<meta name="description" content="東京 26 處銀杏觀賞地點的一年生長階段（青葉到落葉）：依氣象廳東京平年值推估，附地圖、地點彙整與資料來源。">
+<meta name="theme-color" content="#f3f5f1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%234c8a56%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021.2V14M12%2014C8%2013.6%203.4%2010.6%202.8%204.8c2.2%201.2%204.4%201.6%206.4.6L12%208l2.8-2.6c2%201%204.2.6%206.4-.6C20.6%2010.6%2016%2013.6%2012%2014zM12%2014L7.4%207.4M12%2014V9M12%2014l4.6-6.6%22%2F%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="page-home" data-root="">
+<a class="skip" href="#main">跳到主要內容</a>
+<header class="site-head">
+<div class="wrap head-in">
+<a class="brand" href="index.html"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.2V14M12 14C8 13.6 3.4 10.6 2.8 4.8c2.2 1.2 4.4 1.6 6.4.6L12 8l2.8-2.6c2 1 4.2.6 6.4-.6C20.6 10.6 16 13.6 12 14zM12 14L7.4 7.4M12 14V9M12 14l4.6-6.6"/></svg><span>東京銀杏情報</span></a>
+<span class="head-note">教學使用，非營利</span>
+</div>
+</header>
+<main id="main">
+<div class="wrap">
+<section class="hero" aria-labelledby="top-h">
+<div class="hero-grid">
+<div class="hero-main">
+<p class="eyebrow rise">東京都內 26 處銀杏觀賞地點</p>
+<h1 id="top-h" class="rise d1">東京銀杏<br>一年生長階段情報</h1>
+<p class="lede rise d2">青葉、色づき始め、黄葉進行、見頃、落葉始め、落葉。把東京各地的銀杏放在這六個階段上，並在每個地點頁附上判定日期、依據與該地點自己的官方資料。</p>
+</div>
+<div class="hero-side rise d3">
+<div class="today-line">
+<span class="k">今日</span><span class="v"><time data-slot="today"></time></span>
+<span class="k">推估階段</span><span class="v"><a data-slot="stage-link" href="stages/1.html">青葉</a></span>
+</div>
+<p class="basis-note">階段依氣象廳東京平年值推估，在你開啟頁面時依當天日期計算。26 處地點共用同一個推估，並不是各地點的現場觀測；過去年度的官方紀錄只會以有日期的歷史資料顯示。</p>
+</div>
+</div>
+<ol class="ruler" aria-label="銀杏的六個生長階段與推估期間"><li class="rs s1" data-stage="1"><a href="stages/1.html"><span class="rs-bar" aria-hidden="true"></span><span class="rs-name" lang="ja">青葉</span><span class="rs-date">〜10/25</span><span class="rs-now">今日</span></a></li><li class="rs s2" data-stage="2"><a href="stages/2.html"><span class="rs-bar" aria-hidden="true"></span><span class="rs-name" lang="ja">色づき始め</span><span class="rs-date">10/26–11/8</span><span class="rs-now">今日</span></a></li><li class="rs s3" data-stage="3"><a href="stages/3.html"><span class="rs-bar" aria-hidden="true"></span><span class="rs-name" lang="ja">黄葉進行</span><span class="rs-date">11/9–11/22</span><span class="rs-now">今日</span></a></li><li class="rs s4" data-stage="4"><a href="stages/4.html"><span class="rs-bar" aria-hidden="true"></span><span class="rs-name" lang="ja">見頃</span><span class="rs-date">11/23–11/28</span><span class="rs-now">今日</span></a></li><li class="rs s5" data-stage="5"><a href="stages/5.html"><span class="rs-bar" aria-hidden="true"></span><span class="rs-name" lang="ja">落葉始め</span><span class="rs-date">11/29–12/2</span><span class="rs-now">今日</span></a></li><li class="rs s6" data-stage="6"><a href="stages/6.html"><span class="rs-bar" aria-hidden="true"></span><span class="rs-name" lang="ja">落葉</span><span class="rs-date">12/3〜</span><span class="rs-now">今日</span></a></li></ol>
+</section>
+<div class="explorer">
+<section class="map-pane" aria-labelledby="map-h">
+<div class="pane-h"><h2 id="map-h">地圖</h2><span class="meta">圖磚：OpenStreetMap</span></div>
+<div class="map-wrap">
+<div id="map" class="map" role="region" aria-label="東京銀杏地點地圖"><p class="map-msg">地圖載入中⋯⋯</p><noscript><p class="map-msg">需要啟用 JavaScript 才能顯示地圖；地點與階段請看表格。</p></noscript></div>
+<div id="map-notice" class="map-notice" role="status" hidden>地圖底圖暫時無法載入，標記仍在原來的位置。你可以改用下方的「地點彙整」表格，或點進各地點頁面查看。</div>
+</div>
+<p class="map-hint"><span id="map-hint-text">圓點是地點的近似位置，不是銀杏樹的精確座標。放大地圖會顯示更多地點名稱，點標記可看詳細資訊。</span><a class="skiptable" href="#table-h">跳到地點彙整</a></p>
+</section>
+<section class="table-pane" aria-labelledby="table-h">
+<div class="pane-h"><h2 id="table-h">地點彙整</h2><span class="meta">共 26 處</span></div>
+<p class="table-note">「銀杏現況」欄依氣象廳東京平年值推估，26 處共用同一個階段。點地點名稱看詳細介紹，點階段看該階段的說明。</p>
+<div class="tbl-wrap">
+<table class="places">
+<caption class="sr-only">東京銀杏觀賞地點與推估的銀杏現況</caption>
+<colgroup><col class="c-name"><col class="c-area"><col class="c-stage"></colgroup>
+<thead><tr><th scope="col">地點名稱</th><th scope="col" class="area">所在區域</th><th scope="col">銀杏現況<small>依氣象廳東京平年值推估</small></th></tr></thead>
+<tbody>
+<tr><th scope="row"><a class="nm" href="places/tkg-002.html"><span lang="ja">上野恩賜公園</span><span class="sub">台東區</span></a></th><td class="area">台東區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-003.html"><span lang="ja">木場公園</span><span class="sub">江東區</span></a></th><td class="area">江東區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-004.html"><span lang="ja">小金井公園</span><span class="sub">小金井市等</span></a></th><td class="area">小金井市等</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-005.html"><span lang="ja">芝公園</span><span class="sub">港區</span></a></th><td class="area">港區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-006.html"><span lang="ja">城北中央公園</span><span class="sub">板橋區、練馬區</span></a></th><td class="area">板橋區、練馬區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-007.html"><span lang="ja">善福寺川緑地</span><span class="zh">善福寺川綠地</span><span class="sub">杉並區</span></a></th><td class="area">杉並區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-008.html"><span lang="ja">和田堀公園</span><span class="sub">杉並區</span></a></th><td class="area">杉並區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-009.html"><span lang="ja">戸山公園</span><span class="zh">戶山公園</span><span class="sub">新宿區</span></a></th><td class="area">新宿區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-010.html"><span lang="ja">光が丘公園</span><span class="zh">光之丘公園</span><span class="sub">練馬區、板橋區</span></a></th><td class="area">練馬區、板橋區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-011.html"><span lang="ja">日比谷公園</span><span class="sub">千代田區</span></a></th><td class="area">千代田區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-012.html"><span lang="ja">代々木公園</span><span class="zh">代代木公園</span><span class="sub">澀谷區</span></a></th><td class="area">澀谷區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-013.html"><span lang="ja">旧岩崎邸庭園</span><span class="zh">舊岩崎邸庭園</span><span class="sub">台東區</span></a></th><td class="area">台東區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-014.html"><span lang="ja">国営昭和記念公園</span><span class="zh">國營昭和紀念公園</span><span class="sub">立川市、昭島市</span></a></th><td class="area">立川市、昭島市</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-015.html"><span lang="ja">新宿御苑</span><span class="sub">新宿區、澀谷區</span></a></th><td class="area">新宿區、澀谷區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-016.html"><span lang="ja">八王子 甲州街道いちょう並木</span><span class="zh">八王子甲州街道銀杏大道</span><span class="sub">八王子市</span></a></th><td class="area">八王子市</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-017.html"><span lang="ja">皇居東御苑</span><span class="sub">千代田區</span></a></th><td class="area">千代田區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-018.html"><span lang="ja">小石川植物園</span><span class="zh">小石川植物園（東京大學附屬植物園）</span><span class="sub">文京區</span></a></th><td class="area">文京區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-019.html"><span lang="ja">広徳寺</span><span class="zh">廣德寺</span><span class="sub">あきる野市</span></a></th><td class="area">あきる野市</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-023.html"><span lang="ja">明治神宮外苑 いちょう並木</span><span class="zh">明治神宮外苑銀杏大道</span><span class="sub">新宿區</span></a></th><td class="area">新宿區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-024.html"><span lang="ja">大田黒公園</span><span class="zh">大田黑公園</span><span class="sub">杉並區</span></a></th><td class="area">杉並區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-025.html"><span lang="ja">大國魂神社</span><span class="sub">府中市</span></a></th><td class="area">府中市</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-026.html"><span lang="ja">靖國神社</span><span class="sub">千代田區</span></a></th><td class="area">千代田區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-030-kitanomaru.html"><span lang="ja">北の丸公園</span><span class="zh">北之丸公園</span><span class="sub">千代田區</span></a></th><td class="area">千代田區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-040-hongo.html"><span lang="ja">東京大学 本郷キャンパス</span><span class="zh">東京大學本鄉校區</span><span class="sub">文京區</span></a></th><td class="area">文京區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-040-komaba.html"><span lang="ja">東京大学 駒場キャンパス</span><span class="zh">東京大學駒場校區</span><span class="sub">目黑區</span></a></th><td class="area">目黑區</td><td class="stage" data-stage-cell></td></tr>
+<tr><th scope="row"><a class="nm" href="places/tkg-041.html"><span lang="ja">国立 大学通り</span><span class="zh">國立大學通</span><span class="sub">國立市</span></a></th><td class="area">國立市</td><td class="stage" data-stage-cell></td></tr>
+</tbody>
+</table>
+<noscript><p class="table-note">需要啟用 JavaScript，才能依今天的日期顯示推估階段。階段與期間請見各階段頁面。</p></noscript>
+</div>
+</section>
+</div>
+</div>
+</main>
+<footer class="site-foot">
+<div class="wrap">
+<div class="foot-main">
+<a class="foot-src" href="sources.html">資料來源</a>
+<p>階段為依氣象廳東京平年值的推估，不是各地點的現場觀測。教學使用，非營利。</p>
+</div>
+<p class="foot-small">地圖圖磚：&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>。資料查核日 2026-10-02（資料表快照 2026-09-29）。</p>
+</div>
+</footer>
+<script src="data.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
+</body>
+</html>
