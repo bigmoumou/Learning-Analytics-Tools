@@ -55,22 +55,22 @@
       href: "weeks/week04/",
       thumb: "weeks/week04/video/01-built-in-browser/thumb.jpg",
       still: "weeks/week04/video/01-built-in-browser/poster.jpg",
-      meta: "影片 2 分 23 秒・5 則重點",
+      meta: "1 支影片＋1 支補充・共 5 分 51 秒",
       i18n: {
         "zh-Hans": {
           title: "AI Agent 内置浏览器",
           summary: "AI Agent 控制浏览器的五种方法；用 Codex 内置浏览器打开网页、修好卡住的连接，实际做出方块桌椅。",
-          meta: "视频 2 分 23 秒・5 条重点",
+          meta: "1 个视频＋1 个补充・共 5 分 51 秒",
         },
         en: {
           title: "AI Agent Built-in Browser",
           summary: "Five ways an AI agent can control a browser; using Codex's built-in browser to open pages, fix a stuck connection and build a block table and chair.",
-          meta: "Video 2 min 23 s · 5 key points",
+          meta: "1 video + 1 extra · 5 min 51 s in total",
         },
         vi: {
           title: "Trình duyệt tích hợp của AI Agent",
           summary: "Năm cách AI Agent điều khiển trình duyệt; dùng trình duyệt tích hợp của Codex để mở trang web, sửa kết nối bị kẹt và làm bộ bàn ghế khối.",
-          meta: "Video 2 phút 23 giây · 5 ý chính",
+          meta: "1 video + 1 bổ sung · tổng cộng 5 phút 51 giây",
         },
       },
     },
