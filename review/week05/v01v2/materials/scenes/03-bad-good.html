@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>03 壞的寫法和好的寫法</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+<style>
+  #bg { left: 120px; top: 140px; width: 1680px; padding: 26px 44px 22px; }
+  .pair { position: relative; display: grid; grid-template-columns: 440px 70px 1fr; align-items: center; padding: 26px 0; border-bottom: 1px dashed #d3cbb9; }
+  .bad { position: relative; justify-self: start; font-size: 38px; font-weight: 700; color: #8a7a5a; white-space: nowrap; }
+  .bad i { position: absolute; left: -6px; right: -6px; top: 52%; height: 4px; background: #6b5a3a; transform-origin: 0 50%; }
+  .arr { font-size: 38px; color: #8a7a5a; text-align: center; }
+  .good { font-size: 38px; font-weight: 800; color: #1d232c; white-space: nowrap; }
+  .good u { text-decoration: none; position: relative; }
+  .good u::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 5px; background: #f0b545; transform-origin: 0 50%; transform: scaleX(var(--ul, 0)); }
+  .good code { font-family: "Cascadia Mono", monospace; font-size: .86em; }
+  .colh { display: grid; grid-template-columns: 440px 70px 1fr; font-size: 26px; font-weight: 700; color: #8a7a5a; padding-bottom: 10px; border-bottom: 2px solid #d4ccb9; }
+  /* 拆解第一組：看什麼／怎麼看／應該看到什麼 */
+  #parts { display: flex; gap: 0; margin-top: 18px; }
+  #parts div { flex: 1; padding: 6px 18px; border-left: 3px solid #d4ccb9; font-size: 27px; color: #1d232c; white-space: nowrap; }
+  #parts div b { display: block; font-size: 24px; color: #6b5a3a; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  const PAIRS = [
+    ["「地圖要正確」", "<u>地圖上有 12 個標記</u>，和 <code>spots.csv</code> 的筆數一樣"],
+    ["「手機也要能看」", "<u>寬 390 px 時不會左右捲動</u>"],
+    ["「不要有錯」", "<u>Console 沒有紅字</u>"],
+  ];
+  L.mount({ world: `<div class="sheet" id="bg"><div class="colh"><span>說不清楚（沒辦法檢查）</span><span></span><span>可以檢查</span></div>` +
+    PAIRS.map(([b, g], i) => `<div class="pair" id="p${i}"><span class="bad">${b}<i></i></span><span class="arr">→</span><span class="good">${g}</span></div>`).join("") +
+    `<div id="parts"><div><b>看什麼</b>地圖上的標記</div><div><b>怎麼看</b>數一數，和 spots.csv 比</div><div><b>應該看到什麼</b>12 個</div></div></div>` });
+  ["zMac", "zSrv", "app", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 26;
+  const T = [0.8, 6.4, 12.0], PARTS = 17.6;
+  // 第 2 版：前兩組回扣開頭的兩個差別（12 個和 4 個、有沒有檢查手機）；最後補一句，填掉結尾的停頓
+  const CAPS = [
+    [0.4, 5.9, "「地圖要正確」：幾個點才算正確？", "剛才一次 12 個、一次 4 個；寫成「12 個標記」就不用猜"],
+    [6.3, 11.6, "「手機也要能看」：寫成寬 390 px 不會左右捲動", "剛才有一次沒檢查手機；寫了數字，就有標準可以檢查"],
+    [12.0, 17.2, "「要好看」「不要有錯」都不算，因為沒辦法檢查", "改成看得到、數得出來的樣子：有數字，就寫數字"],
+    [17.6, 21.4, "好的寫法有：看什麼、怎麼看、應該看到什麼", ""],
+    [21.8, D - 0.3, "寫進 VERIFY.md，就不用每次靠它猜", "每次都照同一份標準檢查"],
+  ];
+  const SUB5 = 23.2;
+  function render(t) {
+    V.dip(t, D);
+    L.cam(t, [[0, ...L.WIDE]]);
+    L.sec(t, "03", "壞的寫法和好的寫法");
+    K.vis($("bg"), C((t - 0.2) / 0.4));
+    $("bg").style.transform = `translateY(${((1 - K.spring(t - 0.2, 14, 0.85)) * 20).toFixed(1)}px)`;
+    PAIRS.forEach((_, i) => {
+      const a = T[i], p = $("p" + i);
+      p.querySelector(".bad").style.opacity = C((t - a) / 0.3);
+      p.querySelector(".bad i").style.transform = `scaleX(${E((t - a - 1.2) / 0.5).toFixed(3)})`;
+      p.querySelector(".arr").style.opacity = C((t - a - 1.8) / 0.3);
+      const g = p.querySelector(".good");
+      g.style.opacity = C((t - a - 2.0) / 0.3);
+      g.style.transform = `translateX(${((1 - K.easeOut((t - a - 2.0) / 0.5)) * -16).toFixed(1)}px)`;
+      g.querySelectorAll("u").forEach((u) => u.style.setProperty("--ul", E((t - a - 2.8) / 0.6).toFixed(3)));
+    });
+    // 拆解第一組
+    $("parts").querySelectorAll("div").forEach((d, i) => { d.style.opacity = C((t - (PARTS + 0.3 + i * 0.6)) / 0.3); });
+    $("p0").style.setProperty("background", t > PARTS ? `rgba(240,181,69,${(0.12 * C((t - PARTS) / 0.4)).toFixed(3)})` : "");
+    L.caps(t, CAPS);
+    $("capS").style.opacity = t >= CAPS[4][0] ? C((t - SUB5) / 0.35).toFixed(3) : "";
+  }
+  L.start("03 壞的寫法和好的寫法", D, render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>00 開場：同一句話，問兩次</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+<style>
+  /* 第 2 版的開頭：同一個專案的兩段對話，左右並排（視窗縮小，對話和側欄的字放大，畫面上讀得到） */
+  .duo { width: 1180px; height: 900px; transform-origin: 0 0; }
+  .duo .cx-side { width: 330px; }
+  .duo .cx-main { left: 384px; }
+  .duo .cx-thread, .duo .cx-composer { width: 726px; left: 34px; }
+  .duo .cx-thread { bottom: 196px; }
+  .duo .cx-row { height: 46px; font-size: 24px; gap: 12px; }
+  .duo .cx-row svg { width: 24px; height: 24px; }
+  .duo .cx-row.chat { padding-left: 46px; }
+  .duo .cx-row .meta { font-size: 20px; color: #9a9a9a; }
+  .duo .cx-side .brand { font-size: 28px; }
+  .duo .cx-side .section { font-size: 20px; }
+  .duo .cx-head { font-size: 24px; height: 70px; }
+  .duo .cx-user, .duo .cx-agent { font-size: 36px; }
+  .duo .cx-time { font-size: 24px; }
+  .duo .tr { font-size: 30px; height: 46px; line-height: 46px; }
+  .duo .tr svg { width: 30px; height: 30px; }
+  .duo .cx-worked { font-size: 26px; }
+  .duo .miss { align-self: flex-start; border: 3px dashed #f0b545; border-radius: 12px; padding: 0 18px; height: 46px; line-height: 40px; font-size: 28px; color: #f0b545; white-space: nowrap; }
+  .duo .cx-composer .text { font-size: 32px; }
+  #nA, #nB { display: inline-block; margin: 0 10px; }
+  #rings { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; pointer-events: none; }
+  #rings rect { fill: none; stroke: #f0b545; stroke-width: 4; }
+  #okL { position: absolute; font-size: 26px; font-weight: 700; color: #f0b545; white-space: nowrap; }
+  #vo { left: 560px; top: 120px; width: 800px; padding: 26px 34px 22px; }
+  #vo .vrow { font-size: 30px; padding: 11px 0; grid-template-columns: 50px 40px 1fr; }
+  #vo .vrow .n { font-size: 26px; }
+  #vo .ttl { font-size: 44px; }
+  #vo .fn { font-size: 28px; }
+  #vo .sub { font-size: 28px; }
+  #vo .vrow::before { left: -34px; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$, I = (n) => K.icon(n);
+  L.mount({ boards: `<div class="app duo" id="wA"></div><div class="app duo" id="wB"></div><svg id="rings"><rect id="rg0" rx="14"/><rect id="rg1" rx="14"/><rect id="rg2" rx="14"/></svg>` +
+    `<div id="okL">有檢查手機寬度</div><div class="sheet mini" id="vo"></div>` });
+  ["zMac", "zSrv", "app", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 10;
+  // 兩段對話：同一句話，送出之後各自做；第 1 次 12 個點、有檢查手機，第 2 次 4 個點、沒檢查手機（示意）
+  const TYPE = 0.15, CPS = 13, SEND = 1.3, ROWS_A = [1.7, 2.1, 2.5], ROWS_B = [1.8], DONE_A = 3.0, DONE_B = 3.3, RING = 3.8, MISS = 4.4;
+  const BACK = 6.0, SHEET = 6.2, TICK = [[2, 6.8], [4, 7.3], [0, 7.9], [1, 8.1], [3, 8.3], [5, 8.5], [6, 8.7]];
+  const W = [
+    { el: "wA", x: 56, at: "4:10 PM", worked: "Worked for 52s", rows: [["pencil", "Edited index.html"], ["browser", "Used the browser"], ["browser", "Resized the browser to 390 px"]], rt: ROWS_A, done: DONE_A,
+      reply: `做好了！<span id="nA">12 個景點</span>都在地圖上。` },
+    { el: "wB", x: 1014, at: "4:32 PM", worked: "Worked for 31s", rows: [["pencil", "Edited index.html"]], rt: ROWS_B, done: DONE_B,
+      reply: `做好了！地圖上有 <span id="nB">4 個景點</span>。` },
+  ];
+  const S = 0.72, TOP = 108;
+  const CAPS = [
+    [0.3, 3.0, "同一句話，問兩次", ""],
+    [3.2, 6.0, "兩次做出來的<em>不一樣</em>", ""],
+    [6.3, D - 0.3, "因為你沒寫清楚「怎樣算做好」", "這支教你：寫一份 VERIFY.md"],
+  ];
+  function rect(el) { const r = el.getBoundingClientRect(), s = $("stage").getBoundingClientRect(), k = s.width / 1920; return { x: (r.left - s.left) / k, y: (r.top - s.top) / k, w: r.width / k, h: r.height / k }; }
+  function ring(id, el, u, pad = 8) {
+    const g = $(id);
+    if (!el || u <= 0) { g.style.opacity = 0; return; }
+    const r = rect(el);
+    g.setAttribute("x", r.x - pad); g.setAttribute("y", r.y - pad); g.setAttribute("width", r.w + pad * 2); g.setAttribute("height", r.h + pad * 2);
+    g.setAttribute("pathLength", 1); g.style.strokeDasharray = 1; g.style.strokeDashoffset = (1 - u).toFixed(3); g.style.opacity = 1;
+  }
+  function build(w, i, t) {
+    const sent = t >= SEND, done = t >= w.done, shown = w.rt.filter((a) => t >= a).length;
+    const key = [sent, done, shown, t >= MISS].join("|");
+    const el = $(w.el);
+    if (el.__k !== key) {
+      el.__k = key;
+      const chats = [{ title: "銀杏散步地圖", meta: "4:10 PM", on: i === 0 }, { title: "銀杏散步地圖", meta: "4:32 PM", on: i === 1 }];
+      let m = "";
+      if (sent) {
+        m += K.cx.time("Today " + w.at) + K.cx.user(L.ASK, "", false);
+        m += done ? K.cx.worked(w.worked) : `<div class="working"><span class="shine">Working…</span></div>`;
+        m += w.rows.slice(0, shown).map(([ic, tx], j) => `<div class="tr" id="${w.el}r${j}">${I(ic)}<span>${tx}</span></div>`).join("");
+        if (i === 1 && t >= MISS) m += `<div class="miss" id="miss">沒有檢查手機</div>`;
+        if (done) m += K.cx.agent(`<p>${w.reply}</p>`);
+      }
+      el.innerHTML = K.codex({ title: "銀杏散步地圖", folders: [{ name: "game", open: false, chats: [] }, { name: "Project", open: false, chats: [] }, { name: "ginkgo-map", open: true, chats }, { name: "日常", open: false, chats: [] }],
+        recents: ["寫報告", "英文信件潤稿"], panel: false, dot: 0, messages: m, model: "GPT-6 Luna Extra High" });
+    }
+    K.setComposer(el.querySelector("#cxComposer"), sent ? "" : K.typed(L.ASK, t, TYPE, CPS), !sent, t);
+  }
+  function render(t) {
+    V.dip(t, D);
+    L.cam(t, [[0, ...L.WIDE]]);
+    // 兩個視窗：最後退到後面（縮小一點、變暗），把前面讓給驗收單
+    const back = E((t - BACK) / 0.6);
+    W.forEach((w, i) => {
+      build(w, i, t);
+      const el = $(w.el), s = S * (1 - 0.06 * back);
+      el.style.left = (w.x + 1180 * S * 0.03 * back).toFixed(1) + "px";
+      el.style.top = (TOP + 30 * back) + "px";
+      el.style.transform = `scale(${s.toFixed(4)})`;
+      el.style.opacity = (C(t / 0.3) * (1 - 0.65 * back)).toFixed(3);
+    });
+    // 差異：琥珀圈（第 1 次的「12 個景點」和「檢查手機」那一列、第 2 次的「4 個景點」），第 2 次少的那一列用虛線框
+    const ru = E((t - RING) / 0.6) * (1 - back);
+    ring("rg0", $("nA"), ru, 6);
+    ring("rg1", $("nB"), E((t - RING - 0.2) / 0.6) * (1 - back), 6);
+    ring("rg2", $("wAr2"), E((t - MISS) / 0.6) * (1 - back), 6);
+    const r2 = $("wAr2") ? rect($("wAr2")) : null;
+    if (r2) { $("okL").style.left = (r2.x + r2.w + 22) + "px"; $("okL").style.top = (r2.y + r2.h / 2 - 18) + "px"; }
+    K.vis($("okL"), C((t - MISS - 0.3) / 0.3) * (1 - back));
+    const ms = $("miss");
+    if (ms) ms.style.opacity = (C((t - MISS) / 0.3) * (1 - back)).toFixed(3);
+    // 驗收單浮到前面：「12 個標記」「手機寬 390 px」先打勾，其他接著一格一格打勾
+    const marks = [], hi = t >= TICK[1][1] && t < TICK[2][1] ? 4 : t >= TICK[0][1] && t < TICK[1][1] ? 2 : -1;
+    TICK.forEach(([i, a]) => { marks[i] = t >= a ? ["ok", E((t - a) / 0.35)] : ["", 0]; });
+    V.verify($("vo"), { marks, hi });
+    const so = C((t - SHEET) / 0.4);
+    K.vis($("vo"), so);
+    $("vo").style.transform = `translateY(${((1 - K.spring(t - SHEET, 14, 0.85)) * 30).toFixed(1)}px) rotate(-0.4deg)`;
+    L.illus(t, [[DONE_A + 0.2, D, "示意：同一句話，每次的做法可能不同"]]);
+    L.caps(t, CAPS);
+  }
+  L.start("00 開場", D, render);
+})();
+</script>
+</body>
+</html>

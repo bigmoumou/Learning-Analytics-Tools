@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>02 長期協作規則和驗收單</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  L.mount({ world: `<div class="sheet" id="ag" style="left:96px;top:140px;width:800px"></div><div class="sheet" id="vf" style="left:1024px;top:140px;width:800px"></div>` });
+  ["zMac", "zSrv", "app", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 18;
+  // 第 2 版：家規改叫「長期協作規則」；補一句為什麼是「長期」（每段對話一開始都會讀，事實 3）；
+  // 逐格檢查後縮短停頓（長期協作規則一行一行出現、官方建議那句時驗收單的副標題畫底線）
+  const AG = 0.4, LN0 = 0.9, LND = 0.5, TUL = 4.2, VF = 6.8, ROW0 = 7.4, ROWD = 0.42, OFF = 13.0, SUB = 14.6, UL = 15.4;
+  const CAPS = [
+    [0.4, 3.6, "AGENTS.md 是長期協作規則：寫「怎麼做」", "Week 3 學過：用繁中、檔案放哪、不要改什麼"],
+    [3.9, 6.6, "Codex 每段對話一開始都會讀它", "寫一次，之後每段對話都用得到"],
+    [6.9, 12.6, "VERIFY.md 是驗收單：寫「怎樣算做好、怎麼檢查」", ""],
+    [13.0, D - 0.3, "OpenAI 官方也這樣建議", "把「做好是什麼、怎麼驗證」寫清楚（〈Codex Best practices〉）"],
+  ];
+  function render(t) {
+    V.dip(t, D);
+    L.cam(t, [[0, ...L.WIDE]]);
+    L.sec(t, "02", "長期協作規則和驗收單");
+    // 左：長期協作規則，一行一行出現
+    V.agents($("ag"));
+    K.vis($("ag"), C((t - AG) / 0.35));
+    $("ag").style.transform = `translateY(${((1 - K.spring(t - AG, 14, 0.85)) * 24).toFixed(1)}px) rotate(-0.4deg)`;
+    $("ag").querySelectorAll(".ln").forEach((l, i) => { l.style.opacity = C((t - (LN0 + i * LND)) / 0.3); });
+    // 「長期協作規則」這幾個字畫琥珀底線（講「每段對話都會讀」的時候）
+    const tt = $("ag").querySelector(".ttl");
+    if (tt && !tt.querySelector(".hl")) tt.innerHTML = `<span class="hl" style="background:linear-gradient(#f0b545,#f0b545) no-repeat 0 100%;padding-bottom:4px">${tt.innerHTML}</span>`;
+    if (tt) tt.querySelector(".hl").style.backgroundSize = `${(E((t - TUL) / 0.6) * 100).toFixed(1)}% 5px`;
+    // 右：驗收單，一條一條寫上去
+    V.verify($("vf"), { rows: V.CHECKS.map((_, i) => C((t - (ROW0 + i * ROWD)) / 0.35)) });
+    K.vis($("vf"), C((t - VF) / 0.35));
+    $("vf").style.transform = `translateY(${((1 - K.spring(t - VF, 14, 0.85)) * 24).toFixed(1)}px) rotate(0.35deg)`;
+    // 官方建議：驗收單的副標題「寫『怎樣算做好、怎麼檢查』」畫琥珀底線
+    const sb = $("vf").querySelector(".sub");
+    if (sb && !sb.querySelector(".hl")) sb.innerHTML = `<span class="hl" style="background:linear-gradient(#f0b545,#f0b545) no-repeat 0 100%;padding-bottom:6px">${sb.innerHTML}</span>`;
+    if (sb) sb.querySelector(".hl").style.backgroundSize = `${(E((t - UL) / 0.6) * 100).toFixed(1)}% 4px`;
+    // 講到驗收單時，長期協作規則稍微退後
+    const dimAg = 0.22 * (E((t - VF) / 0.6) - E((t - OFF) / 0.6));
+    $("ag").style.filter = dimAg > 0.001 ? `brightness(${(1 - dimAg).toFixed(3)})` : "";
+    L.illus(t, [[VF + 0.6, D - 0.3, "檔名可以自己取；官方建議把「怎樣算做好、怎麼驗證」寫給 Codex"]]);
+    L.caps(t, CAPS);
+    $("capS").style.opacity = t >= CAPS[3][0] ? C((t - SUB) / 0.35).toFixed(3) : "";
+  }
+  L.start("02 長期協作規則和驗收單", D, render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>08 你要做的</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+<style>
+  #vf { left: 1080px; top: 150px; width: 760px; }
+  #tap, #ring { position: absolute; border-radius: 50%; border: 3px solid #f0b545; opacity: 0; }
+  #tap { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
+  #ring { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+  #ringL { position: absolute; font: 700 26px "Noto Sans TC", sans-serif; color: #f0b545; white-space: nowrap; opacity: 0; }
+  #vf .vrow u { text-decoration: none; position: relative; }
+  #vf .vrow u::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; background: #f0b545; transform-origin: 0 50%; transform: scaleX(var(--ul, 0)); }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../../src/fox2.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/pins.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  L.mount({ boards: `<div class="phone" id="ph"></div><div id="tap"></div><div id="ring"></div><div id="ringL">標記太小</div><div class="sheet mini" id="vf"></div>` });
+  ["zMac", "zSrv", "app", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 20;
+  // 第 2 版：逐格檢查後接緊（卡片早一點收、小字晚一點出現、最後小安點頭）
+  const TAP = 1.6, POP = 1.8, POPOUT = 4.4, RING = 5.0, HI5 = 4.8, UL5 = 5.4, ADD8 = 11.6, SUB3 = 9.4, SUB4 = 13.2, NOD = 17.4;
+  const PX = 300, PY = 100, PW = 300;
+  // 老師（檢查點 2）：第 5 條只寫「點得到」，沒有數字 → 回頭接第 3 段「沒辦法檢查」→ 第 8 條改成有數字的
+  const CAPS = [
+    [0.4, 4.4, "看它的回報，自己抽查一兩條", "小安用手機點一個景點確認"],
+    [4.8, 7.6, "第 5 條只寫「點得到」，不夠具體", "手機寬度下，標記只有 11 px，手指其實不好點"],
+    [8.0, 11.4, "「點得到」沒有數字，就沒辦法檢查", "和「要好看」「不要有錯」一樣"],
+    [11.6, 14.8, "改成有數字的：每個標記至少 44 px", "驗收單加第 8 條"],
+    [15.2, D - 0.3, "發現新的問題，就加一條：<em>清單會越寫越好</em>", ""],
+  ];
+  // 第 5 條在這裡寫完整（和第 4 段的 VERIFY.md 一樣），「標記點得到」畫琥珀底線
+  const LIST = V.CHECKS.map((r, i) => (i === 4 ? ["網頁", "寬 390 px：不會左右捲動，<u>標記點得到</u>", r[2]] : r)).concat([["網頁", V.CHECK8[1].replace("44 px", "<u>44 px</u>"), V.CHECK8[2]]]);
+  function render(t) {
+    V.dip(t, D);
+    L.cam(t, [[0, ...L.WIDE]]);
+    L.sec(t, "08", "你要做的");
+    // 手機：Codex 改好的網頁（真的截圖），點 3 號 → 卡片；再看標記的大小
+    const fade = t >= POP && t < POPOUT + 0.3 ? ["v2-390-pop.png", C((t - POP) / 0.3) * (1 - C((t - POPOUT) / 0.3))] : null;
+    const g = V.screen($("ph"), { src: "v2-390.png", w: PW, fade });
+    $("ph").style.left = PX + "px"; $("ph").style.top = PY + "px";
+    K.vis($("ph"), C((t - 0.2) / 0.4));
+    const at = (i) => { const p = window.PINS.v2[i]; return [PX + 12 + p[0] * g.k, PY + 12 + g.bar + p[1] * g.k]; };
+    const [tx, ty] = at(2);
+    Object.assign($("tap").style, { left: tx + "px", top: ty + "px", transform: `scale(${(0.6 + 0.6 * C((t - TAP) / 0.4)).toFixed(3)})` });
+    $("tap").style.opacity = C((t - TAP) / 0.12) * (1 - C((t - TAP - 0.3) / 0.3));
+    // 標記太小：琥珀色圈＋字
+    const [rx, ry] = at(0), ro = C((t - RING) / 0.4) * (1 - C((t - (D - 0.6)) / 0.4));
+    Object.assign($("ring").style, { left: rx + "px", top: ry + "px", opacity: ro, transform: `scale(${(0.8 + 0.2 * K.spring(t - RING, 12, 0.8)).toFixed(3)})` });
+    Object.assign($("ringL").style, { left: (PX + PW + 18) + "px", top: (ry - 18) + "px", opacity: ro });   // 字放在手機外面
+    // 驗收單：1–7 都打勾；第 8 條加上去（琥珀色）
+    const hi = t >= ADD8 ? 7 : t >= HI5 ? 4 : -1;
+    V.verify($("vf"), { list: LIST, n: t >= ADD8 ? 8 : 7, marks: Array(7).fill(["ok", 1]), hi, rows: LIST.map((_, i) => (i < 7 ? 1 : C((t - ADD8) / 0.4))) });
+    $("vf").querySelector('.vrow[data-i="4"]').style.setProperty("--ul", K.easeOut(C((t - UL5) / 0.5)).toFixed(3));
+    const r8 = $("vf").querySelector('.vrow[data-i="7"]');
+    if (r8) r8.style.setProperty("--ul", K.easeOut(C((t - ADD8 - 0.6) / 0.5)).toFixed(3));
+    K.vis($("vf"), C((t - 0.6) / 0.4));
+    $("vf").style.transform = "rotate(0.4deg)";
+    // 小安：在手機旁邊
+    L.fox("foxO", 840, 690, 0.9, "front", { alpha: C((t - 0.5) / 0.5), look: -0.6, expr: t < RING ? "happy" : t < ADD8 ? "curious" : "happy", nod: Math.max(0, Math.sin(C((t - NOD) / 0.6) * Math.PI)) * 0.4, blink: Math.floor(t * 10) % 43 === 0 });
+    L.illus(t, [[16.0, D - 0.3, "沒辦法檢查的，它應該照實說。"]]);
+    L.caps(t, CAPS);
+    $("capS").style.opacity = t >= CAPS[2][0] && t < CAPS[3][0] ? C((t - SUB3) / 0.35).toFixed(3) : t >= CAPS[3][0] && t < CAPS[4][0] ? C((t - SUB4) / 0.35).toFixed(3) : "";
+  }
+  L.start("08 你要做的", D, render);
+})();
+</script>
+</body>
+</html>

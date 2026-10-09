@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>
+  // 課程網址已改成 Cloudflare Pages（GitHub Pages 在台灣太慢）：舊的 github.io 網址轉到同一頁，保留 #t= 等片段
+  if (location.hostname.endsWith("github.io")) {
+    location.replace("https://learning-analytics-tools.pages.dev" + (location.pathname.replace(/^\/Learning-Analytics-Tools(?=\/|$)/, "") || "/") + location.search + location.hash);
+  }
+</script>
+<meta name="robots" content="noindex">
+<script src="../../../../../assets/i18n-strings.js"></script>
+<script src="../../../../../assets/i18n.js"></script>
+<!-- 審核用草稿，沒有任何頁面連到這裡。Copyright © 2026 JUNHAO CHEN -->
+
+<title>07 回報表</title>
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../../assets/kit/codex.css">
+<link rel="stylesheet" href="../common/loop.css">
+<link rel="stylesheet" href="../common/v01.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<script src="../../assets/kit/kit.js"></script>
+<script src="../common/spots.js"></script>
+<script src="../common/loop.js"></script>
+<script src="../common/v01.js"></script>
+<script>
+(function () {
+  const C = K.clamp, E = K.ease, $ = L.$;
+  L.mount({ boards: `<div class="sheet mini" id="vm"></div>` });
+  ["zSrv", "folder", "net", "netL", "srv", "stack", "stackN"].forEach((id) => K.vis($(id), 0));
+  const D = 16;
+  // 第 2 版：表一列一列對照得慢一點；第 3、5 條一起亮（回扣開頭的兩個差別）；逐格檢查後補字幕，填掉後半的停頓
+  const DONE = 0.6, PUSH0 = 0.9, PUSH1 = 1.9, ROW0 = 2.2, ROWD = 0.8, OK7 = ROW0 + 7 * ROWD + 0.2, TWO0 = 8.4, TWO1 = 11.4, SUB4 = 13.4;
+  const CAM = [[0, ...L.WIDE], [PUSH0, ...L.WIDE], [PUSH1, ...V.PUSH_T]];
+  const CAPS = [
+    [0.4, 4.0, "最後的回答：一張 7 列的表", "每一條都寫結果，也寫證據：跑了什麼、看到什麼"],
+    [4.4, 7.9, "照 VERIFY.md，一條一條對", ""],
+    [8.2, 11.4, "第 3 條、第 5 條：開頭的兩個差別都檢查了", "數到 12 個標記、縮到 390 px"],
+    [11.8, D - 0.3, "「做好了」，<em>現在有證據了</em>", "不用再猜它做了幾個點、有沒有檢查手機"],
+  ];
+  function render(t) {
+    V.dip(t, D);
+    const cam = L.cam(t, CAM), k = L.pushK(cam.z);
+    L.scrims(k); L.dim(k, ["zMac"]);
+    L.sec(t, "07", "回報表");
+    const at = { tm: -1, ask: -1, work: -1, a1: -1, r1: -1, a2: -1, r2: -1, x1: -1, a3: -1, r3: -1, x2: -1, a4: -1, r4: -1, fin: DONE };
+    L.thread(t, { title: () => V.TITLE2, at, doneAt: DONE });
+    // 表一列一列亮起來（對照右邊驗收單的同一條）；之後第 3、5 條一起亮
+    // 第 3 條先亮、第 5 條隔 1 秒再亮
+    const on = t >= ROW0 && t < ROW0 + 7 * ROWD ? Math.floor((t - ROW0) / ROWD) : -1, two = (i) => t >= TWO0 + (i === 4 ? 1 : 0) && t < TWO1 && (i === 2 || i === 4);
+    $("cxMsgs").querySelectorAll(".rep tr").forEach((tr, i) => tr.classList.toggle("on", i - 1 === on || two(i - 1)));
+    V.verify($("vm"), { marks: [["ok", 1], ["ok", 1], ["ok", 1], ["ok", 1], ["ok", 1], ["ok", 1], ["ok", C((t - OK7) / 0.4)]], hi: on });
+    [2, 4].forEach((i) => { if (two(i)) $("vm").querySelectorAll(".vrow")[i].style.setProperty("--hi", 1); });
+    K.vis($("vm"), 1);
+    L.illus(t, [[PUSH1, D - 0.3, "表裡第 3–6 條的證據是示意"]]);
+    L.caps(t, CAPS);
+    $("capS").style.opacity = t >= CAPS[3][0] ? C((t - SUB4) / 0.35).toFixed(3) : "";
+  }
+  L.start("07 回報表", D, render);
+})();
+</script>
+</body>
+</html>

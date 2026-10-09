@@ -1,0 +1,43 @@
+/* ==========================================================================
+   素材共用：字型、1920×1080 畫布、預覽播放列、標註（橘框、標籤、箭頭）
+   每個素材都是一個「只由時間決定畫面」的頁面：window.render(t)，不用 CSS 動畫。
+   ========================================================================== */
+@font-face { font-family: "Noto Sans TC"; src: url("fonts/NotoSansTC-VF.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Cascadia Mono"; src: url("fonts/CascadiaMono.ttf"); font-weight: 200 700; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #0b0b0b; color: #ececec; font-family: "Noto Sans TC", sans-serif; overflow: hidden; height: 100%; }
+
+/* 畫布：永遠是 1920×1080，預覽時整個縮放到視窗裡 */
+#viewport { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: #111; }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+.cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+
+/* ---------- 預覽播放列（錄影時自動隱藏） ---------- */
+#ctl { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 18px; background: #161616; border-top: 1px solid #2a2a2a; font-size: 14px; z-index: 10; }
+#ctl button { appearance: none; border: 1px solid #3a3a3a; background: #222; color: #eee; border-radius: 8px; height: 34px; min-width: 40px; padding: 0 12px; font: inherit; cursor: pointer; }
+#ctl button:hover { background: #2c2c2c; }
+#ctl input[type=range] { flex: 1; accent-color: #f0b545; }
+#ctl .time { font-family: "Cascadia Mono", monospace; color: #bbb; min-width: 112px; text-align: right; }
+#ctl .name { color: #f0b545; font-weight: 700; white-space: nowrap; }
+#ctl a { color: #9a9a9a; text-decoration: none; white-space: nowrap; }
+#ctl a:hover { color: #fff; }
+body.capture #ctl { display: none; }
+
+/* ---------- 標註：和投影片一樣的橘色框 ---------- */
+.callout { position: absolute; border: 4px solid #f5a623; border-radius: 6px; pointer-events: none; }
+.tag { position: absolute; white-space: nowrap; font-weight: 800; border-radius: 10px; padding: 8px 18px; font-size: 30px; line-height: 1.3; }
+.tag.box { background: #fff; color: #333; border: 4px solid #f5a623; border-radius: 4px; text-align: center; }
+.tag.dark { background: #0f141b; color: #ececec; border: 2px solid #3a4556; }
+.tag.teal { background: #133338; color: #45bfc8; border: 2px solid #45bfc8; }
+.tag.amber { background: #3a2f17; color: #f0b545; border: 2px solid #f0b545; }
+.tag.green { background: #173222; color: #53c27c; border: 2px solid #53c27c; }
+.tag.red { background: #3a1716; color: #ff7b72; border: 2px solid #e5534b; }
+.tag small { display: block; font-size: .8em; font-weight: 600; opacity: .85; }
+svg.arrow { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; pointer-events: none; }
+svg.arrow path { fill: none; stroke: #f5a623; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 深色說明畫面（非 Codex 介面的素材用） */
+.board { position: absolute; inset: 0; background: #0f141b; color: #e5eaf1; }
+.board .title { position: absolute; left: 80px; top: 64px; font-size: 56px; font-weight: 900; letter-spacing: .01em; white-space: nowrap; }
+.board .kicker { position: absolute; left: 80px; top: 30px; font-size: 24px; font-weight: 800; color: #45bfc8; letter-spacing: .08em; }
