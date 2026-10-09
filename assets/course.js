@@ -81,22 +81,22 @@
       href: "weeks/week05/",
       thumb: "weeks/week05/video/01-verify-md/thumb.jpg",
       still: "weeks/week05/video/01-verify-md/poster.jpg",
-      meta: "2 支影片＋2 支補充・共 12 分 32 秒",
+      meta: "2 支影片＋2 支補充・共 12 分 30 秒",
       i18n: {
         "zh-Hans": {
           title: "让 Codex 做对：验证与 context window",
           summary: "先写一份验证清单，让 Codex 知道怎样才算做好、做完自己检查。每个模型有自己的 context window；中途换模型，新模型要整段重读、缓存失效，用量一下子跳高。开工前选好模型，真的要换就带交接摘要开新对话。",
-          meta: "2 个视频＋2 个补充・共 12 分 32 秒",
+          meta: "2 个视频＋2 个补充・共 12 分 30 秒",
         },
         en: {
           title: "Getting It Right with Codex: Verification and the Context Window",
           summary: "First, write a verification checklist so Codex knows what counts as done and checks its own work. Each model has its own context window; switching mid-chat makes the new model reread everything and breaks the cache, so usage jumps. Pick the model before you start, and if you must switch, open a new chat with a hand-off summary.",
-          meta: "2 videos + 2 extras · 12 min 32 s in total",
+          meta: "2 videos + 2 extras · 12 min 30 s in total",
         },
         vi: {
           title: "Để Codex làm đúng: kiểm chứng và context window",
           summary: "Trước hết, viết danh sách kiểm tra để Codex biết thế nào là xong và tự kiểm tra. Mỗi mô hình có context window riêng; đổi mô hình giữa chừng khiến mô hình mới phải đọc lại toàn bộ và bộ nhớ đệm mất hiệu lực, nên mức sử dụng tăng vọt. Hãy chọn mô hình trước khi bắt đầu; nếu buộc phải đổi, mở cuộc hội thoại mới kèm bản tóm tắt bàn giao.",
-          meta: "2 video + 2 bổ sung · tổng cộng 12 phút 32 giây",
+          meta: "2 video + 2 bổ sung · tổng cộng 12 phút 30 giây",
         },
       },
     },
