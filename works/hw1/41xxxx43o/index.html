@@ -1,0 +1,1360 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>東京物候散策｜櫻花與銀杏情報地圖</title>
+<meta name="description" content="東京八處賞櫻與賞銀杏景點的物候資訊地圖：櫻花與銀杏雙物候切換、搜尋與篩選、散步路線距離估算與 Google 地圖步行導航。所有景點的當季現況皆誠實標示為待核對。">
+<meta name="theme-color" content="#fbfaf7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23b22a58'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23fff' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+/* ===== 色彩與字型：日間明亮（預設）／夜間夜櫻 ===== */
+:root{
+  --sans:"Noto Sans TC","Hiragino Sans","PingFang TC","Microsoft JhengHei","Yu Gothic",system-ui,sans-serif;
+  --jp-sans:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans TC",sans-serif;
+  --mincho:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif TC","PMingLiU",serif;
+  --bg:#efece6; --panel:#fbfaf7; --panel-2:#f4f1eb;
+  --ink:#26221f; --ink-2:#554e48; --ink-3:#675f58;
+  --line:#dbd4ca; --line-2:#bdb3a6;
+  --focus:#1b4fd0; --map-bg:#e8e4dc; --shadow:rgba(38,34,31,.14);
+  --tile-filter:saturate(.4) contrast(.94) brightness(1.04) sepia(.08);
+  --side-w:408px; --drawer-w:396px; --hdr-h:64px;
+  /* 狀態專屬色（pin 與標籤的圓點）：fill 與其上的字形色 */
+  --c-pending:#5d6877; --o-pending:#fff;
+  --c-s1:#a68a92; --o-s1:#26221f; --c-s2:#e58aa6; --o-s2:#26221f; --c-s3:#d5527f; --o-s3:#26221f;
+  --c-s4:#b0124d; --o-s4:#fff;    --c-s5:#a58bc0; --o-s5:#26221f; --c-s6:#5b9560; --o-s6:#26221f;
+  --c-g1:#5d9444; --o-g1:#26221f; --c-g2:#aab83a; --o-g2:#26221f; --c-g3:#ddb02a; --o-g3:#26221f;
+  --c-g4:#f0a30a; --o-g4:#26221f; --c-g5:#c26a2a; --o-g5:#26221f; --c-g6:#8b7a6a; --o-g6:#fff;
+  color-scheme:light;
+}
+body[data-species="sakura"]{--accent:#b22a58; --on-accent:#fff; --accent-ink:#a3224f; --accent-soft:#f6e4ea}
+body[data-species="ginkgo"]{--accent:#efb41c; --on-accent:#26221f; --accent-ink:#7d5300; --accent-soft:#f6ead0}
+body[data-theme="night"]{
+  --bg:#121016; --panel:#1b1821; --panel-2:#231f2b;
+  --ink:#f3eef2; --ink-2:#c9c0cb; --ink-3:#b0a6b3;
+  --line:#34303c; --line-2:#4a4455; --focus:#8fb2ff; --map-bg:#1a1822; --shadow:rgba(0,0,0,.5);
+  --tile-filter:invert(1) hue-rotate(195deg) brightness(.8) contrast(.9) saturate(.45);
+  --c-pending:#9aa7bb; --o-pending:#14121a;
+  --c-s1:#c4a3ac; --c-s2:#f0a0b8; --c-s3:#ec6f98; --c-s4:#ff5c92; --c-s5:#bda2d6; --c-s6:#7fbf84;
+  --c-g1:#82bf62; --c-g2:#c5d24f; --c-g3:#ecc43b; --c-g4:#ffb62a; --c-g5:#e08840; --c-g6:#b09a86;
+  --o-s1:#14121a; --o-s2:#14121a; --o-s3:#14121a; --o-s4:#14121a; --o-s5:#14121a; --o-s6:#14121a;
+  --o-g1:#14121a; --o-g2:#14121a; --o-g3:#14121a; --o-g4:#14121a; --o-g5:#14121a; --o-g6:#14121a;
+  color-scheme:dark;
+}
+body[data-theme="night"][data-species="sakura"]{--accent:#f2a0bc; --on-accent:#2a0f1b; --accent-ink:#f5aec6; --accent-soft:#3a2230}
+body[data-theme="night"][data-species="ginkgo"]{--accent:#f0c24e; --on-accent:#2b1f00; --accent-ink:#f2c95f; --accent-soft:#38301a}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.7 var(--sans);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+:lang(ja){font-family:var(--jp-sans)}
+.ja-name{font-family:var(--mincho)!important;font-weight:500}
+h1,h2,h3,p,ol,ul,dl,dd{margin:0}
+ol,ul{padding:0;list-style:none}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--accent-ink);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+.foot a,.ref-b a,.dlg-b a,.dr-body a,.links a{display:inline-flex;align-items:center;min-height:44px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:8px;top:-60px;z-index:3000;background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:4px;text-decoration:none}
+.skip:focus{top:8px}
+svg.gl{width:1.15em;height:1.15em;flex:none;fill:currentColor}
+svg.ic{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===== 外殼：頁首 + 地圖應用 ===== */
+.shell{display:flex;flex-direction:column}
+.top{background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:40}
+.top-in{display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;padding:8px 16px;max-width:1800px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:12px;min-height:44px;color:var(--ink);text-decoration:none;margin-right:auto}
+.seal{width:32px;height:32px;border-radius:3px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:700 12.5px/1.05 var(--mincho);writing-mode:vertical-rl;letter-spacing:.06em;flex:none}
+.brand-t{display:block;margin:0;font:700 19px/1.15 var(--mincho);letter-spacing:.16em}
+.brand-s{display:block;font-size:11.5px;color:var(--ink-3);letter-spacing:.1em;line-height:1.3}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:4px;overflow:hidden;background:var(--panel)}
+.seg button{appearance:none;border:0;background:transparent;cursor:pointer;min-height:44px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:500;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button:hover{background:var(--panel-2)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+.seg.neutral button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg.species button{min-height:48px;padding:0 22px;font-size:15px}
+.seg.species svg.gl{width:19px;height:19px}
+.linkbtn{appearance:none;background:none;border:0;cursor:pointer;min-height:44px;padding:0 6px;color:var(--ink);font-size:14px;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+.linkbtn:hover{color:var(--accent-ink)}
+
+.app{position:relative;display:flex;flex-direction:column;flex:1}
+.tabs{display:flex;background:var(--panel);border-bottom:1px solid var(--line)}
+.tabs [role="tab"]{flex:1;appearance:none;background:transparent;border:0;border-bottom:3px solid transparent;cursor:pointer;min-height:48px;padding:0 8px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:500;color:var(--ink-2)}
+.tabs [role="tab"][aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent);font-weight:700}
+.tabs .n{font-size:12.5px;min-width:1.6em;padding:0 5px;border:1px solid var(--line-2);border-radius:3px;line-height:1.5;text-align:center;color:var(--ink-2);font-weight:500}
+
+.pane{background:var(--panel);display:none}
+.app[data-view="list"] #pane-list,.app[data-view="route"] #pane-route{display:block}
+.app[data-view="map"] .map-pane,.app[data-view="list"] .map-pane,.app[data-view="route"] .map-pane{display:none}
+.app[data-view="map"] .map-pane{display:block}
+.map-pane{position:relative;background:var(--map-bg);isolation:isolate;overflow:hidden;height:calc(100dvh - var(--hdr-h) - 48px);min-height:420px}
+#map{position:absolute;inset:0;background:var(--map-bg);font-family:var(--sans)}
+.leaflet-tile-pane{filter:var(--tile-filter)}
+
+@media (min-width:900px){
+  .shell{height:100dvh;min-height:600px}
+  .app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);grid-template-rows:48px minmax(0,1fr);min-height:0}
+  .tabs{grid-column:1;grid-row:1;border-right:1px solid var(--line)}
+  #tab-map{display:none}
+  .pane{grid-column:1;grid-row:2;overflow-y:auto;border-right:1px solid var(--line);scrollbar-gutter:stable}
+  .app[data-view="map"] #pane-list{display:block}
+  .map-pane,.app[data-view="map"] .map-pane,.app[data-view="list"] .map-pane,.app[data-view="route"] .map-pane{display:block;grid-column:2;grid-row:1 / span 2;height:auto;min-height:0}
+}
+
+/* ===== 景點清單窗格 ===== */
+.pane-in{padding:16px 16px 28px}
+.notice{border-left:3px solid var(--accent);background:var(--panel-2);padding:10px 12px 10px 14px;font-size:13px;line-height:1.65;color:var(--ink-2)}
+.notice b{color:var(--ink);font-weight:700}
+.notice .seq{display:block;margin-top:6px;color:var(--ink);font-size:13px}
+.notice .seq i{font-style:normal;color:var(--ink-3);padding:0 3px}
+.field{position:relative;margin-top:14px}
+.field input[type="search"]{width:100%;min-height:48px;padding:0 48px 0 42px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);font-size:16px;-webkit-appearance:none;appearance:none}
+.field input[type="search"]::-webkit-search-cancel-button{display:none}
+.field input[type="search"]::placeholder{color:var(--ink-3);opacity:1}
+.field .mag{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-3);pointer-events:none}
+.field .clr{position:absolute;right:2px;top:2px;width:44px;height:44px;appearance:none;border:0;background:transparent;cursor:pointer;color:var(--ink-2);display:grid;place-items:center}
+.field .clr[hidden]{display:none}
+.flt{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+@media (min-width:420px) and (max-width:899px),(min-width:900px){.flt{grid-template-columns:1fr 1fr}}
+.flt label{display:block}
+.flt label span{display:block;font-size:12.5px;font-weight:500;color:var(--ink-3);letter-spacing:.06em;margin-bottom:4px}
+.flt select{width:100%;min-height:46px;padding:0 10px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);font-size:14.5px;text-overflow:ellipsis}
+.res{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;min-height:44px;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.res .linkbtn{font-size:13px}
+.plist{margin-top:0}
+.place{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 4px;border-bottom:1px solid var(--line);position:relative}
+.place.is-sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.place-h{font-size:inherit;font-weight:inherit}
+.place-main{appearance:none;background:transparent;border:0;cursor:pointer;text-align:left;width:100%;min-height:76px;padding:12px 6px 12px 4px;display:grid;grid-template-columns:30px minmax(0,1fr);gap:0 6px;align-items:start}
+.place-main:hover{background:var(--panel-2)}
+.place.is-sel .place-main:hover{background:transparent}
+.place-no{font:500 13px/1.9 var(--sans);color:var(--ink-3);letter-spacing:.04em}
+.place-zh{display:block;font-size:16.5px;font-weight:700;line-height:1.4;color:var(--ink)}
+.place-ja{display:block;font-size:13px;line-height:1.4;color:var(--ink-2);margin-top:1px}
+.place-meta{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;margin-top:6px;font-size:12.5px;color:var(--ink-2)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:1px 8px 1px 7px;border:1px solid var(--line-2);border-radius:3px;background:var(--panel);color:var(--ink);font-size:12.5px;font-weight:500;line-height:1.6;white-space:nowrap}
+.badge i{width:9px;height:9px;border-radius:50%;background:var(--st);box-shadow:0 0 0 1px var(--ink-3);flex:none}
+.badge[data-st="pending"] i{background:repeating-linear-gradient(45deg,var(--st) 0 2px,var(--panel) 2px 4px)}
+.place-add{appearance:none;background:transparent;border:1px solid var(--line-2);border-radius:4px;min-height:44px;min-width:84px;padding:0 10px;margin-right:2px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink)}
+.place-add:hover{background:var(--panel-2)}
+.place-add[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.empty{padding:26px 6px 10px;font-size:14px;color:var(--ink-2)}
+.empty strong{display:block;font-size:16px;color:var(--ink);margin-bottom:6px}
+.empty .btn{margin-top:14px}
+.ref{margin-top:22px;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+.ref summary{cursor:pointer;min-height:48px;padding:0 14px;display:flex;align-items:center;font-size:13.5px;font-weight:700;list-style:none}
+.ref summary::-webkit-details-marker{display:none}
+.ref summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+.ref[open] summary::after{transform:rotate(-135deg)}
+.ref-b{padding:2px 14px 14px;font-size:13px;color:var(--ink-2)}
+.ref-b dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:4px 0 10px}
+.ref-b dt{color:var(--ink-3)}
+.ref-b p{margin-top:6px}
+
+/* ===== 路線窗格 ===== */
+.h2{font:700 20px/1.3 var(--mincho);letter-spacing:.12em;margin-bottom:10px}
+.hint{font-size:13.5px;color:var(--ink-2);line-height:1.7}
+.stops{margin-top:14px;border-top:1px solid var(--line)}
+.stop{display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 8px;padding:14px 0 12px;border-bottom:1px solid var(--line)}
+.stop-no{font:700 15px/1.5 var(--sans);width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--panel);display:grid;place-items:center}
+.stop h3{font-size:16px;font-weight:700;line-height:1.4}
+.stop .place-ja{margin-top:0}
+.leg{margin-top:6px;font-size:13px;color:var(--ink-2)}
+.leg b{color:var(--ink);font-weight:700}
+.leg.warn{color:var(--ink)}
+.stop-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stop-btns button,.btn{appearance:none;cursor:pointer;min-height:44px;min-width:56px;padding:0 14px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);font-size:13.5px;font-weight:500;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.stop-btns button:hover,.btn:hover{background:var(--panel-2)}
+.stop-btns button:disabled{opacity:.42;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700;padding:0 20px;min-height:48px;font-size:15px}
+.btn.primary:hover{filter:brightness(.94)}
+.btn.primary[aria-disabled="true"]{background:var(--panel-2);color:var(--ink-3);border-color:var(--line-2);cursor:not-allowed;filter:none}
+.total{margin-top:16px;padding:14px 14px 12px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel-2)}
+.total .lbl{font-size:12.5px;color:var(--ink-3);letter-spacing:.06em}
+.total .num{font:700 30px/1.25 var(--sans);letter-spacing:.01em}
+.total .num small{font-size:14px;font-weight:500;color:var(--ink-2);margin-left:6px}
+.total p{margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.65}
+.nav-box{margin-top:20px}
+.nav-box label{display:block}
+.nav-box label span{display:block;font-size:13px;font-weight:700;margin-bottom:4px}
+.nav-box input{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);font-size:16px}
+.nav-box input::placeholder{color:var(--ink-3);opacity:1}
+.nav-act{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+#nav-hint{margin-top:10px;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+
+/* ===== 地圖與疊層 ===== */
+.map-legend{position:absolute;z-index:900;top:12px;left:12px;max-width:calc(100% - 24px);background:var(--panel);border:1px solid var(--line-2);border-radius:4px;padding:8px 12px 8px;font-size:12.5px;line-height:1.5;box-shadow:0 2px 10px var(--shadow)}
+.map-legend b{display:block;font-size:11.5px;letter-spacing:.1em;color:var(--ink-3);font-weight:500;margin-bottom:2px}
+.map-legend ul{display:flex;flex-wrap:wrap;gap:2px 14px}
+.map-legend small{display:block;margin-top:3px;font-size:12px;color:var(--ink-3)}
+.map-legend li{display:flex;align-items:center;gap:6px}
+.map-legend i{width:11px;height:11px;border-radius:50%;background:var(--st);box-shadow:0 0 0 1px var(--ink-3);flex:none}
+.map-legend li[data-st="pending"] i{background:repeating-linear-gradient(45deg,var(--st) 0 2px,var(--panel) 2px 4px)}
+.map-notice,.map-fallback{position:absolute;z-index:950;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line-2);border-left:3px solid var(--accent);border-radius:4px;padding:10px 14px;font-size:13px;line-height:1.65;box-shadow:0 2px 10px var(--shadow);max-width:min(560px,calc(100% - 24px));width:max-content}
+.map-notice{top:64px}
+.map-notice[hidden],.map-fallback[hidden]{display:none}
+.map-notice b{display:block;margin-bottom:2px}
+.map-fallback{top:16px;left:16px;transform:none;width:min(440px,calc(100% - 32px));padding:18px 20px}
+@media (min-width:900px){.map-pane.has-drawer .map-fallback{max-width:calc(100% - var(--drawer-w) - 40px)}}
+.map-fallback b{display:block;font-size:15.5px;margin-bottom:6px}
+.toast{position:fixed;z-index:3500;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translate(-50%,14px);display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--panel);border-radius:4px;padding:8px 8px 8px 16px;font-size:13.5px;opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s linear .25s;max-width:calc(100% - 24px);box-shadow:0 4px 16px var(--shadow)}
+.toast.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .25s,transform .25s}
+.toast button{appearance:none;border:1px solid currentColor;background:transparent;color:inherit;min-height:44px;padding:0 14px;border-radius:3px;cursor:pointer;font-size:13.5px;font-weight:700;white-space:nowrap}
+.toast button[hidden]{display:none}
+
+.leaflet-bar{border:1px solid var(--line-2)!important;box-shadow:0 2px 10px var(--shadow)!important;border-radius:4px!important;overflow:hidden}
+.leaflet-bar a,.leaflet-touch .leaflet-bar a{width:44px;height:44px;line-height:42px;font-size:22px;background:var(--panel);color:var(--ink);border-bottom:1px solid var(--line-2)}
+.leaflet-bar a:last-child{border-bottom:0}
+.leaflet-bar a:hover,.leaflet-bar a:focus{background:var(--panel-2);color:var(--ink)}
+.leaflet-bar a.leaflet-disabled{background:var(--panel-2);color:var(--ink-3)}
+.leaflet-control-attribution{background:var(--panel)!important;color:var(--ink-2)!important;font-size:11.5px;line-height:1.5;padding:2px 8px!important;border-top-left-radius:4px}
+.leaflet-control-attribution a{color:var(--accent-ink)!important;text-decoration:underline}
+.leaflet-container{font-family:var(--sans);background:var(--map-bg)}
+.leaflet-tooltip{background:var(--panel);color:var(--ink);border:1px solid var(--line-2);border-radius:3px;box-shadow:0 2px 10px var(--shadow);font:500 13px/1.45 var(--sans);padding:6px 10px;white-space:nowrap}
+.leaflet-tooltip strong{display:block;font-size:14px}
+.leaflet-tooltip-top:before{border-top-color:var(--line-2)}
+.leaflet-tooltip-bottom:before{border-bottom-color:var(--line-2)}
+.leaflet-tooltip.leg-tip{background:var(--panel);color:var(--accent-ink);border-color:var(--accent);font:700 12px/1.3 var(--sans);padding:2px 7px;box-shadow:none}
+.leaflet-tooltip.leg-tip:before{display:none}
+.route-line{animation:drift 48s linear infinite}
+@keyframes drift{to{stroke-dashoffset:-480}}
+
+/* ===== Pin：依物候狀態上色、帶呼吸微光 ===== */
+.pin-wrap{background:none!important;border:0!important}
+.pin-wrap:focus-visible{outline:3px solid var(--focus);outline-offset:-5px;border-radius:50%}
+.pin{position:absolute;inset:0;display:block;--st:var(--c-pending);--on:var(--o-pending)}
+.pin[data-st="s1"],.badge[data-st="s1"],li[data-st="s1"]{--st:var(--c-s1);--on:var(--o-s1)}
+.pin[data-st="s2"],.badge[data-st="s2"],li[data-st="s2"]{--st:var(--c-s2);--on:var(--o-s2)}
+.pin[data-st="s3"],.badge[data-st="s3"],li[data-st="s3"]{--st:var(--c-s3);--on:var(--o-s3)}
+.pin[data-st="s4"],.badge[data-st="s4"],li[data-st="s4"]{--st:var(--c-s4);--on:var(--o-s4)}
+.pin[data-st="s5"],.badge[data-st="s5"],li[data-st="s5"]{--st:var(--c-s5);--on:var(--o-s5)}
+.pin[data-st="s6"],.badge[data-st="s6"],li[data-st="s6"]{--st:var(--c-s6);--on:var(--o-s6)}
+.pin[data-st="g1"],.badge[data-st="g1"],li[data-st="g1"]{--st:var(--c-g1);--on:var(--o-g1)}
+.pin[data-st="g2"],.badge[data-st="g2"],li[data-st="g2"]{--st:var(--c-g2);--on:var(--o-g2)}
+.pin[data-st="g3"],.badge[data-st="g3"],li[data-st="g3"]{--st:var(--c-g3);--on:var(--o-g3)}
+.pin[data-st="g4"],.badge[data-st="g4"],li[data-st="g4"]{--st:var(--c-g4);--on:var(--o-g4)}
+.pin[data-st="g5"],.badge[data-st="g5"],li[data-st="g5"]{--st:var(--c-g5);--on:var(--o-g5)}
+.pin[data-st="g6"],.badge[data-st="g6"],li[data-st="g6"]{--st:var(--c-g6);--on:var(--o-g6)}
+.badge,.map-legend li{--st:var(--c-pending)}
+.badge[data-st="pending"],.map-legend li[data-st="pending"]{--st:var(--c-pending)}
+.pin-glow{position:absolute;left:50%;top:50%;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;background:var(--st);opacity:.3;animation:breathe 4.6s ease-in-out infinite;animation-delay:var(--d,0s)}
+.pin-bead{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--st);color:var(--on);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--ink-2),0 2px 5px var(--shadow);display:grid;place-items:center;transition:transform .25s}
+.pin[data-st="pending"] .pin-bead{border-style:dashed}
+.pin-bead svg{width:16px;height:16px;fill:currentColor}
+.pin.is-sel .pin-bead{transform:scale(1.2);box-shadow:0 0 0 3px var(--panel),0 0 0 5px var(--ink)}
+.pin-n{position:absolute;right:1px;top:0;min-width:19px;height:19px;padding:0 4px;border-radius:10px;background:var(--ink);color:var(--panel);font:700 11.5px/19px var(--sans);text-align:center;border:1px solid var(--panel)}
+.pin-n:empty{display:none}
+.is-far .pin-bead{transform:scale(.74)}
+.is-far .pin.is-sel .pin-bead{transform:scale(.95)}
+@keyframes breathe{0%,100%{transform:scale(.9);opacity:.34}50%{transform:scale(1.55);opacity:.05}}
+
+/* ===== 抽屜式詳情卡 ===== */
+.drawer{position:absolute;z-index:1200;top:0;right:0;bottom:0;width:min(var(--drawer-w),100%);background:var(--panel);border-left:1px solid var(--line-2);box-shadow:-10px 0 28px var(--shadow);display:flex;flex-direction:column;visibility:hidden;opacity:0;transform:translateX(26px);transition:transform .3s ease,opacity .3s ease,visibility 0s linear .3s}
+.drawer.on{visibility:visible;opacity:1;transform:none;transition:transform .3s ease,opacity .3s ease}
+.drawer:focus{outline:none}
+.dr-head{display:flex;gap:10px;align-items:flex-start;padding:18px 8px 14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.dr-head>div{flex:1;min-width:0}
+.dr-ward{font-size:12.5px;letter-spacing:.08em;color:var(--ink-3)}
+.dr-title{font:700 25px/1.3 var(--sans);margin-top:2px}
+.dr-ja{font-size:16px;margin-top:2px;color:var(--ink-2);letter-spacing:.06em}
+.dr-close{appearance:none;border:1px solid var(--line-2);background:var(--panel);width:44px;height:44px;border-radius:4px;cursor:pointer;display:grid;place-items:center;flex:none;color:var(--ink)}
+.dr-close:hover{background:var(--panel-2)}
+.dr-body{overflow-y:auto;flex:1;overscroll-behavior:contain}
+.dr-sec{padding:16px 20px 18px;border-top:1px solid var(--line)}
+.dr-sec:first-child{border-top:0}
+.dr-sec h3{font:700 12.5px/1.4 var(--sans);letter-spacing:.14em;color:var(--ink-3);margin-bottom:10px}
+.dr-sec h4{font-size:14px;font-weight:700;margin:14px 0 6px}
+.kv{display:grid;grid-template-columns:6.4em minmax(0,1fr);gap:7px 12px;font-size:14px}
+.kv dt{color:var(--ink-3);font-size:13px;padding-top:1px}
+.kv dd{min-width:0;overflow-wrap:anywhere}
+.past,.gen{margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:3px;background:var(--panel-2);font-size:13px;line-height:1.65;color:var(--ink)}
+.past+.past,.gen+.gen{margin-top:6px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;border:1px solid var(--ink-2);border-radius:2px;padding:0 5px;margin-right:6px;line-height:1.55;color:var(--ink)}
+.small{font-size:12.5px;color:var(--ink-2);line-height:1.7}
+.crowd li{font-size:13.5px;line-height:1.7;padding:6px 0 6px 12px;border-left:2px solid var(--line-2);margin-top:6px}
+.crowd .pending{display:flex;gap:8px;align-items:baseline;font-size:14px}
+.links li{margin-top:6px;font-size:13.5px;line-height:1.6}
+details.other{border-top:1px solid var(--line)}
+details.other>summary{cursor:pointer;min-height:52px;padding:0 20px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;list-style:none}
+details.other>summary::-webkit-details-marker{display:none}
+details.other>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+details.other[open]>summary::after{transform:rotate(-135deg)}
+details.other>.dr-sec{border-top:0;padding-top:4px}
+.rail{display:grid;grid-template-columns:repeat(6,1fr);position:relative;margin:14px 0 6px}
+.rail::before{content:"";position:absolute;left:8%;right:8%;top:8px;border-top:1px dashed var(--line-2)}
+.rail li{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px}
+.rail li i{width:17px;height:17px;border-radius:50%;background:var(--panel);border:3px solid var(--st,var(--c-pending));display:block}
+.rail li span{writing-mode:vertical-rl;font-size:13px;line-height:1.2;letter-spacing:.08em;color:var(--ink-2);min-height:4.9em}
+.rail li.cur i{background:var(--st)}
+.rail li.cur span{color:var(--ink);font-weight:700}
+.dr-act{display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px 22px;border-top:1px solid var(--line)}
+
+@media (max-width:899px){
+  .drawer{top:auto;left:0;right:0;width:auto;height:58%;border-left:0;border-top:1px solid var(--line-2);border-radius:10px 10px 0 0;box-shadow:0 -10px 28px var(--shadow);transform:translateY(26px)}
+  .drawer.on{transform:none}
+  .map-pane.has-drawer .leaflet-bottom{bottom:58%}
+  .dr-title{font-size:22px}
+}
+@media (min-width:900px){
+  .map-pane.has-drawer .leaflet-bottom.leaflet-right{right:var(--drawer-w)}
+}
+
+/* ===== 頁尾 ===== */
+.foot{background:var(--panel);border-top:1px solid var(--line);padding:36px 16px 44px}
+.foot-in{max-width:1180px;margin:0 auto;display:grid;gap:28px 48px;grid-template-columns:1fr}
+@media (min-width:860px){.foot-in{grid-template-columns:1.25fr 1fr 1fr}}
+.foot h2{font:700 12.5px/1.4 var(--sans);letter-spacing:.16em;color:var(--ink-3);margin-bottom:10px}
+.foot p,.foot li{font-size:13.5px;line-height:1.8;color:var(--ink-2)}
+.foot li{margin-top:2px}
+.foot .disclaimer{color:var(--ink);font-size:14px;line-height:1.85;padding-left:14px;border-left:3px solid var(--accent)}
+.foot .fine{margin-top:12px;font-size:12.5px}
+.foot a{overflow-wrap:anywhere}
+
+/* ===== 關於與引用 彈窗 ===== */
+dialog{width:min(760px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid var(--line-2);border-radius:6px;background:var(--panel);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(18,14,12,.55)}
+dialog[open]{display:flex;flex-direction:column}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 24px;border-bottom:1px solid var(--line);flex:none}
+.dlg-h h2{font:700 20px/1.3 var(--mincho);letter-spacing:.12em}
+.dlg-b{overflow-y:auto;padding:6px 24px 28px}
+.dlg-b section{padding:18px 0 4px;border-top:1px solid var(--line)}
+.dlg-b section:first-child{border-top:0}
+.dlg-b h3{font:700 15px/1.5 var(--sans);margin-bottom:6px}
+.dlg-b p,.dlg-b li{font-size:14px;line-height:1.85;color:var(--ink-2)}
+.dlg-b li{margin-top:5px}
+.dlg-b ul.src>li{padding:10px 0;border-bottom:1px solid var(--line);margin:0}
+.dlg-b ul.src b{color:var(--ink)}
+.dlg-b .disclaimer{color:var(--ink);font-size:14.5px;border-left:3px solid var(--accent);padding:6px 0 6px 14px;margin-top:8px}
+.dlg-b dl.seqs{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px}
+.dlg-b dl.seqs dt{font-weight:700;color:var(--ink)}
+.dlg-b dl.seqs dd{color:var(--ink-2)}
+
+/* ===== 手機細節 ===== */
+@media (max-width:899px){
+  .top-in{gap:2px 10px;padding:4px 12px 8px}
+  .brand-s{display:none}
+  .brand{margin-right:auto;order:1}
+  #open-about{order:2}
+  .brand-t{font-size:18px}
+  .seg.species button{min-height:46px;padding:0 20px}
+  .row2{display:flex;width:100%;gap:8px;align-items:center;justify-content:space-between;order:3}
+  .seg button{padding:0 12px;font-size:13.5px}
+  .seg.species{flex:none}
+  .pane-in{padding:14px 14px 24px}
+}
+@media (max-width:380px){
+  .seg button{padding:0 9px;font-size:13px;gap:5px}
+  .seg.species button{padding:0 14px}
+  .place-add{min-width:76px;padding:0 6px;font-size:13px}
+  .place-no{display:none}
+  .place-main{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:899px) and (max-height:520px){
+  .top-in{flex-wrap:nowrap;gap:10px;padding:4px 12px}
+  .brand{margin-right:0}
+  .row2{width:auto;flex:1;order:2;justify-content:flex-end;gap:12px}
+  #open-about{order:3}
+  .seg.species button{min-height:44px}
+  .map-pane{min-height:300px}
+}
+@media (min-width:900px){.row2{display:contents}.top-in .seg.species{margin-left:8px}.top-in .seg.neutral{margin-left:auto}.brand{margin-right:0}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .pin-glow{opacity:.22;transform:scale(1.2)}
+}
+</style>
+</head>
+<body data-species="sakura" data-theme="day">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="g-sakura" viewBox="0 0 24 24">
+      <g>
+        <path id="g-petal" d="M12 11.6C7.7 9.5 8 4.2 11 2.3l1 1.3 1-1.3c3 1.9 3.3 7.2-1 9.3z"/>
+        <use href="#g-petal" transform="rotate(72 12 12)"/>
+        <use href="#g-petal" transform="rotate(144 12 12)"/>
+        <use href="#g-petal" transform="rotate(216 12 12)"/>
+        <use href="#g-petal" transform="rotate(288 12 12)"/>
+      </g>
+    </symbol>
+    <symbol id="g-ginkgo" viewBox="0 0 24 24">
+      <path d="M12.6 22h-1.2l-.5-7.6C5.4 13.5 2.6 8.8 3.4 4.6c3-1.4 6.4-.4 8.6 3 2.2-3.4 5.6-4.4 8.6-3 .8 4.2-2 8.9-7.5 9.8z"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">跳到主要內容</a>
+<noscript><p style="padding:16px;background:#fff3cd;color:#26221f">此網站的地圖、搜尋與路線功能需要啟用 JavaScript。</p></noscript>
+
+<div class="shell">
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#main" aria-label="東京物候散策">
+      <span class="seal" lang="ja" aria-hidden="true">物候</span>
+      <span><h1 class="brand-t" lang="ja">物候散策</h1><span class="brand-s">東京　櫻花・銀杏　情報地圖</span></span>
+    </a>
+    <div class="row2">
+      <div class="seg species" role="group" aria-label="物候切換">
+        <button type="button" id="sp-sakura" data-sp="sakura" aria-pressed="true"><svg class="gl" aria-hidden="true"><use href="#g-sakura"/></svg>櫻花</button>
+        <button type="button" id="sp-ginkgo" data-sp="ginkgo" aria-pressed="false"><svg class="gl" aria-hidden="true"><use href="#g-ginkgo"/></svg>銀杏</button>
+      </div>
+      <div class="seg neutral" role="group" aria-label="色彩主題">
+        <button type="button" data-theme-btn="day" aria-pressed="true">日間明亮</button>
+        <button type="button" data-theme-btn="night" aria-pressed="false">夜間夜櫻</button>
+      </div>
+    </div>
+    <button type="button" class="linkbtn" id="open-about" aria-haspopup="dialog">關於與引用</button>
+  </div>
+</header>
+
+<main id="main" class="app" data-view="map">
+  <div class="tabs" role="tablist" aria-label="檢視切換">
+    <button type="button" role="tab" id="tab-map" aria-controls="pane-map" aria-selected="true">地圖</button>
+    <button type="button" role="tab" id="tab-list" aria-controls="pane-list" aria-selected="false" tabindex="-1">景點清單<span class="n" id="n-list">8</span></button>
+    <button type="button" role="tab" id="tab-route" aria-controls="pane-route" aria-selected="false" tabindex="-1">散步路線<span class="n" id="n-route">0</span></button>
+  </div>
+
+  <section class="pane" id="pane-list" role="tabpanel" aria-labelledby="tab-list">
+    <div class="pane-in">
+      <h2 class="h2">東京八處物候景點</h2>
+      <div class="notice" id="notice"></div>
+      <div class="field">
+        <svg class="mag ic" aria-hidden="true"><use href="#i-search"/></svg>
+        <input type="search" id="q" aria-label="搜尋景點" placeholder="搜尋名稱、日文原名、區域、樹種" autocomplete="off" enterkeyhint="search">
+        <button type="button" class="clr" id="q-clear" aria-label="清除搜尋文字" hidden><svg class="ic" aria-hidden="true" width="18" height="18"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="flt">
+        <label><span>區域</span><select id="f-area"></select></label>
+        <label><span>物候狀態</span><select id="f-stage"></select></label>
+      </div>
+      <div class="res"><span id="res-n" role="status" aria-live="polite"></span><button type="button" class="linkbtn" id="clear-f" hidden>清除篩選</button></div>
+      <ul class="plist" id="plist"></ul>
+      <div id="empty" class="empty" hidden></div>
+      <details class="ref" id="ref"><summary id="ref-sum">東京全域參考（氣象廳，非景點現況）</summary><div class="ref-b" id="ref-b"></div></details>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-route" role="tabpanel" aria-labelledby="tab-route">
+    <div class="pane-in">
+      <h2 class="h2">散步路線</h2>
+      <p class="hint">在景點清單、詳情卡按「加入路線」，順序即為行走順序。下方距離是依近似座標計算的直線距離（估算），不是實際步行路徑。</p>
+      <div id="route-empty" class="empty" style="padding-top:20px"><strong>尚未加入任何景點</strong>從「景點清單」或地圖上的詳情卡加入至少兩處，就能估算距離並在地圖上畫出虛線路線。<br><button type="button" class="btn" id="go-list" style="margin-top:14px">前往景點清單</button></div>
+      <ol class="stops" id="stops"></ol>
+      <div class="total" id="total" hidden>
+        <div class="lbl">總步程｜直線距離（估算）</div>
+        <div class="num" id="total-n"></div>
+        <p id="total-note"></p>
+      </div>
+      <div class="nav-box">
+        <label><span>自訂起點（選填）</span><input type="text" id="origin" placeholder="例：新宿駅、東京駅丸の内口，或街道地址" autocomplete="off"></label>
+        <div class="nav-act">
+          <a class="btn primary" id="nav-go" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true">開始導航（Google 地圖・步行）</a>
+          <button type="button" class="btn" id="route-clear" hidden>清空路線</button>
+        </div>
+        <p id="nav-hint"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="map-pane" id="pane-map" role="tabpanel" aria-labelledby="tab-map">
+    <div id="map" role="region" aria-label="東京物候地圖"></div>
+    <div class="map-legend" id="legend" aria-label="圖例"></div>
+    <div class="map-notice" id="map-notice" role="status" hidden><b>地圖圖資暫時無法載入。</b>可能是離線或圖磚被封鎖；景點清單、搜尋、篩選與散步路線仍可正常使用。</div>
+    <div class="map-fallback" id="map-fallback" role="status" hidden><b>地圖元件無法載入</b>Leaflet 或 OpenStreetMap 圖資目前連不上（可能離線或被封鎖）。請改用左側的景點清單：選取景點即可查看詳情，路線距離與 Google 地圖導航連結不受影響。</div>
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="false" aria-labelledby="dr-title" tabindex="-1" aria-hidden="true"></aside>
+  </section>
+</main>
+</div>
+
+<footer class="foot" id="footer">
+  <div class="foot-in">
+    <div>
+      <h2>聲明</h2>
+      <p class="disclaimer">本網站為前端介面設計與物候資訊架構之教學研究展示，純屬非營利性質，非各景點管理單位或地圖服務之官方網站。現場開放時間與即時葉況請以各管理機關最新公告為準。</p>
+      <p class="fine">景點資料盤點日：銀杏 2026-10-02、櫻花樹種查證 2026-10-09。所有景點的當季現況皆為「待核對」。</p>
+      <p style="margin-top:8px"><button type="button" class="linkbtn" data-open-about style="padding:0;min-height:44px">開啟「關於與引用」</button></p>
+    </div>
+    <div>
+      <h2>資料參考來源</h2>
+      <ul id="foot-src"></ul>
+    </div>
+    <div>
+      <h2>地圖與授權</h2>
+      <ul>
+        <li>地圖圖磚：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a></li>
+        <li>地圖程式庫：<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet 1.9.4</a>（BSD-2-Clause）</li>
+        <li>字型：Google Fonts（Noto Sans TC、Zen Kaku Gothic New、Shippori Mincho，SIL OFL）</li>
+        <li>步行導航：僅產生 Google 地圖連結，不使用其 API 或金鑰</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-t"></span><button type="button" id="toast-a" hidden></button></div>
+
+<dialog id="about" aria-labelledby="about-t">
+  <div class="dlg-h"><h2 id="about-t">關於與引用</h2><button type="button" class="dr-close" id="about-x" aria-label="關閉「關於與引用」"><svg class="ic" aria-hidden="true" width="18" height="18"><use href="#i-x"/></svg></button></div>
+  <div class="dlg-b" id="about-b"></div>
+</dialog>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* ============================================================
+   東京物候散策：資料、狀態機與互動（純前端，無後端、無金鑰）
+   ============================================================ */
+const AUDITED = { sakura: '2026-10-09', ginkgo: '2026-10-02' };
+
+/* 物候生命週期（依簡報）：key 僅供程式使用，ja 為畫面顯示名稱 */
+const STAGES = {
+  sakura: [
+    { k: 'tsubomi', ja: 'つぼみ', zh: '花苞' },
+    { k: 'kaika', ja: '開花', zh: '開始綻放' },
+    { k: 'gobu', ja: '5分咲き', zh: '約五成盛開' },
+    { k: 'mikagoro', ja: '見頃', zh: '最佳觀賞期' },
+    { k: 'chiri', ja: '散り始め', zh: '開始落花' },
+    { k: 'hazakura', ja: '葉桜', zh: '花謝長出新葉' }
+  ],
+  ginkgo: [
+    { k: 'aoba', ja: '青葉', zh: '葉仍翠綠' },
+    { k: 'irozuki', ja: '色づき始め', zh: '開始轉黃' },
+    { k: 'koyo', ja: '黄葉進行', zh: '黃葉持續擴大' },
+    { k: 'mikagoro', ja: '見頃', zh: '最佳觀賞期' },
+    { k: 'ochiba0', ja: '落葉始め', zh: '開始落葉' },
+    { k: 'ochiba', ja: '落葉', zh: '葉片大多落盡' }
+  ]
+};
+const SP = {
+  sakura: { zh: '櫻花', tree: 'サクラ', words: '櫻花 樱花 桜 さくら サクラ sakura cherry blossom ソメイヨシノ 染井吉野' },
+  ginkgo: { zh: '銀杏', tree: 'イチョウ', words: '銀杏 银杏 いちょう イチョウ ginkgo 黃葉 黄葉 紅葉' }
+};
+const PENDING_LABEL = '當季現況待核對';
+const pend = () => ({ sakura: { stage: 'pending', obs: null }, ginkgo: { stage: 'pending', obs: null } });
+
+const L_TPA = 'https://www.tokyo-park.or.jp/park/';
+const L_KEN = 'https://www.kensetsu.metro.tokyo.lg.jp/jimusho/toubuk/ueno/';
+const L_GAIEN = 'https://www.meijijingugaien.jp/';
+const L_SHOWA = 'https://www.showakinen-koen.jp/';
+const L_FNG = 'https://fng.or.jp/shinjuku/';
+
+const SPOTS = [
+  {
+    id: 'ueno', op: '東京都建設局（管理單位）／東京都公園協會（資訊頁）', zh: '上野恩賜公園', ja: '上野恩賜公園', kana: 'うえのおんしこうえん', en: 'Ueno Onshi Park', alias: ['上野公園', 'ueno park'],
+    ward: { zh: '台東區', ja: '台東区' }, area: '台東區', nav: '上野恩賜公園 東京都台東区',
+    pos: { lat: 35.713, lng: 139.7724, label: '公園中心（概略點）', basis: '取 OpenStreetMap、維基百科、Weathernews 三處座標的代表點，各來源相差最大約 175 m；園區約 54 公頃，未對應特定步道。' },
+    info: { hours: '東京都公園協會頁面：常時開園；東京都建設局頁面：午前5時〜午後11時（時間外は立入禁止）。兩者不一致，出發前請向管理單位確認。', closed: '無休（各設施年末年始休業）', fee: '免費（部分設施收費）', access: 'JR・東京 Metro「上野」站步行約 2 分；京成「京成上野」站步行約 1 分', src: L_TPA + 'ueno/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（官方公園案內列約 1,200 本）',
+        note: '東京都建設局的公園案內在「主な植物」寫有サクラ（約1200本），公園見どころ頁稱上野公園為「日本を代表する桜の名所」。',
+        general: [{ t: '官方「植物のカレンダー」寫上野の山自江戶時代起就是「桜の名所」，賞櫻季人出延べ約 330 萬人（頁面更新日 2023-03-04，為歷年概況）。', u: L_KEN + 'midokoro/shizen' }],
+        past: [],
+        links: [{ t: '東京都建設局｜上野恩賜公園 公園案內（主な植物）', u: L_KEN + 'kouenannai' }, { t: '東京都公園協會｜上野恩賜公園', u: L_TPA + 'ueno/' }, { t: '東京都建設局｜公園の見どころ（自然）', u: L_KEN + 'midokoro/shizen' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（官方公園案內「主な植物」）',
+        note: '公園案內「主な植物」列有イチョウ；園內具體位置官方頁面未載，故針點只代表園區概略位置。',
+        general: [{ t: '官方「植物のカレンダー」：イチョウ「11月下旬から12月中旬が紅葉の見頃」（頁面更新日 2023-03-04，為歷年目安，不是今年現況）。', u: L_KEN + 'midokoro/shizen' }],
+        past: [],
+        links: [{ t: '東京都建設局｜上野恩賜公園 公園案內（主な植物）', u: L_KEN + 'kouenannai' }, { t: '東京都建設局｜植物のカレンダー（紅葉）', u: L_KEN + 'midokoro/shizen' }, { t: '東京都公園協會｜上野恩賜公園', u: L_TPA + 'ueno/' }] }
+    },
+    status: pend(),
+    crowd: {
+      sakura: [{ t: '官方頁面寫賞櫻季「延べ330万人近い人出」（頁面更新日 2023-03-04）。這是歷年統計，不是今年的人潮預測。', u: L_KEN + 'midokoro/shizen' }],
+      ginkgo: []
+    }
+  },
+  {
+    id: 'shinjuku', op: '環境省（管理單位）／一般財團法人國民公園協會', zh: '新宿御苑', ja: '新宿御苑', kana: 'しんじゅくぎょえん', en: 'Shinjuku Gyoen National Garden', alias: ['新宿御院', 'shinjuku gyoen'],
+    ward: { zh: '新宿區', ja: '新宿区' }, area: '新宿區', nav: '新宿御苑 東京都新宿区',
+    pos: { lat: 35.6867, lng: 139.7126, label: '大温室周邊（官方季節情報提到的銀杏賞景點）', basis: '取自大温室建築物位置，官方稱銀杏在「温室近く」；僅 OpenStreetMap 單一座標來源，實際樹位誤差約數十公尺。園區約 58 公頃。' },
+    info: { hours: '9:00–16:30（最終入園 16:00；10/1–3/14 的時間）', closed: '週一（遇假日順延至翌平日）、12/29–1/3；秋の特別開園 11/1–11/15 無休', fee: '一般 500 日圓；65 歲以上與高中生以上學生 250 日圓；國中生以下免費', access: '新宿門：新宿駅南口步行約 10 分，或地鐵新宿御苑前駅 1 號出口步行約 5 分', src: L_FNG + 'guide/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（官方稱約 70 品種、約 900 本）',
+        note: '環境省「庭園のみどころ 桜」寫「約70品種約900本の桜」，從早咲き到遅咲きまで長く楽しめる。針點取自大温室，不代表櫻花集中處。',
+        general: [{ t: '官方一般說明：早咲きのカンザクラ類は2月〜3月上旬、ソメイヨシノは3月下旬に咲き始め、八重桜は4月中旬が見頃（無年份的一般說明，不是當季觀測）。', u: 'https://policies.env.go.jp/national-garden/shinjukugyoen/highlights/sakura/' }],
+        past: [],
+        links: [{ t: '環境省｜新宿御苑 庭園のみどころ「桜」', u: 'https://policies.env.go.jp/national-garden/shinjukugyoen/highlights/sakura/' }, { t: '國民公園協會｜新宿御苑', u: L_FNG }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（園內各處，溫室附近為攝影熱點）',
+        note: '國民公園協會 2025-11-28 的季節情報寫「園内各所でイチョウがみごろ」，並說溫室附近枝條低、是人氣攝影點。',
+        general: [{ t: '官方「季節のみどころ」月別表：11月＝紅葉（イチョウ、プラタナスなど）（無年份的一般說明）。', u: L_FNG + 'place/season' }],
+        past: [{ d: '2025-11-28', t: '「園内各所でイチョウがみごろ。大木を一面に黄色が覆い、写真映えします」（季節のみどころ情報【11月28日号】）', u: L_FNG + '2025/11/28/20251128_03/' }],
+        links: [{ t: '國民公園協會｜季節のみどころ情報【11月28日号】', u: L_FNG + '2025/11/28/20251128_03/' }, { t: '國民公園協會｜季節のみどころ（月別）', u: L_FNG + 'place/season' }, { t: '環境省｜新宿御苑', u: 'https://policies.env.go.jp/national-garden/shinjukugyoen/index.html' }] }
+    },
+    status: pend(),
+    crowd: {
+      sakura: [], ginkgo: [],
+      common: [
+        { t: '官方公告（2026-10-01）：大木戸門周邊因工程，2026-10-06 至 11 月下旬（預定）有通行管制，園路較窄；機車請停新宿門。', u: L_FNG + '2026/10/01/20261001-01/' },
+        { t: '官方公告：早朝開園日（7:00 開園，7:00–9:00 僅新宿門開放）為 10/11、10/25、11/8、12/13；秋の特別開園 11/1–11/15 期間無休。', u: L_FNG + '2026/09/25/20260925-03/' }
+      ]
+    }
+  },
+  {
+    id: 'gaien', op: '明治神宮外苑（官方網站）', zh: '明治神宮外苑', ja: '明治神宮外苑', kana: 'めいじじんぐうがいえん', en: 'Meiji Jingu Gaien', alias: ['神宮外苑', '外苑いちょう並木', '銀杏大道', '銀杏並木', 'いちょう並木'],
+    ward: { zh: '新宿區', ja: '新宿区' }, area: '新宿區', nav: '明治神宮外苑 いちょう並木 東京都',
+    pos: { lat: 35.6739, lng: 139.7199, label: 'いちょう並木 並木中點', basis: '取並木本身的中點；與 OpenStreetMap、Weathernews 等三個來源相差皆在 150 m 內。官方稱並木從青山通り口到外苑中央広場円周道路約 300 m。' },
+    info: { hours: '官方頁面未載', closed: '官方頁面未載', fee: '官方頁面未載', access: 'JR 信濃町、千駄ケ谷站；東京 Metro 外苑前、青山一丁目站；都營大江戶線國立競技場站（官方交通頁未載步行時間）', src: L_GAIEN + 'information/access-map.html' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（外苑便り提到染井吉野、大島桜、枝垂桜）',
+        note: '官方「外苑便り」（2023-03-24）寫「神宮外苑のサクラも満開になりました」，並提到大島桜與枝垂桜；2024-04-04 的文章稱櫻花在「点在するそれぞれの場所で」開花。針點取自銀杏並木，不代表櫻花位置。',
+        general: [],
+        past: [
+          { d: '2023-03-24', t: '「サクラ満開」：東京で桜（染井吉野）が満開と発表…神宮外苑のサクラも満開になりました。', u: L_GAIEN + 'gaien-news/_2023/032436.html' },
+          { d: '2024-04-04', t: '「外苑の桜の魅力」：外苑の桜も咲き始め、点在するそれぞれの場所で満開となっています。', u: L_GAIEN + 'gaien-news/2024/040400.html' }
+        ],
+        links: [{ t: '明治神宮外苑｜外苑便り「サクラ満開」2023-03-24', u: L_GAIEN + 'gaien-news/_2023/032436.html' }, { t: '明治神宮外苑｜外苑便り「外苑の桜の魅力」2024-04-04', u: L_GAIEN + 'gaien-news/2024/040400.html' }, { t: '明治神宮外苑｜外苑便り 一覽', u: L_GAIEN + 'gaien-news/' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（並木約 300 m、146 本，官方歷史數字）',
+        note: '官方「いちょう並木の春夏秋冬」寫青山口から円周道路まで約300 m、146本（歷史數字，不保證 2026 現況）；本站查核至 2026-10-09，官方外苑便り沒有 2022 年之後的銀杏葉況貼文。',
+        general: [],
+        past: [{ d: '2022-11-17', t: '「イチョウ並木が見頃です。」：明治神宮外苑ではイチョウ並木が見頃を迎えております。（外苑便り）', u: L_GAIEN + 'gaien-news/2022/111734.html' }],
+        links: [{ t: '明治神宮外苑｜いちょう並木の春夏秋冬', u: L_GAIEN + 'walk/sight/season.html' }, { t: '明治神宮外苑｜外苑便り「イチョウ並木が見頃です」2022-11-17', u: L_GAIEN + 'gaien-news/2022/111734.html' }, { t: '明治神宮外苑｜外苑便り 一覽', u: L_GAIEN + 'gaien-news/' }] }
+    },
+    status: pend(),
+    crowd: { sakura: [], ginkgo: [] }
+  },
+  {
+    id: 'yoyogi', op: '東京都公園協會（官方公園頁）', zh: '代代木公園', ja: '代々木公園', kana: 'よよぎこうえん', en: 'Yoyogi Park', alias: ['代々木公園', '代代木', '代々木', 'yoyogi park'],
+    ward: { zh: '澀谷區', ja: '渋谷区' }, area: '澀谷區', nav: '代々木公園 東京都渋谷区',
+    pos: { lat: 35.6717, lng: 139.6965, label: '公園中心（概略點）', basis: '公園整體的代表點，三個來源相差最大約 122 m；園區約 54 公頃，官方頁面未載觀賞樹列的位置。' },
+    info: { hours: '常時開園', closed: '無休；神南一丁目地區不屬東京都公園協會管理', fee: '免費（部分設施收費）', access: 'JR「原宿」站步行約 3 分；東京 Metro 千代田線「代々木公園」站步行約 3 分', src: L_TPA + 'yoyogi/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（ソメイヨシノ）',
+        note: '官方「主な植物」寫有「サクラ（ソメイヨシノ）」，「花の見ごろ情報」春季列有ソメイヨシノ與カワヅザクラ。',
+        general: [{ t: '官方「花の見ごろ情報」只標示季節：春＝コブシ、ソメイヨシノ、ハナミズキ…（無日期、無階段）。', u: L_TPA + 'yoyogi/' }],
+        past: [], links: [{ t: '東京都公園協會｜代々木公園', u: L_TPA + 'yoyogi/' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ',
+        note: '官方「花の見ごろ情報」秋季列有イチョウ，但未指出園內位置，針點只代表園區概略位置。',
+        general: [{ t: '官方「花の見ごろ情報」只標示季節：秋＝イチョウ、キンモクセイ、イロハモミジ…（無日期、無階段）。', u: L_TPA + 'yoyogi/' }],
+        past: [], links: [{ t: '東京都公園協會｜代々木公園', u: L_TPA + 'yoyogi/' }] }
+    },
+    status: pend(),
+    crowd: {
+      sakura: [], ginkgo: [],
+      common: [{ t: '官方交通案內：「土・日・祝のご来園は、公園前の道路が混雑しますので、公共交通機関をご利用ください」；請勿在公道上排隊等候停車場入庫。', u: L_TPA + 'yoyogi/' }]
+    }
+  },
+  {
+    id: 'showa', op: '國營昭和記念公園（官方網站）', zh: '昭和紀念公園', ja: '国営昭和記念公園', kana: 'こくえいしょうわきねんこうえん', en: 'Showa Kinen Park', alias: ['國營昭和紀念公園', '昭和記念公園', '昭和紀念', 'showa kinen', 'カナール', 'かたらいのイチョウ並木', '立川'],
+    ward: { zh: '立川市・昭島市', ja: '立川市・昭島市' }, area: '立川市・昭島市', nav: '国営昭和記念公園 東京都立川市',
+    pos: { lat: 35.7028, lng: 139.4022, label: 'カナール（銀杏並木沿水路）', basis: 'OpenStreetMap 標有銀杏的樹列與官方「立川口徒步約 1 分」的敘述相符，三個物件互相一致。園區遼闊；官方列出的櫻花賞景處（桜の園・旧桜の園，花木園內）另有所在，此針點不代表櫻花位置。' },
+    info: { hours: '10 月：收費區與免費區 9:30–17:00（みどりの文化ゾーン 8:30–17:00）；11–2 月 9:30–16:30', closed: '12/31、1/1、1 月第 3 個週一至週五；天候不佳可能臨時休園', fee: '高中生以上 450 日圓；65 歲以上 210 日圓；國中生以下免費', access: 'JR 青梅線「西立川」站公園口步行約 2 分；JR「立川」站北口步行約 10 分（あけぼの口）', src: L_SHOWA + 'park-information/schedule/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（31 品種、約 1,500 本；半數為ソメイヨシノ）',
+        note: '官方「花の情報」寫「31品種・約1500本のサクラ」，主要賞景處為桜の園・旧桜の園（花木園內）。針點取自カナール，不代表櫻花位置。',
+        general: [{ t: '官方「花の情報」：サクラ「3月下旬～4月中旬」，桜の園・旧桜の園（花木園內）など（一般時期說明，不是當季觀測）。', u: L_SHOWA + 'flower-information/' }],
+        past: [], links: [{ t: '國營昭和記念公園｜花の情報', u: L_SHOWA + 'flower-information/' }, { t: '國營昭和記念公園｜花だより（每週現況入口）', u: L_SHOWA + 'hanadayori/' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（カナール 106 本、かたらいのイチョウ並木 98 本）',
+        note: '官方「秋の夜散歩」頁：カナール イチョウ106本 全長150 m、かたらいのイチョウ並木 イチョウ98本 全長300 m；「花の情報」頁則寫カナール 200 m（兩頁不一致）。',
+        general: [{ t: '官方「花の情報」：イチョウ（黄葉）「10月下旬～11月下旬」；「秋の夜散歩」頁：かたらい 色づき11月中旬～下旬、カナール 色づき11月上旬～中旬（一般時期說明，不是當季觀測）。', u: L_SHOWA + 'autumn-night-walk/' }],
+        past: [], links: [{ t: '國營昭和記念公園｜花の情報', u: L_SHOWA + 'flower-information/' }, { t: '國營昭和記念公園｜黄葉・紅葉まつり＆秋の夜散歩2026', u: L_SHOWA + 'autumn-night-walk/' }, { t: '國營昭和記念公園｜花だより（每週現況入口）', u: L_SHOWA + 'hanadayori/' }] }
+    },
+    status: pend(),
+    crowd: {
+      sakura: [],
+      ginkgo: [{ t: '官方「黄葉・紅葉まつり＆秋の夜散歩2026」（2026-10-29 至 11-29）夜間入退園僅限「西立川口」「立川口」；砂川口等其他入口與自行車道夜間不可使用。', u: L_SHOWA + 'autumn-night-walk/' }]
+    }
+  },
+  {
+    id: 'shiba', op: '東京都公園協會（官方公園頁）', zh: '芝公園', ja: '芝公園', kana: 'しばこうえん', en: 'Shiba Park', alias: ['増上寺', 'shiba park'],
+    ward: { zh: '港區', ja: '港区' }, area: '港區', nav: '芝公園 東京都港区',
+    pos: { lat: 35.6555, lng: 139.748, label: '公園中心（概略點）', basis: '環狀公園整體的代表點，各來源相差最大約 332 m；官方頁面沒有寫銀杏與櫻花的具體位置。もみじ谷是楓樹區，不是銀杏。' },
+    info: { hours: '常時開園', closed: '無休（各設施年末年始休業）', fee: '免費（部分設施收費）', access: '都營三田線「芝公園」站步行約 2 分；JR「浜松町」站步行約 12 分', src: L_TPA + 'siba/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（品種官方未載）',
+        note: '官方「主な植物」與「花の見ごろ情報」春季都列有サクラ，但未指出品種與位置。',
+        general: [{ t: '官方「花の見ごろ情報」只標示季節：春＝サクラ、ヤマブキ、ボケ…（無日期、無階段）。', u: L_TPA + 'siba/' }],
+        past: [], links: [{ t: '東京都公園協會｜芝公園（網址為 siba）', u: L_TPA + 'siba/' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（大木，位置官方未載）',
+        note: '官方公園說明寫「クスノキ、ケヤキ、イチョウなどの大木がところどころにあります」，未指出位置；「もみじ谷」是楓樹區，與銀杏無關。',
+        general: [{ t: '官方「花の見ごろ情報」只標示季節：秋＝ヒガンバナ、イチョウ、キンモクセイ、モミジ、ケヤキ（無日期、無階段）。', u: L_TPA + 'siba/' }],
+        past: [], links: [{ t: '東京都公園協會｜芝公園（網址為 siba）', u: L_TPA + 'siba/' }] }
+    },
+    status: pend(),
+    crowd: { sakura: [], ginkgo: [] }
+  },
+  {
+    id: 'hibiya', op: '東京都公園協會（官方公園頁）', zh: '日比谷公園', ja: '日比谷公園', kana: 'ひびやこうえん', en: 'Hibiya Park', alias: ['首賭けイチョウ', '首掛銀杏', 'hibiya park'],
+    ward: { zh: '千代田區', ja: '千代田区' }, area: '千代田區', nav: '日比谷公園 東京都千代田区',
+    pos: { lat: 35.6737, lng: 139.7559, label: '首賭けイチョウ（松本楼付近・概略）', basis: '依 OpenStreetMap 的導覽牌與松本楼位置推算，精度約 ±50–100 m，僅單一座標來源。' },
+    info: { hours: '常時開園（服務中心 8:30–17:30）', closed: '無休；官方頁面標示部分區域因再生整備工事不可進入', fee: '免費（部分設施收費）', access: '東京 Metro「霞ケ関」「日比谷」站出口即達', src: L_TPA + 'hibiya/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（品種官方未載）',
+        note: '官方「花の見ごろ情報」春季列有サクラ，但未指出品種與位置；針點取自首賭けイチョウ，不代表櫻花位置。',
+        general: [{ t: '官方「花の見ごろ情報」只標示季節：春＝サクラ、ツツジ、ハナミズキ、バラ（無日期、無階段）。', u: L_TPA + 'hibiya/' }],
+        past: [], links: [{ t: '東京都公園協會｜日比谷公園', u: L_TPA + 'hibiya/' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（首賭けイチョウ，推定樹齡 400–500 年）',
+        note: '官方「見どころ」介紹首賭けイチョウ：推定樹齢400〜500年、幹周り7 m，是園內的象徵樹；官方文字沒有寫園內位置。',
+        general: [],
+        past: [], links: [{ t: '東京都公園協會｜日比谷公園（見どころ：首賭けイチョウ）', u: L_TPA + 'hibiya/' }] }
+    },
+    status: pend(),
+    crowd: {
+      sakura: [], ginkgo: [],
+      common: [{ t: '官方頁面標示：公園進行再生整備工事，大噴水・噴水広場與小音楽堂周邊等部分區域「立ち入れません」。', u: L_TPA + 'hibiya/' }]
+    }
+  },
+  {
+    id: 'hikari', op: '東京都公園協會（官方公園頁）', zh: '光之丘公園', ja: '光が丘公園', kana: 'ひかりがおかこうえん', en: 'Hikarigaoka Park', alias: ['光が丘', '光之丘', '光ヶ丘', 'hikarigaoka park'],
+    ward: { zh: '練馬區', ja: '練馬区' }, area: '練馬區', nav: '光が丘公園 東京都練馬区',
+    pos: { lat: 35.7648, lng: 139.6295, label: 'いちょう並木（観賞池と売店の間・概略）', basis: '依官方文字「公園中央（売店と観賞池の間）」加上 OpenStreetMap 的池塘與商店位置推算；精度約 ±100 m，僅單一座標來源。' },
+    info: { hours: '常時開園', closed: '無休；屋敷森跡地週一休園', fee: '免費（部分設施收費）', access: '都營大江戶線「光が丘」站步行約 8 分', src: L_TPA + 'hikarigaoka/' },
+    trees: {
+      sakura: { state: 'confirmed', tree: 'サクラ（ソメイヨシノ 等）',
+        note: '官方寫芝生広場有「サクラやケヤキが点在」，「春には美しいサクラの風景が楽しめます」；「花の見ごろ情報」春季列有サクラ、ソメイヨシノ。針點取自銀杏並木，不代表櫻花位置。',
+        general: [{ t: '官方「花の見ごろ情報」只標示季節：春＝サクラ、コブシ、ソメイヨシノ、ハナミズキ…（無日期、無階段）。', u: L_TPA + 'hikarigaoka/' }],
+        past: [], links: [{ t: '東京都公園協會｜光が丘公園', u: L_TPA + 'hikarigaoka/' }] },
+      ginkgo: { state: 'confirmed', tree: 'イチョウ（いちょう並木 28 本、ふれあいの径 40 本）',
+        note: '官方「見どころ」：「いちょう並木」在公園中央（売店と観賞池の間），移植自グラントハイツ的イチョウ28本，「秋の黄葉は見事です」；「ふれあいの径」是從有楽町舊都廳舍前移植、樹齡逾百年的巨木40本。',
+        general: [],
+        past: [], links: [{ t: '東京都公園協會｜光が丘公園（見どころ：いちょう並木）', u: L_TPA + 'hikarigaoka/' }] }
+    },
+    status: pend(),
+    crowd: { sakura: [], ginkgo: [] }
+  }
+];
+const BY_ID = Object.fromEntries(SPOTS.map(s => [s.id, s]));
+
+/* 氣象廳東京觀測（全域參考，標為過去紀錄；不代表各景點） */
+const JMA = {
+  sakura: {
+    rows: [['2026 年 開花日', '3 月 19 日（平年值 3 月 24 日）'], ['2026 年 満開日', '3 月 28 日（平年值 3 月 31 日）']],
+    note: '以上是已結束的 2026 春季「過去紀錄」。氣象廳以東京的標本木（靖國神社境內）單一站點觀測，不代表各景點的花況。',
+    links: [{ t: '氣象廳｜2026年のさくらの開花状況', u: 'https://www.data.jma.go.jp/sakura/data/sakura_kaika.html' }, { t: '氣象廳｜2026年のさくらの満開状況', u: 'https://www.data.jma.go.jp/sakura/data/sakura_mankai.html' }, { t: '靖國神社｜境内案内（標本木）', u: 'https://www.yasukuni.or.jp/precincts/map.html' }]
+  },
+  ginkgo: {
+    rows: [['2025 年 黃葉日', '11 月 22 日（平年值 11 月 23 日）'], ['2025 年 落葉日', '12 月 4 日（平年值 12 月 3 日）'], ['2026 年', '尚未觀測（氣象廳頁面顯示「///」）']],
+    note: '2025 年為「過去紀錄」。氣象廳以東京單一站點觀測，黃葉日是標本木整體大致轉黃的日子，不代表各景點的見頃。',
+    links: [{ t: '氣象廳｜いちょうの黄葉日', u: 'https://www.data.jma.go.jp/sakura/data/phn_012.html' }, { t: '氣象廳｜いちょうの落葉日', u: 'https://www.data.jma.go.jp/sakura/data/phn_013.html' }, { t: '氣象廳｜生物季節 累年值下載', u: 'https://www.data.jma.go.jp/sakura/data/download_ruinenchi.html' }]
+  }
+};
+
+/* 資料來源（頁尾與「關於與引用」共用） */
+const SRC_MAIN = [
+  { name: '東京都公園協會', ja: '公益財団法人東京都公園協会', u: 'https://www.tokyo-park.or.jp/', note: '上野、芝、日比谷、代々木、光が丘各公園頁面：園區介紹、植物、開園資訊與公告。官方一手資料。' },
+  { name: '日本氣象廳', ja: '気象庁', u: 'https://www.data.jma.go.jp/sakura/data/', note: '生物季節觀測：東京站さくら開花／満開、いちょう黄葉日／落葉日與平年值。單一站點的觀測，用於「東京全域參考」，不當作景點現況。',
+    more: [['いちょうの黄葉日', 'https://www.data.jma.go.jp/sakura/data/phn_012.html'], ['いちょうの落葉日', 'https://www.data.jma.go.jp/sakura/data/phn_013.html'], ['さくらの開花状況', 'https://www.data.jma.go.jp/sakura/data/sakura_kaika.html'], ['さくらの満開状況', 'https://www.data.jma.go.jp/sakura/data/sakura_mankai.html']] },
+  { name: 'tenki.jp', ja: '日本気象協会 tenki.jp', u: 'https://tenki.jp/kouyou/3/16/', note: '民間彙整的東京紅葉見頃資訊，另有櫻花開花資訊。僅列為交叉對照入口；本站不採用其階段或預測作為景點現況。',
+    more: [['櫻花開花情報', 'https://tenki.jp/sakura/']] },
+  { name: 'Weathernews', ja: 'ウェザーニュース', u: 'https://weathernews.jp/koyo/area/tokyo/', note: '民間氣象平台的東京紅葉情報，另有櫻花資訊。僅列為交叉對照入口；本站不採用其階段或預測作為景點現況。',
+    more: [['櫻花開花情報', 'https://weathernews.jp/sakura/']] }
+];
+const SRC_OTHER = [
+  { name: '東京都建設局 上野恩賜公園', u: L_KEN + 'index_top.html', note: '上野恩賜公園的管理單位頁面：主な植物（サクラ約1200本、イチョウ）、植物のカレンダー、開園時間。' },
+  { name: '國民公園協會 新宿御苑／環境省 新宿御苑', u: L_FNG, note: '季節のみどころ（含 2025-11-28 的銀杏見頃紀錄）、開園與公告；環境省頁面提供櫻花品種與本數。' },
+  { name: '國營昭和記念公園', u: L_SHOWA, note: '花の情報、花だより、黄葉・紅葉まつり＆秋の夜散歩2026。' },
+  { name: '明治神宮外苑', u: L_GAIEN, note: 'いちょう並木の春夏秋冬、外苑便り（2022 年銀杏、2023／2024 年櫻花的過去紀錄）。' },
+  { name: '課程教學資料表（Google 試算表）', u: 'https://docs.google.com/spreadsheets/d/1dx_41InyuuWuILc4ZHJW8tTZMVOCpIuSz-QzISzd7y0/edit?gid=164385659', note: '老師整理的來源清單與分級；本站景點座標與銀杏樹種證據出自其研究成果（盤點日 2026-09-29，2026-10-02 複核）。' }
+];
+const GOOGLE_MAPS = 'https://www.google.com/maps/dir/?api=1';
+
+/* ============================================================
+   狀態與工具函式
+   ============================================================ */
+const state = { sp: 'sakura', theme: 'day', q: '', area: 'all', stage: 'all', selected: null, drawer: null, route: [], view: 'map', origin: '' };
+const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MQ_DESK = window.matchMedia('(min-width: 900px)');
+const isDesk = () => MQ_DESK.matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* 把含假名的「…」引文標成日文，字形才正確 */
+const rich = s => esc(s).replace(/「([^」]*[぀-ヿ][^」]*)」/g, '「<span lang="ja">$1</span>」');
+const ja = s => '<span lang="ja">' + esc(s) + '</span>';
+const ext = (u, t) => '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + rich(t) + '<span class="sr">（另開新分頁）</span></a>';
+const norm = s => String(s).normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[\s　・･·\-‐—_,，、。]/g, '');
+
+function stageOf(spot, sp) {
+  const st = spot.status[sp];
+  if (!st || st.stage === 'pending') return { key: 'pending', css: 'pending', label: PENDING_LABEL, idx: -1 };
+  const i = STAGES[sp].findIndex(x => x.k === st.stage);
+  return { key: st.stage, css: (sp === 'sakura' ? 's' : 'g') + (i + 1), label: STAGES[sp][i].ja, idx: i };
+}
+const confirmed = (s, sp) => s.trees[sp].state === 'confirmed';
+function hay(s, sp) {
+  return norm([s.zh, s.ja, s.kana, s.en, s.ward.zh, s.ward.ja, s.area, s.alias.join(' '), SP[sp].words, SP[sp].tree, s.trees[sp].tree, stageOf(s, sp).label, '待核對'].join(' '));
+}
+function matches(s, f) {
+  const sp = state.sp;
+  if (!confirmed(s, sp)) return false;
+  if (f.area !== 'all' && s.area !== f.area) return false;
+  if (f.stage !== 'all' && stageOf(s, sp).key !== f.stage) return false;
+  if (f.q) {
+    const h = hay(s, sp);
+    const toks = String(f.q).split(/[\s　]+/).map(norm).filter(Boolean);
+    if (!toks.every(t => h.indexOf(t) !== -1)) return false;
+  }
+  return true;
+}
+const visibleSpots = () => SPOTS.filter(s => matches(s, state));
+
+/* Haversine：兩點間的球面直線距離（km） */
+function haversine(a, b) {
+  const R = 6371.0088, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function fmtDist(km) {
+  if (km < 1) return '約 ' + (Math.round(km * 100) * 10) + ' m';
+  return '約 ' + km.toFixed(1) + ' km';
+}
+const posOf = s => ({ lat: s.pos.lat, lng: s.pos.lng });
+
+/* ============================================================
+   地圖（Leaflet）。失敗時清單與其他功能照常運作
+   ============================================================ */
+let map = null, markerGroup = null, routeGroup = null, tiles = null;
+const markers = {};
+let lastSize = null, tileOk = 0, tileErr = 0, tileBlocked = 0, mapNoticeTimer = 0, fitTimer = 0;
+
+function pinHTML(s, i) {
+  const sp = state.sp, st = stageOf(s, sp);
+  const n = state.route.indexOf(s.id);
+  const sel = state.selected === s.id || state.drawer === s.id;
+  return '<span class="pin' + (sel ? ' is-sel' : '') + '" data-id="' + s.id + '" data-st="' + st.css + '" style="--d:-' + ((i * 0.9) % 4.4).toFixed(1) + 's">' +
+    '<span class="pin-glow"></span><span class="pin-bead"><svg aria-hidden="true"><use href="#g-' + sp + '"/></svg></span>' +
+    '<span class="pin-n">' + (n > -1 ? n + 1 : '') + '</span></span>';
+}
+function tipHTML(s) {
+  return '<strong>' + esc(s.zh) + '</strong>' + esc(SP[state.sp].zh) + '｜' + esc(stageOf(s, state.sp).label);
+}
+function markerLabel(s) {
+  return s.zh + '（' + s.ja + '），' + SP[state.sp].zh + '，' + stageOf(s, state.sp).label + '，近似位置。按 Enter 開啟詳情。';
+}
+const MAP_NOTICE = {
+  error: '<b>地圖圖資暫時無法載入。</b>可能是離線或圖磚被封鎖；景點清單、搜尋、篩選與散步路線仍可正常使用。',
+  blocked: '<b>OpenStreetMap 圖磚服務目前拒絕了這個頁面的請求（Access blocked）。</b>常見原因是直接以檔案開啟，或短時間內請求過多；景點清單、搜尋、篩選與散步路線仍可正常使用，稍後重新整理即可再試。'
+};
+function showMapNotice(kind) { const n = $('#map-notice'); n.innerHTML = MAP_NOTICE[kind]; n.hidden = false; }
+/* OSM 的「Access blocked」佔位圖左側有純黃（255,255,0）與近黑的斜紋：取樣左側 24 px，兩種像素都很多才判定 */
+function looksBlocked(img) {
+  try {
+    const w = img.naturalWidth || 256, h = img.naturalHeight || 256;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, 24, h).data; let y = 0, k = 0;
+    for (let i = 0; i < d.length; i += 4) { const r = d[i], gr = d[i + 1], b = d[i + 2]; if (r > 235 && gr > 235 && b < 50) y++; else if (r < 40 && gr < 40 && b < 40) k++; }
+    return y > 500 && k > 500;
+  } catch (e) { return false; }
+}
+function initMap() {
+  if (typeof L === 'undefined') { $('#map').hidden = true; $('#map-fallback').hidden = false; $('#legend').hidden = true; return; }
+  try {
+    map = L.map('map', {
+      center: [35.69, 139.68], zoom: 10, zoomSnap: 0.5, zoomDelta: 1, minZoom: 8, maxZoom: 18,
+      trackResize: false, zoomControl: false, attributionControl: false,
+      zoomAnimation: !REDUCE, fadeAnimation: !REDUCE, markerZoomAnimation: !REDUCE
+    });
+    L.control.attribution({ prefix: '<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>' }).addTo(map);
+    L.control.zoom({ position: 'bottomleft', zoomInTitle: '放大地圖', zoomOutTitle: '縮小地圖' }).addTo(map);
+    tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 3, crossOrigin: true,
+      attribution: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>'
+    });
+    /* 頁面載入完成後才加入圖磚，圖磚伺服器慢時不會拖住整頁載入 */
+    const addTiles = () => {
+      tiles.addTo(map);
+      mapNoticeTimer = setTimeout(() => { if (tileOk === 0) showMapNotice('error'); }, 9000);
+    };
+    if (document.readyState === 'complete') addTiles(); else window.addEventListener('load', addTiles, { once: true });
+    /* 圖磚失敗時給友善訊息：連線失敗（tileerror），或 OSM 以 200 回傳「Access blocked」佔位圖（偵測左緣黃黑警示條紋） */
+    tiles.on('tileload', e => {
+      if (looksBlocked(e.tile)) {
+        tileBlocked++; e.tile.style.visibility = 'hidden';
+        if (tileBlocked >= 3 && tileOk < tileBlocked) showMapNotice('blocked');
+      } else { tileOk++; if (tileOk >= tileBlocked) $('#map-notice').hidden = true; }
+    });
+    tiles.on('tileerror', () => { tileErr++; if (tileOk === 0 && tileErr >= 4) showMapNotice('error'); });
+    markerGroup = L.layerGroup().addTo(map);
+    routeGroup = L.layerGroup().addTo(map);
+    map.on('zoomend', () => map.getContainer().classList.toggle('is-far', map.getZoom() < 11));
+    map.getContainer().classList.toggle('is-far', map.getZoom() < 11);
+    SPOTS.forEach((s, i) => {
+      const m = L.marker([s.pos.lat, s.pos.lng], {
+        icon: L.divIcon({ className: 'pin-wrap', html: pinHTML(s, i), iconSize: [46, 46], iconAnchor: [23, 23] }),
+        keyboard: true, riseOnHover: true
+      });
+      m.bindTooltip(tipHTML(s), { direction: 'top', offset: [0, -16], opacity: 1 });
+      m.on('click', () => openDrawer(s.id, { pin: true }));
+      markers[s.id] = m;
+    });
+    /* 鍵盤：Tab 聚焦 pin 顯示標籤，Enter／空白鍵展開詳情卡（Leaflet 不會替 divIcon 轉成 click） */
+    const mc = map.getContainer();
+    const pinId = t => { const el = t && t.closest ? t.closest('.leaflet-marker-icon') : null; const p = el && el.querySelector('.pin'); return p ? p.dataset.id : null; };
+    mc.addEventListener('focusin', e => { const id = pinId(e.target); if (id && markers[id]) markers[id].openTooltip(); });
+    mc.addEventListener('focusout', e => { const id = pinId(e.target); if (id && markers[id]) markers[id].closeTooltip(); });
+    mc.addEventListener('keydown', e => {
+      const id = pinId(e.target);
+      if (id && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openDrawer(id, { pin: true }); }
+    });
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => syncMapSize()).observe($('#map'));
+    window.addEventListener('resize', () => requestAnimationFrame(syncMapSize));
+    window.addEventListener('orientationchange', () => setTimeout(syncMapSize, 250));
+  } catch (err) {
+    map = null; $('#map').hidden = true; $('#map-fallback').hidden = false; $('#legend').hidden = true;
+    if (window.console) console.warn('map init failed', err);
+  }
+}
+function mapSized() { if (!map) return false; const c = map.getContainer(); return c.clientWidth > 0 && c.clientHeight > 0; }
+/* 容器尺寸大幅改變（> 25% 或方向翻轉）才重新取景；小幅變動（網址列）保持中心 */
+function syncMapSize() {
+  if (!mapSized()) return;
+  const c = map.getContainer(), w = c.clientWidth, h = c.clientHeight;
+  if (!lastSize) { map.invalidateSize({ animate: false }); lastSize = { w, h }; fitView(false); return; }
+  const dw = Math.abs(w - lastSize.w) / lastSize.w, dh = Math.abs(h - lastSize.h) / lastSize.h;
+  const flip = (w >= h) !== (lastSize.w >= lastSize.h);
+  const cached = map.getSize();   /* Leaflet 內部快取的尺寸（trackResize:false 時要自己更新） */
+  if (dw > 0.25 || dh > 0.25 || flip) { map.invalidateSize({ animate: false }); lastSize = { w, h }; fitView(false); }
+  else if (cached.x !== w || cached.y !== h) { map.invalidateSize({ animate: false }); }
+}
+function drawerPad() {
+  const dr = $('#drawer');
+  if (!state.drawer) return { r: 0, b: 0 };
+  return isDesk() ? { r: dr.offsetWidth, b: 0 } : { r: 0, b: dr.offsetHeight };
+}
+function fitView(animate) {
+  if (!mapSized()) return;
+  const pad = drawerPad(), base = 56;
+  const opts = { paddingTopLeft: [base, base + (isDesk() ? 0 : 40)], paddingBottomRight: [base + pad.r, base + pad.b], maxZoom: 15, animate: !!animate };
+  /* 1. 已展開詳情卡的景點：保持在視野內 */
+  if (state.drawer && markers[state.drawer] && markerGroup.hasLayer(markers[state.drawer])) {
+    const p = BY_ID[state.drawer];
+    map.panInside([p.pos.lat, p.pos.lng], { paddingTopLeft: [base, base], paddingBottomRight: [base + pad.r, base + pad.b], animate: !!animate });
+    return;
+  }
+  /* 2. 路線有 2 站以上：取景整條路線 */
+  if (state.route.length >= 2) {
+    map.fitBounds(L.latLngBounds(state.route.map(id => [BY_ID[id].pos.lat, BY_ID[id].pos.lng])), opts);
+    return;
+  }
+  /* 3. 其餘：目前顯示的全部景點 */
+  const pts = visibleSpots().map(s => [s.pos.lat, s.pos.lng]);
+  if (pts.length === 1) map.setView(pts[0], 14.5, { animate: !!animate });
+  else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts), opts);
+}
+function offsetTarget(ll, z) {
+  const pad = drawerPad();
+  if (!pad.r && !pad.b) return ll;
+  const p = map.project(ll, z).add([pad.r / 2, pad.b / 2]);
+  return map.unproject(p, z);
+}
+function flyToSpot(s) {
+  if (!mapSized()) return;
+  const z = 15, ll = L.latLng(s.pos.lat, s.pos.lng), target = offsetTarget(ll, z);
+  if (REDUCE) map.setView(target, z, { animate: false });
+  else map.flyTo(target, z, { duration: 1.6, easeLinearity: 0.25 });
+}
+function renderMarkers() {
+  if (!map) return;
+  const vis = new Set(visibleSpots().map(s => s.id));
+  SPOTS.forEach((s, i) => {
+    const m = markers[s.id];
+    if (!vis.has(s.id)) { if (markerGroup.hasLayer(m)) markerGroup.removeLayer(m); return; }
+    m.setIcon(L.divIcon({ className: 'pin-wrap', html: pinHTML(s, i), iconSize: [46, 46], iconAnchor: [23, 23] }));
+    m.setTooltipContent(tipHTML(s));
+    if (!markerGroup.hasLayer(m)) markerGroup.addLayer(m);
+    const el = m.getElement();
+    if (el) el.setAttribute('aria-label', markerLabel(s));
+  });
+}
+function renderRouteLine() {
+  if (!map) return;
+  routeGroup.clearLayers();
+  const pts = state.route.map(id => BY_ID[id]);
+  if (pts.length < 2) return;
+  const ll = pts.map(p => [p.pos.lat, p.pos.lng]);
+  const color = getComputedStyle(document.body).getPropertyValue('--accent-ink').trim() || '#a3224f';
+  L.polyline(ll, { color, weight: 3.5, opacity: 0.95, dashArray: '2 11', lineCap: 'round', className: 'route-line', interactive: false }).addTo(routeGroup);
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    L.tooltip({ permanent: true, direction: 'center', className: 'leg-tip', interactive: false })
+      .setLatLng([(a.pos.lat + b.pos.lat) / 2, (a.pos.lng + b.pos.lng) / 2])
+      .setContent(fmtDist(haversine(posOf(a), posOf(b))).replace('約 ', '')).addTo(routeGroup);
+  }
+}
+
+/* ============================================================
+   畫面渲染
+   ============================================================ */
+function renderNotice() {
+  const sp = state.sp, seq = STAGES[sp].map(x => ja(x.ja)).join('<i>→</i>');
+  $('#notice').innerHTML =
+    '<b>' + esc(SP[sp].zh) + '：所有景點「' + PENDING_LABEL + '」</b>。尚無各管理單位發布的當季一手觀測，本站不以歷年資料或預測推估現況。' +
+    '觀測發布日：無｜資料盤點日：' + AUDITED[sp] + '。' +
+    '<span class="seq">' + esc(SP[sp].zh) + '物候：' + seq + '</span>';
+}
+function areaList() { const seen = []; SPOTS.forEach(s => { if (seen.indexOf(s.area) === -1) seen.push(s.area); }); return seen; }
+function renderFilters() {
+  const sp = state.sp;
+  /* 區域選單 */
+  const baseA = SPOTS.filter(s => matches(s, { q: state.q, area: 'all', stage: state.stage }));
+  const selA = $('#f-area');
+  selA.innerHTML = '<option value="all">全部區域（' + baseA.length + '）</option>' +
+    areaList().map(a => '<option value="' + esc(a) + '">' + esc(a) + '（' + baseA.filter(s => s.area === a).length + '）</option>').join('');
+  selA.value = state.area;
+  /* 物候狀態選單：待核對 + 該物候的六個階段 */
+  const baseS = SPOTS.filter(s => matches(s, { q: state.q, area: state.area, stage: 'all' }));
+  const selS = $('#f-stage');
+  const cnt = k => baseS.filter(s => stageOf(s, sp).key === k).length;
+  selS.innerHTML = '<option value="all">全部狀態（' + baseS.length + '）</option>' +
+    '<option value="pending">' + PENDING_LABEL + '（' + cnt('pending') + '）</option>' +
+    STAGES[sp].map(x => '<option value="' + x.k + '">' + esc(x.ja) + '（' + cnt(x.k) + '）</option>').join('');
+  selS.value = state.stage;
+}
+function placeHTML(s, i) {
+  const sp = state.sp, st = stageOf(s, sp), ri = state.route.indexOf(s.id);
+  return '<li class="place' + (state.selected === s.id ? ' is-sel' : '') + '" data-id="' + s.id + '">' +
+    '<h3 class="place-h"><button type="button" class="place-main" data-act="focus"' + (state.selected === s.id ? ' aria-current="true"' : '') + '>' +
+    '<span class="place-no" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</span>' +
+    '<span><span class="place-zh">' + esc(s.zh) + '</span><span class="place-ja ja-name" lang="ja">' + esc(s.ja) + '</span>' +
+    '<span class="place-meta"><span>' + esc(s.ward.zh) + '</span><span class="badge" data-st="' + st.css + '"><i></i>' + esc(st.label) + '</span></span></span>' +
+    '</button></h3>' +
+    '<button type="button" class="place-add" data-act="route" aria-pressed="' + (ri > -1) + '" aria-label="' + (ri > -1 ? '從散步路線移除' : '將') + esc(s.zh) + (ri > -1 ? '' : '加入散步路線') + '">' + (ri > -1 ? '已在路線' : '加入路線') + '</button></li>';
+}
+function renderList() {
+  const sp = state.sp, vis = visibleSpots(), total = SPOTS.filter(s => confirmed(s, sp)).length;
+  $('#plist').innerHTML = vis.map(placeHTML).join('');
+  $('#n-list').textContent = vis.length;
+  $('#res-n').textContent = '顯示 ' + vis.length + ' ／ ' + total + ' 處' + SP[sp].zh + '景點';
+  const filtered = !!(state.q || state.area !== 'all' || state.stage !== 'all');
+  $('#clear-f').hidden = !filtered;
+  const em = $('#empty');
+  if (vis.length) { em.hidden = true; em.innerHTML = ''; }
+  else {
+    em.hidden = false;
+    const stageOnly = state.stage !== 'all' && state.stage !== 'pending';
+    const sName = stageOnly ? (STAGES[sp].find(x => x.k === state.stage) || {}).ja : '';
+    em.innerHTML = stageOnly
+      ? '<strong>目前沒有景點處於「' + esc(sName) + '」</strong>本站尚未取得任何景點的當季官方觀測，所以不顯示任何階段；所有景點都維持「' + PENDING_LABEL + '」，也不會用歷年資料推估。<br><button type="button" class="btn" data-act="clear">清除篩選</button>'
+      : '<strong>沒有符合條件的景點</strong>試試縮短搜尋文字，或清除區域與物候狀態篩選。<br><button type="button" class="btn" data-act="clear">清除篩選</button>';
+  }
+  $('#q-clear').hidden = !state.q;
+}
+function renderLegend() {
+  const sp = state.sp, vis = visibleSpots(), by = {};
+  vis.forEach(s => { const st = stageOf(s, sp); (by[st.css] = by[st.css] || { label: st.label, n: 0 }).n++; });
+  const keys = Object.keys(by);
+  $('#legend').innerHTML = '<b>' + esc(SP[sp].zh) + '｜圖例</b>' + (keys.length
+    ? '<ul>' + keys.map(k => '<li data-st="' + k + '"><i style="--st:var(--c-' + (k === 'pending' ? 'pending' : k) + ')"></i><span>' + esc(by[k].label) + '：' + by[k].n + ' 處</span></li>').join('') + '</ul>'
+    : '<span>目前沒有符合條件的景點</span>') + '<small>點選地圖上的 pin 開啟詳情卡</small>';
+}
+function renderRef() {
+  const j = JMA[state.sp];
+  $('#ref-b').innerHTML = '<dl>' + j.rows.map(r => '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>').join('') + '</dl><p>' + esc(j.note) + '</p>' +
+    '<ul>' + j.links.map(l => '<li>' + ext(l.u, l.t) + '</li>').join('') + '</ul>';
+}
+
+/* ---------- 路線窗格 ---------- */
+function navQuery(s) { return s.nav; }
+function buildNavUrl() {
+  const stops = state.route.map(id => BY_ID[id]), origin = state.origin.trim();
+  if (!stops.length) return null;
+  let o, d, w;
+  if (origin) { o = origin; d = navQuery(stops[stops.length - 1]); w = stops.slice(0, -1).map(navQuery); }
+  else { if (stops.length < 2) return null; o = navQuery(stops[0]); d = navQuery(stops[stops.length - 1]); w = stops.slice(1, -1).map(navQuery); }
+  const q = ['origin=' + encodeURIComponent(o), 'destination=' + encodeURIComponent(d)];
+  if (w.length) q.push('waypoints=' + w.map(encodeURIComponent).join('%7C'));
+  q.push('travelmode=walking');
+  return GOOGLE_MAPS + '&' + q.join('&');
+}
+function renderRoute() {
+  const stops = state.route.map(id => BY_ID[id]);
+  $('#n-route').textContent = stops.length;
+  $('#route-empty').hidden = stops.length > 0;
+  $('#route-clear').hidden = stops.length === 0;
+  let total = 0, longLeg = false;
+  $('#stops').innerHTML = stops.map((s, i) => {
+    let leg = '<p class="leg">起點站</p>';
+    if (i > 0) {
+      const d = haversine(posOf(stops[i - 1]), posOf(s)); total += d;
+      if (d > 10) longLeg = true;
+      leg = '<p class="leg' + (d > 10 ? ' warn' : '') + '">自上一站 <b>' + fmtDist(d) + '</b>　直線距離（估算）' + (d > 10 ? '<br>這段超過 10 km，步行不切實際，實際可改搭電車。' : '') + '</p>';
+    }
+    return '<li class="stop" data-id="' + s.id + '"><span class="stop-no" aria-hidden="true">' + (i + 1) + '</span><div>' +
+      '<h3>第 ' + (i + 1) + ' 站　' + esc(s.zh) + '</h3><p class="place-ja ja-name" lang="ja">' + esc(s.ja) + '</p>' + leg +
+      '<div class="stop-btns"><button type="button" data-act="up"' + (i === 0 ? ' disabled' : '') + ' aria-label="將' + esc(s.zh) + '上移一站">上移</button>' +
+      '<button type="button" data-act="down"' + (i === stops.length - 1 ? ' disabled' : '') + ' aria-label="將' + esc(s.zh) + '下移一站">下移</button>' +
+      '<button type="button" data-act="rm" aria-label="從路線移除' + esc(s.zh) + '">移除</button></div></div></li>';
+  }).join('');
+  const tot = $('#total');
+  tot.hidden = stops.length < 2;
+  if (stops.length >= 2) {
+    $('#total-n').innerHTML = fmtDist(total) + '<small>' + (stops.length - 1) + ' 段</small>';
+    $('#total-note').textContent = '以 Haversine 公式、依景點近似座標計算的兩點直線距離加總，不是實際步行路徑，實際步程通常更長。' + (longLeg ? '路線含超過 10 km 的路段。' : '');
+  }
+  const url = buildNavUrl(), a = $('#nav-go');
+  if (url) { a.href = url; a.setAttribute('aria-disabled', 'false'); }
+  else { a.href = '#'; a.setAttribute('aria-disabled', 'true'); }
+  let hint;
+  if (!stops.length) hint = '加入景點後，這裡會產生 Google 地圖的步行導航連結（另開新分頁）。';
+  else if (!url) hint = '只有 1 站：請在「自訂起點」輸入出發地，或再加入一個景點，才能開始導航。';
+  else hint = (state.origin.trim() ? '起點為你輸入的「' + state.origin.trim() + '」，依序經過 ' + stops.length + ' 站。' : '起點為第 1 站，終點為最後 1 站，中間各站為途經點。') +
+    '導航以景點的名稱交給 Google 地圖解析，終點位置可能與本站的近似位置略有差異；實際步行路線與時間以 Google 地圖為準。';
+  $('#nav-hint').textContent = hint;
+  renderRouteLine();
+}
+
+/* ---------- 詳情抽屜 ---------- */
+function statusBlock(s, sp, open) {
+  const st = stageOf(s, sp), data = s.trees[sp], rec = s.status[sp];
+  const stageNow = st.idx;
+  const rail = '<ol class="rail" aria-label="' + esc(SP[sp].zh) + '物候階段（目前：' + esc(st.label) + '）">' +
+    STAGES[sp].map((x, i) => '<li class="' + (i === stageNow ? 'cur' : '') + '" data-st="' + (sp === 'sakura' ? 's' : 'g') + (i + 1) + '" style="--st:var(--c-' + (sp === 'sakura' ? 's' : 'g') + (i + 1) + ')"><i></i><span lang="ja">' + esc(x.ja) + '</span></li>').join('') + '</ol>';
+  const past = data.past.length
+    ? data.past.map(p => '<div class="past"><span class="tag">過去紀錄</span>' + esc(p.d) + '　' + rich(p.t) + '<br>' + ext(p.u, '查看官方原文') + '</div>').join('')
+    : '<span class="small">無（本站沒有取得該景點的往年官方日期紀錄）</span>';
+  const gen = data.general.length ? data.general.map(g => '<div class="gen"><span class="tag">一般說明</span>' + rich(g.t) + '<br>' + ext(g.u, '查看官方頁面') + '</div>').join('') : '';
+  return '<div class="dr-sec"><h3>' + esc(SP[sp].zh) + '物候</h3>' +
+    '<dl class="kv"><dt>樹種</dt><dd>' + rich(data.tree) + '<br><span class="small">' + rich(data.note) + '</span></dd>' +
+    '<dt>狀態</dt><dd><span class="badge" data-st="' + st.css + '"><i></i>' + esc(st.label) + '</span></dd>' +
+    '<dt>觀測發布日</dt><dd>' + (rec.obs ? esc(rec.obs) : '無<span class="small">（尚無該景點當季官方觀測發布）</span>') + '</dd>' +
+    '<dt>資料盤點日</dt><dd>' + esc(AUDITED[sp]) + '<span class="small">（本站核對資料的日期，不是葉況或花況的觀測日）</span></dd>' +
+    '<dt>來源單位</dt><dd>' + esc(s.op) + '</dd></dl>' +
+    rail +
+    '<p class="small">空心圓表示該階段尚無官方觀測；各階段顏色即地圖 pin 與清單標籤的狀態色。</p>' +
+    '<h4>過去紀錄</h4>' + past + (gen ? '<h4>官方一般說明（非當季觀測）</h4>' + gen : '') +
+    '<h4>官方查證連結</h4><ul class="links">' + data.links.map(l => '<li>' + ext(l.u, l.t) + '</li>').join('') + '</ul></div>';
+}
+function crowdBlock(s, sp) {
+  const items = (s.crowd[sp] || []).concat(s.crowd.common || []);
+  return '<div class="dr-sec"><h3>人潮指引</h3>' +
+    (items.length
+      ? '<p class="small">官方沒有發布即時或預測的人潮資訊；以下是官方頁面中與人流、動線或入園有關的內容：</p><ul class="crowd">' + items.map(c => '<li>' + rich(c.t) + '<br>' + ext(c.u, '官方來源') + '</li>').join('') + '</ul>'
+      : '<p class="crowd pending"><span class="badge" data-st="pending"><i></i>待核對</span><span>官方頁面沒有提供人潮或混雜預測，本站不自行推測。出發前請查看管理單位最新公告。</span></p>') +
+    '</div>';
+}
+function infoBlock(s) {
+  const i = s.info;
+  return '<div class="dr-sec"><h3>到訪資訊（官方，2026-10-02 查證）</h3><dl class="kv">' +
+    '<dt>開園時間</dt><dd>' + esc(i.hours) + '</dd><dt>休園日</dt><dd>' + esc(i.closed) + '</dd><dt>入園費</dt><dd>' + esc(i.fee) + '</dd><dt>交通</dt><dd>' + esc(i.access) + '</dd></dl>' +
+    '<p class="small" style="margin-top:8px">' + ext(i.src, '查看官方頁面') + '　開放時間與公告可能已變動，請以官方最新公告為準。</p></div>';
+}
+function posBlock(s) {
+  return '<div class="dr-sec"><h3>地圖位置（近似位置）</h3><dl class="kv"><dt>針點</dt><dd>' + rich(s.pos.label) + '</dd>' +
+    '<dt>座標</dt><dd>北緯 ' + s.pos.lat.toFixed(4) + '°、東經 ' + s.pos.lng.toFixed(4) + '°</dd><dt>依據</dt><dd>' + rich(s.pos.basis) + '</dd></dl>' +
+    '<p class="small" style="margin-top:8px">針點是近似位置，不是觀賞樹木或入口的精確座標；現場請以園內指標為準。</p></div>';
+}
+function drawerHTML(s) {
+  const sp = state.sp, other = sp === 'sakura' ? 'ginkgo' : 'sakura', ri = state.route.indexOf(s.id);
+  return '<div class="dr-head"><div><p class="dr-ward">' + esc(s.ward.zh) + (s.ward.ja !== s.ward.zh ? '　' + ja(s.ward.ja) : '') + '</p><h2 class="dr-title" id="dr-title">' + esc(s.zh) + '</h2>' +
+    '<p class="dr-ja ja-name" lang="ja">' + esc(s.ja) + '</p></div>' +
+    '<button type="button" class="dr-close" data-act="close" aria-label="關閉詳情卡"><svg class="ic" aria-hidden="true" width="18" height="18"><use href="#i-x"/></svg></button></div>' +
+    '<div class="dr-body">' + statusBlock(s, sp) + crowdBlock(s, sp) +
+    '<details class="other"><summary>另一物候：' + esc(SP[other].zh) + '　<span class="badge" data-st="' + stageOf(s, other).css + '" style="font-weight:500"><i></i>' + esc(stageOf(s, other).label) + '</span></summary>' + statusBlock(s, other) + crowdBlock(s, other) + '</details>' +
+    infoBlock(s) + posBlock(s) + '</div>' +
+    '<div class="dr-act"><button type="button" class="btn primary" data-act="route" aria-pressed="' + (ri > -1) + '">' + (ri > -1 ? '已在路線（第 ' + (ri + 1) + ' 站）・移除' : '加入散步路線') + '</button></div>';
+}
+let returnFocus = null;
+function openDrawer(id, opts) {
+  opts = opts || {};
+  const s = BY_ID[id]; if (!s) return;
+  clearTimeout(fitTimer);
+  if (!state.drawer) returnFocus = opts.pin && markers[id] ? markers[id].getElement() : document.activeElement;
+  state.drawer = id; state.selected = id;
+  const dr = $('#drawer');
+  dr.innerHTML = drawerHTML(s);
+  dr.classList.add('on'); dr.removeAttribute('aria-hidden');
+  $('#pane-map').classList.add('has-drawer');
+  $('.dr-body', dr).scrollTop = 0;
+  renderList(); renderMarkers();
+  if (map && mapSized()) {
+    const pad = drawerPad(), base = 56;
+    map.panInside([s.pos.lat, s.pos.lng], { paddingTopLeft: [base, base + 40], paddingBottomRight: [base + pad.r, base + pad.b], animate: !REDUCE });
+  }
+  if (!opts.silent) dr.focus({ preventScroll: true });
+}
+function closeDrawer(restore) {
+  if (!state.drawer) return;
+  const dr = $('#drawer');
+  state.drawer = null;
+  dr.classList.remove('on'); dr.setAttribute('aria-hidden', 'true');
+  $('#pane-map').classList.remove('has-drawer');
+  renderMarkers(); renderList();
+  if (restore !== false && returnFocus && returnFocus.focus && document.contains(returnFocus)) returnFocus.focus({ preventScroll: true });
+  returnFocus = null;
+}
+
+/* ---------- 其他：吐司、檢視切換、關於彈窗 ---------- */
+let toastTimer = 0;
+function toast(msg, actLabel, actFn) {
+  const t = $('#toast'), b = $('#toast-a');
+  $('#toast-t').textContent = msg;
+  if (actLabel) { b.hidden = false; b.textContent = actLabel; b.onclick = () => { t.classList.remove('on'); actFn(); }; } else { b.hidden = true; b.onclick = null; }
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), actLabel ? 6000 : 3200);
+}
+function setView(v, opts) {
+  state.view = v;
+  $('#main').setAttribute('data-view', v);
+  const desk = isDesk();
+  $$('[role=tab]').forEach(t => {
+    const key = t.id.replace('tab-', '');
+    const on = desk ? (key === (v === 'route' ? 'route' : 'list')) : key === v;
+    t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+  });
+  if (!desk && !(opts && opts.scroll === false)) window.scrollTo(0, 0);
+  if (v === 'map' || desk) requestAnimationFrame(syncMapSize);
+}
+function applySpecies(sp, silent) {
+  state.sp = sp;
+  document.body.setAttribute('data-species', sp);
+  $$('[data-sp]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sp === sp));
+  if (!['all', 'pending', 'mikagoro'].includes(state.stage)) state.stage = 'all';
+  renderAll();
+  if (state.drawer) openDrawer(state.drawer, { silent: true });
+}
+function applyTheme(t) {
+  state.theme = t;
+  document.body.setAttribute('data-theme', t);
+  $$('[data-theme-btn]').forEach(b => b.setAttribute('aria-pressed', b.dataset.themeBtn === t));
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'night' ? '#1b1821' : '#fbfaf7';
+  renderRouteLine();
+}
+function renderAbout() {
+  const srcLi = a => '<li><b>' + esc(a.name) + '</b>' + (a.ja ? '（' + ja(a.ja) + '）' : '') + '<br>' + ext(a.u, a.u) + '<br>' + esc(a.note) +
+    (a.more ? '<br>' + a.more.map(m => '<span class="small">' + esc(m[0]) + '：</span>' + ext(m[1], m[1])).join('<br>') : '') + '</li>';
+  const seqs = ['sakura', 'ginkgo'].map(sp => '<dt>' + SP[sp].zh + '</dt><dd>' + STAGES[sp].map(x => ja(x.ja) + '（' + esc(x.zh) + '）').join(' → ') + '</dd>').join('');
+  $('#about-b').innerHTML =
+    '<section><h3>這個網站是什麼</h3><p>東京八處賞櫻與賞銀杏景點的物候資訊地圖：可切換櫻花與銀杏、搜尋與篩選景點，並把景點排成散步路線，估算直線距離後交給 Google 地圖做步行導航。</p></section>' +
+    '<section><h3>資料怎麼標示</h3><ul>' +
+    '<li><b>當季現況：</b>所有景點的櫻花與銀杏一律顯示「' + PENDING_LABEL + '」。原因是目前沒有各管理單位發布的當季一手觀測；本站不用歷年資料或預測推估現況，也不採用 tenki.jp、Weathernews 的階段值。</li>' +
+    '<li><b>觀測發布日：</b>官方發布該次葉況或花況觀測的日期，目前所有景點皆為「無」。往年的官方紀錄只會以「過去紀錄」標示日期，不當作現況。</li>' +
+    '<li><b>資料盤點日：</b>本站核對該筆資料的日期，與觀測發布日是兩回事。銀杏資料 2026-10-02（課程資料表 2026-09-29 盤點）；櫻花樹種證據 2026-10-09 重新讀取官方頁面。</li>' +
+    '<li><b>人潮指引：</b>只採官方頁面的公告；沒有就寫「待核對」，不自行推測。</li>' +
+    '<li><b>近似位置與距離：</b>地圖針點是近似位置（大型公園為代表點或官方文字描述的賞景處）。路線距離用 Haversine 公式計算兩點直線距離，是估算值，不是實際步行路徑。</li></ul></section>' +
+    '<section><h3>物候階段（依簡報定義）</h3><dl class="seqs">' + seqs + '</dl></section>' +
+    '<section><h3>資料參考來源</h3><ul class="src">' + SRC_MAIN.map(srcLi).join('') + '</ul></section>' +
+    '<section><h3>其他引用的官方頁面與資料</h3><ul class="src">' + SRC_OTHER.map(srcLi).join('') + '</ul></section>' +
+    '<section><h3>地圖、程式庫與字型</h3><ul><li>地圖圖磚：' + ext('https://www.openstreetmap.org/copyright', '© OpenStreetMap contributors') + '（ODbL）</li><li>' + ext('https://leafletjs.com', 'Leaflet 1.9.4') + '（BSD-2-Clause）</li><li>字型：Google Fonts 的 Noto Sans TC、Zen Kaku Gothic New、Shippori Mincho（SIL Open Font License）</li><li>步行導航：只產生 Google 地圖網址並另開新分頁，不使用 API 或金鑰。</li></ul></section>' +
+    '<section><h3>聲明</h3><p class="disclaimer">本網站為前端介面設計與物候資訊架構之教學研究展示，純屬非營利性質，非各景點管理單位或地圖服務之官方網站。現場開放時間與即時葉況請以各管理機關最新公告為準。</p></section>';
+  $('#foot-src').innerHTML = SRC_MAIN.map(a => '<li>' + ext(a.u, a.name) + '</li>').join('') + '<li>東京都建設局、國民公園協會、國營昭和記念公園、明治神宮外苑等官方頁面（詳見「關於與引用」）</li>';
+}
+
+function renderAll() {
+  renderNotice(); renderFilters(); renderList(); renderLegend(); renderRef(); renderMarkers(); renderRoute();
+}
+
+/* ---------- 路線操作 ---------- */
+function toggleRoute(id) {
+  const i = state.route.indexOf(id), s = BY_ID[id];
+  if (i > -1) { state.route.splice(i, 1); toast('已從散步路線移除「' + s.zh + '」'); }
+  else { state.route.push(id); toast('已加入散步路線：第 ' + state.route.length + ' 站「' + s.zh + '」', '查看路線', () => setView('route')); }
+  afterRouteChange();
+}
+function afterRouteChange() {
+  renderRoute(); renderList(); renderMarkers();
+  if (state.drawer) { const dr = $('#drawer'), top = $('.dr-body', dr).scrollTop; dr.innerHTML = drawerHTML(BY_ID[state.drawer]); $('.dr-body', dr).scrollTop = top; }
+}
+function moveStop(i, d) {
+  const j = i + d; if (j < 0 || j >= state.route.length) return;
+  const t = state.route[i]; state.route[i] = state.route[j]; state.route[j] = t;
+  renderRoute(); renderMarkers();
+}
+
+/* ---------- 選取景點：清單點擊 → 平滑定位 ---------- */
+function focusSpot(id) {
+  const s = BY_ID[id]; if (!s) return;
+  clearTimeout(fitTimer);
+  state.selected = id;
+  if (state.drawer && state.drawer !== id) openDrawer(id, { silent: true });
+  if (!map) { openDrawer(id); return; }
+  if (!isDesk() && state.view !== 'map') setView('map');
+  syncMapSize();
+  renderList(); renderMarkers();
+  flyToSpot(s);
+  const m = markers[id]; if (m && markerGroup.hasLayer(m)) m.openTooltip();
+}
+function clearFilters() { state.q = ''; state.area = 'all'; state.stage = 'all'; $('#q').value = ''; refreshFilterUI(); }
+function refreshFilterUI() {
+  renderFilters(); renderList(); renderLegend(); renderMarkers();
+  if (state.drawer && !matches(BY_ID[state.drawer], state)) closeDrawer(false);
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(() => { if (map && mapSized() && !state.drawer && visibleSpots().length) fitView(!REDUCE); }, 280);
+}
+
+/* ============================================================
+   事件
+   ============================================================ */
+document.addEventListener('click', e => {
+  const sp = e.target.closest('[data-sp]'); if (sp) { applySpecies(sp.dataset.sp); return; }
+  const th = e.target.closest('[data-theme-btn]'); if (th) { applyTheme(th.dataset.themeBtn); return; }
+  if (e.target.closest('#open-about,[data-open-about]')) { renderAbout(); const d = $('#about'); if (!d.open) d.showModal(); return; }
+});
+$('#about-x').addEventListener('click', () => $('#about').close());
+$('#about').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$('#about').addEventListener('close', () => { const b = $('#open-about'); if (b && document.activeElement === document.body) b.focus(); });
+
+$('#plist').addEventListener('click', e => {
+  const li = e.target.closest('.place'); if (!li) return;
+  const act = e.target.closest('[data-act]'); if (!act) return;
+  if (act.dataset.act === 'focus') focusSpot(li.dataset.id);
+  else if (act.dataset.act === 'route') toggleRoute(li.dataset.id);
+});
+$('#empty').addEventListener('click', e => { if (e.target.closest('[data-act=clear]')) clearFilters(); });
+$('#clear-f').addEventListener('click', clearFilters);
+$('#q').addEventListener('input', e => { state.q = e.target.value; refreshFilterUI(); });
+$('#q-clear').addEventListener('click', () => { $('#q').value = ''; state.q = ''; refreshFilterUI(); $('#q').focus(); });
+$('#f-area').addEventListener('change', e => { state.area = e.target.value; refreshFilterUI(); });
+$('#f-stage').addEventListener('change', e => { state.stage = e.target.value; refreshFilterUI(); });
+
+$('#drawer').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]'); if (!act) return;
+  if (act.dataset.act === 'close') closeDrawer(true);
+  else if (act.dataset.act === 'route' && state.drawer) toggleRoute(state.drawer);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && state.drawer && !$('#about').open) { closeDrawer(true); }
+});
+
+$('#stops').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); const li = e.target.closest('.stop'); if (!b || !li || b.disabled) return;
+  const id = li.dataset.id, i = state.route.indexOf(id);
+  if (b.dataset.act === 'rm') { state.route.splice(i, 1); toast('已從散步路線移除「' + BY_ID[id].zh + '」'); afterRouteChange(); const h = $('#pane-route .h2'); if (h) { h.tabIndex = -1; h.focus(); } }
+  else {
+    const d = b.dataset.act === 'up' ? -1 : 1; moveStop(i, d);
+    if (state.drawer) afterRouteChange(); else renderList();
+    const nb = $('.stop[data-id="' + id + '"] [data-act="' + b.dataset.act + '"]');
+    if (nb && !nb.disabled) nb.focus(); else { const alt = $('.stop[data-id="' + id + '"] [data-act="' + (b.dataset.act === 'up' ? 'down' : 'up') + '"]'); if (alt && !alt.disabled) alt.focus(); }
+  }
+});
+$('#route-clear').addEventListener('click', () => { state.route = []; toast('已清空散步路線'); afterRouteChange(); });
+$('#go-list').addEventListener('click', () => setView('list'));
+$('#origin').addEventListener('input', e => { state.origin = e.target.value; renderRoute(); });
+$('#nav-go').addEventListener('click', e => { if (e.currentTarget.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
+
+/* 分頁（地圖／清單／路線）：方向鍵切換 */
+$$('[role=tab]').forEach(t => {
+  t.addEventListener('click', () => setView(t.id.replace('tab-', '')));
+  t.addEventListener('keydown', e => {
+    const tabs = $$('[role=tab]').filter(x => x.offsetParent);
+    let i = tabs.indexOf(t);
+    if (e.key === 'ArrowRight') i = (i + 1) % tabs.length; else if (e.key === 'ArrowLeft') i = (i - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') i = 0; else if (e.key === 'End') i = tabs.length - 1; else return;
+    e.preventDefault(); tabs[i].focus(); setView(tabs[i].id.replace('tab-', ''));
+  });
+});
+MQ_DESK.addEventListener('change', () => setView(state.view, { scroll: false }));
+
+/* 頁首高度 → CSS 變數，供手機版地圖高度計算 */
+function syncHeader() { document.documentElement.style.setProperty('--hdr-h', $('.top').offsetHeight + 'px'); }
+if (typeof ResizeObserver !== 'undefined') new ResizeObserver(syncHeader).observe($('.top')); else window.addEventListener('resize', syncHeader);
+
+/* ============================================================
+   啟動
+   ============================================================ */
+renderAbout();
+syncHeader();
+initMap();
+applySpecies('sakura');
+setView('map', { scroll: false });
+syncMapSize();
+</script>
+</body>
+</html>
