@@ -29,22 +29,22 @@
       href: "weeks/week03/",
       thumb: "weeks/week03/video/01-report-journey/thumb.jpg",
       still: "weeks/week03/video/01-report-journey/poster.jpg",
-      meta: "3 支影片＋2 支補充・共 16 分 21 秒",
+      meta: "3 支影片＋3 支補充・共 20 分 31 秒",
       i18n: {
         "zh-Hans": {
           title: "AI Agent 的工作文件夹",
           summary: "Codex 为什么以文件夹为工作单位：路径、四个窗口、找回文件；再用 AGENTS.md 当长期记忆，管理上下文；最后是作业：只用 Codex 收集佛罗伦萨美术馆数据。",
-          meta: "3 个视频＋2 个补充・共 16 分 21 秒",
+          meta: "3 个视频＋3 个补充・共 20 分 31 秒",
         },
         en: {
           title: "The AI Agent's Working Folder",
           summary: "Why Codex works inside one folder: paths, four windows and finding files again; then AGENTS.md as long-term memory, and managing the context; and finally the homework: collecting Florence museum data with Codex only.",
-          meta: "3 videos + 2 extras · 16 min 21 s in total",
+          meta: "3 videos + 3 extras · 20 min 31 s in total",
         },
         vi: {
           title: "Thư mục làm việc của AI Agent",
           summary: "Vì sao Codex làm việc trong một thư mục: đường dẫn, bốn cửa sổ, cách tìm lại tệp; rồi dùng AGENTS.md làm bộ nhớ dài hạn và quản lý ngữ cảnh; cuối cùng là bài tập: chỉ dùng Codex để thu thập dữ liệu bảo tàng ở Florence.",
-          meta: "3 video + 2 bổ sung · tổng cộng 16 phút 21 giây",
+          meta: "3 video + 3 bổ sung · tổng cộng 20 phút 31 giây",
         },
       },
     },
