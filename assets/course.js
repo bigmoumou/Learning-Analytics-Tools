@@ -29,22 +29,22 @@
       href: "weeks/week03/",
       thumb: "weeks/week03/video/01-report-journey/thumb.jpg",
       still: "weeks/week03/video/01-report-journey/poster.jpg",
-      meta: "3 支影片＋3 支補充・共 20 分 31 秒",
+      meta: "3 支影片＋2 支補充・共 16 分 21 秒",
       i18n: {
         "zh-Hans": {
           title: "AI Agent 的工作文件夹",
           summary: "Codex 为什么以文件夹为工作单位：路径、四个窗口、找回文件；再用 AGENTS.md 当长期记忆，管理上下文；最后是作业：只用 Codex 收集佛罗伦萨美术馆数据。",
-          meta: "3 个视频＋3 个补充・共 20 分 31 秒",
+          meta: "3 个视频＋2 个补充・共 16 分 21 秒",
         },
         en: {
           title: "The AI Agent's Working Folder",
           summary: "Why Codex works inside one folder: paths, four windows and finding files again; then AGENTS.md as long-term memory, and managing the context; and finally the homework: collecting Florence museum data with Codex only.",
-          meta: "3 videos + 3 extras · 20 min 31 s in total",
+          meta: "3 videos + 2 extras · 16 min 21 s in total",
         },
         vi: {
           title: "Thư mục làm việc của AI Agent",
           summary: "Vì sao Codex làm việc trong một thư mục: đường dẫn, bốn cửa sổ, cách tìm lại tệp; rồi dùng AGENTS.md làm bộ nhớ dài hạn và quản lý ngữ cảnh; cuối cùng là bài tập: chỉ dùng Codex để thu thập dữ liệu bảo tàng ở Florence.",
-          meta: "3 video + 3 bổ sung · tổng cộng 20 phút 31 giây",
+          meta: "3 video + 2 bổ sung · tổng cộng 16 phút 21 giây",
         },
       },
     },
@@ -55,22 +55,22 @@
       href: "weeks/week04/",
       thumb: "weeks/week04/video/01-built-in-browser/thumb.jpg",
       still: "weeks/week04/video/01-built-in-browser/poster.jpg",
-      meta: "2 支影片＋1 支補充・共 9 分 6 秒",
+      meta: "2 支影片＋2 支補充・共 13 分 16 秒",
       i18n: {
         "zh-Hans": {
           title: "AI Agent 内置浏览器",
           summary: "AI Agent 控制浏览器的五种方法；用 Codex 内置浏览器打开网页、修好卡住的连接，实际做出方块桌椅。",
-          meta: "2 个视频＋1 个补充・共 9 分 6 秒",
+          meta: "2 个视频＋2 个补充・共 13 分 16 秒",
         },
         en: {
           title: "AI Agent Built-in Browser",
           summary: "Five ways an AI agent can control a browser; using Codex's built-in browser to open pages, fix a stuck connection and build a block table and chair.",
-          meta: "2 videos + 1 extra · 9 min 6 s in total",
+          meta: "2 videos + 2 extras · 13 min 16 s in total",
         },
         vi: {
           title: "Trình duyệt tích hợp của AI Agent",
           summary: "Năm cách AI Agent điều khiển trình duyệt; dùng trình duyệt tích hợp của Codex để mở trang web, sửa kết nối bị kẹt và làm bộ bàn ghế khối.",
-          meta: "2 video + 1 bổ sung · tổng cộng 9 phút 6 giây",
+          meta: "2 video + 2 bổ sung · tổng cộng 13 phút 16 giây",
         },
       },
     },

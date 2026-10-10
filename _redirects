@@ -20,3 +20,5 @@
 /works/hw1/41xxxxx2e    /works/hw1/41xxxx02e/        301
 # Week 5 加了新的影片 01（驗證清單），「不要一直換模型」從 01 改成 02（2026-10-08）：舊的影片檔網址還讀得到
 /weeks/week05/video/01-model-switch/*  /weeks/week05/video/02-model-switch/:splat  301
+# Mermaid 補充從 Week 3 補充 3 搬到 Week 4 補充 2（2026-10-11）
+/weeks/week03/video/s3-mermaid/*  /weeks/week04/video/s2-mermaid/:splat  301
