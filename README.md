@@ -38,7 +38,7 @@ An AI teaching-video demonstration site for the Learning Analytics Tools course 
 
 ### AI 教學影片
 
-目前（2026 年 10 月）已公開 Week 3「AI 助理的工作資料夾」、Week 4「AI Agent 內建瀏覽器」與 Week 5「讓 Codex 做對：驗證與 context window」：共 6 支影片加 5 支補充教材（合計 34 分鐘）、104 個章節、58 則重點。Week 6 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
+目前（2026 年 10 月）已公開 Week 3「AI Agent 的工作資料夾」、Week 4「AI Agent 內建瀏覽器」與 Week 5「讓 Codex 做對：驗證與 context window」：共 6 支影片加 5 支補充教材（合計 34 分鐘）、104 個章節、58 則重點。Week 6 到 Week 16 依課程進度陸續開放，網站上先顯示「準備中」。
 
 影片沒有旁白，用動畫、字卡和程式合成的配樂說明一個主題，長度從 1 分多到 4 分鐘左右。課程教的是 AI 程式助理的實際用法，影片中示範的工具主要是 OpenAI 的 Codex。
 
@@ -224,7 +224,7 @@ This repository is the website itself; every file the site serves is here.
 
 ### AI teaching videos
 
-As of October 2026, Week 3, "The AI Assistant's Working Folder", Week 4, "AI Agent Built-in Browser", and Week 5, "Getting It Right with Codex: Verification and the Context Window", are published: 6 videos plus 5 extras (34 min in total), 104 chapters and 58 key points. Weeks 6 to 16 open as the course goes on and show as "Coming soon" on the site until then.
+As of October 2026, Week 3, "The AI Agent's Working Folder", Week 4, "AI Agent Built-in Browser", and Week 5, "Getting It Right with Codex: Verification and the Context Window", are published: 6 videos plus 5 extras (34 min in total), 104 chapters and 58 key points. Weeks 6 to 16 open as the course goes on and show as "Coming soon" on the site until then.
 
 The videos have no voice-over. Each one explains a single topic with animation, text cards and music synthesized in code, and runs between one and about four minutes. The course teaches the practical use of AI coding agents, and the tool shown in the videos is mostly OpenAI's Codex.
 
