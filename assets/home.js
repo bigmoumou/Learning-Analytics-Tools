@@ -267,6 +267,9 @@
     fallback();
     return;
   }
+  // 攝影棚道具（assets/studio.js）：畫不出來就只是沒有道具，膠捲照常
+  let studio = null;
+  try { if (window.Studio) studio = window.Studio(gl, { floorY: FLOOR_Y }); } catch (e) { studio = null; }
 
   /* ---------- 貼圖 ---------- */
   const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
@@ -538,6 +541,7 @@
     proj[11] = -1;
     proj[14] = (-2 * FAR * NEAR) / (FAR - NEAR);
     pxPerFrame = fw;
+    if (studio) studio.layout(proj, cam, w, h, canvas.width, canvas.height);
     wake();
   }
   let resizeQueued = false;
@@ -587,6 +591,13 @@
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, floorQuad.count);
     gl.disable(gl.BLEND);
 
+    // 膠捲後面的道具；進入某一週時（相機往前推）道具跟著淡出
+    const propAlpha = leaving ? 1 - clamp((performance.now() - leaving.t0) / 450, 0, 1) : 1;
+    if (studio) {
+      studio.colors(col.fog, col.fog[0] + col.fog[1] + col.fog[2] < 1.2);
+      studio.drawBack(propAlpha);
+    }
+
     // 膠捲：只畫看得到的那幾格
     gl.useProgram(frameProg.p);
     const u = frameProg.u;
@@ -611,6 +622,7 @@
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, arc.count);
     }
     gl.bindVertexArray(null);
+    if (studio) studio.drawFront(propAlpha);   // 膠捲前面的道具
   }
 
   /* ======================================================================

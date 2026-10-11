@@ -166,6 +166,67 @@ body.is-loading .spot { opacity: 0; }
 :root[data-theme="dark"] .spot { display: block; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .spot { display: block; } }
 body.no-film .spot { display: none !important; }
+
+/* 攝影棚道具會動的部分（assets/studio.js 放位置）：只在深色模式。
+   全部只動 transform／opacity，慢、幅度小；減少動態時靜止。 */
+.studio-fx { position: fixed; inset: 0; z-index: 1; pointer-events: none; display: none; opacity: 1; transition: opacity .6s var(--ease); --u: 1; }
+:root[data-theme="dark"] .studio-fx { display: block; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .studio-fx { display: block; } }
+body.no-film .studio-fx, .studio-fx.is-hidden { display: none !important; }
+body.is-loading .studio-fx, body.is-leaving .studio-fx { opacity: 0; }
+body.index-open .studio-fx { visibility: hidden; }
+.studio-fx span { position: absolute; display: block; }
+/* 膠捲後面兩盞燈的光（.studio-back 在畫布後面，只從膠捲上下的空隙透出來） */
+.studio-back { z-index: -1; }
+.fx-lamp { width: calc(520px * var(--u)); height: calc(340px * var(--u)); margin: calc(-170px * var(--u)) 0 0 calc(-260px * var(--u)); border-radius: 50%; }
+.fx-lamp-l {
+  left: var(--lampl-x); top: var(--lampl-y);
+  background: radial-gradient(closest-side, rgba(255, 196, 120, .22), rgba(255, 180, 100, .07) 50%, transparent);
+  animation: fx-breathe 8s ease-in-out infinite alternate;
+}
+.fx-lamp-r {
+  left: var(--lampr-x); top: var(--lampr-y);
+  background: radial-gradient(closest-side, rgba(255, 236, 205, .18), rgba(255, 225, 190, .06) 50%, transparent);
+  animation: fx-breathe 11s ease-in-out -4s infinite alternate;
+}
+/* 攝影機側邊小螢幕的微光，像在播畫面 */
+.fx-screen {
+  left: var(--screen-x); top: var(--screen-y); width: calc(120px * var(--u)); height: calc(90px * var(--u));
+  margin: calc(-45px * var(--u)) 0 0 calc(-60px * var(--u));
+  background: radial-gradient(closest-side, rgba(150, 190, 220, .16), transparent);
+  animation: fx-flicker 7s steps(1, end) infinite;
+}
+/* 錄影指示燈 */
+.fx-tally {
+  left: var(--tally-x); top: var(--tally-y); width: calc(5px * var(--u)); height: calc(5px * var(--u));
+  margin: calc(-2.5px * var(--u)) 0 0 calc(-2.5px * var(--u)); border-radius: 50%;
+  background: #ff4a32; box-shadow: 0 0 calc(10px * var(--u)) calc(3px * var(--u)) rgba(255, 60, 40, .45);
+  animation: fx-tally 2.8s ease-in-out infinite;
+}
+/* 貼地的薄霧，很慢地左右飄 */
+.fx-haze { border-radius: 50%; background: radial-gradient(closest-side, rgba(220, 205, 180, .055), transparent); }
+.fx-haze-a { left: -10%; top: 62%; width: 70%; height: 30%; animation: fx-drift 46s ease-in-out infinite alternate; }
+.fx-haze-b { right: -12%; top: 66%; width: 64%; height: 26%; animation: fx-drift 58s ease-in-out -20s infinite alternate-reverse; }
+/* 頂燈光裡的灰塵（只在已開放的週次、燈亮的時候） */
+.fx-dust { inset: 0; opacity: 0; transition: opacity 1.2s var(--ease); }
+body.spot-on .fx-dust { opacity: 1; }
+.fx-dust i {
+  position: absolute; left: calc(38% + var(--x) * .24); top: var(--y); width: var(--s); height: var(--s); border-radius: 50%;
+  background: rgba(255, 220, 160, var(--o)); opacity: 0;
+  animation: fx-float var(--d) linear var(--delay) infinite;
+}
+@keyframes fx-breathe { from { opacity: .75; } to { opacity: 1; } }
+@keyframes fx-flicker { 0% { opacity: .8; } 23% { opacity: .95; } 41% { opacity: .7; } 64% { opacity: 1; } 82% { opacity: .85; } }
+@keyframes fx-tally { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes fx-drift { from { transform: translateX(-3%); } to { transform: translateX(3%); } }
+@keyframes fx-float {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate(var(--dx), -140px); opacity: 0; }
+}
+.studio-fx.is-still span, .studio-fx.is-still i { animation: none !important; }
+.studio-fx.is-still .fx-dust { display: none; }
 :root[data-theme="dark"] .info.is-ready .info-title { text-shadow: 0 0 34px rgba(255, 196, 92, .22); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .info.is-ready .info-title { text-shadow: 0 0 34px rgba(255, 196, 92, .22); } }
 
